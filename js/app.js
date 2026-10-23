@@ -89,7 +89,11 @@ function renderProductCard(product) {
         const affUrl = escapeHTML(primaryOffer.affiliate_url);
         const pid = escapeHTML(String(product.id ?? ''));
 
-        const priceDisplay = primaryOffer.price ? `<div style="font-weight:bold; color:#1E1B4B; margin-bottom:5px;">Rs. ${primaryOffer.price}</div>` : '';
+        // ⭐ DYNAMIC CURRENCY ADDED HERE ⭐
+        const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
+        const offerCurrency = (primaryOffer.currency || 'USD').toUpperCase();
+        const offerSymbol = currencySymbols[offerCurrency] || offerCurrency + ' ';
+        const priceDisplay = primaryOffer.price ? `<div style="font-weight:bold; color:#1E1B4B; margin-bottom:5px;">${offerSymbol}${primaryOffer.price}</div>` : '';
 
         cta = `
                ${priceDisplay}
