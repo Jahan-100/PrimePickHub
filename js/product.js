@@ -7,7 +7,6 @@ function escapeHTML(s) {
         .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-// Currency Symbols
 const currencySymbols = {
     USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ', CAD: 'C$', AUD: 'A$'
 };
@@ -22,17 +21,27 @@ function getVideoHtml(url) {
     if (ytMatch) embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
     const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
     if (vimeoMatch && !url.includes('/video/')) embedUrl = `https://player.vimeo.com/video/${vimeoMatch[1]}`;
-
     return `<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;"><iframe src="${escapeHTML(embedUrl)}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen></iframe></div>`;
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    const path = window.location.pathname;
     const params = new URLSearchParams(window.location.search);
-    const slug = params.get('slug');
-    const id = params.get('id');
+    
+    let slug = params.get('slug');
+    let id = params.get('id');
+
+    // ⭐ Clean URL se slug nikalne ka logic
+    if (!slug && path.startsWith('/product/')) {
+        slug = path.replace('/product/', '').split('/')[0];
+    }
+
     const container = document.getElementById('productContainer');
 
-    if (!slug && !id) { window.location.href = 'index.html'; return; }
+    if (!slug && !id) {
+        window.location.href = '/index.html';
+        return;
+    }
 
     const product = slug
         ? await API.getProductBySlug(slug)
@@ -43,7 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         })();
 
     if (!product) {
-        container.innerHTML = '<h2 style="text-align:center;padding:40px;">Product not found. <a href="index.html">Return Home</a></h2>';
+        container.innerHTML = '<h2 style="text-align:center;padding:40px;">Product not found. <a href="/index.html">Return Home</a></h2>';
         return;
     }
 
@@ -55,7 +64,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const offers = (product.affiliate_offers && product.affiliate_offers.length > 0) ? product.affiliate_offers : [];
     const primaryOffer = offers[0] || { price: '0', store_name: 'Store', currency: 'USD' };
 
-    // Currency Setup
     const baseCurrency = (primaryOffer.currency || 'USD').toUpperCase();
     const basePrice = parseFloat(primaryOffer.price) || 0;
     const baseSymbol = currencySymbols[baseCurrency] || baseCurrency + ' ';
@@ -76,7 +84,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let galleryImages = (product.gallery_images && product.gallery_images.length > 0) ? product.gallery_images.filter(Boolean) : [];
     if (galleryImages.length === 0 && product.image_url) galleryImages = [product.image_url];
-    const mainImage = galleryImages[0] || 'assets/icon-192.png';
+    const mainImage = galleryImages[0] || '/assets/icon-192.png';
 
     const thumbnailsHtml = galleryImages.length > 1
         ? galleryImages.map((url, i) => `
@@ -93,14 +101,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:40px;background:#fff;padding:30px;border-radius:12px;border:1px solid #E2E8F0;margin-bottom:20px;">
             <div>
                 <div style="background:#F8FAFC;border-radius:12px;padding:15px;margin-bottom:15px;">
-                    <img id="mainImage" src="${escapeHTML(mainImage)}" alt="${escapeHTML(product.title)}" style="width:100%;max-height:400px;object-fit:contain;border-radius:8px;" onerror="this.src='assets/icon-192.png';">
+                    <img id="mainImage" src="${escapeHTML(mainImage)}" alt="${escapeHTML(product.title)}" style="width:100%;max-height:400px;object-fit:contain;border-radius:8px;" onerror="this.src='/assets/icon-192.png';">
                 </div>
                 ${thumbnailsHtml ? `<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">${thumbnailsHtml}</div>` : ''}
             </div>
             <div>
                 <h1 style="font-size:1.8rem;margin-bottom:10px;">${escapeHTML(product.title)}</h1>
                 
-                <!-- ⭐ CURRENCY CONVERTER UI ⭐ -->
+                <!-- CURRENCY CONVERTER UI -->
                 <div style="margin-bottom: 20px; background: #F8FAFC; padding: 15px; border-radius: 8px; border: 1px solid #E2E8F0;">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                         <span style="font-size: 1.4rem; font-weight: bold; color: #FF5A3C;" id="displayPrice">${baseSymbol}${basePrice.toFixed(2)}</span>
@@ -137,26 +145,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
     `;
 
-    // ⭐ CURRENCY CONVERTER LOGIC ⭐
     const currencySelector = document.getElementById('currencySelector');
     const displayPrice = document.getElementById('displayPrice');
     let exchangeRates = {};
 
-    // Fetch rates from Frankfurter API
     async function fetchRates() {
         try {
             const res = await fetch(`https://api.frankfurter.dev/v1/latest?base=${baseCurrency}`);
             const data = await res.json();
             exchangeRates = data.rates;
-            exchangeRates[baseCurrency] = 1; // Base currency rate is always 1
+            exchangeRates[baseCurrency] = 1;
         } catch (err) {
-            console.warn('Could not fetch live rates. Using fallback.');
-            // Fallback approximate rates agar internet issue ho
             exchangeRates = { USD: 1, PKR: 278.5, EUR: 0.92, GBP: 0.79, INR: 83.2, AED: 3.67, CAD: 1.36, AUD: 1.52 };
         }
     }
 
-    // Convert and update UI
     function updatePrice(currency) {
         const rate = exchangeRates[currency];
         if (!rate) return;
@@ -165,15 +168,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         displayPrice.innerText = `${symbol}${converted.toFixed(2)}`;
     }
 
-    // Initialize
     await fetchRates();
 
-    // On change currency
     currencySelector.addEventListener('change', (e) => {
         updatePrice(e.target.value);
     });
 
-    // Attach thumbnail click handlers
     container.querySelectorAll('.gallery-thumb').forEach(thumb => {
         thumb.addEventListener('click', function () {
             document.getElementById('mainImage').src = this.dataset.src;
@@ -182,7 +182,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // JSON-LD Schema
     const jsonLd = {
         "@context": "https://schema.org/", "@type": "Product", "name": product.title,
         "image": [product.image_url].concat(product.gallery_images || []).filter(Boolean),
