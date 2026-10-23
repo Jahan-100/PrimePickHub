@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Admin Dashboard — Supabase Auth
+ * PrimePickHub Admin Dashboard — Supabase Auth + Gallery + Video
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function showLogin() {
-    // Ab hum container aur form ko alag alag target kar rahe hain
     const loginContainer = document.getElementById('loginContainer');
     const loginForm = document.getElementById('loginForm');
     const dashEl = document.getElementById('dashboard');
@@ -31,7 +30,6 @@ function showLogin() {
     if (loginContainer) loginContainer.style.display = 'block';
     if (dashEl) dashEl.style.display = 'none';
 
-    // Submit event sirf form par lagega
     loginForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('loginEmail').value.trim();
@@ -75,11 +73,15 @@ function setupProductForm() {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // Get Values
         const title = document.getElementById('pTitle').value.trim();
         const slug = document.getElementById('pSlug').value.trim();
         const img = document.getElementById('pImg').value.trim();
+        const galleryText = document.getElementById('pGallery').value.trim();
+        const videoUrl = document.getElementById('pVideo').value.trim();
         const category = document.getElementById('pCategory').value;
+        const badge = document.getElementById('pBadge').value.trim();
+        const rating = document.getElementById('pRating').value ? parseFloat(document.getElementById('pRating').value) : null;
+        const reviewsCount = document.getElementById('pReviewsCount').value ? parseInt(document.getElementById('pReviewsCount').value) : 0;
         const store = document.getElementById('pStore').value.trim().toLowerCase();
         const price = parseFloat(document.getElementById('pPrice').value);
         const affUrl = document.getElementById('pAffUrl').value.trim();
@@ -88,23 +90,31 @@ function setupProductForm() {
         const featured = document.getElementById('pFeatured').checked;
         const trending = document.getElementById('pTrending').checked;
 
-        // Validation
+        // Gallery: split by newlines, trim, remove empty
+        const galleryImages = galleryText 
+            ? galleryText.split('\n').map(u => u.trim()).filter(u => u.length > 0)
+            : [];
+
         if (!title || !slug || !img || !store || !price || !affUrl) return alert('Please fill all required fields.');
         if (!/^[a-z0-9-]+$/.test(slug)) return alert('Slug: lowercase letters, numbers, dashes only.');
+        if (!/^https?:\/\//i.test(img)) return alert('Primary Image URL must start with http:// or https://');
 
         try {
-            // 1. Insert Product
             const { data: newProduct, error: prodErr } = await window.supabaseClient
                 .from('products')
                 .insert([{
                     title, slug, image_url: img, category_slug: category,
                     description: desc, review_html: review,
-                    is_featured: featured, is_trending: trending
+                    is_featured: featured, is_trending: trending,
+                    badge: badge || null,
+                    rating: rating,
+                    reviews_count: reviewsCount,
+                    gallery_images: galleryImages,
+                    video_url: videoUrl || null
                 }]).select().single();
 
             if (prodErr) throw prodErr;
 
-            // 2. Insert Affiliate Offer
             const { error: offErr } = await window.supabaseClient
                 .from('affiliate_offers')
                 .insert([{
@@ -116,7 +126,7 @@ function setupProductForm() {
 
             if (offErr) throw offErr;
 
-            alert(`"${title}" saved successfully!`);
+            alert(`"${title}" saved successfully!\n\nGallery Images: ${galleryImages.length}\nVideo: ${videoUrl ? 'Yes' : 'No'}`);
             form.reset();
             await loadStats();
         } catch (err) {
@@ -124,7 +134,6 @@ function setupProductForm() {
         }
     });
 
-    // Logout
     document.getElementById('logoutBtn')?.addEventListener('click', async () => {
         await API.signOut();
         window.location.reload();
