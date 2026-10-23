@@ -21,7 +21,6 @@
         </div>
         <div class="admin-content">
             
-            <!-- Login Form Container (ID fixed) -->
             <div id="loginContainer" class="admin-card" style="max-width:420px;margin:80px auto;">
                 <h2>Admin Login</h2>
                 <br>
@@ -39,7 +38,6 @@
                 </form>
             </div>
 
-            <!-- Dashboard Container -->
             <div id="dashboard" style="display:none;">
                 <h1>Platform Overview</h1>
                 <br>
@@ -60,7 +58,24 @@
                     <form id="productForm">
                         <div class="form-group"><label>Product Title</label><input type="text" id="pTitle" required></div>
                         <div class="form-group"><label>URL Slug (e.g. iphone-15-pro)</label><input type="text" id="pSlug" required pattern="[a-z0-9-]+"></div>
-                        <div class="form-group"><label>Image URL</label><input type="url" id="pImg" required></div>
+                        
+                        <div class="form-group">
+                            <label>Primary Image URL (Homepage Card Mein Yeh Dikhegi)</label>
+                            <input type="url" id="pImg" required placeholder="https://...main-image.jpg">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Gallery Images (Har Line Mein Ek URL - Product Page Ke Liye)</label>
+                            <textarea id="pGallery" rows="4" placeholder="https://...image2.jpg&#10;https://...image3.jpg&#10;https://...image4.jpg"></textarea>
+                            <small style="color:#64748B;font-size:0.8rem;">Har line mein ek image URL. Yeh product page par thumbnails ke tor par dikhengi.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Video URL (YouTube - Optional)</label>
+                            <input type="url" id="pVideo" placeholder="https://www.youtube.com/watch?v=VIDEO_ID">
+                            <small style="color:#64748B;font-size:0.8rem;">YouTube link ya direct .mp4 link chalega.</small>
+                        </div>
+
                         <div class="form-group"><label>Category</label>
                             <select id="pCategory">
                                 <option value="electronics">Electronics</option>
@@ -71,6 +86,10 @@
                             </select>
                         </div>
                         
+                        <div class="form-group"><label>Badge (e.g. Best Seller - Optional)</label><input type="text" id="pBadge" placeholder="Best Seller"></div>
+                        <div class="form-group"><label>Rating (1 to 5 - Optional)</label><input type="number" step="0.1" min="1" max="5" id="pRating" placeholder="4.5"></div>
+                        <div class="form-group"><label>Reviews Count (Optional)</label><input type="number" id="pReviewsCount" placeholder="120"></div>
+
                         <h3 style="margin-top:20px; border-bottom:1px solid #ccc; padding-bottom:5px;">Offer Details</h3>
                         <div class="form-group"><label>Store Name (amazon, daraz, aliexpress)</label><input type="text" id="pStore" required></div>
                         <div class="form-group"><label>Price (e.g. 1500.00)</label><input type="number" step="0.01" id="pPrice" required></div>
@@ -79,7 +98,7 @@
                         <h3 style="margin-top:20px; border-bottom:1px solid #ccc; padding-bottom:5px;">SEO Content</h3>
                         <div class="form-group"><label>Short Description (1-2 lines)</label><input type="text" id="pDesc" required></div>
                         <div class="form-group">
-                            <label>Detailed Review (HTML allowed: &lt;p&gt;, &lt;h3&gt;, &lt;ul&gt;, &lt;li&gt;)</label>
+                            <label>Detailed Review (HTML allowed)</label>
                             <textarea id="pReview" rows="6" required placeholder="<h3>Our Verdict</h3><p>This is a great product...</p>"></textarea>
                         </div>
 
