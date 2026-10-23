@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - PrimePickHub</title>
+    <meta name="description" content="Contact PrimePickHub for partnership inquiries, product suggestions, or support.">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header class="header">
+        <div class="nav-main">
+            <a href="index.html" class="logo">PrimePick<span>Hub</span></a>
+            <a href="index.html" style="text-decoration:none;color:var(--primary);font-weight:600;">← Back to Home</a>
+        </div>
+    </header>
+
+    <main class="container" style="max-width:700px;padding:50px 20px;">
+        <h1 style="color:var(--primary);margin-bottom:15px;">Contact Us</h1>
+        <p style="color:var(--text-muted);margin-bottom:30px;line-height:1.7;">
+            Have a question, partnership inquiry, or product suggestion? Send us a message — we usually reply within 48 hours.
+        </p>
+
+        <!-- Formspree: FREE service. Sign up at formspree.io, create a form, paste YOUR ID below -->
+        <form action="https://formspree.io/f/YOUR_FORMSPREE_ID" method="POST"
+              style="background:#fff;padding:30px;border-radius:12px;border:1px solid var(--border);">
+            <div style="margin-bottom:15px;">
+                <label style="display:block;font-weight:600;margin-bottom:6px;">Your Name</label>
+                <input type="text" name="name" required
+                       style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;">
+            </div>
+            <div style="margin-bottom:15px;">
+                <label style="display:block;font-weight:600;margin-bottom:6px;">Email Address</label>
+                <input type="email" name="email" required
+                       style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;">
+            </div>
+            <div style="margin-bottom:20px;">
+                <label style="display:block;font-weight:600;margin-bottom:6px;">Message</label>
+                <textarea name="message" rows="5" required
+                          style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;"></textarea>
+            </div>
+            <button type="submit" class="btn-check-price" style="width:auto;padding:12px 30px;">Send Message</button>
+        </form>
+
+        <div style="margin-top:30px;padding:20px;background:#F1F5F9;border-radius:12px;">
+            <h3 style="margin-bottom:10px;">Direct Contact</h3>
+            <p style="color:var(--text-muted);margin-bottom:6px;">
+                <i class="fa-solid fa-envelope" style="color:var(--accent);"></i>
+                <strong>Email:</strong> support@primepickhub.com
+            </p>
+            <p style="color:var(--text-muted);">
+                <i class="fa-solid fa-clock" style="color:var(--accent);"></i>
+                <strong>Response time:</strong> 24–48 hours (Mon–Fri)
+            </p>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p style="font-size:0.85rem;">
+            <a href="about.html" style="color:#CBD5E1;">About</a> ·
+            <a href="contact.html" style="color:#CBD5E1;">Contact</a> ·
+            <a href="privacy-policy.html" style="color:#CBD5E1;">Privacy</a> ·
+            <a href="terms.html" style="color:#CBD5E1;">Terms</a> ·
+            <a href="affiliate-disclosure.html" style="color:#CBD5E1;">Affiliate Disclosure</a>
+        </p>
+        <div class="footer-disclaimer">PrimePickHub © 2026. All rights reserved.</div>
+    </footer>
+</body>
+</html>
