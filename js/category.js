@@ -5,13 +5,21 @@ function escapeHTML(s) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    const path = window.location.pathname;
     const params = new URLSearchParams(window.location.search);
-    const categorySlug = params.get('cat') || params.get('category');
+    
+    let categorySlug = params.get('cat') || params.get('category');
+
+    // ⭐ Clean URL se category nikalne ka logic
+    if (!categorySlug && path.startsWith('/category/')) {
+        categorySlug = path.replace('/category/', '').split('/')[0];
+    }
+
     const grid = document.getElementById('categoryGrid');
     const titleEl = document.getElementById('categoryTitle');
     const bcEl = document.getElementById('breadcrumbCategory');
 
-    if (!categorySlug) { window.location.href = 'index.html'; return; }
+    if (!categorySlug) { window.location.href = '/index.html'; return; }
 
     const title = categorySlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     document.title = `${title} Deals - PrimePickHub`;
@@ -25,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!products || products.length === 0) {
         grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;">
             <h3>No products in "${escapeHTML(title)}" yet</h3>
-            <p style="color:#64748B;margin-top:10px;">Check back later or <a href="index.html">browse all products</a>.</p>
+            <p style="color:#64748B;margin-top:10px;">Check back later or <a href="/index.html">browse all products</a>.</p>
         </div>`;
         return;
     }
@@ -38,9 +46,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const fg = /^#[0-9a-fA-F]{6}$/.test(cfg.textColor) ? cfg.textColor : '#ffffff';
         const affUrl = offer ? offer.affiliate_url : '#';
 
-        // ⭐ Clean URL logic
         const pUrl = p.slug ? `/product/${encodeURIComponent(p.slug)}` : '#';
-        const imgSrc = p.image_url ? escapeHTML(p.image_url) : 'assets/icon-192.png';
+        const imgSrc = p.image_url ? escapeHTML(p.image_url) : '/assets/icon-192.png';
 
         return `
             <div class="product-card">
@@ -66,5 +73,5 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function handleCategorySearch() {
     const q = document.getElementById('searchInput')?.value.trim();
-    if (q) window.location.href = `search.html?q=${encodeURIComponent(q)}`;
+    if (q) window.location.href = `/search.html?q=${encodeURIComponent(q)}`;
 }
