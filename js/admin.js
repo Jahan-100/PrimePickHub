@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Admin Dashboard — Supabase Auth + Gallery + Video
+ * PrimePickHub Admin Dashboard
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -82,22 +82,23 @@ function setupProductForm() {
         const badge = document.getElementById('pBadge').value.trim();
         const rating = document.getElementById('pRating').value ? parseFloat(document.getElementById('pRating').value) : null;
         const reviewsCount = document.getElementById('pReviewsCount').value ? parseInt(document.getElementById('pReviewsCount').value) : 0;
+        
         const store = document.getElementById('pStore').value.trim().toLowerCase();
         const price = parseFloat(document.getElementById('pPrice').value);
+        const currency = document.getElementById('pCurrency').value;
         const affUrl = document.getElementById('pAffUrl').value.trim();
+        
         const desc = document.getElementById('pDesc').value.trim();
         const review = document.getElementById('pReview').value.trim();
         const featured = document.getElementById('pFeatured').checked;
         const trending = document.getElementById('pTrending').checked;
 
-        // Gallery: split by newlines, trim, remove empty
         const galleryImages = galleryText 
             ? galleryText.split('\n').map(u => u.trim()).filter(u => u.length > 0)
             : [];
 
         if (!title || !slug || !img || !store || !price || !affUrl) return alert('Please fill all required fields.');
         if (!/^[a-z0-9-]+$/.test(slug)) return alert('Slug: lowercase letters, numbers, dashes only.');
-        if (!/^https?:\/\//i.test(img)) return alert('Primary Image URL must start with http:// or https://');
 
         try {
             const { data: newProduct, error: prodErr } = await window.supabaseClient
@@ -106,11 +107,8 @@ function setupProductForm() {
                     title, slug, image_url: img, category_slug: category,
                     description: desc, review_html: review,
                     is_featured: featured, is_trending: trending,
-                    badge: badge || null,
-                    rating: rating,
-                    reviews_count: reviewsCount,
-                    gallery_images: galleryImages,
-                    video_url: videoUrl || null
+                    badge: badge || null, rating: rating, reviews_count: reviewsCount,
+                    gallery_images: galleryImages, video_url: videoUrl || null
                 }]).select().single();
 
             if (prodErr) throw prodErr;
@@ -121,12 +119,13 @@ function setupProductForm() {
                     product_id: newProduct.id,
                     store_name: store,
                     price: price,
+                    currency: currency, // Naya Currency field
                     affiliate_url: affUrl
                 }]);
 
             if (offErr) throw offErr;
 
-            alert(`"${title}" saved successfully!\n\nGallery Images: ${galleryImages.length}\nVideo: ${videoUrl ? 'Yes' : 'No'}`);
+            alert(`"${title}" saved successfully!`);
             form.reset();
             await loadStats();
         } catch (err) {
