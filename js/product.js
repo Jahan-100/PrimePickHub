@@ -31,7 +31,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     let slug = params.get('slug');
     let id = params.get('id');
 
-    // ⭐ Clean URL se slug nikalne ka logic
     if (!slug && path.startsWith('/product/')) {
         slug = path.replace('/product/', '').split('/')[0];
     }
@@ -124,7 +123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <option value="AUD">AUD (A$)</option>
                         </select>
                     </div>
-                    <p style="font-size: 0.75rem; color: #64748B; margin: 0;"><i>Real-time rates powered by Frankfurter API</i></p>
+                    <p style="font-size: 0.75rem; color: #64748B; margin: 0;"><i>Real-time rates</i></p>
                 </div>
 
                 <p style="color:#64748B;margin-bottom:20px;">${escapeHTML(product.description || '')}</p>
@@ -149,13 +148,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const displayPrice = document.getElementById('displayPrice');
     let exchangeRates = {};
 
+    // ⭐ NEW API: open.er-api.com (Supports PKR, AED, and 160+ currencies)
     async function fetchRates() {
         try {
-            const res = await fetch(`https://api.frankfurter.dev/v1/latest?base=${baseCurrency}`);
+            const res = await fetch(`https://open.er-api.com/v6/latest/${baseCurrency}`);
             const data = await res.json();
-            exchangeRates = data.rates;
-            exchangeRates[baseCurrency] = 1;
+            if (data.result === "success") {
+                exchangeRates = data.rates;
+            } else {
+                throw new Error("API failed");
+            }
         } catch (err) {
+            console.warn("Could not fetch live rates. Using fallback.");
+            // Fallback approximate rates
             exchangeRates = { USD: 1, PKR: 278.5, EUR: 0.92, GBP: 0.79, INR: 83.2, AED: 3.67, CAD: 1.36, AUD: 1.52 };
         }
     }
