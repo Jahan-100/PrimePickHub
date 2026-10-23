@@ -7,8 +7,14 @@ function escapeHTML(s) {
         .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
+// ⭐ Expanded Currency Symbols List
 const currencySymbols = {
-    USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ', CAD: 'C$', AUD: 'A$'
+    USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ', 
+    SAR: 'SAR ', CAD: 'C$', AUD: 'A$', CNY: '¥', JPY: '¥', TRY: '₺', 
+    BDT: '৳', MYR: 'RM ', IDR: 'Rp ', QAR: 'QAR ', KWD: 'KWD ', 
+    BHD: 'BHD ', OMR: 'OMR ', ZAR: 'R ', BRL: 'R$', MXN: 'MX$', 
+    RUB: '₽', KRW: '₩', SGD: 'S$', HKD: 'HK$', NZD: 'NZ$', 
+    CHF: 'CHF ', SEK: 'kr ', NOK: 'kr '
 };
 
 function getVideoHtml(url) {
@@ -107,23 +113,63 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div>
                 <h1 style="font-size:1.8rem;margin-bottom:10px;">${escapeHTML(product.title)}</h1>
                 
-                <!-- CURRENCY CONVERTER UI -->
+                <!-- ⭐ EXPANDED CURRENCY CONVERTER UI ⭐ -->
                 <div style="margin-bottom: 20px; background: #F8FAFC; padding: 15px; border-radius: 8px; border: 1px solid #E2E8F0;">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                         <span style="font-size: 1.4rem; font-weight: bold; color: #FF5A3C;" id="displayPrice">${baseSymbol}${basePrice.toFixed(2)}</span>
-                        <select id="currencySelector" style="padding: 5px 10px; border-radius: 6px; border: 1px solid #CBD5E1; font-weight: bold; color: #1E1B4B; background: #fff; cursor: pointer;">
+                        <select id="currencySelector" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #CBD5E1; font-weight: bold; color: #1E1B4B; background: #fff; cursor: pointer; font-size: 1rem;">
                             <option value="${baseCurrency}">${baseCurrency}</option>
-                            <option value="USD">USD ($)</option>
-                            <option value="PKR">PKR (Rs)</option>
-                            <option value="EUR">EUR (€)</option>
-                            <option value="GBP">GBP (£)</option>
-                            <option value="INR">INR (₹)</option>
-                            <option value="AED">AED (د.إ)</option>
-                            <option value="CAD">CAD (C$)</option>
-                            <option value="AUD">AUD (A$)</option>
+                            
+                            <optgroup label="South Asia">
+                                <option value="PKR">PKR (Rs)</option>
+                                <option value="INR">INR (₹)</option>
+                                <option value="BDT">BDT (৳)</option>
+                            </optgroup>
+                            
+                            <optgroup label="Middle East">
+                                <option value="AED">AED (د.إ)</option>
+                                <option value="SAR">SAR (ر.س)</option>
+                                <option value="QAR">QAR (ر.ق)</option>
+                                <option value="KWD">KWD (د.ك)</option>
+                                <option value="BHD">BHD (د.ب)</option>
+                                <option value="OMR">OMR (ر.ع.)</option>
+                                <option value="TRY">TRY (₺)</option>
+                            </optgroup>
+                            
+                            <optgroup label="Americas">
+                                <option value="USD">USD ($)</option>
+                                <option value="CAD">CAD (C$)</option>
+                                <option value="BRL">BRL (R$)</option>
+                                <option value="MXN">MXN (MX$)</option>
+                            </optgroup>
+                            
+                            <optgroup label="Europe / UK">
+                                <option value="EUR">EUR (€)</option>
+                                <option value="GBP">GBP (£)</option>
+                                <option value="CHF">CHF</option>
+                                <option value="SEK">SEK (kr)</option>
+                                <option value="NOK">NOK (kr)</option>
+                                <option value="RUB">RUB (₽)</option>
+                            </optgroup>
+
+                            <optgroup label="Asia Pacific">
+                                <option value="AUD">AUD (A$)</option>
+                                <option value="NZD">NZD (NZ$)</option>
+                                <option value="CNY">CNY (¥)</option>
+                                <option value="JPY">JPY (¥)</option>
+                                <option value="KRW">KRW (₩)</option>
+                                <option value="SGD">SGD (S$)</option>
+                                <option value="HKD">HKD (HK$)</option>
+                                <option value="MYR">MYR (RM)</option>
+                                <option value="IDR">IDR (Rp)</option>
+                            </optgroup>
+                            
+                            <optgroup label="Africa">
+                                <option value="ZAR">ZAR (R)</option>
+                            </optgroup>
                         </select>
                     </div>
-                    <p style="font-size: 0.75rem; color: #64748B; margin: 0;"><i>Real-time rates</i></p>
+                    <p style="font-size: 0.75rem; color: #64748B; margin: 0;"><i>Real-time rates powered by open.er-api.com</i></p>
                 </div>
 
                 <p style="color:#64748B;margin-bottom:20px;">${escapeHTML(product.description || '')}</p>
@@ -148,7 +194,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const displayPrice = document.getElementById('displayPrice');
     let exchangeRates = {};
 
-    // ⭐ NEW API: open.er-api.com (Supports PKR, AED, and 160+ currencies)
     async function fetchRates() {
         try {
             const res = await fetch(`https://open.er-api.com/v6/latest/${baseCurrency}`);
@@ -160,8 +205,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } catch (err) {
             console.warn("Could not fetch live rates. Using fallback.");
-            // Fallback approximate rates
-            exchangeRates = { USD: 1, PKR: 278.5, EUR: 0.92, GBP: 0.79, INR: 83.2, AED: 3.67, CAD: 1.36, AUD: 1.52 };
+            exchangeRates = { USD: 1, PKR: 278.5, EUR: 0.92, GBP: 0.79, INR: 83.2, AED: 3.67, CAD: 1.36, AUD: 1.52, SAR: 3.75, CNY: 7.23, JPY: 149.5 };
         }
     }
 
