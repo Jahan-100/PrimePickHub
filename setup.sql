@@ -2,14 +2,44 @@
 DROP TABLE IF EXISTS public.affiliate_offers CASCADE;
 DROP TABLE IF EXISTS public.products CASCADE;
 DROP TABLE IF EXISTS public.clicks CASCADE;
+DROP TABLE IF EXISTS public.profiles CASCADE;
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP FUNCTION IF EXISTS public.handle_new_user();
+
+-- ==================== PROFILES (YEH MISSING THA) ====================
+CREATE TABLE public.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT,
+  role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, role) VALUES (NEW.id, NEW.email, 'user');
+  RETURN NEW;
+END; $$;
+
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+CREATE POLICY "users read own profile" ON public.profiles
+  FOR SELECT TO authenticated USING (auth.uid() = id);
+
+CREATE POLICY "admins read all profiles" ON public.profiles
+  FOR SELECT TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
 -- ==================== PRODUCTS ====================
 CREATE TABLE public.products (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   title TEXT NOT NULL,
   slug TEXT UNIQUE NOT NULL,
-  description TEXT, -- Short description
-  review_html TEXT, -- ⭐ SEO Content (300-500 words)
+  description TEXT,
+  review_html TEXT,
   image_url TEXT,
   badge TEXT,
   rating NUMERIC(2,1),
@@ -32,7 +62,7 @@ CREATE TABLE public.affiliate_offers (
   product_id UUID REFERENCES public.products(id) ON DELETE CASCADE,
   store_name TEXT NOT NULL,
   affiliate_url TEXT NOT NULL,
-  price NUMERIC(10,2) NOT NULL, -- ⭐ Price is now REQUIRED for Google Rich Results
+  price NUMERIC(10,2) NOT NULL,
   currency TEXT DEFAULT 'PKR',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
