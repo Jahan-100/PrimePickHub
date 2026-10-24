@@ -4,84 +4,40 @@
 
 function escapeHTML(str) {
     if (str === null || str === undefined) return '';
-    return String(str)
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
-
-function isValidExternalURL(url) {
-    if (typeof url !== 'string') return false;
-    try {
-        const p = new URL(url);
-        return p.protocol === 'https:' || p.protocol === 'http:';
-    } catch { return false; }
-}
-
-function isValidURL(url) {
-    if (!url || typeof url !== 'string') return false;
-    try {
-        const p = new URL(url, window.location.origin);
-        return p.protocol === 'http:' || p.protocol === 'https:';
-    } catch { return false; }
-}
-
-function safeColor(v, fb) {
-    return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb;
-}
-
-function getPrimaryOffer(product) {
-    if (!product || !Array.isArray(product.affiliate_offers)) return null;
-    return product.affiliate_offers.find(
-        o => o && typeof o.store_name === 'string' && isValidExternalURL(o.affiliate_url)
-    ) || null;
-}
-
+function isValidExternalURL(url) { if (typeof url !== 'string') return false; try { const p = new URL(url); return p.protocol === 'https:' || p.protocol === 'http:'; } catch { return false; } }
+function isValidURL(url) { if (!url || typeof url !== 'string') return false; try { const p = new URL(url, window.location.origin); return p.protocol === 'http:' || p.protocol === 'https:'; } catch { return false; } }
+function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb; }
+function getPrimaryOffer(product) { if (!product || !Array.isArray(product.affiliate_offers)) return null; return product.affiliate_offers.find(o => o && typeof o.store_name === 'string' && isValidExternalURL(o.affiliate_url)) || null; }
 function deduplicateProducts(list) {
     if (!Array.isArray(list)) return [];
     const map = new Map();
-    list.forEach(p => {
-        if (!p) return;
-        const k = p.id != null ? `id:${p.id}` : (p.slug ? `slug:${p.slug}` : null);
-        if (k && !map.has(k)) map.set(k, p);
-    });
+    list.forEach(p => { if (!p) return; const k = p.id != null ? `id:${p.id}` : (p.slug ? `slug:${p.slug}` : null); if (k && !map.has(k)) map.set(k, p); });
     return Array.from(map.values());
 }
-
-function showGridMessage(grid, msg) {
-    if (!grid) return;
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;"><p>${escapeHTML(msg)}</p></div>`;
-}
+function showGridMessage(grid, msg) { if (!grid) return; grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;"><p>${escapeHTML(msg)}</p></div>`; }
 
 function renderProductCard(product) {
     if (!product || typeof product !== 'object') return '';
-
     const title = escapeHTML(product.title || 'Untitled');
-    let id = '';
-    if (product.slug) id = `${encodeURIComponent(product.slug)}`;
-    else if (product.id != null) id = `id-${encodeURIComponent(product.id)}`;
-    
+    let id = product.slug ? `${encodeURIComponent(product.slug)}` : (product.id != null ? `id-${encodeURIComponent(product.id)}` : '');
     const hasLink = Boolean(id);
     const productUrl = hasLink ? `/product/${id}` : '#';
     const disabledAttr = hasLink ? '' : 'aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:0.6;"';
-
-    const imageSrc = isValidURL(product.image_url)
-        ? escapeHTML(product.image_url) : 'assets/icon-192.png';
-
+    const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png';
     const r = Number(product.rating);
     const rating = Number.isFinite(r) && r > 0 && r <= 5 ? r : null;
     const rc = Number(product.reviews_count);
     const reviewCount = Number.isInteger(rc) && rc >= 0 ? rc : 0;
     const ratingText = rating !== null ? `★ ${rating.toFixed(1)} (${reviewCount})` : 'Not yet rated';
-
     const primaryOffer = getPrimaryOffer(product);
     const networks = (typeof CONFIG !== 'undefined' && CONFIG.networks) ? CONFIG.networks : {};
     let cta = '';
 
     if (primaryOffer) {
         const storeKey = primaryOffer.store_name.toLowerCase();
-        const cfg = networks[storeKey] ?? networks[primaryOffer.store_name] ?? {
-            name: primaryOffer.store_name, brandColor: '#2563eb', textColor: '#ffffff'
-        };
+        const cfg = networks[storeKey] ?? networks[primaryOffer.store_name] ?? { name: primaryOffer.store_name, brandColor: '#2563eb', textColor: '#ffffff' };
         const bg = safeColor(cfg.brandColor, '#2563eb');
         const fg = safeColor(cfg.textColor, '#ffffff');
         const storeName = escapeHTML(cfg.name || primaryOffer.store_name);
@@ -92,11 +48,9 @@ function renderProductCard(product) {
         const offerCurrency = (primaryOffer.currency || 'USD').toUpperCase();
         const offerSymbol = currencySymbols[offerCurrency] || offerCurrency + ' ';
         
-        // Commission calculation
         const basePrice = parseFloat(primaryOffer.price) || 0;
         const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
         const finalPrice = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice;
-        
         const priceDisplay = primaryOffer.price ? `<div style="font-weight:bold; color:#1E1B4B; margin-bottom:5px;">${offerSymbol}${finalPrice.toFixed(2)}</div>` : '';
 
         cta = `
@@ -110,7 +64,6 @@ function renderProductCard(product) {
     } else {
         cta = `<a href="${productUrl}" ${disabledAttr} class="btn-check-price" style="background:#64748B;">View Details</a>`;
     }
-
     const badge = product.badge ? `<span class="card-badge">${escapeHTML(product.badge)}</span>` : '';
 
     return `
@@ -137,37 +90,30 @@ function renderProductsGrid(products, grid) {
     }
     grid.innerHTML = products.map(renderProductCard).join('');
     grid.querySelectorAll('img.product-thumb').forEach(img => {
-        img.addEventListener('error', function () {
-            this.src = 'assets/icon-192.png';
-        }, { once: true });
+        img.addEventListener('error', function () { this.src = 'assets/icon-192.png'; }, { once: true });
     });
 }
 
-// ⭐ Timer Logic
 let countdownInterval;
 function startCountdown(endDateStr) {
     const countdownEl = document.getElementById('countdownTimer');
     if (!countdownEl) return;
-
     const endDate = new Date(endDateStr).getTime();
     clearInterval(countdownInterval);
 
     countdownInterval = setInterval(() => {
         const now = new Date().getTime();
         const distance = endDate - now;
-
         if (distance < 0) {
             clearInterval(countdownInterval);
             countdownEl.innerHTML = "EXPIRED";
-            setTimeout(() => window.location.reload(), 2000); // Refresh after 2s
+            setTimeout(() => window.location.reload(), 2000);
             return;
         }
-
         const days = Math.floor(distance / (1000 * 60 * 60 * 24));
         const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
         countdownEl.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
     }, 1000);
 }
@@ -176,7 +122,6 @@ async function loadHomepageProducts() {
     const grid = document.getElementById('productGrid');
     const flashGrid = document.getElementById('flashSaleGrid');
     const flashSection = document.getElementById('flashSaleSection');
-    
     if (!grid) return;
     showGridMessage(grid, 'Loading products...');
 
@@ -190,7 +135,6 @@ async function loadHomepageProducts() {
         const flashSaleProducts = [];
         const normalProducts = [];
 
-        // ⭐ Filter Logic
         allProducts.forEach(p => {
             const endDate = p.sale_end_date ? new Date(p.sale_end_date) : null;
             if (endDate && endDate > now) {
@@ -200,7 +144,6 @@ async function loadHomepageProducts() {
             }
         });
 
-        // Render Flash Sale
         if (flashSaleProducts.length > 0) {
             flashSection.style.display = 'block';
             document.getElementById('flashSaleTitle').innerText = flashSaleProducts[0].event_name || 'Limited Time Offer';
@@ -210,7 +153,6 @@ async function loadHomepageProducts() {
             flashSection.style.display = 'none';
         }
 
-        // Render Normal Products
         renderProductsGrid(normalProducts, grid);
 
     } catch (err) {
@@ -225,7 +167,6 @@ function handleSearch() {
     const q = input.value.trim();
     if (q) window.location.href = `search.html?q=${encodeURIComponent(q)}`;
 }
-
 document.addEventListener('DOMContentLoaded', () => {
     loadHomepageProducts();
     const btn = document.getElementById('searchBtn');
