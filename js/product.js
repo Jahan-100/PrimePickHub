@@ -1,3 +1,6 @@
+/**
+ * Product Detail Page with Real-Time Currency Conversion & Optional Commission
+ */
 function escapeHTML(s) {
     if (s === null || s === undefined) return '';
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -52,31 +55,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelector('meta[property="og:description"]')?.setAttribute('content', product.description || '');
 
     const allOffers = product.affiliate_offers || [];
-    
-    // Group Offers: Default vs Variations
     const defaultOffer = allOffers.find(o => !o.variation_name) || allOffers[0] || { price: '0', store_name: 'Store', currency: 'USD', commission_rate: 0 };
     const variations = allOffers.filter(o => o.variation_name);
 
     const baseCurrency = (defaultOffer.currency || 'USD').toUpperCase();
     const baseSymbol = currencySymbols[baseCurrency] || baseCurrency + ' ';
 
-    // Current active offer state
-    let activeOffer = defaultOffer;
+    let activeOffer = variations.length > 0 ? variations[0] : defaultOffer;
 
-    // Render Offers / Buttons
-    const renderBuyButtons = (offer) => {
+    const renderBuyButton = (offer) => {
         const cfg = CONFIG.networks[offer.store_name?.toLowerCase()] || CONFIG.networks.amazon;
         const bg = /^#[0-9a-fA-F]{6}$/.test(cfg.brandColor) ? cfg.brandColor : '#2563eb';
         const fg = /^#[0-9a-fA-F]{6}$/.test(cfg.textColor) ? cfg.textColor : '#ffffff';
         return `<a href="${escapeHTML(offer.affiliate_url || '#')}" target="_blank" rel="noopener noreferrer sponsored"
                    class="btn-check-price js-affiliate-link"
-                   style="background-color:${bg};color:${fg};padding:14px;margin-bottom:10px;display:block;text-align:center;"
+                   style="background-color:${bg};color:${fg};padding:14px;display:block;text-align:center;"
                    data-store="${escapeHTML(offer.store_name)}" data-product-id="${escapeHTML(String(product.id))}" data-url="${escapeHTML(offer.affiliate_url)}">
                    Buy on ${escapeHTML(offer.store_name || 'Store')}
                 </a>`;
     };
 
-    // Render Variations UI
     let variationHtml = '';
     if (variations.length > 0) {
         variationHtml = `
@@ -84,15 +82,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p style="font-weight:bold; margin-bottom:8px;">Select Option:</p>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
                     ${variations.map((v, i) => `
-                        <button class="var-btn" data-index="${i}" style="padding:8px 16px; border:2px solid ${i===0?'#FF5A3C':'#E2E8F0'}; background:#fff; border-radius:6px; cursor:pointer; font-weight:bold; transition:all 0.2s;">
+                        <button class="var-btn" data-index="${i}" style="padding:8px 16px; border:2px solid ${i===0?'#FF5A3C':'#E2E8F0'}; background:#fff; border-radius:6px; cursor:pointer; font-weight:bold; color:${i===0?'#FF5A3C':'#1E1B4B'}; transition:all 0.2s;">
                             ${escapeHTML(v.variation_name)}
                         </button>
                     `).join('')}
                 </div>
             </div>
         `;
-        // Default to first variation
-        activeOffer = variations[0];
     }
 
     let galleryImages = (product.gallery_images && product.gallery_images.length > 0) ? product.gallery_images.filter(Boolean) : [];
@@ -119,9 +115,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div>
                 <h1 style="font-size:1.8rem;margin-bottom:10px;">${escapeHTML(product.title)}</h1>
                 
-                <!-- CURRENCY CONVERTER UI -->
                 <div style="margin-bottom: 20px; background: #F8FAFC; padding: 15px; border-radius: 8px; border: 1px solid #E2E8F0;">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
                         <span style="font-size: 1.4rem; font-weight: bold; color: #FF5A3C;" id="displayPrice"></span>
                         <select id="currencySelector" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #CBD5E1; font-weight: bold; color: #1E1B4B; background: #fff; cursor: pointer; font-size: 1rem;">
                             <option value="${baseCurrency}">${baseCurrency}</option>
@@ -145,12 +140,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </p>
                 </div>
 
-                <!-- Variations UI -->
                 ${variationHtml}
 
-                <div style="margin-bottom:25px;padding:15px;background:#F8FAFC;border-radius:8px;" id="buyButtonContainer">
-                    <!-- Buy Button will render here dynamically -->
-                </div>
+                <div style="margin-bottom:25px;padding:15px;background:#F8FAFC;border-radius:8px;" id="buyButtonContainer"></div>
+                
                 <div style="display:flex;gap:10px;flex-wrap:wrap;">
                     <a href="https://wa.me/?text=${shareText}%20${shareUrl}" target="_blank" rel="noopener" style="padding:8px 16px;background:#25D366;color:#fff;border-radius:6px;text-decoration:none;font-size:0.9rem;">Share on WhatsApp</a>
                     <a href="https://www.facebook.com/sharer/sharer.php?u=${shareUrl}" target="_blank" rel="noopener" style="padding:8px 16px;background:#1877F2;color:#fff;border-radius:6px;text-decoration:none;font-size:0.9rem;">Share on Facebook</a>
@@ -180,39 +173,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Function to update UI based on active offer and selected currency
     function updateUI(currency) {
         const rate = exchangeRates[currency] || 1;
         
-        // 1. Calculate Final Price for current active offer
+        // ⭐ Calculate Final Price (Commission optional)
         const basePrice = parseFloat(activeOffer.price) || 0;
         const commissionRate = parseFloat(activeOffer.commission_rate) || 0;
-        const finalBasePrice = basePrice + (basePrice * (commissionRate / 100));
         
-        // 2. Convert and display
+        const finalBasePrice = commissionRate > 0 
+            ? basePrice + (basePrice * (commissionRate / 100)) 
+            : basePrice;
+        
         const converted = finalBasePrice * rate;
         const symbol = currencySymbols[currency] || currency + ' ';
         displayPrice.innerText = `${symbol}${converted.toFixed(2)}`;
 
-        // 3. Update Buy Button
-        buyButtonContainer.innerHTML = renderBuyButtons(activeOffer);
+        buyButtonContainer.innerHTML = renderBuyButton(activeOffer);
     }
 
     await fetchRates();
-    updateUI(baseCurrency); // Initial render
+    updateUI(baseCurrency);
 
-    // Currency change listener
     currencySelector.addEventListener('change', (e) => updateUI(e.target.value));
 
-    // Variation buttons listener
     if (variations.length > 0) {
         document.querySelectorAll('.var-btn').forEach(btn => {
             btn.addEventListener('click', function() {
-                // Update active offer
                 const idx = parseInt(this.dataset.index);
                 activeOffer = variations[idx];
 
-                // Update button styles
                 document.querySelectorAll('.var-btn').forEach(b => {
                     b.style.borderColor = '#E2E8F0';
                     b.style.color = '#1E1B4B';
@@ -220,13 +209,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 this.style.borderColor = '#FF5A3C';
                 this.style.color = '#FF5A3C';
 
-                // Update Price and Buy Button
                 updateUI(currencySelector.value);
             });
         });
-        // Set initial selected style for first variation
-        document.querySelector('.var-btn').style.borderColor = '#FF5A3C';
-        document.querySelector('.var-btn').style.color = '#FF5A3C';
     }
 
     container.querySelectorAll('.gallery-thumb').forEach(thumb => {
@@ -237,20 +222,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // JSON-LD Schema (Uses default or first variation)
-    const schemaPrice = parseFloat(activeOffer.price) + (parseFloat(activeOffer.price) * (parseFloat(activeOffer.commission_rate) / 100));
     const jsonLd = {
         "@context": "https://schema.org/", "@type": "Product", "name": product.title,
         "image": [product.image_url].concat(product.gallery_images || []).filter(Boolean),
         "description": product.description || product.title,
         "offers": allOffers.map(o => {
-             const p = parseFloat(o.price) || 0;
-             const c = parseFloat(o.commission_rate) || 0;
-             return {
+            const p = parseFloat(o.price) || 0;
+            const c = parseFloat(o.commission_rate) || 0;
+            const finalP = c > 0 ? p + (p * (c / 100)) : p;
+            return {
                 "@type": "Offer", "url": o.affiliate_url, "priceCurrency": o.currency || "USD",
-                "price": (p + (p * (c / 100))).toFixed(2), "availability": "https://schema.org/InStock",
+                "price": finalP.toFixed(2), "availability": "https://schema.org/InStock",
                 "seller": { "@type": "Organization", "name": o.store_name }
-             };
+            };
         })
     };
     if (product.rating && product.reviews_count > 0) jsonLd.aggregateRating = { "@type": "AggregateRating", "ratingValue": product.rating, "reviewCount": product.reviews_count };
