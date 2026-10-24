@@ -1,3 +1,7 @@
+/**
+ * PrimePickHub Admin Dashboard with Commission & Variations
+ */
+
 let allProducts = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -133,7 +137,12 @@ function renderTable() {
         const defaultOffer = p.affiliate_offers?.find(o => !o.variation_name) || p.affiliate_offers?.[0] || {};
         const basePrice = parseFloat(defaultOffer.price) || 0;
         const commissionRate = parseFloat(defaultOffer.commission_rate) || 0;
-        const finalPrice = basePrice + (basePrice * (commissionRate / 100));
+        
+        // ⭐ Calculate Final Price (Base + Commission if exists)
+        const finalPrice = commissionRate > 0 
+            ? basePrice + (basePrice * (commissionRate / 100)) 
+            : basePrice;
+        
         const priceStr = defaultOffer.price ? `${finalPrice.toFixed(2)} ${defaultOffer.currency || 'USD'}` : 'N/A';
 
         return `
@@ -150,7 +159,6 @@ function renderTable() {
     }).join('');
 }
 
-// ⭐ Variation Row Add Function
 window.addVariationRow = function(name = '', price = '', commission = '', url = '') {
     const container = document.getElementById('variationsContainer');
     const div = document.createElement('div');
@@ -158,7 +166,7 @@ window.addVariationRow = function(name = '', price = '', commission = '', url = 
     div.innerHTML = `
         <input type="text" placeholder="Size/Color (e.g. M, L, Red)" value="${name}" class="var-name" required>
         <input type="number" step="0.01" placeholder="Price" value="${price}" class="var-price" required>
-        <input type="number" step="0.1" placeholder="Comm %" value="${commission}" class="var-comm" style="max-width:80px;">
+        <input type="number" step="0.1" placeholder="Comm % (Optional)" value="${commission}" class="var-comm">
         <input type="url" placeholder="Affiliate URL (Optional)" value="${url}" class="var-url">
         <button type="button" class="btn-remove-var" onclick="this.parentElement.remove()">X</button>
     `;
@@ -177,7 +185,6 @@ window.editProduct = async function(id) {
         
         if (error) throw error;
         
-        // Default offer (no variation name)
         const defaultOffer = p.affiliate_offers?.find(o => !o.variation_name) || p.affiliate_offers?.[0] || {};
         
         document.getElementById('pId').value = p.id;
@@ -194,7 +201,8 @@ window.editProduct = async function(id) {
         
         document.getElementById('pStore').value = defaultOffer.store_name || '';
         document.getElementById('pPrice').value = defaultOffer.price || '';
-        document.getElementById('pCommission').value = defaultOffer.commission_rate || 0;
+        // Commission: agar >0 hai to show, warna khali
+        document.getElementById('pCommission').value = (defaultOffer.commission_rate && defaultOffer.commission_rate > 0) ? defaultOffer.commission_rate : '';
         document.getElementById('pCurrency').value = defaultOffer.currency || 'USD';
         document.getElementById('pAffUrl').value = defaultOffer.affiliate_url || '';
         
@@ -203,13 +211,13 @@ window.editProduct = async function(id) {
         document.getElementById('pFeatured').checked = p.is_featured || false;
         document.getElementById('pTrending').checked = p.is_trending || false;
 
-        // Populate Variations
         const varContainer = document.getElementById('variationsContainer');
         varContainer.innerHTML = '';
         
         const variations = p.affiliate_offers?.filter(o => o.variation_name) || [];
         variations.forEach(v => {
-            addVariationRow(v.variation_name, v.price, v.commission_rate, v.affiliate_url);
+            const commVal = (v.commission_rate && v.commission_rate > 0) ? v.commission_rate : '';
+            addVariationRow(v.variation_name, v.price, commVal, v.affiliate_url);
         });
 
         document.getElementById('formTitle').innerText = "Edit Product";
@@ -270,7 +278,11 @@ function setupProductForm() {
         
         const store = document.getElementById('pStore').value.trim().toLowerCase();
         const price = parseFloat(document.getElementById('pPrice').value) || 0;
-        const commission = parseFloat(document.getElementById('pCommission').value) || 0;
+        
+        // ⭐ Commission: Khali ho toh 0, warna value
+        const commInput = document.getElementById('pCommission').value.trim();
+        const commission = commInput === '' ? 0 : (parseFloat(commInput) || 0);
+        
         const currency = document.getElementById('pCurrency').value;
         const affUrl = document.getElementById('pAffUrl').value.trim();
         
@@ -281,7 +293,7 @@ function setupProductForm() {
 
         const galleryImages = galleryText ? galleryText.split('\n').map(u => u.trim()).filter(u => u.length > 0) : [];
 
-        if (!title || !slug || !img || !store) return alert('Please fill all required fields (Title, Slug, Image, Store).');
+        if (!title || !slug || !img || !store || !affUrl) return alert('Please fill all required fields.');
 
         const productData = {
             title, slug, image_url: img, category_slug: category,
@@ -291,23 +303,22 @@ function setupProductForm() {
             gallery_images: galleryImages, video_url: videoUrl || null
         };
 
-        // 1. Main Offer Data (Default)
         const mainOfferData = {
             store_name: store,
             price: price,
             commission_rate: commission,
             currency: currency,
-            affiliate_url: affUrl || '#',
+            affiliate_url: affUrl,
             variation_name: null
         };
 
-        // 2. Get Variations Data
         const variations = [];
         document.querySelectorAll('.variation-row').forEach(row => {
             const vName = row.querySelector('.var-name').value.trim();
             const vPrice = parseFloat(row.querySelector('.var-price').value);
-            const vComm = parseFloat(row.querySelector('.var-comm').value) || commission; // Fallback to main commission
-            const vUrl = row.querySelector('.var-url').value.trim() || affUrl; // Fallback to main URL
+            const vCommInput = row.querySelector('.var-comm').value.trim();
+            const vComm = vCommInput === '' ? commission : (parseFloat(vCommInput) || 0);
+            const vUrl = row.querySelector('.var-url').value.trim() || affUrl;
 
             if (vName && !isNaN(vPrice)) {
                 variations.push({
@@ -328,7 +339,6 @@ function setupProductForm() {
                 const { error: prodErr } = await window.supabaseClient.from('products').update(productData).eq('id', id);
                 if (prodErr) throw prodErr;
                 
-                // Delete old offers to replace with new ones
                 await window.supabaseClient.from('affiliate_offers').delete().eq('product_id', id);
             } else {
                 const { data: newProduct, error: prodErr } = await window.supabaseClient.from('products').insert([productData]).select().single();
@@ -336,13 +346,11 @@ function setupProductForm() {
                 productId = newProduct.id;
             }
 
-            // Insert Main Offer (if price > 0)
-            if (price > 0) {
+            if (price > 0 || variations.length === 0) {
                 mainOfferData.product_id = productId;
                 await window.supabaseClient.from('affiliate_offers').insert([mainOfferData]);
             }
 
-            // Insert Variations
             if (variations.length > 0) {
                 variations.forEach(v => v.product_id = productId);
                 const { error: varErr } = await window.supabaseClient.from('affiliate_offers').insert(variations);
