@@ -1,6 +1,3 @@
-/**
- * Product Detail Page with Real-Time Currency Conversion
- */
 function escapeHTML(s) {
     if (s === null || s === undefined) return '';
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -18,9 +15,7 @@ const currencySymbols = {
 
 function getVideoHtml(url) {
     if (!url || typeof url !== 'string') return '';
-    if (/\.(mp4|webm|ogg)(\?|$)/i.test(url)) {
-        return `<video controls style="width:100%;border-radius:12px;background:#000;"><source src="${escapeHTML(url)}"></video>`;
-    }
+    if (/\.(mp4|webm|ogg)(\?|$)/i.test(url)) return `<video controls style="width:100%;border-radius:12px;background:#000;"><source src="${escapeHTML(url)}"></video>`;
     let embedUrl = url;
     const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
     if (ytMatch) embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
@@ -35,25 +30,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     let slug = params.get('slug');
     let id = params.get('id');
-
-    if (!slug && path.startsWith('/product/')) {
-        slug = path.replace('/product/', '').split('/')[0];
-    }
+    if (!slug && path.startsWith('/product/')) slug = path.replace('/product/', '').split('/')[0];
 
     const container = document.getElementById('productContainer');
+    if (!slug && !id) { window.location.href = '/index.html'; return; }
 
-    if (!slug && !id) {
-        window.location.href = '/index.html';
-        return;
-    }
-
-    const product = slug
-        ? await API.getProductBySlug(slug)
-        : await (async () => {
-            if (!window.supabaseClient) return null;
-            const { data } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').eq('id', id).single();
-            return data;
-        })();
+    const product = slug ? await API.getProductBySlug(slug) : await (async () => {
+        if (!window.supabaseClient) return null;
+        const { data } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').eq('id', id).single();
+        return data;
+    })();
 
     if (!product) {
         container.innerHTML = '<h2 style="text-align:center;padding:40px;">Product not found. <a href="/index.html">Return Home</a></h2>';
@@ -65,35 +51,56 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelector('meta[property="og:image"]')?.setAttribute('content', product.image_url || '');
     document.querySelector('meta[property="og:description"]')?.setAttribute('content', product.description || '');
 
-    const offers = (product.affiliate_offers && product.affiliate_offers.length > 0) ? product.affiliate_offers : [];
-    const primaryOffer = offers[0] || { price: '0', store_name: 'Store', currency: 'USD' };
+    const allOffers = product.affiliate_offers || [];
+    
+    // Group Offers: Default vs Variations
+    const defaultOffer = allOffers.find(o => !o.variation_name) || allOffers[0] || { price: '0', store_name: 'Store', currency: 'USD', commission_rate: 0 };
+    const variations = allOffers.filter(o => o.variation_name);
 
-    const baseCurrency = (primaryOffer.currency || 'USD').toUpperCase();
-    const basePrice = parseFloat(primaryOffer.price) || 0;
+    const baseCurrency = (defaultOffer.currency || 'USD').toUpperCase();
     const baseSymbol = currencySymbols[baseCurrency] || baseCurrency + ' ';
 
-    const offersHtml = offers.length > 0
-        ? offers.map(o => {
-            const cfg = CONFIG.networks[o.store_name.toLowerCase()] || CONFIG.networks.amazon;
-            const bg = /^#[0-9a-fA-F]{6}$/.test(cfg.brandColor) ? cfg.brandColor : '#2563eb';
-            const fg = /^#[0-9a-fA-F]{6}$/.test(cfg.textColor) ? cfg.textColor : '#ffffff';
-            return `<a href="${escapeHTML(o.affiliate_url)}" target="_blank" rel="noopener noreferrer sponsored"
-                       class="btn-check-price js-affiliate-link"
-                       style="background-color:${bg};color:${fg};padding:14px;margin-bottom:10px;display:block;text-align:center;"
-                       data-store="${escapeHTML(o.store_name)}" data-product-id="${escapeHTML(String(product.id))}" data-url="${escapeHTML(o.affiliate_url)}">
-                       Buy on ${escapeHTML(o.store_name)}
-                    </a>`;
-        }).join('')
-        : '<p style="color:#64748B;">No offers available yet.</p>';
+    // Current active offer state
+    let activeOffer = defaultOffer;
+
+    // Render Offers / Buttons
+    const renderBuyButtons = (offer) => {
+        const cfg = CONFIG.networks[offer.store_name?.toLowerCase()] || CONFIG.networks.amazon;
+        const bg = /^#[0-9a-fA-F]{6}$/.test(cfg.brandColor) ? cfg.brandColor : '#2563eb';
+        const fg = /^#[0-9a-fA-F]{6}$/.test(cfg.textColor) ? cfg.textColor : '#ffffff';
+        return `<a href="${escapeHTML(offer.affiliate_url || '#')}" target="_blank" rel="noopener noreferrer sponsored"
+                   class="btn-check-price js-affiliate-link"
+                   style="background-color:${bg};color:${fg};padding:14px;margin-bottom:10px;display:block;text-align:center;"
+                   data-store="${escapeHTML(offer.store_name)}" data-product-id="${escapeHTML(String(product.id))}" data-url="${escapeHTML(offer.affiliate_url)}">
+                   Buy on ${escapeHTML(offer.store_name || 'Store')}
+                </a>`;
+    };
+
+    // Render Variations UI
+    let variationHtml = '';
+    if (variations.length > 0) {
+        variationHtml = `
+            <div style="margin-bottom: 15px;">
+                <p style="font-weight:bold; margin-bottom:8px;">Select Option:</p>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    ${variations.map((v, i) => `
+                        <button class="var-btn" data-index="${i}" style="padding:8px 16px; border:2px solid ${i===0?'#FF5A3C':'#E2E8F0'}; background:#fff; border-radius:6px; cursor:pointer; font-weight:bold; transition:all 0.2s;">
+                            ${escapeHTML(v.variation_name)}
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+        // Default to first variation
+        activeOffer = variations[0];
+    }
 
     let galleryImages = (product.gallery_images && product.gallery_images.length > 0) ? product.gallery_images.filter(Boolean) : [];
     if (galleryImages.length === 0 && product.image_url) galleryImages = [product.image_url];
     const mainImage = galleryImages[0] || '/assets/icon-192.png';
 
     const thumbnailsHtml = galleryImages.length > 1
-        ? galleryImages.map((url, i) => `
-            <img src="${escapeHTML(url)}" alt="View ${i + 1}" class="gallery-thumb" data-src="${escapeHTML(url)}"
-                 style="width:70px;height:70px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid ${i === 0 ? '#FF5A3C' : '#E2E8F0'};transition:border-color 0.2s;">`).join('')
+        ? galleryImages.map((url, i) => `<img src="${escapeHTML(url)}" alt="View ${i + 1}" class="gallery-thumb" data-src="${escapeHTML(url)}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid ${i === 0 ? '#FF5A3C' : '#E2E8F0'};transition:border-color 0.2s;">`).join('')
         : '';
 
     const videoHtml = product.video_url ? `<div style="background:#fff; padding:30px; border-radius:12px; border:1px solid #E2E8F0; margin-bottom:20px;"><h2 style="margin-bottom:15px; border-bottom:2px solid #FF5A3C; padding-bottom:10px; display:inline-block;">Product Video</h2>${getVideoHtml(product.video_url)}</div>` : '';
@@ -115,57 +122,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <!-- CURRENCY CONVERTER UI -->
                 <div style="margin-bottom: 20px; background: #F8FAFC; padding: 15px; border-radius: 8px; border: 1px solid #E2E8F0;">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                        <span style="font-size: 1.4rem; font-weight: bold; color: #FF5A3C;" id="displayPrice">${baseSymbol}${basePrice.toFixed(2)}</span>
+                        <span style="font-size: 1.4rem; font-weight: bold; color: #FF5A3C;" id="displayPrice"></span>
                         <select id="currencySelector" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #CBD5E1; font-weight: bold; color: #1E1B4B; background: #fff; cursor: pointer; font-size: 1rem;">
                             <option value="${baseCurrency}">${baseCurrency}</option>
-                            
-                            <optgroup label="South Asia">
-                                <option value="PKR">PKR (Rs)</option>
-                                <option value="INR">INR (₹)</option>
-                                <option value="BDT">BDT (৳)</option>
-                            </optgroup>
-                            
-                            <optgroup label="Middle East">
-                                <option value="AED">AED (د.إ)</option>
-                                <option value="SAR">SAR (ر.س)</option>
-                                <option value="QAR">QAR (ر.ق)</option>
-                                <option value="KWD">KWD (د.ك)</option>
-                                <option value="BHD">BHD (د.ب)</option>
-                                <option value="OMR">OMR (ر.ع.)</option>
-                                <option value="TRY">TRY (₺)</option>
-                            </optgroup>
-                            
-                            <optgroup label="Americas">
-                                <option value="USD">USD ($)</option>
-                                <option value="CAD">CAD (C$)</option>
-                                <option value="BRL">BRL (R$)</option>
-                                <option value="MXN">MXN (MX$)</option>
-                            </optgroup>
-                            
-                            <optgroup label="Europe / UK">
-                                <option value="EUR">EUR (€)</option>
-                                <option value="GBP">GBP (£)</option>
-                                <option value="CHF">CHF</option>
-                                <option value="SEK">SEK (kr)</option>
-                                <option value="NOK">NOK (kr)</option>
-                                <option value="RUB">RUB (₽)</option>
-                            </optgroup>
-
-                            <optgroup label="Asia Pacific">
-                                <option value="AUD">AUD (A$)</option>
-                                <option value="NZD">NZD (NZ$)</option>
-                                <option value="CNY">CNY (¥)</option>
-                                <option value="JPY">JPY (¥)</option>
-                                <option value="KRW">KRW (₩)</option>
-                                <option value="SGD">SGD (S$)</option>
-                                <option value="HKD">HKD (HK$)</option>
-                                <option value="MYR">MYR (RM)</option>
-                                <option value="IDR">IDR (Rp)</option>
-                            </optgroup>
-                            
-                            <optgroup label="Africa">
-                                <option value="ZAR">ZAR (R)</option>
-                            </optgroup>
+                            <optgroup label="South Asia"><option value="PKR">PKR (Rs)</option><option value="INR">INR (₹)</option><option value="BDT">BDT (৳)</option></optgroup>
+                            <optgroup label="Middle East"><option value="AED">AED (د.إ)</option><option value="SAR">SAR (ر.س)</option><option value="QAR">QAR (ر.ق)</option><option value="KWD">KWD (د.ك)</option><option value="BHD">BHD (د.ب)</option><option value="OMR">OMR (ر.ع.)</option><option value="TRY">TRY (₺)</option></optgroup>
+                            <optgroup label="Americas"><option value="USD">USD ($)</option><option value="CAD">CAD (C$)</option><option value="BRL">BRL (R$)</option><option value="MXN">MXN (MX$)</option></optgroup>
+                            <optgroup label="Europe / UK"><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option><option value="CHF">CHF</option><option value="SEK">SEK (kr)</option><option value="NOK">NOK (kr)</option><option value="RUB">RUB (₽)</option></optgroup>
+                            <optgroup label="Asia Pacific"><option value="AUD">AUD (A$)</option><option value="NZD">NZD (NZ$)</option><option value="CNY">CNY (¥)</option><option value="JPY">JPY (¥)</option><option value="KRW">KRW (₩)</option><option value="SGD">SGD (S$)</option><option value="HKD">HKD (HK$)</option><option value="MYR">MYR (RM)</option><option value="IDR">IDR (Rp)</option></optgroup>
+                            <optgroup label="Africa"><option value="ZAR">ZAR (R)</option></optgroup>
                         </select>
                     </div>
                     <p style="font-size: 0.75rem; color: #64748B; margin: 0;"><i>Real-time rates powered by open.er-api.com</i></p>
@@ -173,7 +138,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 <p style="color:#64748B;margin-bottom:20px;">${escapeHTML(product.description || '')}</p>
                 
-                <!-- ⭐ HIGHLIGHTED NOTICE BOX ⭐ -->
                 <div style="background-color:#FEF3C7; border-left:4px solid #F59E0B; padding:12px 15px; margin-bottom:15px; border-radius:6px; display:flex; align-items:flex-start; gap:10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
                     <i class="fa-solid fa-circle-info" style="color:#D97706; font-size:1.2rem; margin-top:2px;"></i>
                     <p style="font-size:0.95rem; color:#92400E; margin:0; font-weight:600; line-height:1.5;">
@@ -181,8 +145,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </p>
                 </div>
 
-                <div style="margin-bottom:25px;padding:15px;background:#F8FAFC;border-radius:8px;">
-                    ${offersHtml}
+                <!-- Variations UI -->
+                ${variationHtml}
+
+                <div style="margin-bottom:25px;padding:15px;background:#F8FAFC;border-radius:8px;" id="buyButtonContainer">
+                    <!-- Buy Button will render here dynamically -->
                 </div>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;">
                     <a href="https://wa.me/?text=${shareText}%20${shareUrl}" target="_blank" rel="noopener" style="padding:8px 16px;background:#25D366;color:#fff;border-radius:6px;text-decoration:none;font-size:0.9rem;">Share on WhatsApp</a>
@@ -199,36 +166,68 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const currencySelector = document.getElementById('currencySelector');
     const displayPrice = document.getElementById('displayPrice');
+    const buyButtonContainer = document.getElementById('buyButtonContainer');
     let exchangeRates = {};
 
     async function fetchRates() {
         try {
             const res = await fetch(`https://open.er-api.com/v6/latest/${baseCurrency}`);
             const data = await res.json();
-            if (data.result === "success") {
-                exchangeRates = data.rates;
-            } else {
-                throw new Error("API failed");
-            }
+            if (data.result === "success") exchangeRates = data.rates;
+            else throw new Error("API failed");
         } catch (err) {
-            console.warn("Could not fetch live rates. Using fallback.");
             exchangeRates = { USD: 1, PKR: 278.5, EUR: 0.92, GBP: 0.79, INR: 83.2, AED: 3.67, CAD: 1.36, AUD: 1.52, SAR: 3.75, CNY: 7.23, JPY: 149.5 };
         }
     }
 
-    function updatePrice(currency) {
-        const rate = exchangeRates[currency];
-        if (!rate) return;
-        const converted = basePrice * rate;
+    // Function to update UI based on active offer and selected currency
+    function updateUI(currency) {
+        const rate = exchangeRates[currency] || 1;
+        
+        // 1. Calculate Final Price for current active offer
+        const basePrice = parseFloat(activeOffer.price) || 0;
+        const commissionRate = parseFloat(activeOffer.commission_rate) || 0;
+        const finalBasePrice = basePrice + (basePrice * (commissionRate / 100));
+        
+        // 2. Convert and display
+        const converted = finalBasePrice * rate;
         const symbol = currencySymbols[currency] || currency + ' ';
         displayPrice.innerText = `${symbol}${converted.toFixed(2)}`;
+
+        // 3. Update Buy Button
+        buyButtonContainer.innerHTML = renderBuyButtons(activeOffer);
     }
 
     await fetchRates();
+    updateUI(baseCurrency); // Initial render
 
-    currencySelector.addEventListener('change', (e) => {
-        updatePrice(e.target.value);
-    });
+    // Currency change listener
+    currencySelector.addEventListener('change', (e) => updateUI(e.target.value));
+
+    // Variation buttons listener
+    if (variations.length > 0) {
+        document.querySelectorAll('.var-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Update active offer
+                const idx = parseInt(this.dataset.index);
+                activeOffer = variations[idx];
+
+                // Update button styles
+                document.querySelectorAll('.var-btn').forEach(b => {
+                    b.style.borderColor = '#E2E8F0';
+                    b.style.color = '#1E1B4B';
+                });
+                this.style.borderColor = '#FF5A3C';
+                this.style.color = '#FF5A3C';
+
+                // Update Price and Buy Button
+                updateUI(currencySelector.value);
+            });
+        });
+        // Set initial selected style for first variation
+        document.querySelector('.var-btn').style.borderColor = '#FF5A3C';
+        document.querySelector('.var-btn').style.color = '#FF5A3C';
+    }
 
     container.querySelectorAll('.gallery-thumb').forEach(thumb => {
         thumb.addEventListener('click', function () {
@@ -238,14 +237,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
+    // JSON-LD Schema (Uses default or first variation)
+    const schemaPrice = parseFloat(activeOffer.price) + (parseFloat(activeOffer.price) * (parseFloat(activeOffer.commission_rate) / 100));
     const jsonLd = {
         "@context": "https://schema.org/", "@type": "Product", "name": product.title,
         "image": [product.image_url].concat(product.gallery_images || []).filter(Boolean),
         "description": product.description || product.title,
-        "offers": offers.map(o => ({
-            "@type": "Offer", "url": o.affiliate_url, "priceCurrency": o.currency || "USD",
-            "price": o.price, "availability": "https://schema.org/InStock", "seller": { "@type": "Organization", "name": o.store_name }
-        }))
+        "offers": allOffers.map(o => {
+             const p = parseFloat(o.price) || 0;
+             const c = parseFloat(o.commission_rate) || 0;
+             return {
+                "@type": "Offer", "url": o.affiliate_url, "priceCurrency": o.currency || "USD",
+                "price": (p + (p * (c / 100))).toFixed(2), "availability": "https://schema.org/InStock",
+                "seller": { "@type": "Organization", "name": o.store_name }
+             };
+        })
     };
     if (product.rating && product.reviews_count > 0) jsonLd.aggregateRating = { "@type": "AggregateRating", "ratingValue": product.rating, "reviewCount": product.reviews_count };
     const script = document.createElement('script'); script.type = 'application/ld+json'; script.text = JSON.stringify(jsonLd); document.head.appendChild(script);
