@@ -1,8 +1,4 @@
-/**
- * PrimePickHub Admin Dashboard with Filters, Edit, Delete
- */
-
-let allProducts = []; // Global array to store fetched products for filtering
+let allProducts = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     if (typeof API === 'undefined' || !API.getCurrentUser) {
@@ -21,10 +17,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     showDashboard();
     await loadStats();
-    await loadProductsList(); // Load products and populate filters
+    await loadProductsList();
     setupProductForm();
     
-    // Attach event listeners for filters
     document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
     document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
 });
@@ -73,7 +68,6 @@ async function loadStats() {
     }
 }
 
-// ⭐ Fetch Data and Populate Filters
 async function loadProductsList() {
     const tbody = document.getElementById('productListBody');
     if (!tbody) return;
@@ -88,10 +82,8 @@ async function loadProductsList() {
 
         allProducts = products || [];
         
-        // 1. Populate Filter Dropdown (Unique Categories)
         const categoryFilter = document.getElementById('adminCategoryFilter');
         if (categoryFilter) {
-            // Get unique categories from DB, and merge with default ones
             const defaultCats = ['electronics', 'fashion', 'home-kitchen', 'beauty', 'sports'];
             const dbCats = [...new Set(allProducts.map(p => p.category_slug).filter(Boolean))];
             const allCats = [...new Set([...defaultCats, ...dbCats])];
@@ -100,7 +92,6 @@ async function loadProductsList() {
                 allCats.map(c => `<option value="${c}">${c.charAt(0).toUpperCase() + c.slice(1).replace('-', ' ')}</option>`).join('');
         }
 
-        // 2. Populate Add/Edit Form Dropdown
         const addCategorySelect = document.getElementById('pCategory');
         if (addCategorySelect) {
             const defaultCats = ['electronics', 'fashion', 'home-kitchen', 'beauty', 'sports'];
@@ -112,7 +103,7 @@ async function loadProductsList() {
             ).join('');
         }
 
-        renderTable(); // Render the table with current filters
+        renderTable();
 
     } catch (err) {
         console.error('List Load Error:', err);
@@ -120,7 +111,6 @@ async function loadProductsList() {
     }
 }
 
-// ⭐ Filter and Render Table
 function renderTable() {
     const tbody = document.getElementById('productListBody');
     if (!tbody) return;
@@ -128,7 +118,6 @@ function renderTable() {
     const categoryFilter = document.getElementById('adminCategoryFilter')?.value || 'all';
     const searchQuery = document.getElementById('adminSearchInput')?.value.toLowerCase().trim() || '';
 
-    // Filter Logic: Match Category AND Search Query
     const filteredProducts = allProducts.filter(p => {
         const matchesCategory = categoryFilter === 'all' || p.category_slug === categoryFilter;
         const matchesSearch = p.title.toLowerCase().includes(searchQuery);
@@ -141,13 +130,17 @@ function renderTable() {
     }
 
     tbody.innerHTML = filteredProducts.map(p => {
-        const offer = p.affiliate_offers?.[0] || {};
-        const priceStr = `${offer.price || 0} ${offer.currency || 'USD'}`;
+        const defaultOffer = p.affiliate_offers?.find(o => !o.variation_name) || p.affiliate_offers?.[0] || {};
+        const basePrice = parseFloat(defaultOffer.price) || 0;
+        const commissionRate = parseFloat(defaultOffer.commission_rate) || 0;
+        const finalPrice = basePrice + (basePrice * (commissionRate / 100));
+        const priceStr = defaultOffer.price ? `${finalPrice.toFixed(2)} ${defaultOffer.currency || 'USD'}` : 'N/A';
+
         return `
             <tr>
                 <td><img src="${p.image_url}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;"></td>
                 <td>${p.title}</td>
-                <td>${priceStr}</td>
+                <td><strong style="color:#FF5A3C;">${priceStr}</strong></td>
                 <td>
                     <button class="btn-edit" onclick="editProduct('${p.id}')">Edit</button>
                     <button class="btn-delete" onclick="deleteProduct('${p.id}')">Delete</button>
@@ -157,7 +150,23 @@ function renderTable() {
     }).join('');
 }
 
-// Edit Function
+// ⭐ Variation Row Add Function
+window.addVariationRow = function(name = '', price = '', commission = '', url = '') {
+    const container = document.getElementById('variationsContainer');
+    const div = document.createElement('div');
+    div.className = 'variation-row';
+    div.innerHTML = `
+        <input type="text" placeholder="Size/Color (e.g. M, L, Red)" value="${name}" class="var-name" required>
+        <input type="number" step="0.01" placeholder="Price" value="${price}" class="var-price" required>
+        <input type="number" step="0.1" placeholder="Comm %" value="${commission}" class="var-comm" style="max-width:80px;">
+        <input type="url" placeholder="Affiliate URL (Optional)" value="${url}" class="var-url">
+        <button type="button" class="btn-remove-var" onclick="this.parentElement.remove()">X</button>
+    `;
+    container.appendChild(div);
+}
+
+document.getElementById('addVariationBtn')?.addEventListener('click', () => addVariationRow());
+
 window.editProduct = async function(id) {
     try {
         const { data: p, error } = await window.supabaseClient
@@ -167,10 +176,12 @@ window.editProduct = async function(id) {
             .single();
         
         if (error) throw error;
-        const offer = p.affiliate_offers?.[0] || {};
-
+        
+        // Default offer (no variation name)
+        const defaultOffer = p.affiliate_offers?.find(o => !o.variation_name) || p.affiliate_offers?.[0] || {};
+        
         document.getElementById('pId').value = p.id;
-        document.getElementById('pOfferId').value = offer.id || '';
+        document.getElementById('pOfferId').value = defaultOffer.id || '';
         document.getElementById('pTitle').value = p.title || '';
         document.getElementById('pSlug').value = p.slug || '';
         document.getElementById('pImg').value = p.image_url || '';
@@ -181,15 +192,25 @@ window.editProduct = async function(id) {
         document.getElementById('pRating').value = p.rating || '';
         document.getElementById('pReviewsCount').value = p.reviews_count || 0;
         
-        document.getElementById('pStore').value = offer.store_name || '';
-        document.getElementById('pPrice').value = offer.price || '';
-        document.getElementById('pCurrency').value = offer.currency || 'USD';
-        document.getElementById('pAffUrl').value = offer.affiliate_url || '';
+        document.getElementById('pStore').value = defaultOffer.store_name || '';
+        document.getElementById('pPrice').value = defaultOffer.price || '';
+        document.getElementById('pCommission').value = defaultOffer.commission_rate || 0;
+        document.getElementById('pCurrency').value = defaultOffer.currency || 'USD';
+        document.getElementById('pAffUrl').value = defaultOffer.affiliate_url || '';
         
         document.getElementById('pDesc').value = p.description || '';
         document.getElementById('pReview').value = p.review_html || '';
         document.getElementById('pFeatured').checked = p.is_featured || false;
         document.getElementById('pTrending').checked = p.is_trending || false;
+
+        // Populate Variations
+        const varContainer = document.getElementById('variationsContainer');
+        varContainer.innerHTML = '';
+        
+        const variations = p.affiliate_offers?.filter(o => o.variation_name) || [];
+        variations.forEach(v => {
+            addVariationRow(v.variation_name, v.price, v.commission_rate, v.affiliate_url);
+        });
 
         document.getElementById('formTitle').innerText = "Edit Product";
         document.getElementById('saveBtn').innerText = "Update Product";
@@ -202,18 +223,12 @@ window.editProduct = async function(id) {
     }
 }
 
-// Delete Function
 window.deleteProduct = async function(id) {
     if (!confirm("Are you sure you want to delete this product? This cannot be undone.")) return;
 
     try {
-        const { error } = await window.supabaseClient
-            .from('products')
-            .delete()
-            .eq('id', id);
-
+        const { error } = await window.supabaseClient.from('products').delete().eq('id', id);
         if (error) throw error;
-        
         alert("Product deleted successfully!");
         await loadStats();
         await loadProductsList();
@@ -222,7 +237,6 @@ window.deleteProduct = async function(id) {
     }
 }
 
-// Form Submit Logic
 function setupProductForm() {
     const form = document.getElementById('productForm');
     const cancelBtn = document.getElementById('cancelEditBtn');
@@ -230,6 +244,7 @@ function setupProductForm() {
 
     cancelBtn.addEventListener('click', () => {
         form.reset();
+        document.getElementById('variationsContainer').innerHTML = '';
         document.getElementById('pId').value = '';
         document.getElementById('pOfferId').value = '';
         document.getElementById('formTitle').innerText = "Add New Product";
@@ -241,7 +256,6 @@ function setupProductForm() {
         e.preventDefault();
 
         const id = document.getElementById('pId').value;
-        const offerId = document.getElementById('pOfferId').value;
         const isEditing = id !== '';
 
         const title = document.getElementById('pTitle').value.trim();
@@ -255,7 +269,8 @@ function setupProductForm() {
         const reviewsCount = document.getElementById('pReviewsCount').value ? parseInt(document.getElementById('pReviewsCount').value) : 0;
         
         const store = document.getElementById('pStore').value.trim().toLowerCase();
-        const price = parseFloat(document.getElementById('pPrice').value);
+        const price = parseFloat(document.getElementById('pPrice').value) || 0;
+        const commission = parseFloat(document.getElementById('pCommission').value) || 0;
         const currency = document.getElementById('pCurrency').value;
         const affUrl = document.getElementById('pAffUrl').value.trim();
         
@@ -266,7 +281,7 @@ function setupProductForm() {
 
         const galleryImages = galleryText ? galleryText.split('\n').map(u => u.trim()).filter(u => u.length > 0) : [];
 
-        if (!title || !slug || !img || !store || !price || !affUrl) return alert('Please fill all required fields.');
+        if (!title || !slug || !img || !store) return alert('Please fill all required fields (Title, Slug, Image, Store).');
 
         const productData = {
             title, slug, image_url: img, category_slug: category,
@@ -276,45 +291,74 @@ function setupProductForm() {
             gallery_images: galleryImages, video_url: videoUrl || null
         };
 
-        const offerData = {
+        // 1. Main Offer Data (Default)
+        const mainOfferData = {
             store_name: store,
             price: price,
+            commission_rate: commission,
             currency: currency,
-            affiliate_url: affUrl
+            affiliate_url: affUrl || '#',
+            variation_name: null
         };
 
+        // 2. Get Variations Data
+        const variations = [];
+        document.querySelectorAll('.variation-row').forEach(row => {
+            const vName = row.querySelector('.var-name').value.trim();
+            const vPrice = parseFloat(row.querySelector('.var-price').value);
+            const vComm = parseFloat(row.querySelector('.var-comm').value) || commission; // Fallback to main commission
+            const vUrl = row.querySelector('.var-url').value.trim() || affUrl; // Fallback to main URL
+
+            if (vName && !isNaN(vPrice)) {
+                variations.push({
+                    store_name: store,
+                    price: vPrice,
+                    commission_rate: vComm,
+                    currency: currency,
+                    affiliate_url: vUrl,
+                    variation_name: vName
+                });
+            }
+        });
+
         try {
+            let productId = id;
+
             if (isEditing) {
                 const { error: prodErr } = await window.supabaseClient.from('products').update(productData).eq('id', id);
                 if (prodErr) throw prodErr;
-
-                if (offerId) {
-                    const { error: offErr } = await window.supabaseClient.from('affiliate_offers').update(offerData).eq('id', offerId);
-                    if (offErr) throw offErr;
-                } else {
-                    offerData.product_id = id;
-                    await window.supabaseClient.from('affiliate_offers').insert([offerData]);
-                }
-                alert(`"${title}" updated successfully!`);
+                
+                // Delete old offers to replace with new ones
+                await window.supabaseClient.from('affiliate_offers').delete().eq('product_id', id);
             } else {
                 const { data: newProduct, error: prodErr } = await window.supabaseClient.from('products').insert([productData]).select().single();
                 if (prodErr) throw prodErr;
-
-                offerData.product_id = newProduct.id;
-                const { error: offErr } = await window.supabaseClient.from('affiliate_offers').insert([offerData]);
-                if (offErr) throw offErr;
-                
-                alert(`"${title}" saved successfully!`);
+                productId = newProduct.id;
             }
 
+            // Insert Main Offer (if price > 0)
+            if (price > 0) {
+                mainOfferData.product_id = productId;
+                await window.supabaseClient.from('affiliate_offers').insert([mainOfferData]);
+            }
+
+            // Insert Variations
+            if (variations.length > 0) {
+                variations.forEach(v => v.product_id = productId);
+                const { error: varErr } = await window.supabaseClient.from('affiliate_offers').insert(variations);
+                if (varErr) throw varErr;
+            }
+
+            alert(`"${title}" saved successfully!`);
             form.reset();
+            document.getElementById('variationsContainer').innerHTML = '';
             document.getElementById('pId').value = '';
             document.getElementById('formTitle').innerText = "Add New Product";
             document.getElementById('saveBtn').innerText = "Save Product";
             cancelBtn.style.display = "none";
             
             await loadStats();
-            await loadProductsList(); // Reload table and filters
+            await loadProductsList();
 
         } catch (err) {
             alert('Save error: ' + (err.message || 'Check RLS policies.'));
