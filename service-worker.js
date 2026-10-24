@@ -1,18 +1,35 @@
-const CACHE = 'primepickhub-v1';
+const CACHE = 'primepickhub-v2'; // ⭐ Version update kiya gaya hai
 const ASSETS = ['/', '/index.html', '/css/main.css', '/js/config.js', '/js/api.js', '/js/app.js'];
 
 self.addEventListener('install', e => {
     e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS).catch(() => {})));
-    self.skipWaiting();
+    self.skipWaiting(); // Naya service worker foran activate ho jaye
 });
 
 self.addEventListener('activate', e => {
     e.waitUntil(caches.keys().then(keys =>
         Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
     ));
+    self.clients.claim(); // Naya service worker foran control le le
 });
 
 self.addEventListener('fetch', e => {
     if (e.request.method !== 'GET') return;
-    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+    
+    // ⭐ NETWORK-FIRST STRATEGY (HTML, JS, CSS ke liye)
+    // Yeh pehle internet se nayi file layega, agar internet na ho toh cache se dega.
+    if (e.request.url.includes('.html') || e.request.url.includes('.js') || e.request.url.includes('.css')) {
+        e.respondWith(
+            fetch(e.request)
+                .then(response => {
+                    const responseClone = response.clone();
+                    caches.open(CACHE).then(cache => cache.put(e.request, responseClone));
+                    return response;
+                })
+                .catch(() => caches.match(e.request)) // Agar internet na ho toh cache se do
+        );
+    } else {
+        // Cache-First for images, fonts (jo bar bar nahi badalti)
+        e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+    }
 });
