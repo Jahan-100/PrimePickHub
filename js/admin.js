@@ -23,10 +23,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadStats();
     await loadProductsList();
     setupProductForm();
+    setupToggleList(); // ⭐ Toggle Button Setup
     
     document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
     document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
 });
+
+// ⭐ Show / Hide Product List Toggle Logic
+function setupToggleList() {
+    const toggleBtn = document.getElementById('toggleProductListBtn');
+    const listContainer = document.getElementById('productListContainer');
+
+    if (toggleBtn && listContainer) {
+        toggleBtn.addEventListener('click', () => {
+            if (listContainer.style.display === 'none') {
+                listContainer.style.display = 'block';
+                toggleBtn.textContent = 'Hide Product List';
+                toggleBtn.style.background = '#EF4444'; // Red for hide
+            } else {
+                listContainer.style.display = 'none';
+                toggleBtn.textContent = 'Show Product List';
+                toggleBtn.style.background = '#3B82F6'; // Blue for show
+            }
+        });
+    }
+}
 
 function showLogin() {
     const loginContainer = document.getElementById('loginContainer');
@@ -138,7 +159,6 @@ function renderTable() {
         const basePrice = parseFloat(defaultOffer.price) || 0;
         const commissionRate = parseFloat(defaultOffer.commission_rate) || 0;
         
-        // ⭐ Calculate Final Price (Base + Commission if exists)
         const finalPrice = commissionRate > 0 
             ? basePrice + (basePrice * (commissionRate / 100)) 
             : basePrice;
@@ -201,7 +221,6 @@ window.editProduct = async function(id) {
         
         document.getElementById('pStore').value = defaultOffer.store_name || '';
         document.getElementById('pPrice').value = defaultOffer.price || '';
-        // Commission: agar >0 hai to show, warna khali
         document.getElementById('pCommission').value = (defaultOffer.commission_rate && defaultOffer.commission_rate > 0) ? defaultOffer.commission_rate : '';
         document.getElementById('pCurrency').value = defaultOffer.currency || 'USD';
         document.getElementById('pAffUrl').value = defaultOffer.affiliate_url || '';
@@ -223,6 +242,12 @@ window.editProduct = async function(id) {
         document.getElementById('formTitle').innerText = "Edit Product";
         document.getElementById('saveBtn').innerText = "Update Product";
         document.getElementById('cancelEditBtn').style.display = "block";
+        
+        // Open the list if it's closed
+        const listContainer = document.getElementById('productListContainer');
+        if(listContainer && listContainer.style.display === 'none') {
+            document.getElementById('toggleProductListBtn').click();
+        }
         
         document.getElementById('productForm').scrollIntoView({ behavior: 'smooth' });
 
@@ -279,7 +304,6 @@ function setupProductForm() {
         const store = document.getElementById('pStore').value.trim().toLowerCase();
         const price = parseFloat(document.getElementById('pPrice').value) || 0;
         
-        // ⭐ Commission: Khali ho toh 0, warna value
         const commInput = document.getElementById('pCommission').value.trim();
         const commission = commInput === '' ? 0 : (parseFloat(commInput) || 0);
         
