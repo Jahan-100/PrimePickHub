@@ -2,9 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- ⭐ Mitgo Ad Space Verification Tag ⭐ -->
     <meta name="mitgo-verification" content="e3f69518-ab0c-46db-a669-34aacd83fd21" />
-    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PrimePickHub - Compare & Click The Best Deals</title>
     <meta name="description" content="Compare products across Daraz, Amazon, AliExpress & eBay. Check live prices instantly.">
@@ -17,12 +15,7 @@
     <meta property="og:url" content="https://www.primepickhub.com/">
     <meta property="og:site_name" content="PrimePickHub">
 
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="PrimePickHub">
-    <meta name="twitter:image" content="https://www.primepickhub.com/assets/og-image.jpg">
-
-    <!-- Google Analytics GA4 -->
+    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-7VE3L1Y8PQ"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -36,21 +29,67 @@
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Flash Sale Animated Styles -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,800;1,900&display=swap" rel="stylesheet">
+    <style>
+        .flash-sale-banner {
+            background: linear-gradient(270deg, #FF2E2E, #FF5A3C, #FF8C00);
+            background-size: 600% 600%;
+            animation: gradientBG 4s ease infinite;
+            border-radius: 16px; padding: 25px; color: #fff; margin-bottom: 20px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            flex-wrap: wrap; box-shadow: 0 10px 25px rgba(255, 90, 60, 0.4); 
+            position: relative; overflow: hidden;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .flash-light-effect {
+            position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; 
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%); 
+            animation: rotateLight 10s linear infinite; pointer-events: none;
+        }
+        @keyframes rotateLight {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .flash-title {
+            font-family: 'Poppins', sans-serif; font-weight: 900; font-style: italic;
+            font-size: 2.2rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: pulseText 1.5s infinite; margin: 0; display: flex; align-items: center; gap: 10px;
+        }
+        @keyframes pulseText {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+        .marquee-container {
+            overflow: hidden; white-space: nowrap; width: 100%; max-width: 350px; margin-top: 8px;
+            mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+        }
+        .marquee-text {
+            display: inline-block; animation: marquee 8s linear infinite;
+            font-size: 1rem; font-weight: 600; opacity: 0.95; margin: 0;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .timer-box {
+            background: rgba(0,0,0,0.35); padding: 12px 20px; border-radius: 12px;
+            text-align: center; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);
+            z-index: 1; box-shadow: inset 0 0 15px rgba(0,0,0,0.3);
+        }
+        .timer-text {
+            font-size: 1.6rem; font-weight: 900; font-family: 'Courier New', monospace;
+            color: #fff; text-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700;
+        }
+    </style>
 
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "PrimePickHub",
-      "url": "https://www.primepickhub.com/",
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": "https://www.primepickhub.com/search.html?q={search_term_string}",
-        "query-input": "required name=search_term_string"
-      }
-    }
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <header class="header">
@@ -60,7 +99,6 @@
                 <input type="text" id="searchInput" placeholder="Search products...">
                 <button id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i></button>
             </div>
-            <!-- Admin link yahan se hata diya gaya hai -->
         </div>
         <nav class="categories-nav">
             <a href="category.html?cat=electronics">Electronics</a>
@@ -73,18 +111,23 @@
 
     <main class="container">
         
-        <!-- ⭐ Flash Sale / Event Section ⭐ -->
+        <!-- ⭐ Flash Sale Section ⭐ -->
         <div id="flashSaleSection" style="display: none; margin-bottom: 40px;">
-            <div style="background: linear-gradient(135deg, #FF5A3C 0%, #FF2E2E 100%); border-radius: 12px; padding: 20px; color: #fff; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; box-shadow: 0 4px 15px rgba(255, 90, 60, 0.3);">
-                <div>
-                    <h2 style="margin: 0; font-size: 1.8rem; display: flex; align-items: center; gap: 10px;">
+            <div class="flash-sale-banner">
+                <div class="flash-light-effect"></div>
+                <div style="z-index: 1; width: 100%; max-width: 500px;">
+                    <h2 class="flash-title">
                         ⚡ <span id="flashSaleTitle">Limited Time Offer</span>
                     </h2>
-                    <p style="margin: 5px 0 0 0; font-size: 0.95rem; opacity: 0.9;">Hurry up! Offer ends soon.</p>
+                    <div class="marquee-container">
+                        <p class="marquee-text">
+                            🔥 Hurry up! Offer ends soon. Limited stock available! &nbsp;&nbsp;&nbsp; 🔥 Hurry up! Offer ends soon. Limited stock available!
+                        </p>
+                    </div>
                 </div>
-                <div style="background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; text-align: center; backdrop-filter: blur(5px);">
-                    <p style="margin: 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Ends In</p>
-                    <div id="countdownTimer" style="font-size: 1.2rem; font-weight: bold; font-family: monospace;">00d 00h 00m 00s</div>
+                <div class="timer-box" style="margin-top: 10px;">
+                    <p style="margin: 0 0 5px 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; color: #FFD700;">Ends In</p>
+                    <div id="countdownTimer" class="timer-text">00d 00h 00m 00s</div>
                 </div>
             </div>
             <div class="product-grid" id="flashSaleGrid"></div>
