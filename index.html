@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- ⭐ YEH MITGO KA TAG HAI, ISAY DELETE NA KAREIN ⭐ -->
+    <!-- ⭐ Mitgo Ad Space Verification Tag ⭐ -->
     <meta name="mitgo-verification" content="e3f69518-ab0c-46db-a669-34aacd83fd21" />
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -28,7 +28,7 @@
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', 'G-7VE3L1Y8PQ'); // Yahan apna GA4 Measurement ID daalein
+      gtag('config', 'G-7VE3L1Y8PQ');
     </script>
 
     <link rel="canonical" href="https://www.primepickhub.com/">
@@ -60,6 +60,7 @@
                 <input type="text" id="searchInput" placeholder="Search products...">
                 <button id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i></button>
             </div>
+            <!-- Admin link yahan se hata diya gaya hai -->
         </div>
         <nav class="categories-nav">
             <a href="category.html?cat=electronics">Electronics</a>
@@ -71,9 +72,31 @@
     </header>
 
     <main class="container">
-        <h2 style="margin-bottom:10px;">🔥 Top Trending Deals</h2>
-        <p style="color:var(--text-muted);margin-bottom:20px;">Click any product to view live price on the official store.</p>
-        <div class="product-grid" id="productGrid"></div>
+        
+        <!-- ⭐ Flash Sale / Event Section ⭐ -->
+        <div id="flashSaleSection" style="display: none; margin-bottom: 40px;">
+            <div style="background: linear-gradient(135deg, #FF5A3C 0%, #FF2E2E 100%); border-radius: 12px; padding: 20px; color: #fff; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; box-shadow: 0 4px 15px rgba(255, 90, 60, 0.3);">
+                <div>
+                    <h2 style="margin: 0; font-size: 1.8rem; display: flex; align-items: center; gap: 10px;">
+                        ⚡ <span id="flashSaleTitle">Limited Time Offer</span>
+                    </h2>
+                    <p style="margin: 5px 0 0 0; font-size: 0.95rem; opacity: 0.9;">Hurry up! Offer ends soon.</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; text-align: center; backdrop-filter: blur(5px);">
+                    <p style="margin: 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Ends In</p>
+                    <div id="countdownTimer" style="font-size: 1.2rem; font-weight: bold; font-family: monospace;">00d 00h 00m 00s</div>
+                </div>
+            </div>
+            <div class="product-grid" id="flashSaleGrid"></div>
+        </div>
+
+        <!-- Normal Products Section -->
+        <div id="normalProductsSection">
+            <h2 style="margin-bottom:10px;">🔥 Top Trending Deals</h2>
+            <p style="color:var(--text-muted);margin-bottom:20px;">Click any product to view live price on the official store.</p>
+            <div class="product-grid" id="productGrid"></div>
+        </div>
+
     </main>
 
     <footer class="footer">
