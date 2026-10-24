@@ -1,10 +1,6 @@
-/**
- * Product Detail Page with Real-Time Currency Conversion & Optional Commission
- */
 function escapeHTML(s) {
     if (s === null || s === undefined) return '';
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
 const currencySymbols = {
@@ -30,9 +26,7 @@ function getVideoHtml(url) {
 document.addEventListener('DOMContentLoaded', async () => {
     const path = window.location.pathname;
     const params = new URLSearchParams(window.location.search);
-    
-    let slug = params.get('slug');
-    let id = params.get('id');
+    let slug = params.get('slug'); let id = params.get('id');
     if (!slug && path.startsWith('/product/')) slug = path.replace('/product/', '').split('/')[0];
 
     const container = document.getElementById('productContainer');
@@ -44,10 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return data;
     })();
 
-    if (!product) {
-        container.innerHTML = '<h2 style="text-align:center;padding:40px;">Product not found. <a href="/index.html">Return Home</a></h2>';
-        return;
-    }
+    if (!product) { container.innerHTML = '<h2 style="text-align:center;padding:40px;">Product not found. <a href="/index.html">Return Home</a></h2>'; return; }
 
     document.title = `${product.title} - Best Price | PrimePickHub`;
     document.querySelector('meta[property="og:title"]')?.setAttribute('content', product.title);
@@ -59,8 +50,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const variations = allOffers.filter(o => o.variation_name);
 
     const baseCurrency = (defaultOffer.currency || 'USD').toUpperCase();
-    const baseSymbol = currencySymbols[baseCurrency] || baseCurrency + ' ';
-
     let activeOffer = variations.length > 0 ? variations[0] : defaultOffer;
 
     const renderBuyButton = (offer) => {
@@ -87,22 +76,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </button>
                     `).join('')}
                 </div>
-            </div>
-        `;
+            </div>`;
     }
 
-    let galleryImages = (product.gallery_images && product.gallery_images.length > 0) ? product.gallery_images.filter(Boolean) : [];
-    if (galleryImages.length === 0 && product.image_url) galleryImages = [product.image_url];
+    let galleryImages = (product.gallery_images && product.gallery_images.length > 0) ? product.gallery_images.filter(Boolean) : (product.image_url ? [product.image_url] : []);
     const mainImage = galleryImages[0] || '/assets/icon-192.png';
-
-    const thumbnailsHtml = galleryImages.length > 1
-        ? galleryImages.map((url, i) => `<img src="${escapeHTML(url)}" alt="View ${i + 1}" class="gallery-thumb" data-src="${escapeHTML(url)}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid ${i === 0 ? '#FF5A3C' : '#E2E8F0'};transition:border-color 0.2s;">`).join('')
-        : '';
-
+    const thumbnailsHtml = galleryImages.length > 1 ? galleryImages.map((url, i) => `<img src="${escapeHTML(url)}" alt="View ${i + 1}" class="gallery-thumb" data-src="${escapeHTML(url)}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid ${i === 0 ? '#FF5A3C' : '#E2E8F0'};transition:border-color 0.2s;">`).join('') : '';
     const videoHtml = product.video_url ? `<div style="background:#fff; padding:30px; border-radius:12px; border:1px solid #E2E8F0; margin-bottom:20px;"><h2 style="margin-bottom:15px; border-bottom:2px solid #FF5A3C; padding-bottom:10px; display:inline-block;">Product Video</h2>${getVideoHtml(product.video_url)}</div>` : '';
-
-    const shareUrl = encodeURIComponent(window.location.href);
-    const shareText = encodeURIComponent(`Check out ${product.title} on PrimePickHub`);
+    const shareUrl = encodeURIComponent(window.location.href); const shareText = encodeURIComponent(`Check out ${product.title} on PrimePickHub`);
 
     container.innerHTML = `
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:40px;background:#fff;padding:30px;border-radius:12px;border:1px solid #E2E8F0;margin-bottom:20px;">
@@ -166,8 +147,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const res = await fetch(`https://open.er-api.com/v6/latest/${baseCurrency}`);
             const data = await res.json();
-            if (data.result === "success") exchangeRates = data.rates;
-            else throw new Error("API failed");
+            if (data.result === "success") exchangeRates = data.rates; else throw new Error("API failed");
         } catch (err) {
             exchangeRates = { USD: 1, PKR: 278.5, EUR: 0.92, GBP: 0.79, INR: 83.2, AED: 3.67, CAD: 1.36, AUD: 1.52, SAR: 3.75, CNY: 7.23, JPY: 149.5 };
         }
@@ -175,25 +155,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function updateUI(currency) {
         const rate = exchangeRates[currency] || 1;
-        
-        // ⭐ Calculate Final Price (Commission optional)
         const basePrice = parseFloat(activeOffer.price) || 0;
         const commissionRate = parseFloat(activeOffer.commission_rate) || 0;
-        
-        const finalBasePrice = commissionRate > 0 
-            ? basePrice + (basePrice * (commissionRate / 100)) 
-            : basePrice;
-        
+        const finalBasePrice = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice;
         const converted = finalBasePrice * rate;
         const symbol = currencySymbols[currency] || currency + ' ';
         displayPrice.innerText = `${symbol}${converted.toFixed(2)}`;
-
         buyButtonContainer.innerHTML = renderBuyButton(activeOffer);
     }
 
-    await fetchRates();
-    updateUI(baseCurrency);
-
+    await fetchRates(); updateUI(baseCurrency);
     currencySelector.addEventListener('change', (e) => updateUI(e.target.value));
 
     if (variations.length > 0) {
@@ -201,14 +172,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             btn.addEventListener('click', function() {
                 const idx = parseInt(this.dataset.index);
                 activeOffer = variations[idx];
-
-                document.querySelectorAll('.var-btn').forEach(b => {
-                    b.style.borderColor = '#E2E8F0';
-                    b.style.color = '#1E1B4B';
-                });
-                this.style.borderColor = '#FF5A3C';
-                this.style.color = '#FF5A3C';
-
+                document.querySelectorAll('.var-btn').forEach(b => { b.style.borderColor = '#E2E8F0'; b.style.color = '#1E1B4B'; });
+                this.style.borderColor = '#FF5A3C'; this.style.color = '#FF5A3C';
                 updateUI(currencySelector.value);
             });
         });
@@ -227,14 +192,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         "image": [product.image_url].concat(product.gallery_images || []).filter(Boolean),
         "description": product.description || product.title,
         "offers": allOffers.map(o => {
-            const p = parseFloat(o.price) || 0;
-            const c = parseFloat(o.commission_rate) || 0;
+            const p = parseFloat(o.price) || 0; const c = parseFloat(o.commission_rate) || 0;
             const finalP = c > 0 ? p + (p * (c / 100)) : p;
-            return {
-                "@type": "Offer", "url": o.affiliate_url, "priceCurrency": o.currency || "USD",
-                "price": finalP.toFixed(2), "availability": "https://schema.org/InStock",
-                "seller": { "@type": "Organization", "name": o.store_name }
-            };
+            return { "@type": "Offer", "url": o.affiliate_url, "priceCurrency": o.currency || "USD", "price": finalP.toFixed(2), "availability": "https://schema.org/InStock", "seller": { "@type": "Organization", "name": o.store_name } };
         })
     };
     if (product.rating && product.reviews_count > 0) jsonLd.aggregateRating = { "@type": "AggregateRating", "ratingValue": product.rating, "reviewCount": product.reviews_count };
