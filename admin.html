@@ -66,31 +66,40 @@
                     </div>
                 </div>
 
-                <!-- Manage Products -->
+                <!-- Manage Products (Collapsible) -->
                 <div class="admin-card" style="margin-bottom: 30px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2 style="margin: 0;">Manage Products</h2>
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <select id="adminCategoryFilter" style="padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; outline: none;">
-                                <option value="all">All Categories</option>
-                            </select>
-                            <input type="text" id="adminSearchInput" placeholder="Search products..." style="padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; outline: none; width: 200px;">
-                        </div>
+                        <button type="button" id="toggleProductListBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#3B82F6; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
+                            Show Product List
+                        </button>
                     </div>
 
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Image</th>
-                                <th>Title</th>
-                                <th>Final Price (Customer View)</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="productListBody">
-                            <tr><td colspan="4" style="text-align:center;">Loading...</td></tr>
-                        </tbody>
-                    </table>
+                    <!-- Hidden List Container -->
+                    <div id="productListContainer" style="display: none; margin-top: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <select id="adminCategoryFilter" style="padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; outline: none;">
+                                    <option value="all">All Categories</option>
+                                </select>
+                                <input type="text" id="adminSearchInput" placeholder="Search products..." style="padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; outline: none; width: 200px;">
+                            </div>
+                        </div>
+
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Title</th>
+                                    <th>Final Price (Customer View)</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productListBody">
+                                <tr><td colspan="4" style="text-align:center;">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <!-- Add / Edit Form -->
@@ -156,7 +165,7 @@
 
                         <!-- Variations -->
                         <h3 style="margin-top:20px; border-bottom:1px solid #ccc; padding-bottom:5px;">Product Variations (Optional)</h3>
-                        <p class="helper-text" style="margin-bottom:10px;">Agar sizes (M, L, XL) ki price alag hai, toh yahan add karein. Agar sirf ek price hai, toh isay khali chhod dein.</p>
+                        <p class="helper-text" style="margin-bottom:10px;">Agar sizes (M, L, XL) ki price alag hai, toh yahan add karein.</p>
                         
                         <div id="variationsContainer"></div>
                         <button type="button" id="addVariationBtn" class="btn-add-var">+ Add Variation (Size/Color)</button>
