@@ -1,6 +1,8 @@
 /**
- * PrimePickHub Admin Dashboard with Add, Edit, Delete
+ * PrimePickHub Admin Dashboard with Filters, Edit, Delete
  */
+
+let allProducts = []; // Global array to store fetched products for filtering
 
 document.addEventListener('DOMContentLoaded', async () => {
     if (typeof API === 'undefined' || !API.getCurrentUser) {
@@ -19,8 +21,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     showDashboard();
     await loadStats();
-    await loadProductsList(); // Product List Load karein
+    await loadProductsList(); // Load products and populate filters
     setupProductForm();
+    
+    // Attach event listeners for filters
+    document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
+    document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
 });
 
 function showLogin() {
@@ -67,7 +73,7 @@ async function loadStats() {
     }
 }
 
-// ⭐ Product List Load Karein
+// ⭐ Fetch Data and Populate Filters
 async function loadProductsList() {
     const tbody = document.getElementById('productListBody');
     if (!tbody) return;
@@ -80,26 +86,33 @@ async function loadProductsList() {
 
         if (error) throw error;
 
-        if (!products || products.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No products yet. Add one!</td></tr>';
-            return;
+        allProducts = products || [];
+        
+        // 1. Populate Filter Dropdown (Unique Categories)
+        const categoryFilter = document.getElementById('adminCategoryFilter');
+        if (categoryFilter) {
+            // Get unique categories from DB, and merge with default ones
+            const defaultCats = ['electronics', 'fashion', 'home-kitchen', 'beauty', 'sports'];
+            const dbCats = [...new Set(allProducts.map(p => p.category_slug).filter(Boolean))];
+            const allCats = [...new Set([...defaultCats, ...dbCats])];
+            
+            categoryFilter.innerHTML = `<option value="all">All Categories</option>` + 
+                allCats.map(c => `<option value="${c}">${c.charAt(0).toUpperCase() + c.slice(1).replace('-', ' ')}</option>`).join('');
         }
 
-        tbody.innerHTML = products.map(p => {
-            const offer = p.affiliate_offers?.[0] || {};
-            const priceStr = `${offer.price || 0} ${offer.currency || 'USD'}`;
-            return `
-                <tr>
-                    <td><img src="${p.image_url}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;"></td>
-                    <td>${p.title}</td>
-                    <td>${priceStr}</td>
-                    <td>
-                        <button class="btn-edit" onclick="editProduct('${p.id}')">Edit</button>
-                        <button class="btn-delete" onclick="deleteProduct('${p.id}')">Delete</button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
+        // 2. Populate Add/Edit Form Dropdown
+        const addCategorySelect = document.getElementById('pCategory');
+        if (addCategorySelect) {
+            const defaultCats = ['electronics', 'fashion', 'home-kitchen', 'beauty', 'sports'];
+            const dbCats = [...new Set(allProducts.map(p => p.category_slug).filter(Boolean))];
+            const allCats = [...new Set([...defaultCats, ...dbCats])];
+            
+            addCategorySelect.innerHTML = allCats.map(c => 
+                `<option value="${c}">${c.charAt(0).toUpperCase() + c.slice(1).replace('-', ' ')}</option>`
+            ).join('');
+        }
+
+        renderTable(); // Render the table with current filters
 
     } catch (err) {
         console.error('List Load Error:', err);
@@ -107,7 +120,44 @@ async function loadProductsList() {
     }
 }
 
-// ⭐ Edit Function (Global Scope so onclick can access it)
+// ⭐ Filter and Render Table
+function renderTable() {
+    const tbody = document.getElementById('productListBody');
+    if (!tbody) return;
+
+    const categoryFilter = document.getElementById('adminCategoryFilter')?.value || 'all';
+    const searchQuery = document.getElementById('adminSearchInput')?.value.toLowerCase().trim() || '';
+
+    // Filter Logic: Match Category AND Search Query
+    const filteredProducts = allProducts.filter(p => {
+        const matchesCategory = categoryFilter === 'all' || p.category_slug === categoryFilter;
+        const matchesSearch = p.title.toLowerCase().includes(searchQuery);
+        return matchesCategory && matchesSearch;
+    });
+
+    if (filteredProducts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No products found matching your criteria.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = filteredProducts.map(p => {
+        const offer = p.affiliate_offers?.[0] || {};
+        const priceStr = `${offer.price || 0} ${offer.currency || 'USD'}`;
+        return `
+            <tr>
+                <td><img src="${p.image_url}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;"></td>
+                <td>${p.title}</td>
+                <td>${priceStr}</td>
+                <td>
+                    <button class="btn-edit" onclick="editProduct('${p.id}')">Edit</button>
+                    <button class="btn-delete" onclick="deleteProduct('${p.id}')">Delete</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Edit Function
 window.editProduct = async function(id) {
     try {
         const { data: p, error } = await window.supabaseClient
@@ -119,7 +169,6 @@ window.editProduct = async function(id) {
         if (error) throw error;
         const offer = p.affiliate_offers?.[0] || {};
 
-        // Fill Form
         document.getElementById('pId').value = p.id;
         document.getElementById('pOfferId').value = offer.id || '';
         document.getElementById('pTitle').value = p.title || '';
@@ -142,12 +191,10 @@ window.editProduct = async function(id) {
         document.getElementById('pFeatured').checked = p.is_featured || false;
         document.getElementById('pTrending').checked = p.is_trending || false;
 
-        // Change UI
         document.getElementById('formTitle').innerText = "Edit Product";
         document.getElementById('saveBtn').innerText = "Update Product";
         document.getElementById('cancelEditBtn').style.display = "block";
         
-        // Scroll to form
         document.getElementById('productForm').scrollIntoView({ behavior: 'smooth' });
 
     } catch (err) {
@@ -155,7 +202,7 @@ window.editProduct = async function(id) {
     }
 }
 
-// ⭐ Delete Function
+// Delete Function
 window.deleteProduct = async function(id) {
     if (!confirm("Are you sure you want to delete this product? This cannot be undone.")) return;
 
@@ -175,13 +222,12 @@ window.deleteProduct = async function(id) {
     }
 }
 
-// ⭐ Add / Edit Form Submit
+// Form Submit Logic
 function setupProductForm() {
     const form = document.getElementById('productForm');
     const cancelBtn = document.getElementById('cancelEditBtn');
     if (!form) return;
 
-    // Cancel Edit Button
     cancelBtn.addEventListener('click', () => {
         form.reset();
         document.getElementById('pId').value = '';
@@ -239,7 +285,6 @@ function setupProductForm() {
 
         try {
             if (isEditing) {
-                // UPDATE
                 const { error: prodErr } = await window.supabaseClient.from('products').update(productData).eq('id', id);
                 if (prodErr) throw prodErr;
 
@@ -252,7 +297,6 @@ function setupProductForm() {
                 }
                 alert(`"${title}" updated successfully!`);
             } else {
-                // INSERT
                 const { data: newProduct, error: prodErr } = await window.supabaseClient.from('products').insert([productData]).select().single();
                 if (prodErr) throw prodErr;
 
@@ -270,7 +314,7 @@ function setupProductForm() {
             cancelBtn.style.display = "none";
             
             await loadStats();
-            await loadProductsList();
+            await loadProductsList(); // Reload table and filters
 
         } catch (err) {
             alert('Save error: ' + (err.message || 'Check RLS policies.'));
