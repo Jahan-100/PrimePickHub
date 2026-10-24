@@ -1,19 +1,10 @@
 let allProducts = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
-    if (typeof API === 'undefined' || !API.getCurrentUser) {
-        alert('API not loaded. Refresh the page.');
-        return;
-    }
-
+    if (typeof API === 'undefined' || !API.getCurrentUser) { alert('API not loaded. Refresh the page.'); return; }
     const auth = await API.getCurrentUser();
-
     if (!auth) return showLogin();
-    if (auth.role !== 'admin') {
-        alert('Access denied. Admin only.');
-        await API.signOut();
-        return showLogin();
-    }
+    if (auth.role !== 'admin') { alert('Access denied. Admin only.'); await API.signOut(); return showLogin(); }
 
     showDashboard();
     await loadStats();
@@ -28,17 +19,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 function setupToggleList() {
     const toggleBtn = document.getElementById('toggleProductListBtn');
     const listContainer = document.getElementById('productListContainer');
-
     if (toggleBtn && listContainer) {
         toggleBtn.addEventListener('click', () => {
             if (listContainer.style.display === 'none') {
-                listContainer.style.display = 'block';
-                toggleBtn.textContent = 'Hide Product List';
-                toggleBtn.style.background = '#EF4444';
+                listContainer.style.display = 'block'; toggleBtn.textContent = 'Hide Product List'; toggleBtn.style.background = '#EF4444';
             } else {
-                listContainer.style.display = 'none';
-                toggleBtn.textContent = 'Show Product List';
-                toggleBtn.style.background = '#3B82F6';
+                listContainer.style.display = 'none'; toggleBtn.textContent = 'Show Product List'; toggleBtn.style.background = '#3B82F6';
             }
         });
     }
@@ -48,7 +34,6 @@ function showLogin() {
     const loginContainer = document.getElementById('loginContainer');
     const loginForm = document.getElementById('loginForm');
     const dashEl = document.getElementById('dashboard');
-    
     if (loginContainer) loginContainer.style.display = 'block';
     if (dashEl) dashEl.style.display = 'none';
 
@@ -57,13 +42,10 @@ function showLogin() {
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
         const errorEl = document.getElementById('loginError');
-
         try {
-            await API.signIn(email, password);
-            window.location.reload();
+            await API.signIn(email, password); window.location.reload();
         } catch (err) {
-            if (errorEl) errorEl.innerText = err.message || 'Login failed';
-            else alert('Login failed: ' + err.message);
+            if (errorEl) errorEl.innerText = err.message || 'Login failed'; else alert('Login failed: ' + err.message);
         }
     });
 }
@@ -71,7 +53,6 @@ function showLogin() {
 function showDashboard() {
     const loginContainer = document.getElementById('loginContainer');
     const dashEl = document.getElementById('dashboard');
-    
     if (loginContainer) loginContainer.style.display = 'none';
     if (dashEl) dashEl.style.display = 'block';
 }
@@ -79,27 +60,16 @@ function showDashboard() {
 async function loadStats() {
     try {
         const stats = await API.getAdminStats();
-        const p = document.getElementById('statProducts');
-        const c = document.getElementById('statClicks');
-        if (p) p.innerText = stats.totalProducts;
-        if (c) c.innerText = stats.totalClicks;
-    } catch (err) {
-        console.warn('Stats error:', err);
-    }
+        const p = document.getElementById('statProducts'); const c = document.getElementById('statClicks');
+        if (p) p.innerText = stats.totalProducts; if (c) c.innerText = stats.totalClicks;
+    } catch (err) { console.warn('Stats error:', err); }
 }
 
 async function loadProductsList() {
-    const tbody = document.getElementById('productListBody');
-    if (!tbody) return;
-
+    const tbody = document.getElementById('productListBody'); if (!tbody) return;
     try {
-        const { data: products, error } = await window.supabaseClient
-            .from('products')
-            .select('*, affiliate_offers(*)')
-            .order('created_at', { ascending: false });
-
+        const { data: products, error } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').order('created_at', { ascending: false });
         if (error) throw error;
-
         allProducts = products || [];
         
         const categoryFilter = document.getElementById('adminCategoryFilter');
@@ -107,9 +77,7 @@ async function loadProductsList() {
             const defaultCats = ['electronics', 'fashion', 'home-kitchen', 'beauty', 'sports'];
             const dbCats = [...new Set(allProducts.map(p => p.category_slug).filter(Boolean))];
             const allCats = [...new Set([...defaultCats, ...dbCats])];
-            
-            categoryFilter.innerHTML = `<option value="all">All Categories</option>` + 
-                allCats.map(c => `<option value="${c}">${c.charAt(0).toUpperCase() + c.slice(1).replace('-', ' ')}</option>`).join('');
+            categoryFilter.innerHTML = `<option value="all">All Categories</option>` + allCats.map(c => `<option value="${c}">${c.charAt(0).toUpperCase() + c.slice(1).replace('-', ' ')}</option>`).join('');
         }
 
         const addCategorySelect = document.getElementById('pCategory');
@@ -117,24 +85,16 @@ async function loadProductsList() {
             const defaultCats = ['electronics', 'fashion', 'home-kitchen', 'beauty', 'sports'];
             const dbCats = [...new Set(allProducts.map(p => p.category_slug).filter(Boolean))];
             const allCats = [...new Set([...defaultCats, ...dbCats])];
-            
-            addCategorySelect.innerHTML = allCats.map(c => 
-                `<option value="${c}">${c.charAt(0).toUpperCase() + c.slice(1).replace('-', ' ')}</option>`
-            ).join('');
+            addCategorySelect.innerHTML = allCats.map(c => `<option value="${c}">${c.charAt(0).toUpperCase() + c.slice(1).replace('-', ' ')}</option>`).join('');
         }
-
         renderTable();
-
     } catch (err) {
-        console.error('List Load Error:', err);
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Failed to load products.</td></tr>';
+        console.error('List Load Error:', err); tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Failed to load products.</td></tr>';
     }
 }
 
 function renderTable() {
-    const tbody = document.getElementById('productListBody');
-    if (!tbody) return;
-
+    const tbody = document.getElementById('productListBody'); if (!tbody) return;
     const categoryFilter = document.getElementById('adminCategoryFilter')?.value || 'all';
     const searchQuery = document.getElementById('adminSearchInput')?.value.toLowerCase().trim() || '';
 
@@ -144,20 +104,13 @@ function renderTable() {
         return matchesCategory && matchesSearch;
     });
 
-    if (filteredProducts.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No products found matching your criteria.</td></tr>';
-        return;
-    }
+    if (filteredProducts.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No products found.</td></tr>'; return; }
 
     tbody.innerHTML = filteredProducts.map(p => {
         const defaultOffer = p.affiliate_offers?.find(o => !o.variation_name) || p.affiliate_offers?.[0] || {};
         const basePrice = parseFloat(defaultOffer.price) || 0;
         const commissionRate = parseFloat(defaultOffer.commission_rate) || 0;
-        
-        const finalPrice = commissionRate > 0 
-            ? basePrice + (basePrice * (commissionRate / 100)) 
-            : basePrice;
-        
+        const finalPrice = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice;
         const priceStr = defaultOffer.price ? `${finalPrice.toFixed(2)} ${defaultOffer.currency || 'USD'}` : 'N/A';
 
         return `
@@ -169,8 +122,7 @@ function renderTable() {
                     <button class="btn-edit" onclick="editProduct('${p.id}')">Edit</button>
                     <button class="btn-delete" onclick="deleteProduct('${p.id}')">Delete</button>
                 </td>
-            </tr>
-        `;
+            </tr>`;
     }).join('');
 }
 
@@ -179,27 +131,20 @@ window.addVariationRow = function(name = '', price = '', commission = '', url = 
     const div = document.createElement('div');
     div.className = 'variation-row';
     div.innerHTML = `
-        <input type="text" placeholder="Size/Color (e.g. M, L, Red)" value="${name}" class="var-name" required>
+        <input type="text" placeholder="Size/Color" value="${name}" class="var-name" required>
         <input type="number" step="0.01" placeholder="Price" value="${price}" class="var-price" required>
-        <input type="number" step="0.1" placeholder="Comm % (Optional)" value="${commission}" class="var-comm">
-        <input type="url" placeholder="Affiliate URL (Optional)" value="${url}" class="var-url">
+        <input type="number" step="0.1" placeholder="Comm % (Opt)" value="${commission}" class="var-comm">
+        <input type="url" placeholder="Aff URL (Opt)" value="${url}" class="var-url">
         <button type="button" class="btn-remove-var" onclick="this.parentElement.remove()">X</button>
     `;
     container.appendChild(div);
 }
-
 document.getElementById('addVariationBtn')?.addEventListener('click', () => addVariationRow());
 
 window.editProduct = async function(id) {
     try {
-        const { data: p, error } = await window.supabaseClient
-            .from('products')
-            .select('*, affiliate_offers(*)')
-            .eq('id', id)
-            .single();
-        
+        const { data: p, error } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').eq('id', id).single();
         if (error) throw error;
-        
         const defaultOffer = p.affiliate_offers?.find(o => !o.variation_name) || p.affiliate_offers?.[0] || {};
         
         document.getElementById('pId').value = p.id;
@@ -214,15 +159,11 @@ window.editProduct = async function(id) {
         document.getElementById('pRating').value = p.rating || '';
         document.getElementById('pReviewsCount').value = p.reviews_count || 0;
         
-        // Event Logic Load
         document.getElementById('pEventName').value = p.event_name || '';
         if(p.sale_end_date) {
-            const d = new Date(p.sale_end_date);
-            d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+            const d = new Date(p.sale_end_date); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
             document.getElementById('pSaleEndDate').value = d.toISOString().slice(0,16);
-        } else {
-            document.getElementById('pSaleEndDate').value = '';
-        }
+        } else { document.getElementById('pSaleEndDate').value = ''; }
 
         document.getElementById('pStore').value = defaultOffer.store_name || '';
         document.getElementById('pPrice').value = defaultOffer.price || '';
@@ -235,43 +176,28 @@ window.editProduct = async function(id) {
         document.getElementById('pFeatured').checked = p.is_featured || false;
         document.getElementById('pTrending').checked = p.is_trending || false;
 
-        const varContainer = document.getElementById('variationsContainer');
-        varContainer.innerHTML = '';
-        
+        const varContainer = document.getElementById('variationsContainer'); varContainer.innerHTML = '';
         const variations = p.affiliate_offers?.filter(o => o.variation_name) || [];
-        variations.forEach(v => {
-            const commVal = (v.commission_rate && v.commission_rate > 0) ? v.commission_rate : '';
-            addVariationRow(v.variation_name, v.price, commVal, v.affiliate_url);
-        });
+        variations.forEach(v => addVariationRow(v.variation_name, v.price, (v.commission_rate > 0 ? v.commission_rate : ''), v.affiliate_url));
 
         document.getElementById('formTitle').innerText = "Edit Product";
         document.getElementById('saveBtn').innerText = "Update Product";
         document.getElementById('cancelEditBtn').style.display = "block";
         
         const listContainer = document.getElementById('productListContainer');
-        if(listContainer && listContainer.style.display === 'none') {
-            document.getElementById('toggleProductListBtn').click();
-        }
+        if(listContainer && listContainer.style.display === 'none') document.getElementById('toggleProductListBtn').click();
         
         document.getElementById('productForm').scrollIntoView({ behavior: 'smooth' });
-
-    } catch (err) {
-        alert("Error loading product: " + err.message);
-    }
+    } catch (err) { alert("Error loading product: " + err.message); }
 }
 
 window.deleteProduct = async function(id) {
-    if (!confirm("Are you sure you want to delete this product? This cannot be undone.")) return;
-
+    if (!confirm("Are you sure you want to delete this product?")) return;
     try {
         const { error } = await window.supabaseClient.from('products').delete().eq('id', id);
         if (error) throw error;
-        alert("Product deleted successfully!");
-        await loadStats();
-        await loadProductsList();
-    } catch (err) {
-        alert("Error deleting product: " + err.message);
-    }
+        alert("Product deleted!"); await loadStats(); await loadProductsList();
+    } catch (err) { alert("Error deleting product: " + err.message); }
 }
 
 function setupProductForm() {
@@ -280,69 +206,48 @@ function setupProductForm() {
     if (!form) return;
 
     cancelBtn.addEventListener('click', () => {
-        form.reset();
-        document.getElementById('variationsContainer').innerHTML = '';
-        document.getElementById('pId').value = '';
-        document.getElementById('pOfferId').value = '';
+        form.reset(); document.getElementById('variationsContainer').innerHTML = '';
+        document.getElementById('pId').value = ''; document.getElementById('pOfferId').value = '';
         document.getElementById('formTitle').innerText = "Add New Product";
-        document.getElementById('saveBtn').innerText = "Save Product";
-        cancelBtn.style.display = "none";
+        document.getElementById('saveBtn').innerText = "Save Product"; cancelBtn.style.display = "none";
     });
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-
         const id = document.getElementById('pId').value;
         const isEditing = id !== '';
 
-        const title = document.getElementById('pTitle').value.trim();
-        const slug = document.getElementById('pSlug').value.trim();
-        const img = document.getElementById('pImg').value.trim();
-        const galleryText = document.getElementById('pGallery').value.trim();
-        const videoUrl = document.getElementById('pVideo').value.trim();
-        const category = document.getElementById('pCategory').value;
-        const badge = document.getElementById('pBadge').value.trim();
-        const rating = document.getElementById('pRating').value ? parseFloat(document.getElementById('pRating').value) : null;
-        const reviewsCount = document.getElementById('pReviewsCount').value ? parseInt(document.getElementById('pReviewsCount').value) : 0;
-        
-        // Event Data
         const eventName = document.getElementById('pEventName').value.trim();
         const saleEndDate = document.getElementById('pSaleEndDate').value;
-
-        const store = document.getElementById('pStore').value.trim().toLowerCase();
-        const price = parseFloat(document.getElementById('pPrice').value) || 0;
-        
         const commInput = document.getElementById('pCommission').value.trim();
         const commission = commInput === '' ? 0 : (parseFloat(commInput) || 0);
-        
-        const currency = document.getElementById('pCurrency').value;
-        const affUrl = document.getElementById('pAffUrl').value.trim();
-        
-        const desc = document.getElementById('pDesc').value.trim();
-        const review = document.getElementById('pReview').value.trim();
-        const featured = document.getElementById('pFeatured').checked;
-        const trending = document.getElementById('pTrending').checked;
-
-        const galleryImages = galleryText ? galleryText.split('\n').map(u => u.trim()).filter(u => u.length > 0) : [];
-
-        if (!title || !slug || !img || !store || !affUrl) return alert('Please fill all required fields.');
+        const price = parseFloat(document.getElementById('pPrice').value) || 0;
 
         const productData = {
-            title, slug, image_url: img, category_slug: category,
-            description: desc, review_html: review,
-            is_featured: featured, is_trending: trending,
-            badge: badge || null, rating: rating, reviews_count: reviewsCount,
-            gallery_images: galleryImages, video_url: videoUrl || null,
+            title: document.getElementById('pTitle').value.trim(),
+            slug: document.getElementById('pSlug').value.trim(),
+            image_url: document.getElementById('pImg').value.trim(),
+            category_slug: document.getElementById('pCategory').value,
+            description: document.getElementById('pDesc').value.trim(),
+            review_html: document.getElementById('pReview').value.trim(),
+            is_featured: document.getElementById('pFeatured').checked,
+            is_trending: document.getElementById('pTrending').checked,
+            badge: document.getElementById('pBadge').value.trim() || null,
+            rating: document.getElementById('pRating').value ? parseFloat(document.getElementById('pRating').value) : null,
+            reviews_count: document.getElementById('pReviewsCount').value ? parseInt(document.getElementById('pReviewsCount').value) : 0,
+            gallery_images: document.getElementById('pGallery').value.trim() ? document.getElementById('pGallery').value.split('\n').map(u=>u.trim()).filter(Boolean) : [],
+            video_url: document.getElementById('pVideo').value.trim() || null,
             event_name: eventName || null,
             sale_end_date: saleEndDate ? new Date(saleEndDate).toISOString() : null
         };
 
+        if (!productData.title || !productData.slug || !productData.image_url) return alert('Please fill required fields.');
+
         const mainOfferData = {
-            store_name: store,
-            price: price,
-            commission_rate: commission,
-            currency: currency,
-            affiliate_url: affUrl,
+            store_name: document.getElementById('pStore').value.trim().toLowerCase(),
+            price: price, commission_rate: commission,
+            currency: document.getElementById('pCurrency').value,
+            affiliate_url: document.getElementById('pAffUrl').value.trim(),
             variation_name: null
         };
 
@@ -352,63 +257,41 @@ function setupProductForm() {
             const vPrice = parseFloat(row.querySelector('.var-price').value);
             const vCommInput = row.querySelector('.var-comm').value.trim();
             const vComm = vCommInput === '' ? commission : (parseFloat(vCommInput) || 0);
-            const vUrl = row.querySelector('.var-url').value.trim() || affUrl;
-
+            const vUrl = row.querySelector('.var-url').value.trim() || mainOfferData.affiliate_url;
             if (vName && !isNaN(vPrice)) {
-                variations.push({
-                    store_name: store,
-                    price: vPrice,
-                    commission_rate: vComm,
-                    currency: currency,
-                    affiliate_url: vUrl,
-                    variation_name: vName
-                });
+                variations.push({ ...mainOfferData, price: vPrice, commission_rate: vComm, affiliate_url: vUrl, variation_name: vName });
             }
         });
 
         try {
             let productId = id;
-
             if (isEditing) {
                 const { error: prodErr } = await window.supabaseClient.from('products').update(productData).eq('id', id);
                 if (prodErr) throw prodErr;
-                
                 await window.supabaseClient.from('affiliate_offers').delete().eq('product_id', id);
             } else {
                 const { data: newProduct, error: prodErr } = await window.supabaseClient.from('products').insert([productData]).select().single();
-                if (prodErr) throw prodErr;
-                productId = newProduct.id;
+                if (prodErr) throw prodErr; productId = newProduct.id;
             }
 
             if (price > 0 || variations.length === 0) {
                 mainOfferData.product_id = productId;
                 await window.supabaseClient.from('affiliate_offers').insert([mainOfferData]);
             }
-
             if (variations.length > 0) {
                 variations.forEach(v => v.product_id = productId);
                 const { error: varErr } = await window.supabaseClient.from('affiliate_offers').insert(variations);
                 if (varErr) throw varErr;
             }
 
-            alert(`"${title}" saved successfully!`);
-            form.reset();
-            document.getElementById('variationsContainer').innerHTML = '';
-            document.getElementById('pId').value = '';
-            document.getElementById('formTitle').innerText = "Add New Product";
-            document.getElementById('saveBtn').innerText = "Save Product";
-            cancelBtn.style.display = "none";
+            alert(`"${productData.title}" saved successfully!`);
+            form.reset(); document.getElementById('variationsContainer').innerHTML = '';
+            document.getElementById('pId').value = ''; document.getElementById('formTitle').innerText = "Add New Product";
+            document.getElementById('saveBtn').innerText = "Save Product"; cancelBtn.style.display = "none";
             
-            await loadStats();
-            await loadProductsList();
-
-        } catch (err) {
-            alert('Save error: ' + (err.message || 'Check RLS policies.'));
-        }
+            await loadStats(); await loadProductsList();
+        } catch (err) { alert('Save error: ' + (err.message || 'Check RLS policies.')); }
     });
 
-    document.getElementById('logoutBtn')?.addEventListener('click', async () => {
-        await API.signOut();
-        window.location.reload();
-    });
+    document.getElementById('logoutBtn')?.addEventListener('click', async () => { await API.signOut(); window.location.reload(); });
 }
