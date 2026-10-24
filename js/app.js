@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer
+ * PrimePickHub Homepage Renderer with Flash Sale
  */
 
 function escapeHTML(str) {
@@ -57,7 +57,6 @@ function renderProductCard(product) {
 
     const title = escapeHTML(product.title || 'Untitled');
     let id = '';
-    // ⭐ Clean URL logic for Netlify
     if (product.slug) id = `${encodeURIComponent(product.slug)}`;
     else if (product.id != null) id = `id-${encodeURIComponent(product.id)}`;
     
@@ -66,7 +65,7 @@ function renderProductCard(product) {
     const disabledAttr = hasLink ? '' : 'aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:0.6;"';
 
     const imageSrc = isValidURL(product.image_url)
-        ? escapeHTML(product.image_url) : 'assets/icon-192.png'; // ⭐ Fallback fixed
+        ? escapeHTML(product.image_url) : 'assets/icon-192.png';
 
     const r = Number(product.rating);
     const rating = Number.isFinite(r) && r > 0 && r <= 5 ? r : null;
@@ -89,11 +88,16 @@ function renderProductCard(product) {
         const affUrl = escapeHTML(primaryOffer.affiliate_url);
         const pid = escapeHTML(String(product.id ?? ''));
 
-        // ⭐ DYNAMIC CURRENCY ADDED HERE ⭐
         const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
         const offerCurrency = (primaryOffer.currency || 'USD').toUpperCase();
         const offerSymbol = currencySymbols[offerCurrency] || offerCurrency + ' ';
-        const priceDisplay = primaryOffer.price ? `<div style="font-weight:bold; color:#1E1B4B; margin-bottom:5px;">${offerSymbol}${primaryOffer.price}</div>` : '';
+        
+        // Commission calculation
+        const basePrice = parseFloat(primaryOffer.price) || 0;
+        const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
+        const finalPrice = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice;
+        
+        const priceDisplay = primaryOffer.price ? `<div style="font-weight:bold; color:#1E1B4B; margin-bottom:5px;">${offerSymbol}${finalPrice.toFixed(2)}</div>` : '';
 
         cta = `
                ${priceDisplay}
@@ -134,13 +138,45 @@ function renderProductsGrid(products, grid) {
     grid.innerHTML = products.map(renderProductCard).join('');
     grid.querySelectorAll('img.product-thumb').forEach(img => {
         img.addEventListener('error', function () {
-            this.src = 'assets/icon-192.png'; // ⭐ Fallback fixed
+            this.src = 'assets/icon-192.png';
         }, { once: true });
     });
 }
 
+// ⭐ Timer Logic
+let countdownInterval;
+function startCountdown(endDateStr) {
+    const countdownEl = document.getElementById('countdownTimer');
+    if (!countdownEl) return;
+
+    const endDate = new Date(endDateStr).getTime();
+    clearInterval(countdownInterval);
+
+    countdownInterval = setInterval(() => {
+        const now = new Date().getTime();
+        const distance = endDate - now;
+
+        if (distance < 0) {
+            clearInterval(countdownInterval);
+            countdownEl.innerHTML = "EXPIRED";
+            setTimeout(() => window.location.reload(), 2000); // Refresh after 2s
+            return;
+        }
+
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        countdownEl.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    }, 1000);
+}
+
 async function loadHomepageProducts() {
     const grid = document.getElementById('productGrid');
+    const flashGrid = document.getElementById('flashSaleGrid');
+    const flashSection = document.getElementById('flashSaleSection');
+    
     if (!grid) return;
     showGridMessage(grid, 'Loading products...');
 
@@ -148,7 +184,35 @@ async function loadHomepageProducts() {
         if (typeof API === 'undefined' || !API.getHomepageProducts) throw new Error('API missing');
         const data = await API.getHomepageProducts();
         const raw = [...(data.featured ?? []), ...(data.trending ?? []), ...(data.latest ?? [])];
-        renderProductsGrid(deduplicateProducts(raw), grid);
+        const allProducts = deduplicateProducts(raw);
+
+        const now = new Date();
+        const flashSaleProducts = [];
+        const normalProducts = [];
+
+        // ⭐ Filter Logic
+        allProducts.forEach(p => {
+            const endDate = p.sale_end_date ? new Date(p.sale_end_date) : null;
+            if (endDate && endDate > now) {
+                flashSaleProducts.push(p);
+            } else {
+                normalProducts.push(p);
+            }
+        });
+
+        // Render Flash Sale
+        if (flashSaleProducts.length > 0) {
+            flashSection.style.display = 'block';
+            document.getElementById('flashSaleTitle').innerText = flashSaleProducts[0].event_name || 'Limited Time Offer';
+            startCountdown(flashSaleProducts[0].sale_end_date);
+            renderProductsGrid(flashSaleProducts, flashGrid);
+        } else {
+            flashSection.style.display = 'none';
+        }
+
+        // Render Normal Products
+        renderProductsGrid(normalProducts, grid);
+
     } catch (err) {
         console.error('Load failed:', err);
         showGridMessage(grid, 'Products could not be loaded. Please refresh.');
