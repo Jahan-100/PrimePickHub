@@ -7,7 +7,6 @@ function escapeHTML(s) {
         .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-// ⭐ Expanded Currency Symbols List
 const currencySymbols = {
     USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ', 
     SAR: 'SAR ', CAD: 'C$', AUD: 'A$', CNY: '¥', JPY: '¥', TRY: '₺', 
@@ -113,7 +112,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div>
                 <h1 style="font-size:1.8rem;margin-bottom:10px;">${escapeHTML(product.title)}</h1>
                 
-                <!-- ⭐ EXPANDED CURRENCY CONVERTER UI ⭐ -->
+                <!-- CURRENCY CONVERTER UI -->
                 <div style="margin-bottom: 20px; background: #F8FAFC; padding: 15px; border-radius: 8px; border: 1px solid #E2E8F0;">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                         <span style="font-size: 1.4rem; font-weight: bold; color: #FF5A3C;" id="displayPrice">${baseSymbol}${basePrice.toFixed(2)}</span>
@@ -173,8 +172,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
 
                 <p style="color:#64748B;margin-bottom:20px;">${escapeHTML(product.description || '')}</p>
+                
+                <!-- ⭐ HIGHLIGHTED NOTICE BOX ⭐ -->
+                <div style="background-color:#FEF3C7; border-left:4px solid #F59E0B; padding:12px 15px; margin-bottom:15px; border-radius:6px; display:flex; align-items:flex-start; gap:10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                    <i class="fa-solid fa-circle-info" style="color:#D97706; font-size:1.2rem; margin-top:2px;"></i>
+                    <p style="font-size:0.95rem; color:#92400E; margin:0; font-weight:600; line-height:1.5;">
+                        Important: You will be redirected to the official store to confirm live price, stock, and delivery.
+                    </p>
+                </div>
+
                 <div style="margin-bottom:25px;padding:15px;background:#F8FAFC;border-radius:8px;">
-                    <p style="font-size:0.85rem;color:#64748B;margin-bottom:10px;">You will be redirected to the official store to confirm live price.</p>
                     ${offersHtml}
                 </div>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;">
