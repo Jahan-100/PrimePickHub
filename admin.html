@@ -33,40 +33,25 @@
         </div>
         <div class="admin-content">
             
-            <!-- Login -->
             <div id="loginContainer" class="admin-card" style="max-width:420px;margin:80px auto;">
                 <h2>Admin Login</h2>
                 <br>
                 <form id="loginForm">
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="loginEmail" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Password</label>
-                        <input type="password" id="loginPassword" required>
-                    </div>
+                    <div class="form-group"><label>Email</label><input type="email" id="loginEmail" required></div>
+                    <div class="form-group"><label>Password</label><input type="password" id="loginPassword" required></div>
                     <p id="loginError" style="color:#DC2626;font-size:0.85rem;margin-bottom:10px;"></p>
                     <button type="submit" class="btn-check-price" style="width:100%;padding:12px;">Login</button>
                 </form>
             </div>
 
-            <!-- Dashboard -->
             <div id="dashboard" style="display:none;">
                 <h1>Platform Overview</h1>
                 <br>
                 <div class="stats-grid">
-                    <div class="stat-card">
-                        <p style="color:#64748B;">Total Products</p>
-                        <h3 id="statProducts">0</h3>
-                    </div>
-                    <div class="stat-card">
-                        <p style="color:#64748B;">Affiliate Clicks</p>
-                        <h3 id="statClicks">0</h3>
-                    </div>
+                    <div class="stat-card"><p style="color:#64748B;">Total Products</p><h3 id="statProducts">0</h3></div>
+                    <div class="stat-card"><p style="color:#64748B;">Affiliate Clicks</p><h3 id="statClicks">0</h3></div>
                 </div>
 
-                <!-- Manage Products (Collapsible) -->
                 <div class="admin-card" style="margin-bottom: 30px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2 style="margin: 0;">Manage Products</h2>
@@ -75,7 +60,6 @@
                         </button>
                     </div>
 
-                    <!-- Hidden List Container -->
                     <div id="productListContainer" style="display: none; margin-top: 20px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
@@ -102,7 +86,6 @@
                     </div>
                 </div>
 
-                <!-- Add / Edit Form -->
                 <div class="admin-card">
                     <h2 id="formTitle">Add New Product</h2>
                     <br>
@@ -113,35 +96,19 @@
                         <div class="form-group"><label>Product Title</label><input type="text" id="pTitle" required></div>
                         <div class="form-group"><label>URL Slug</label><input type="text" id="pSlug" required pattern="[a-z0-9-]+"></div>
                         
-                        <div class="form-group">
-                            <label>Primary Image URL</label>
-                            <input type="url" id="pImg" required placeholder="https://...main-image.jpg">
-                        </div>
+                        <div class="form-group"><label>Primary Image URL</label><input type="url" id="pImg" required placeholder="https://...main-image.jpg"></div>
+                        <div class="form-group"><label>Gallery Images (Har Line Mein Ek URL)</label><textarea id="pGallery" rows="3" placeholder="https://...image2.jpg&#10;https://...image3.jpg"></textarea></div>
+                        <div class="form-group"><label>Video URL (YouTube - Optional)</label><input type="url" id="pVideo" placeholder="https://www.youtube.com/watch?v=..."></div>
 
-                        <div class="form-group">
-                            <label>Gallery Images (Har Line Mein Ek URL)</label>
-                            <textarea id="pGallery" rows="3" placeholder="https://...image2.jpg&#10;https://...image3.jpg"></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Video URL (YouTube - Optional)</label>
-                            <input type="url" id="pVideo" placeholder="https://www.youtube.com/watch?v=...">
-                        </div>
-
-                        <div class="form-group"><label>Category</label>
-                            <select id="pCategory"></select>
-                        </div>
+                        <div class="form-group"><label>Category</label><select id="pCategory"></select></div>
                         
                         <div class="form-group"><label>Badge (Optional)</label><input type="text" id="pBadge" placeholder="Best Seller"></div>
                         <div class="form-group"><label>Rating (1-5)</label><input type="number" step="0.1" min="1" max="5" id="pRating"></div>
                         <div class="form-group"><label>Reviews Count</label><input type="number" id="pReviewsCount"></div>
 
-                        <!-- ⭐ Event / Flash Sale Section ⭐ -->
+                        <!-- Event / Flash Sale Section -->
                         <h3 style="margin-top:20px; border-bottom:1px solid #ccc; padding-bottom:5px; color: #FF5A3C;">Flash Sale / Special Event (Optional)</h3>
-                        <div class="form-group">
-                            <label>Event Name (e.g. 11.11 Sale, Eid Special)</label>
-                            <input type="text" id="pEventName" placeholder="11.11 Mega Sale">
-                        </div>
+                        <div class="form-group"><label>Event Name (e.g. 11.11 Sale)</label><input type="text" id="pEventName" placeholder="11.11 Mega Sale"></div>
                         <div class="form-group">
                             <label>Sale End Date & Time</label>
                             <input type="datetime-local" id="pSaleEndDate">
@@ -152,14 +119,8 @@
                         <div class="form-group"><label>Store Name</label><input type="text" id="pStore" required placeholder="aliexpress, amazon, daraz"></div>
                         
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <div class="form-group" style="flex: 1; min-width: 120px;">
-                                <label>Base Price <span class="helper-text">(Original)</span></label>
-                                <input type="number" step="0.01" id="pPrice" required placeholder="3.45">
-                            </div>
-                            <div class="form-group" style="flex: 1; min-width: 120px;">
-                                <label>Commission % <span class="helper-text">(Optional)</span></label>
-                                <input type="number" step="0.1" id="pCommission" placeholder="e.g. 7 (khali chhod sakte hain)">
-                            </div>
+                            <div class="form-group" style="flex: 1; min-width: 120px;"><label>Base Price <span class="helper-text">(Original)</span></label><input type="number" step="0.01" id="pPrice" required placeholder="3.45"></div>
+                            <div class="form-group" style="flex: 1; min-width: 120px;"><label>Commission % <span class="helper-text">(Optional)</span></label><input type="number" step="0.1" id="pCommission" placeholder="e.g. 7"></div>
                             <div class="form-group" style="flex: 1; min-width: 120px;">
                                 <label>Currency</label>
                                 <select id="pCurrency">
@@ -175,7 +136,6 @@
 
                         <div class="form-group"><label>Affiliate URL</label><input type="url" id="pAffUrl" required placeholder="https://s.click.aliexpress.com/..."></div>
 
-                        <!-- Variations -->
                         <h3 style="margin-top:20px; border-bottom:1px solid #ccc; padding-bottom:5px;">Product Variations (Optional)</h3>
                         <p class="helper-text" style="margin-bottom:10px;">Agar sizes (M, L, XL) ki price alag hai, toh yahan add karein.</p>
                         
@@ -184,10 +144,7 @@
 
                         <h3 style="margin-top:20px; border-bottom:1px solid #ccc; padding-bottom:5px;">SEO Content</h3>
                         <div class="form-group"><label>Short Description</label><input type="text" id="pDesc" required></div>
-                        <div class="form-group">
-                            <label>Detailed Review (HTML allowed)</label>
-                            <textarea id="pReview" rows="6" required placeholder="<h3>Our Verdict</h3><p>This is a great product...</p>"></textarea>
-                        </div>
+                        <div class="form-group"><label>Detailed Review (HTML allowed)</label><textarea id="pReview" rows="6" required placeholder="<h3>Our Verdict</h3><p>This is a great product...</p>"></textarea></div>
 
                         <div class="form-group">
                             <label><input type="checkbox" id="pFeatured"> Featured</label>
