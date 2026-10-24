@@ -1,7 +1,3 @@
-/**
- * PrimePickHub Admin Dashboard with Commission & Variations
- */
-
 let allProducts = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -23,13 +19,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadStats();
     await loadProductsList();
     setupProductForm();
-    setupToggleList(); // ⭐ Toggle Button Setup
+    setupToggleList();
     
     document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
     document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
 });
 
-// ⭐ Show / Hide Product List Toggle Logic
 function setupToggleList() {
     const toggleBtn = document.getElementById('toggleProductListBtn');
     const listContainer = document.getElementById('productListContainer');
@@ -39,11 +34,11 @@ function setupToggleList() {
             if (listContainer.style.display === 'none') {
                 listContainer.style.display = 'block';
                 toggleBtn.textContent = 'Hide Product List';
-                toggleBtn.style.background = '#EF4444'; // Red for hide
+                toggleBtn.style.background = '#EF4444';
             } else {
                 listContainer.style.display = 'none';
                 toggleBtn.textContent = 'Show Product List';
-                toggleBtn.style.background = '#3B82F6'; // Blue for show
+                toggleBtn.style.background = '#3B82F6';
             }
         });
     }
@@ -219,6 +214,16 @@ window.editProduct = async function(id) {
         document.getElementById('pRating').value = p.rating || '';
         document.getElementById('pReviewsCount').value = p.reviews_count || 0;
         
+        // Event Logic Load
+        document.getElementById('pEventName').value = p.event_name || '';
+        if(p.sale_end_date) {
+            const d = new Date(p.sale_end_date);
+            d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+            document.getElementById('pSaleEndDate').value = d.toISOString().slice(0,16);
+        } else {
+            document.getElementById('pSaleEndDate').value = '';
+        }
+
         document.getElementById('pStore').value = defaultOffer.store_name || '';
         document.getElementById('pPrice').value = defaultOffer.price || '';
         document.getElementById('pCommission').value = (defaultOffer.commission_rate && defaultOffer.commission_rate > 0) ? defaultOffer.commission_rate : '';
@@ -243,7 +248,6 @@ window.editProduct = async function(id) {
         document.getElementById('saveBtn').innerText = "Update Product";
         document.getElementById('cancelEditBtn').style.display = "block";
         
-        // Open the list if it's closed
         const listContainer = document.getElementById('productListContainer');
         if(listContainer && listContainer.style.display === 'none') {
             document.getElementById('toggleProductListBtn').click();
@@ -301,6 +305,10 @@ function setupProductForm() {
         const rating = document.getElementById('pRating').value ? parseFloat(document.getElementById('pRating').value) : null;
         const reviewsCount = document.getElementById('pReviewsCount').value ? parseInt(document.getElementById('pReviewsCount').value) : 0;
         
+        // Event Data
+        const eventName = document.getElementById('pEventName').value.trim();
+        const saleEndDate = document.getElementById('pSaleEndDate').value;
+
         const store = document.getElementById('pStore').value.trim().toLowerCase();
         const price = parseFloat(document.getElementById('pPrice').value) || 0;
         
@@ -324,7 +332,9 @@ function setupProductForm() {
             description: desc, review_html: review,
             is_featured: featured, is_trending: trending,
             badge: badge || null, rating: rating, reviews_count: reviewsCount,
-            gallery_images: galleryImages, video_url: videoUrl || null
+            gallery_images: galleryImages, video_url: videoUrl || null,
+            event_name: eventName || null,
+            sale_end_date: saleEndDate ? new Date(saleEndDate).toISOString() : null
         };
 
         const mainOfferData = {
