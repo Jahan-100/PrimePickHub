@@ -5,9 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex,nofollow">
     <title>Admin - PrimePickHub</title>
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/admin.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .admin-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .admin-table th, .admin-table td { border: 1px solid #E2E8F0; padding: 10px; text-align: left; }
+        .admin-table th { background: #F8FAFC; font-weight: 600; }
+        .btn-edit { background: #3B82F6; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; font-size: 0.85rem; }
+        .btn-delete { background: #EF4444; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; margin-left: 5px; }
+    </style>
 </head>
 <body>
     <div class="admin-layout">
@@ -15,7 +22,7 @@
             <h2>PrimePick Admin</h2>
             <div class="admin-nav">
                 <a href="#" class="active">Dashboard</a>
-                <a href="index.html" target="_blank">View Website ↗</a>
+                <a href="/index.html" target="_blank">View Website ↗</a>
                 <a href="#" id="logoutBtn">Logout</a>
             </div>
         </div>
@@ -52,10 +59,33 @@
                     </div>
                 </div>
 
+                <!-- Product List Table -->
+                <div class="admin-card" style="margin-bottom: 30px;">
+                    <h2>Manage Products</h2>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Title</th>
+                                <th>Price</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productListBody">
+                            <tr><td colspan="4" style="text-align:center;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Add / Edit Form -->
                 <div class="admin-card">
-                    <h2>Add Product</h2>
+                    <h2 id="formTitle">Add New Product</h2>
                     <br>
                     <form id="productForm">
+                        <!-- Hidden ID for Editing -->
+                        <input type="hidden" id="pId" value="">
+                        <input type="hidden" id="pOfferId" value="">
+
                         <div class="form-group"><label>Product Title</label><input type="text" id="pTitle" required></div>
                         <div class="form-group"><label>URL Slug</label><input type="text" id="pSlug" required pattern="[a-z0-9-]+"></div>
                         
@@ -122,15 +152,19 @@
                             <label><input type="checkbox" id="pFeatured"> Featured</label>
                             <label style="margin-left:20px;"><input type="checkbox" id="pTrending"> Trending</label>
                         </div>
-                        <button type="submit" class="btn-check-price" style="width:auto;padding:10px 25px;">Save Product</button>
+                        
+                        <div style="display: flex; gap: 10px;">
+                            <button type="submit" id="saveBtn" class="btn-check-price" style="width:auto;padding:10px 25px;">Save Product</button>
+                            <button type="button" id="cancelEditBtn" class="btn-check-price" style="width:auto;padding:10px 25px; background:#64748B; display:none;">Cancel Edit</button>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="js/config.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/admin.js"></script>
+    <script src="/js/config.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/admin.js"></script>
 </body>
 </html>
