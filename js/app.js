@@ -157,7 +157,7 @@ async function loadSpecialDeals() {
     const section = document.getElementById('specialDealSection');
 
     if (products && products.length > 0) {
-        section.style.display = 'block';
+        section.style.display = 'flex'; // Flex to show 30/70 layout
         
         container.innerHTML = products.map(p => {
             const offer = p.affiliate_offers?.[0] || {};
@@ -247,7 +247,7 @@ function handleSearch() {
 }
 document.addEventListener('DOMContentLoaded', () => {
     loadHomepageProducts();
-    loadSpecialDeals(); // ⭐ Special Deals Load Function Call
+    loadSpecialDeals();
     const btn = document.getElementById('searchBtn');
     const input = document.getElementById('searchInput');
     if (btn) btn.addEventListener('click', handleSearch);
