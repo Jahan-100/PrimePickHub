@@ -54,7 +54,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .btn-check-price:hover { opacity: 0.9; }
 
 
-/* ⭐ UPDATED Alibaba Style Special Deal Section (Exact Proportions) ⭐ */
+/* ⭐ Alibaba Style Special Deal Section ⭐ */
 .alibaba-special-deal {
     display: flex;
     position: relative;
@@ -62,12 +62,12 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     border-radius: 12px; 
     overflow: hidden;
     margin-bottom: 40px;
-    min-height: 185px; /* 15% Height Reduced */
+    min-height: 185px; /* Compact Height */
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     border: 1px solid #E2E8F0;
 }
 
-/* ⭐ Background Image (10% More Visible) ⭐ */
+/* Background Image */
 .alibaba-special-deal::before {
     content: "";
     position: absolute;
@@ -75,29 +75,29 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     background-image: url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');
     background-size: cover;
     background-position: center;
-    opacity: 0.4; /* Increased from 0.3 to 0.4 */
+    opacity: 0.4; 
     z-index: 0;
 }
 
-/* Left Side (20% Darker Color, White Text) */
+/* Left Side */
 .special-deal-left {
     flex: 0 0 28%;
-    padding: 20px 25px; /* Padding adjusted for smaller height */
+    padding: 20px 25px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     position: relative;
     z-index: 1;
-    background: rgba(105, 20, 76, 0.85); /* Dark Magenta with slight transparency */
+    background: rgba(105, 20, 76, 0.85); 
 }
 
 #specialDealTitle {
     font-family: 'Poppins', sans-serif;
     font-weight: 800;
-    font-size: 1.8rem; /* Slightly smaller to fit smaller box */
+    font-size: 1.8rem; 
     line-height: 1.1;
     margin-bottom: 6px;
-    color: #fff; /* White text for dark background */
+    color: #fff; 
 }
 
 .special-deal-subtitle {
@@ -107,25 +107,9 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     font-weight: 500;
 }
 
-.special-deal-features {
-    list-style: none;
-    margin-bottom: 15px;
-}
-
-.special-deal-features li {
-    font-size: 0.8rem;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #fff;
-    font-weight: 500;
-}
-
-.special-deal-features li i {
-    color: #FFD700; /* Gold icons */
-    font-size: 0.9rem;
-}
+.special-deal-features { list-style: none; margin-bottom: 15px; }
+.special-deal-features li { font-size: 0.8rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 500; }
+.special-deal-features li i { color: #FFD700; font-size: 0.9rem; }
 
 .explore-btn {
     display: inline-block;
@@ -139,11 +123,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     width: fit-content;
     transition: all 0.2s;
 }
-
-.explore-btn:hover {
-    background: #FFD700;
-    color: #69144c;
-}
+.explore-btn:hover { background: #FFD700; color: #69144c; }
 
 /* Right Side */
 .special-deal-right {
@@ -167,16 +147,16 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 }
 .horizontal-scroll-container::-webkit-scrollbar { display: none; }
 
-/* ⭐ Product Card (Width 10% Less, Height 10% More, 70/30 Split) ⭐ */
+/* ⭐ Product Card (85% Image / 15% Details) ⭐ */
 .special-deal-card {
-    min-width: 190px; /* Width 10% reduced from 210px */
+    min-width: 190px; 
     max-width: 190px;
-    height: 250px; /* Height 10% increased (overall card height) */
+    height: 250px; 
     background: #fff;
     border-radius: 8px;
     text-decoration: none;
     display: flex;
-    flex-direction: column; /* Stack image and info */
+    flex-direction: column; 
     position: relative;
     overflow: hidden;
     transition: transform 0.2s;
@@ -188,33 +168,33 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     box-shadow: 0 8px 20px rgba(0,0,0,0.15);
 }
 
-/* Image Box - 70% of card height */
+/* Image Box - 85% of card height */
 .special-deal-card .img-box {
-    flex: 7; /* Takes 70% of the height */
+    flex: 8.5; /* 85% */
     width: 100%;
     background: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden; /* Hide overflow if using cover */
+    overflow: hidden;
 }
 
 /* Image fills the entire top box */
 .special-deal-card .img-box img {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Fills the space completely, no white borders */
+    object-fit: cover; /* Fills the space completely */
     transition: transform 0.3s;
 }
 
 .special-deal-card:hover .img-box img {
-    transform: scale(1.05); /* Slight zoom effect on hover */
+    transform: scale(1.05); 
 }
 
-/* Info Box - 30% of card height */
+/* Info Box - 15% of card height */
 .special-deal-card .info-box {
-    flex: 3; /* Takes 30% of the height */
-    padding: 8px 10px;
+    flex: 1.5; /* 15% */
+    padding: 4px 8px; /* Reduced padding for tight space */
     background: #fff;
     display: flex;
     flex-direction: column;
@@ -223,14 +203,15 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 }
 
 .special-deal-card .price {
-    font-size: 1.1rem;
+    font-size: 0.95rem; /* Slightly smaller to fit 15% */
     font-weight: 800;
     color: #FF5A3C;
-    margin-bottom: 2px;
+    margin-bottom: 0px;
+    line-height: 1.1;
 }
 
 .special-deal-card .title {
-    font-size: 0.8rem;
+    font-size: 0.7rem; /* Smaller text */
     color: #475569;
     font-weight: 500;
     display: -webkit-box;
@@ -239,6 +220,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+    line-height: 1.1;
 }
 
 /* Arrows */
