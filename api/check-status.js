@@ -1,19 +1,23 @@
 // api/check-status.js (Vercel Serverless Function)
-export default async function handler(req, res) {
+const { createClient } = require('@supabase/supabase-js');
+
+module.exports = async function handler(req, res) {
     // CORS Setup
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     if (req.method === 'OPTIONS') return res.status(200).end();
 
     try {
-        // ⚠️ APNI SUPABASE DETAILS YAHAN DALEIN
-        const supabaseUrl = 'https://smxjiwywepeaybhekrck.supabase.co';
-        const supabaseKey = 'YAHAN_APNI_SERVICE_ROLE_KEY_DALEIN'; // (Settings > API > service_role secret)
+        // Environment variables se keys uthayein
+        const supabaseUrl = process.env.SUPABASE_URL || 'https://smxjiwywepeaybhekrck.supabase.co';
+        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
         
-        const { createClient } = require('@supabase/supabase-js');
+        if (!supabaseKey) {
+            return res.status(500).json({ success: false, error: 'Service Role Key missing in Vercel settings.' });
+        }
+
         const supabase = createClient(supabaseUrl, supabaseKey);
 
-        // Fetch all products with an affiliate URL
         const { data: products, error } = await supabase
             .from('products')
             .select('id, affiliate_url, title');
@@ -23,12 +27,10 @@ export default async function handler(req, res) {
         let updatedCount = 0;
         let unavailableProducts = [];
 
-        // Loop through each product
         for (const product of products) {
             if (!product.affiliate_url) continue;
 
             try {
-                // Fetch the URL to check status
                 const response = await fetch(product.affiliate_url, {
                     method: 'GET',
                     redirect: 'follow',
@@ -38,7 +40,6 @@ export default async function handler(req, res) {
                 const text = await response.text();
                 const lowerText = text.toLowerCase();
 
-                // Check for out of stock indicators
                 const isDead = response.status === 404 || 
                                lowerText.includes('out of stock') || 
                                lowerText.includes('sold out') || 
@@ -51,7 +52,6 @@ export default async function handler(req, res) {
                     updatedCount++;
                     unavailableProducts.push(product.title);
                 } else {
-                    // If it was dead before but now live
                     await supabase.from('products').update({ is_available: true }).eq('id', product.id);
                 }
             } catch (err) {
