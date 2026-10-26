@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer with Dynamic Fonts & Alibaba Layout
+ * PrimePickHub Homepage Renderer with Auto-Update Flash Sale
  */
 
 function escapeHTML(str) {
@@ -125,12 +125,23 @@ function startCountdown(endDateStr) {
     countdownInterval = setInterval(() => {
         const now = new Date().getTime();
         const distance = endDate - now;
+        
+        // ⭐ AUTO-UPDATE LOGIC: Agar time khatam ho jaye
         if (distance < 0) {
             clearInterval(countdownInterval);
             countdownEl.innerHTML = "EXPIRED";
-            setTimeout(() => window.location.reload(), 2000);
+            
+            // 2 second baad page refresh nahi karna, balke data ko smoothly reload karna hai
+            setTimeout(() => {
+                // Section ko hide karein
+                const flashSection = document.getElementById('flashSaleSection');
+                if(flashSection) flashSection.style.display = 'none';
+                // Products ko normal grid mein move karne ke liye data reload karein
+                loadHomepageProducts();
+            }, 2000);
             return;
         }
+        
         const days = Math.floor(distance / (1000 * 60 * 60 * 24));
         const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
@@ -175,7 +186,6 @@ async function loadSpecialDeals() {
             
             const productUrl = `/product/${encodeURIComponent(p.slug)}`;
 
-            // ⭐ Alibaba Card Structure ⭐
             return `
                 <a href="${productUrl}" class="special-deal-card">
                     <div class="img-box">
@@ -223,6 +233,7 @@ async function loadHomepageProducts() {
 
         allProducts.forEach(p => {
             const endDate = p.sale_end_date ? new Date(p.sale_end_date) : null;
+            // Check if sale is active
             if (endDate && endDate > now) {
                 flashSaleProducts.push(p);
             } else {
