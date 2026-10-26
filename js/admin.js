@@ -7,8 +7,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (auth.role !== 'admin') { alert('Access denied. Admin only.'); await API.signOut(); return showLogin(); }
 
     showDashboard(); await loadStats(); await loadProductsList(); setupProductForm(); setupToggleList();
+    
     document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
     document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
+    
+    // Check Availability Button
+    document.getElementById('checkAvailabilityBtn')?.addEventListener('click', async function() {
+        const btn = this;
+        const originalText = btn.innerText;
+        btn.innerText = "Checking... Please Wait (1-2 mins)";
+        btn.disabled = true;
+
+        try {
+            const res = await fetch('/api/check-status');
+            const data = await res.json();
+            
+            if (data.success) {
+                alert(`Check Complete!\n${data.message}`);
+                if(data.unavailable && data.unavailable.length > 0) {
+                    alert(`Unavailable Products:\n\n- ${data.unavailable.join('\n- ')}`);
+                }
+                await loadProductsList(); 
+            } else {
+                alert('Error checking status: ' + (data.error || 'Unknown error'));
+            }
+        } catch (err) {
+            alert('Failed to check. Make sure Vercel API is deployed.');
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    });
 });
 
 function setupToggleList() {
@@ -92,7 +121,6 @@ function renderTable() {
         const basePrice = parseFloat(defaultOffer.price) || 0;
         const commissionRate = parseFloat(defaultOffer.commission_rate) || 0;
         
-        // Check if sale is active for Admin view
         const now = new Date();
         const isSaleActive = p.sale_end_date && new Date(p.sale_end_date) > now;
         const salePrice = parseFloat(defaultOffer.sale_price) || 0;
@@ -105,11 +133,16 @@ function renderTable() {
         }
 
         const priceStr = defaultOffer.price ? `${finalPrice.toFixed(2)} ${defaultOffer.currency || 'USD'}` : 'N/A';
+        
+        // ⭐ Availability Check UI
+        const isAvailable = p.is_available !== false;
+        const rowClass = isAvailable ? '' : 'unavailable-row';
+        const statusBadge = isAvailable ? '' : `<span class="badge-unavailable">UNAVAILABLE</span>`;
 
         return `
-            <tr>
+            <tr class="${rowClass}">
                 <td><img src="${p.image_url}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;"></td>
-                <td>${p.title}</td>
+                <td>${p.title} ${statusBadge}</td>
                 <td><strong style="color:#FF5A3C;">${priceStr}</strong></td>
                 <td>
                     <button class="btn-edit" onclick="editProduct('${p.id}')">Edit</button>
@@ -119,13 +152,12 @@ function renderTable() {
     }).join('');
 }
 
-// ⭐ Variation Row Generation (With Sale Price)
 window.addVariationRow = function(name = '', price = '', salePrice = '', commission = '', url = '') {
     const container = document.getElementById('variationsContainer');
     const div = document.createElement('div');
     div.className = 'variation-row';
     div.innerHTML = `
-        <input type="text" placeholder="Size/Color (e.g. M, L, Red)" value="${name}" class="var-name" required>
+        <input type="text" placeholder="Size/Color (e.g. M, L)" value="${name}" class="var-name" required>
         <input type="number" step="0.01" placeholder="Base Price" value="${price}" class="var-price" required>
         <input type="number" step="0.01" placeholder="Sale Price" value="${salePrice}" class="var-sale-price">
         <input type="number" step="0.1" placeholder="Comm %" value="${commission}" class="var-comm">
@@ -204,7 +236,8 @@ function setupProductForm() {
             reviews_count: document.getElementById('pReviewsCount').value ? parseInt(document.getElementById('pReviewsCount').value) : 0,
             gallery_images: document.getElementById('pGallery').value.trim() ? document.getElementById('pGallery').value.split('\n').map(u=>u.trim()).filter(Boolean) : [],
             video_url: document.getElementById('pVideo').value.trim() || null,
-            event_name: eventName || null, sale_end_date: saleEndDate ? new Date(saleEndDate).toISOString() : null
+            event_name: eventName || null, sale_end_date: saleEndDate ? new Date(saleEndDate).toISOString() : null,
+            is_available: true // Jab edit/add karein toh wapas available ho jaye
         };
 
         if (!productData.title || !productData.slug || !productData.image_url) return alert('Please fill required fields.');
