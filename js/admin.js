@@ -6,12 +6,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!auth) return showLogin();
     if (auth.role !== 'admin') { alert('Access denied. Admin only.'); await API.signOut(); return showLogin(); }
 
-    showDashboard(); await loadStats(); await loadProductsList(); setupProductForm(); setupToggleList();
+    showDashboard(); 
+    await loadStats(); 
+    await loadSpecialTitle(); // Title Load karein
+    await loadProductsList(); 
+    setupProductForm(); 
+    setupToggleList();
     
     document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
     document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
     
-    // Check Availability Button Logic
+    // Special Deal Title Save Button
+    document.getElementById('saveTitleBtn')?.addEventListener('click', async function() {
+        const newTitle = document.getElementById('specialDealTitleInput').value.trim();
+        if(!newTitle) return alert("Title cannot be empty");
+        const { error } = await window.supabaseClient.from('site_settings').update({ special_deal_title: newTitle }).eq('id', 1);
+        if (error) alert("Error: " + error.message);
+        else alert("Homepage Special Deal Title updated successfully!");
+    });
+
+    // Check Availability Button
     document.getElementById('checkAvailabilityBtn')?.addEventListener('click', async function() {
         const btn = this;
         const originalText = btn.innerText;
@@ -21,12 +35,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const res = await fetch('/api/check-status');
             const data = await res.json();
-            
             if (data.success) {
                 alert(`Check Complete!\n${data.message}`);
-                if(data.unavailable && data.unavailable.length > 0) {
-                    alert(`Unavailable Products Found:\n\n- ${data.unavailable.join('\n- ')}`);
-                }
                 await loadProductsList(); 
             } else {
                 alert('Error checking status: ' + (data.error || 'Unknown error'));
@@ -39,6 +49,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 });
+
+async function loadSpecialTitle() {
+    const { data } = await window.supabaseClient.from('site_settings').select('special_deal_title').eq('id', 1).single();
+    if (data && document.getElementById('specialDealTitleInput')) {
+        document.getElementById('specialDealTitleInput').value = data.special_deal_title;
+    }
+}
 
 function setupToggleList() {
     const toggleBtn = document.getElementById('toggleProductListBtn');
@@ -114,13 +131,11 @@ function renderTable() {
         return matchesCategory && matchesSearch;
     });
 
-    // ⭐ SORTING LOGIC: Unavailable Products at the TOP
+    // Unavailable Products Top Par Aayen
     filteredProducts.sort((a, b) => {
         const aIsAvailable = a.is_available !== false;
         const bIsAvailable = b.is_available !== false;
-        // Agar dono ka status same hai, toh order change na karein
         if (aIsAvailable === bIsAvailable) return 0;
-        // Agar 'a' unavailable hai (false) aur 'b' available hai (true), toh 'a' upar aayega (-1)
         return aIsAvailable ? 1 : -1;
     });
 
@@ -144,7 +159,6 @@ function renderTable() {
 
         const priceStr = defaultOffer.price ? `${finalPrice.toFixed(2)} ${defaultOffer.currency || 'USD'}` : 'N/A';
         
-        // ⭐ Availability UI Check
         const isAvailable = p.is_available !== false;
         const rowClass = isAvailable ? '' : 'unavailable-row';
         const statusBadge = isAvailable ? '' : `<span class="badge-unavailable">UNAVAILABLE</span>`;
@@ -167,11 +181,11 @@ window.addVariationRow = function(name = '', price = '', salePrice = '', commiss
     const div = document.createElement('div');
     div.className = 'variation-row';
     div.innerHTML = `
-        <input type="text" placeholder="Size/Color (e.g. M, L)" value="${name}" class="var-name" required>
+        <input type="text" placeholder="Size/Color" value="${name}" class="var-name" required>
         <input type="number" step="0.01" placeholder="Base Price" value="${price}" class="var-price" required>
         <input type="number" step="0.01" placeholder="Sale Price" value="${salePrice}" class="var-sale-price">
         <input type="number" step="0.1" placeholder="Comm %" value="${commission}" class="var-comm">
-        <input type="url" placeholder="Aff URL (Opt)" value="${url}" class="var-url">
+        <input type="url" placeholder="Aff URL" value="${url}" class="var-url">
         <button type="button" class="btn-remove-var" onclick="this.parentElement.remove()">X</button>
     `;
     container.appendChild(div);
@@ -204,6 +218,7 @@ window.editProduct = async function(id) {
         
         document.getElementById('pDesc').value = p.description || ''; document.getElementById('pReview').value = p.review_html || '';
         document.getElementById('pFeatured').checked = p.is_featured || false; document.getElementById('pTrending').checked = p.is_trending || false;
+        document.getElementById('pSpecialDeal').checked = p.is_special_deal || false;
 
         const varContainer = document.getElementById('variationsContainer'); varContainer.innerHTML = '';
         const variations = p.affiliate_offers?.filter(o => o.variation_name) || [];
@@ -242,12 +257,13 @@ function setupProductForm() {
             image_url: document.getElementById('pImg').value.trim(), category_slug: document.getElementById('pCategory').value,
             description: document.getElementById('pDesc').value.trim(), review_html: document.getElementById('pReview').value.trim(),
             is_featured: document.getElementById('pFeatured').checked, is_trending: document.getElementById('pTrending').checked,
+            is_special_deal: document.getElementById('pSpecialDeal').checked,
             badge: document.getElementById('pBadge').value.trim() || null, rating: document.getElementById('pRating').value ? parseFloat(document.getElementById('pRating').value) : null,
             reviews_count: document.getElementById('pReviewsCount').value ? parseInt(document.getElementById('pReviewsCount').value) : 0,
             gallery_images: document.getElementById('pGallery').value.trim() ? document.getElementById('pGallery').value.split('\n').map(u=>u.trim()).filter(Boolean) : [],
             video_url: document.getElementById('pVideo').value.trim() || null,
             event_name: eventName || null, sale_end_date: saleEndDate ? new Date(saleEndDate).toISOString() : null,
-            is_available: true // Jab edit/add karein toh wapas available ho jaye
+            is_available: true
         };
 
         if (!productData.title || !productData.slug || !productData.image_url) return alert('Please fill required fields.');
