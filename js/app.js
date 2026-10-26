@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer with Individual Card Timers
+ * PrimePickHub Homepage Renderer with Individual Card Timers & Auto-Hide
  */
 
 function escapeHTML(str) {
@@ -108,7 +108,6 @@ function renderProductCard(product) {
             <div class="card-body">
                 <a href="${productUrl}" ${disabledAttr} class="card-title">${title}</a>
                 <div class="card-rating">${escapeHTML(ratingText)}</div>
-                <!-- ⭐ Timer Yahan Show Hoga ⭐ -->
                 ${timerHtml}
                 ${cta}
             </div>
@@ -127,25 +126,32 @@ function renderProductsGrid(products, grid) {
     });
 }
 
-// ⭐ 2. Timer ko Har Second Update Karne Ka Function ⭐
+// ⭐ 2. Timer Update aur Auto-Reload Logic ⭐
+let isReloading = false; // Prevent multiple reloads at the same time
+
 setInterval(() => {
+    let expiredFound = false;
+
     document.querySelectorAll('.card-timer').forEach(el => {
         const endTime = new Date(el.dataset.endtime).getTime();
         const now = new Date().getTime();
         const distance = endTime - now;
 
         if (distance < 0) {
-            el.innerHTML = "❌ EXPIRED";
-            el.style.background = "#F1F5F9";
-            el.style.color = "#64748B";
-            el.style.borderColor = "#E2E8F0";
+            // Agar pehle se EXPIRED nahi likha, toh likhein
+            if (el.innerHTML !== "❌ EXPIRED") {
+                el.innerHTML = "❌ EXPIRED";
+                el.style.background = "#F1F5F9";
+                el.style.color = "#64748B";
+                el.style.borderColor = "#E2E8F0";
+                expiredFound = true; // Mark ke koi product expire ho gaya hai
+            }
         } else {
             const days = Math.floor(distance / (1000 * 60 * 60 * 24));
             const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-            // Agar 1 din se zyada bacha hai toh days show karein, warna sirf hours
             if (days > 0) {
                 el.innerHTML = `⏳ ${days}d ${hours}h ${minutes}m`;
             } else {
@@ -153,6 +159,17 @@ setInterval(() => {
             }
         }
     });
+
+    // ⭐ Auto-Reload Action: Agar koi product expire hua hai
+    if (expiredFound && !isReloading) {
+        isReloading = true;
+        // 2 second wait karein taake user "EXPIRED" parh le
+        setTimeout(() => {
+            loadHomepageProducts().then(() => {
+                isReloading = false; // Reload complete hone ke baad reset
+            });
+        }, 2000);
+    }
 }, 1000);
 
 async function loadSpecialDeals() {
