@@ -2,14 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- ⭐ Mitgo Ad Space Verification Tag ⭐ -->
     <meta name="mitgo-verification" content="e3f69518-ab0c-46db-a669-34aacd83fd21" />
-    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PrimePickHub - Compare & Click The Best Deals</title>
     <meta name="description" content="Compare products across Daraz, Amazon, AliExpress & eBay. Check live prices instantly.">
 
-    <!-- OpenGraph -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="PrimePickHub - Compare & Click The Best Deals">
     <meta property="og:description" content="Compare products across top stores. Live prices.">
@@ -17,7 +14,6 @@
     <meta property="og:url" content="https://www.primepickhub.com/">
     <meta property="og:site_name" content="PrimePickHub">
 
-    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-7VE3L1Y8PQ"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -32,7 +28,6 @@
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Fonts & Flash Sale Styles -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,800;1,900&display=swap" rel="stylesheet">
     <style>
         /* Flash Sale Styles */
@@ -40,56 +35,21 @@
             background: linear-gradient(270deg, #FF2E2E, #FF5A3C, #FF8C00);
             background-size: 600% 600%;
             animation: gradientBG 4s ease infinite;
-            border-radius: 16px; padding: 30px 25px; color: #fff; margin-bottom: 30px; 
+            border-radius: 16px; padding: 30px 25px; color: #fff; margin-bottom: 40px; 
             display: flex; justify-content: space-between; align-items: center; 
             flex-wrap: wrap; box-shadow: 0 10px 25px rgba(255, 90, 60, 0.4); 
             position: relative; overflow: hidden;
         }
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        .flash-light-effect {
-            position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; 
-            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%); 
-            animation: rotateLight 10s linear infinite; pointer-events: none;
-        }
-        @keyframes rotateLight {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .flash-title {
-            font-family: 'Poppins', sans-serif; font-weight: 900; font-style: italic;
-            font-size: 3.5rem; letter-spacing: 2px; text-shadow: 3px 3px 8px rgba(0,0,0,0.4);
-            animation: pulseText 1.5s infinite; margin: 0; display: flex; align-items: center; gap: 15px; line-height: 1.2;
-        }
-        @keyframes pulseText {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
-        }
-        .marquee-container {
-            overflow: hidden; white-space: nowrap; width: 100%; max-width: 600px; margin-top: 15px;
-            mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-        }
-        .marquee-text {
-            display: inline-block; animation: marquee 12s linear infinite;
-            font-size: 1.4rem; font-weight: 700; opacity: 0.95; margin: 0; letter-spacing: 1px;
-        }
-        @keyframes marquee {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-        .timer-box {
-            background: rgba(0,0,0,0.35); padding: 15px 25px; border-radius: 12px;
-            text-align: center; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);
-            z-index: 1; box-shadow: inset 0 0 15px rgba(0,0,0,0.3);
-        }
-        .timer-text {
-            font-size: 1.8rem; font-weight: 900; font-family: 'Courier New', monospace;
-            color: #fff; text-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700;
-        }
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .flash-light-effect { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%); animation: rotateLight 10s linear infinite; pointer-events: none; }
+        @keyframes rotateLight { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .flash-title { font-family: 'Poppins', sans-serif; font-weight: 900; font-style: italic; font-size: 3.5rem; letter-spacing: 2px; text-shadow: 3px 3px 8px rgba(0,0,0,0.4); animation: pulseText 1.5s infinite; margin: 0; display: flex; align-items: center; gap: 15px; line-height: 1.2; }
+        @keyframes pulseText { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+        .marquee-container { overflow: hidden; white-space: nowrap; width: 100%; max-width: 600px; margin-top: 15px; mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent); }
+        .marquee-text { display: inline-block; animation: marquee 12s linear infinite; font-size: 1.4rem; font-weight: 700; opacity: 0.95; margin: 0; letter-spacing: 1px; }
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        .timer-box { background: rgba(0,0,0,0.35); padding: 15px 25px; border-radius: 12px; text-align: center; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); z-index: 1; box-shadow: inset 0 0 15px rgba(0,0,0,0.3); }
+        .timer-text { font-size: 1.8rem; font-weight: 900; font-family: 'Courier New', monospace; color: #fff; text-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700; }
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -98,8 +58,6 @@
     <header class="header">
         <div class="nav-main">
             <a href="index.html" class="logo">PrimePick<span>Hub</span></a>
-            
-            <!-- Modern Search Bar -->
             <div class="search-box">
                 <input type="text" id="searchInput" placeholder="Search products, brands, stores...">
                 <button id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i></button>
@@ -116,7 +74,7 @@
 
     <main class="container">
         
-        <!-- ⭐ 1. Flash Sale Section (Sabse Upar) ⭐ -->
+        <!-- 1. Flash Sale Section -->
         <div id="flashSaleSection" style="display: none; margin-bottom: 40px; margin-top: 10px;">
             <div class="flash-sale-banner">
                 <div class="flash-light-effect"></div>
@@ -125,9 +83,7 @@
                         ⚡ <span id="flashSaleTitle">Limited Time Offer</span>
                     </h2>
                     <div class="marquee-container">
-                        <p class="marquee-text">
-                            🔥 Hurry up! Offer ends soon. Limited stock available! &nbsp;&nbsp;&nbsp;&nbsp; 🔥 Hurry up! Offer ends soon. Limited stock available! &nbsp;&nbsp;&nbsp;&nbsp; 🔥 Hurry up! Offer ends soon. Limited stock available!
-                        </p>
+                        <p class="marquee-text">🔥 Hurry up! Offer ends soon. Limited stock available! &nbsp;&nbsp;&nbsp;&nbsp; 🔥 Hurry up! Offer ends soon. Limited stock available! &nbsp;&nbsp;&nbsp;&nbsp; 🔥 Hurry up! Offer ends soon. Limited stock available!</p>
                     </div>
                 </div>
                 <div class="timer-box" style="margin-top: 10px;">
@@ -138,35 +94,34 @@
             <div class="product-grid" id="flashSaleGrid"></div>
         </div>
 
-        <!-- ⭐ 2. Shop by Category Section (Flash Sale ke Neeche) ⭐ -->
-        <div id="categorySection" style="margin-bottom: 40px;">
-            <h2 style="margin-bottom: 20px; font-family: 'Poppins', sans-serif; font-weight: 800; color: var(--text-dark);">Shop by Category</h2>
-            
-            <div class="category-grid">
-                <a href="category.html?cat=electronics" class="category-card">
-                    <div class="cat-img-wrapper"><img src="https://images.unsplash.com/photo-1498049794561-7780e7231661?w=200&h=200&fit=crop" alt="Electronics"></div>
-                    <span>Electronics</span>
-                </a>
-                <a href="category.html?cat=fashion" class="category-card">
-                    <div class="cat-img-wrapper"><img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=200&h=200&fit=crop" alt="Fashion"></div>
-                    <span>Fashion</span>
-                </a>
-                <a href="category.html?cat=home-kitchen" class="category-card">
-                    <div class="cat-img-wrapper"><img src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=200&h=200&fit=crop" alt="Home & Kitchen"></div>
-                    <span>Home & Kitchen</span>
-                </a>
-                <a href="category.html?cat=beauty" class="category-card">
-                    <div class="cat-img-wrapper"><img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=200&h=200&fit=crop" alt="Beauty"></div>
-                    <span>Beauty</span>
-                </a>
-                <a href="category.html?cat=sports" class="category-card">
-                    <div class="cat-img-wrapper"><img src="https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=200&h=200&fit=crop" alt="Sports"></div>
-                    <span>Sports</span>
-                </a>
+        <!-- ⭐ 2. Alibaba Style Horizontal Special Deal Section ⭐ -->
+        <div id="specialDealSection" style="display: none; margin-bottom: 40px; background: linear-gradient(135deg, #4A0E3F, #851760); border-radius: 16px; padding: 25px; position: relative; overflow: hidden;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; color: #fff;">
+                <div>
+                    <h2 id="specialDealTitle" style="font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 2.2rem; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Special Deals</h2>
+                    <p style="margin: 5px 0 0 0; color: #fbcfe8; font-size: 1rem;">Exclusive offers just for you!</p>
+                </div>
+            </div>
+            <div style="position: relative;">
+                <button class="scroll-arrow left-arrow" onclick="scrollSpecial('left')"><i class="fa-solid fa-chevron-left"></i></button>
+                <div id="specialDealScroll" class="horizontal-scroll-container"></div>
+                <button class="scroll-arrow right-arrow" onclick="scrollSpecial('right')"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
         </div>
 
-        <!-- ⭐ 3. Normal Products Section (Just For You) ⭐ -->
+        <!-- 3. Shop by Category Section -->
+        <div id="categorySection" style="margin-bottom: 40px;">
+            <h2 style="margin-bottom: 20px; font-family: 'Poppins', sans-serif; font-weight: 800; color: var(--text-dark);">Shop by Category</h2>
+            <div class="category-grid">
+                <a href="category.html?cat=electronics" class="category-card"><div class="cat-img-wrapper"><img src="https://images.unsplash.com/photo-1498049794561-7780e7231661?w=200&h=200&fit=crop" alt="Electronics"></div><span>Electronics</span></a>
+                <a href="category.html?cat=fashion" class="category-card"><div class="cat-img-wrapper"><img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=200&h=200&fit=crop" alt="Fashion"></div><span>Fashion</span></a>
+                <a href="category.html?cat=home-kitchen" class="category-card"><div class="cat-img-wrapper"><img src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=200&h=200&fit=crop" alt="Home & Kitchen"></div><span>Home & Kitchen</span></a>
+                <a href="category.html?cat=beauty" class="category-card"><div class="cat-img-wrapper"><img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=200&h=200&fit=crop" alt="Beauty"></div><span>Beauty</span></a>
+                <a href="category.html?cat=sports" class="category-card"><div class="cat-img-wrapper"><img src="https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=200&h=200&fit=crop" alt="Sports"></div><span>Sports</span></a>
+            </div>
+        </div>
+
+        <!-- 4. Normal Products Section -->
         <div id="normalProductsSection">
             <h2 style="margin-bottom:10px; font-family: 'Poppins', sans-serif; font-weight: 800;">Just For You</h2>
             <p style="color:var(--text-muted);margin-bottom:20px;">Click any product to view live price on the official store.</p>
@@ -178,16 +133,9 @@
     <footer class="footer">
         <p><strong>PrimePickHub</strong> — Compare. Click. Save Smarter.</p>
         <p style="margin-top:10px;font-size:0.85rem;">
-            <a href="about.html" style="color:#CBD5E1;">About</a> ·
-            <a href="contact.html" style="color:#CBD5E1;">Contact</a> ·
-            <a href="privacy-policy.html" style="color:#CBD5E1;">Privacy</a> ·
-            <a href="terms.html" style="color:#CBD5E1;">Terms</a> ·
-            <a href="affiliate-disclosure.html" style="color:#CBD5E1;">Affiliate Disclosure</a>
+            <a href="about.html" style="color:#CBD5E1;">About</a> · <a href="contact.html" style="color:#CBD5E1;">Contact</a> · <a href="privacy-policy.html" style="color:#CBD5E1;">Privacy</a> · <a href="terms.html" style="color:#CBD5E1;">Terms</a> · <a href="affiliate-disclosure.html" style="color:#CBD5E1;">Affiliate Disclosure</a>
         </p>
-        <div class="footer-disclaimer">
-            PrimePickHub is an affiliate website. We may earn a commission when you click our links
-            and purchase items on official store sites at no additional cost to you.
-        </div>
+        <div class="footer-disclaimer">PrimePickHub is an affiliate website. We may earn a commission when you click our links and purchase items on official store sites at no additional cost to you.</div>
     </footer>
 
     <script src="js/config.js"></script>
