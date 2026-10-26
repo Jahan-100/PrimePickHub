@@ -53,24 +53,24 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .btn-check-price { display: block; width: 100%; border: none; background: var(--primary); color: #fff; padding: 10px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; transition: opacity 0.2s; }
 .btn-check-price:hover { opacity: 0.9; }
 
-/* ⭐ Alibaba Style Special Deal Section ⭐ */
+/* ⭐ Alibaba Style Compact Special Deal Section ⭐ */
 .alibaba-special-deal {
     display: flex;
     background: #fff;
-    border-radius: 16px;
+    border-radius: 12px;
     overflow: hidden;
     margin-bottom: 40px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     border: 1px solid var(--border);
-    min-height: 350px;
+    /* Height fix: Min-height removed, it will wrap content tightly */
 }
 
-/* Left Side (30%) */
+/* Left Side (30%) - Modern Magenta Color */
 .special-deal-left {
     flex: 0 0 30%;
-    background: linear-gradient(135deg, #4A0E3F, #851760);
+    background: #8A1554; /* Alibaba Jaisa Rich Magenta */
     color: #fff;
-    padding: 35px 25px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -88,29 +88,29 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 #specialDealTitle {
     font-family: 'Poppins', sans-serif;
     font-weight: 800;
-    font-size: 2.2rem;
+    font-size: 1.8rem; /* Adjusted for compact look */
     line-height: 1.2;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     z-index: 1;
 }
 .special-deal-subtitle {
     color: #fbcfe8;
-    font-size: 1rem;
-    margin-bottom: 25px;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
     z-index: 1;
 }
 .special-deal-features {
     list-style: none;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     z-index: 1;
 }
 .special-deal-features li {
-    font-size: 0.95rem;
-    margin-bottom: 12px;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     font-weight: 500;
 }
 .special-deal-features li i {
@@ -119,26 +119,26 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .explore-btn {
     display: inline-block;
     background: #fff;
-    color: #4A0E3F;
-    padding: 12px 25px;
+    color: #8A1554;
+    padding: 8px 18px;
     border-radius: 30px;
     text-decoration: none;
     font-weight: bold;
-    font-size: 1rem;
+    font-size: 0.9rem;
     width: fit-content;
     transition: all 0.3s ease;
     z-index: 1;
 }
 .explore-btn:hover {
     background: #FFD700;
-    color: #4A0E3F;
+    color: #8A1554;
     transform: translateY(-2px);
 }
 
-/* Right Side (70%) */
+/* Right Side (70%) - Compact Product Cards */
 .special-deal-right {
     flex: 1;
-    padding: 25px;
+    padding: 15px; /* Kam padding taake box bada na lage */
     position: relative;
     display: flex;
     align-items: center;
@@ -147,10 +147,10 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 
 .horizontal-scroll-container {
     display: flex;
-    gap: 20px;
+    gap: 15px;
     overflow-x: auto;
     scroll-behavior: smooth;
-    padding-bottom: 10px;
+    padding: 5px 0; /* Top/Bottom padding for hover effect */
     -ms-overflow-style: none;
     scrollbar-width: none;
     width: 100%;
@@ -158,11 +158,11 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .horizontal-scroll-container::-webkit-scrollbar { display: none; }
 
 .special-deal-card {
-    min-width: 200px;
-    max-width: 200px;
+    min-width: 160px; /* Size kam kiya Alibaba ki tarah */
+    max-width: 160px;
     background: #fff;
-    border-radius: 12px;
-    padding: 10px;
+    border-radius: 8px;
+    padding: 8px;
     text-decoration: none;
     display: flex;
     flex-direction: column;
@@ -171,16 +171,16 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     border: 1px solid #F1F5F9;
 }
 .special-deal-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.08);
     border-color: #E2E8F0;
 }
 .special-deal-card .img-box {
     width: 100%;
-    height: 160px;
+    height: 120px; /* Height kam ki taake box chota lage */
     background: #F8FAFC;
-    border-radius: 8px;
-    margin-bottom: 12px;
+    border-radius: 6px;
+    margin-bottom: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -192,18 +192,18 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     object-fit: contain;
 }
 .special-deal-card .title {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: #1E1B4B;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    margin-bottom: 8px;
+    margin-bottom: 5px;
     flex: 1;
 }
 .special-deal-card .price {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     font-weight: 800;
     color: #FF5A3C;
 }
@@ -212,8 +212,8 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     background: #fff;
     border: 1px solid #E2E8F0;
     border-radius: 50%;
@@ -222,13 +222,13 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     color: #1E1B4B;
     transition: all 0.2s;
 }
-.scroll-arrow:hover { background: #FF5A3C; color: #fff; border-color: #FF5A3C; }
-.left-arrow { left: 5px; }
-.right-arrow { right: 5px; }
+.scroll-arrow:hover { background: #8A1554; color: #fff; border-color: #8A1554; }
+.left-arrow { left: 2px; }
+.right-arrow { right: 2px; }
 
 /* Footer */
 .footer { background: var(--primary); color: #CBD5E1; padding: 40px 5% 20px; margin-top: 60px; font-size: 0.9rem; text-align: center; }
@@ -247,9 +247,9 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     
     /* Mobile Special Deal */
     .alibaba-special-deal { flex-direction: column; }
-    .special-deal-left { flex: none; padding: 25px; text-align: center; align-items: center; }
-    .special-deal-right { padding: 15px; }
+    .special-deal-left { flex: none; padding: 20px; text-align: center; align-items: center; }
+    .special-deal-right { padding: 10px; }
     .scroll-arrow { display: none; }
-    .special-deal-card { min-width: 160px; max-width: 160px; }
-    .special-deal-card .img-box { height: 120px; }
+    .special-deal-card { min-width: 140px; max-width: 140px; }
+    .special-deal-card .img-box { height: 100px; }
 }
