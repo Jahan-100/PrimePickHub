@@ -74,8 +74,26 @@
 
     <main class="container">
         
-        <!-- 1. Flash Sale Section -->
-        <div id="flashSaleSection" style="display: none; margin-bottom: 40px; margin-top: 10px;">
+        <!-- ⭐ 1. Special Deal Section (Top) ⭐ -->
+        <div id="specialDealSection" class="alibaba-special-deal" style="margin-top: 10px;">
+            <div class="special-deal-left">
+                <h2 id="specialDealTitle">First order deal</h2>
+                <p class="special-deal-subtitle">Exclusive offers just for you!</p>
+                <ul class="special-deal-features">
+                    <li><i class="fa-solid fa-circle-check"></i> Limited Time Only</li>
+                    <li><i class="fa-solid fa-truck-fast"></i> Top Rated Products</li>
+                </ul>
+                <a href="search.html?q=" class="explore-btn">Explore now</a>
+            </div>
+            <div class="special-deal-right">
+                <button class="scroll-arrow left-arrow" onclick="scrollSpecial('left')"><i class="fa-solid fa-chevron-left"></i></button>
+                <div id="specialDealScroll" class="horizontal-scroll-container"></div>
+                <button class="scroll-arrow right-arrow" onclick="scrollSpecial('right')"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
+
+        <!-- ⭐ 2. Flash Sale Section (Middle) ⭐ -->
+        <div id="flashSaleSection" style="display: none; margin-bottom: 40px;">
             <div class="flash-sale-banner">
                 <div class="flash-light-effect"></div>
                 <div style="z-index: 1; width: 100%; max-width: 650px;">
@@ -94,30 +112,7 @@
             <div class="product-grid" id="flashSaleGrid"></div>
         </div>
 
-        <!-- ⭐ 2. EXACT Alibaba Style Special Deal Section ⭐ -->
-        <div id="specialDealSection" class="alibaba-special-deal">
-            
-            <!-- Left Side (Text) -->
-            <div class="special-deal-left">
-                <h2 id="specialDealTitle">First order deal</h2>
-                <p class="special-deal-subtitle">Exclusive offers just for you!</p>
-                <ul class="special-deal-features">
-                    <li><i class="fa-solid fa-circle-check"></i> Limited Time Only</li>
-                    <li><i class="fa-solid fa-truck-fast"></i> Top Rated Products</li>
-                </ul>
-                <a href="search.html?q=" class="explore-btn">Explore now</a>
-            </div>
-
-            <!-- Right Side (Products) -->
-            <div class="special-deal-right">
-                <button class="scroll-arrow left-arrow" onclick="scrollSpecial('left')"><i class="fa-solid fa-chevron-left"></i></button>
-                <div id="specialDealScroll" class="horizontal-scroll-container"></div>
-                <button class="scroll-arrow right-arrow" onclick="scrollSpecial('right')"><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-
-        </div>
-
-        <!-- 3. Shop by Category Section -->
+        <!-- ⭐ 3. Shop by Category (After Flash Sale) ⭐ -->
         <div id="categorySection" style="margin-bottom: 40px;">
             <h2 style="margin-bottom: 20px; font-family: 'Poppins', sans-serif; font-weight: 800; color: var(--text-dark);">Shop by Category</h2>
             <div class="category-grid">
@@ -129,7 +124,7 @@
             </div>
         </div>
 
-        <!-- 4. Normal Products Section -->
+        <!-- ⭐ 4. Normal Products Section (Just For You) ⭐ -->
         <div id="normalProductsSection">
             <h2 style="margin-bottom:10px; font-family: 'Poppins', sans-serif; font-weight: 800;">Just For You</h2>
             <p style="color:var(--text-muted);margin-bottom:20px;">Click any product to view live price on the official store.</p>
