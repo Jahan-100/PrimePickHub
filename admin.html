@@ -22,7 +22,6 @@
         .helper-text { color:#64748B; font-weight:400; font-size:0.8rem; }
         .form-section-title { margin-top: 25px; margin-bottom: 15px; border-bottom: 2px solid #E2E8F0; padding-bottom: 5px; color: #1E1B4B; font-size: 1.1rem; font-weight: bold; }
         
-        /* Unavailable Row Style */
         tr.unavailable-row { background-color: #FEE2E2; opacity: 0.8; }
         .badge-unavailable { background:#EF4444; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; margin-left:5px; }
     </style>
@@ -60,11 +59,48 @@
 
                 <!-- ⭐ Special Deal Title Setup ⭐ -->
                 <div class="admin-card" style="background: #fdf4ff; border: 1px solid #fbcfe8;">
-                    <h3 style="margin-top:0; color: #9d174d;">Special Deal Section Title (Homepage)</h3>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <input type="text" id="specialDealTitleInput" style="flex:1; padding:10px; border:1px solid #cbd5e1; border-radius:6px;" placeholder="e.g. Hot Deal, Must Watch">
-                        <button type="button" id="saveTitleBtn" class="btn-check-price" style="width:auto; padding:10px 20px;">Update Title</button>
+                    <h3 style="margin-top:0; color: #9d174d;">Special Deal Section Customization</h3>
+                    
+                    <div class="form-group">
+                        <label>Section Title (e.g. Hot Deal, Must Watch)</label>
+                        <input type="text" id="specialDealTitleInput" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;" placeholder="e.g. Hot Deal">
                     </div>
+
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                        <div class="form-group" style="flex: 1; min-width: 150px; margin-bottom:0;">
+                            <label>Font Style</label>
+                            <select id="titleFontFamily" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
+                                <option value="Poppins">Poppins (Modern)</option>
+                                <option value="Roboto">Roboto (Clean)</option>
+                                <option value="Oswald">Oswald (Bold)</option>
+                                <option value="Playfair Display">Playfair (Elegant)</option>
+                                <option value="Lobster">Lobster (Stylish)</option>
+                                <option value="Montserrat">Montserrat (Classic)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 100px; margin-bottom:0;">
+                            <label>Size (e.g. 2.5rem)</label>
+                            <input type="text" id="titleFontSize" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;" placeholder="2.5rem">
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 100px; margin-bottom:0;">
+                            <label>Weight</label>
+                            <select id="titleFontWeight" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
+                                <option value="400">Normal</option>
+                                <option value="600">Semi Bold</option>
+                                <option value="800">Extra Bold</option>
+                                <option value="900">Black</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 100px; margin-bottom:0;">
+                            <label>Style</label>
+                            <select id="titleFontStyle" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
+                                <option value="normal">Normal</option>
+                                <option value="italic">Italic</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button type="button" id="saveTitleBtn" class="btn-check-price" style="width:auto; padding:10px 20px;">Update Section Design</button>
                 </div>
 
                 <!-- Manage Products List -->
@@ -72,37 +108,21 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2 style="margin: 0;">Manage Products</h2>
                         <div style="display: flex; gap: 10px;">
-                            <button type="button" id="checkAvailabilityBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#FF5A3C; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
-                                Check Availability
-                            </button>
-                            <button type="button" id="toggleProductListBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#3B82F6; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
-                                Show Product List
-                            </button>
+                            <button type="button" id="checkAvailabilityBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#FF5A3C; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Check Availability</button>
+                            <button type="button" id="toggleProductListBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#3B82F6; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Show Product List</button>
                         </div>
                     </div>
 
                     <div id="productListContainer" style="display: none; margin-top: 20px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <select id="adminCategoryFilter" style="padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; outline: none;">
-                                    <option value="all">All Categories</option>
-                                </select>
+                                <select id="adminCategoryFilter" style="padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; outline: none;"><option value="all">All Categories</option></select>
                                 <input type="text" id="adminSearchInput" placeholder="Search products..." style="padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; outline: none; width: 200px;">
                             </div>
                         </div>
-
                         <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>Image</th>
-                                    <th>Title</th>
-                                    <th>Final Price (Customer View)</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="productListBody">
-                                <tr><td colspan="4" style="text-align:center;">Loading...</td></tr>
-                            </tbody>
+                            <thead><tr><th>Image</th><th>Title</th><th>Final Price</th><th>Actions</th></tr></thead>
+                            <tbody id="productListBody"><tr><td colspan="4" style="text-align:center;">Loading...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -122,7 +142,6 @@
                         <div class="form-group"><label>Primary Image URL</label><input type="url" id="pImg" required placeholder="https://...main-image.jpg"></div>
                         <div class="form-group"><label>Gallery Images (Har Line Mein Ek URL)</label><textarea id="pGallery" rows="3" placeholder="https://...image2.jpg&#10;https://...image3.jpg"></textarea></div>
                         <div class="form-group"><label>Video URL (YouTube - Optional)</label><input type="url" id="pVideo" placeholder="https://www.youtube.com/watch?v=..."></div>
-
                         <div class="form-group"><label>Category</label><select id="pCategory"></select></div>
                         
                         <div class="form-group"><label>Badge (Optional)</label><input type="text" id="pBadge" placeholder="Best Seller"></div>
@@ -136,61 +155,41 @@
                         <div class="form-group">
                             <label>Sale End Date & Time</label>
                             <input type="datetime-local" id="pSaleEndDate">
-                            <small class="helper-text">Is date ke baad product automatically normal list mein chala jayega.</small>
                         </div>
 
                         <div class="form-section-title">Main Offer Details</div>
                         <div class="form-group"><label>Store Name</label><input type="text" id="pStore" required placeholder="aliexpress, amazon, daraz"></div>
                         
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <div class="form-group" style="flex: 1; min-width: 120px;">
-                                <label>Base Price <span class="helper-text">(Original)</span></label>
-                                <input type="number" step="0.01" id="pPrice" required placeholder="3.45">
-                            </div>
-                            <div class="form-group" style="flex: 1; min-width: 120px;">
-                                <label style="color:#FF5A3C;">Sale Price <span class="helper-text">(Discount)</span></label>
-                                <input type="number" step="0.01" id="pSalePrice" placeholder="2.50">
-                            </div>
-                            <div class="form-group" style="flex: 1; min-width: 120px;">
-                                <label>Commission % <span class="helper-text">(Optional)</span></label>
-                                <input type="number" step="0.1" id="pCommission" placeholder="e.g. 7">
-                            </div>
+                            <div class="form-group" style="flex: 1; min-width: 120px;"><label>Base Price</label><input type="number" step="0.01" id="pPrice" required></div>
+                            <div class="form-group" style="flex: 1; min-width: 120px;"><label style="color:#FF5A3C;">Sale Price</label><input type="number" step="0.01" id="pSalePrice"></div>
+                            <div class="form-group" style="flex: 1; min-width: 120px;"><label>Commission %</label><input type="number" step="0.1" id="pCommission"></div>
                             <div class="form-group" style="flex: 1; min-width: 120px;">
                                 <label>Currency</label>
                                 <select id="pCurrency">
-                                    <option value="USD">USD ($)</option>
-                                    <option value="PKR">PKR (Rs)</option>
-                                    <option value="EUR">EUR (€)</option>
-                                    <option value="GBP">GBP (£)</option>
-                                    <option value="INR">INR (₹)</option>
-                                    <option value="AED">AED (د.إ)</option>
+                                    <option value="USD">USD ($)</option><option value="PKR">PKR (Rs)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option><option value="INR">INR (₹)</option><option value="AED">AED (د.إ)</option>
                                 </select>
                             </div>
                         </div>
+                        <div class="form-group"><label>Affiliate URL</label><input type="url" id="pAffUrl" required></div>
 
-                        <div class="form-group"><label>Affiliate URL</label><input type="url" id="pAffUrl" required placeholder="https://s.click.aliexpress.com/..."></div>
-
-                        <div class="form-section-title">Product Variations (Size/Color - Optional)</div>
-                        <p class="helper-text" style="margin-bottom:10px;">Agar sizes (M, L, XL) ya colors ki price alag hai, toh yahan add karein.</p>
-                        
+                        <div class="form-section-title">Product Variations (Optional)</div>
                         <div id="variationsContainer"></div>
                         <button type="button" id="addVariationBtn" class="btn-add-var">+ Add Variation (Size/Color)</button>
 
                         <div class="form-section-title">SEO Content</div>
                         <div class="form-group"><label>Short Description</label><input type="text" id="pDesc" required></div>
-                        <div class="form-group"><label>Detailed Review (HTML allowed)</label><textarea id="pReview" rows="6" required placeholder="<h3>Our Verdict</h3><p>This is a great product...</p>"></textarea></div>
+                        <div class="form-group"><label>Detailed Review (HTML allowed)</label><textarea id="pReview" rows="6" required></textarea></div>
 
                         <div class="form-group" style="display: flex; flex-direction: column; gap: 10px;">
                             <label><input type="checkbox" id="pFeatured"> Featured</label>
                             <label><input type="checkbox" id="pTrending"> Trending</label>
-                            <label style="background: #fdf4ff; padding: 10px; border-radius: 6px; border: 1px solid #fbcfe8;">
-                                <input type="checkbox" id="pSpecialDeal"> <strong>Add to Special Deal Section (Horizontal Scroll)</strong>
-                            </label>
+                            <label style="background: #fdf4ff; padding: 10px; border-radius: 6px; border: 1px solid #fbcfe8;"><input type="checkbox" id="pSpecialDeal"> <strong>Add to Special Deal Section</strong></label>
                         </div>
                         
                         <div style="display: flex; gap: 10px; margin-top: 20px;">
-                            <button type="submit" id="saveBtn" class="btn-check-price" style="width:auto;padding:12px 30px; font-size: 1rem;">Save Product</button>
-                            <button type="button" id="cancelEditBtn" class="btn-check-price" style="width:auto;padding:12px 30px; background:#64748B; display:none; font-size: 1rem;">Cancel Edit</button>
+                            <button type="submit" id="saveBtn" class="btn-check-price" style="width:auto;padding:12px 30px;">Save Product</button>
+                            <button type="button" id="cancelEditBtn" class="btn-check-price" style="width:auto;padding:12px 30px; background:#64748B; display:none;">Cancel Edit</button>
                         </div>
                     </form>
                 </div>
