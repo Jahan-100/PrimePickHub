@@ -119,8 +119,18 @@
                         <div class="form-group"><label>Store Name</label><input type="text" id="pStore" required placeholder="aliexpress, amazon, daraz"></div>
                         
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <div class="form-group" style="flex: 1; min-width: 120px;"><label>Base Price <span class="helper-text">(Original)</span></label><input type="number" step="0.01" id="pPrice" required placeholder="3.45"></div>
-                            <div class="form-group" style="flex: 1; min-width: 120px;"><label>Commission % <span class="helper-text">(Optional)</span></label><input type="number" step="0.1" id="pCommission" placeholder="e.g. 7"></div>
+                            <div class="form-group" style="flex: 1; min-width: 120px;">
+                                <label>Base Price <span class="helper-text">(Original)</span></label>
+                                <input type="number" step="0.01" id="pPrice" required placeholder="3.45">
+                            </div>
+                            <div class="form-group" style="flex: 1; min-width: 120px;">
+                                <label style="color:#FF5A3C;">Sale Price <span class="helper-text">(Discount)</span></label>
+                                <input type="number" step="0.01" id="pSalePrice" placeholder="2.50">
+                            </div>
+                            <div class="form-group" style="flex: 1; min-width: 120px;">
+                                <label>Commission % <span class="helper-text">(Optional)</span></label>
+                                <input type="number" step="0.1" id="pCommission" placeholder="e.g. 7">
+                            </div>
                             <div class="form-group" style="flex: 1; min-width: 120px;">
                                 <label>Currency</label>
                                 <select id="pCurrency">
