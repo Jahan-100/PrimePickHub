@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     showDashboard(); 
     await loadStats(); 
-    await loadSpecialTitle(); // Title Load karein
+    await loadSpecialSettings(); 
     await loadProductsList(); 
     setupProductForm(); 
     setupToggleList();
@@ -16,44 +16,55 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
     document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
     
-    // Special Deal Title Save Button
+    // Special Deal Settings Save Button
     document.getElementById('saveTitleBtn')?.addEventListener('click', async function() {
         const newTitle = document.getElementById('specialDealTitleInput').value.trim();
+        const fontFamily = document.getElementById('titleFontFamily').value;
+        const fontSize = document.getElementById('titleFontSize').value.trim() || '2.2rem';
+        const fontWeight = document.getElementById('titleFontWeight').value;
+        const fontStyle = document.getElementById('titleFontStyle').value;
+
         if(!newTitle) return alert("Title cannot be empty");
-        const { error } = await window.supabaseClient.from('site_settings').update({ special_deal_title: newTitle }).eq('id', 1);
+        
+        const { error } = await window.supabaseClient.from('site_settings').update({ 
+            special_deal_title: newTitle,
+            title_font_family: fontFamily,
+            title_font_size: fontSize,
+            title_font_weight: fontWeight,
+            title_font_style: fontStyle
+        }).eq('id', 1);
+
         if (error) alert("Error: " + error.message);
-        else alert("Homepage Special Deal Title updated successfully!");
+        else alert("Homepage Special Deal Design updated successfully!");
     });
 
-    // Check Availability Button
     document.getElementById('checkAvailabilityBtn')?.addEventListener('click', async function() {
         const btn = this;
         const originalText = btn.innerText;
         btn.innerText = "Checking... Please Wait (1-2 mins)";
         btn.disabled = true;
-
         try {
             const res = await fetch('/api/check-status');
             const data = await res.json();
             if (data.success) {
                 alert(`Check Complete!\n${data.message}`);
                 await loadProductsList(); 
-            } else {
-                alert('Error checking status: ' + (data.error || 'Unknown error'));
-            }
-        } catch (err) {
-            alert('Failed to check. Make sure Vercel API is deployed.');
-        } finally {
-            btn.innerText = originalText;
-            btn.disabled = false;
-        }
+            } else { alert('Error checking status: ' + (data.error || 'Unknown error')); }
+        } catch (err) { alert('Failed to check. Make sure Vercel API is deployed.'); }
+        finally { btn.innerText = originalText; btn.disabled = false; }
     });
 });
 
-async function loadSpecialTitle() {
-    const { data } = await window.supabaseClient.from('site_settings').select('special_deal_title').eq('id', 1).single();
-    if (data && document.getElementById('specialDealTitleInput')) {
-        document.getElementById('specialDealTitleInput').value = data.special_deal_title;
+async function loadSpecialSettings() {
+    const { data } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).single();
+    if (data) {
+        if(document.getElementById('specialDealTitleInput')) {
+            document.getElementById('specialDealTitleInput').value = data.special_deal_title || 'Must Watch Deals';
+            document.getElementById('titleFontFamily').value = data.title_font_family || 'Poppins';
+            document.getElementById('titleFontSize').value = data.title_font_size || '2.2rem';
+            document.getElementById('titleFontWeight').value = data.title_font_weight || '800';
+            document.getElementById('titleFontStyle').value = data.title_font_style || 'normal';
+        }
     }
 }
 
@@ -74,7 +85,6 @@ function setupToggleList() {
 function showLogin() {
     const loginContainer = document.getElementById('loginContainer'); const loginForm = document.getElementById('loginForm'); const dashEl = document.getElementById('dashboard');
     if (loginContainer) loginContainer.style.display = 'block'; if (dashEl) dashEl.style.display = 'none';
-
     loginForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('loginEmail').value.trim(); const password = document.getElementById('loginPassword').value; const errorEl = document.getElementById('loginError');
@@ -131,12 +141,9 @@ function renderTable() {
         return matchesCategory && matchesSearch;
     });
 
-    // Unavailable Products Top Par Aayen
     filteredProducts.sort((a, b) => {
-        const aIsAvailable = a.is_available !== false;
-        const bIsAvailable = b.is_available !== false;
-        if (aIsAvailable === bIsAvailable) return 0;
-        return aIsAvailable ? 1 : -1;
+        const aIsAvailable = a.is_available !== false; const bIsAvailable = b.is_available !== false;
+        if (aIsAvailable === bIsAvailable) return 0; return aIsAvailable ? 1 : -1;
     });
 
     if (filteredProducts.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No products found.</td></tr>'; return; }
@@ -145,18 +152,11 @@ function renderTable() {
         const defaultOffer = p.affiliate_offers?.find(o => !o.variation_name) || p.affiliate_offers?.[0] || {};
         const basePrice = parseFloat(defaultOffer.price) || 0;
         const commissionRate = parseFloat(defaultOffer.commission_rate) || 0;
-        
-        const now = new Date();
-        const isSaleActive = p.sale_end_date && new Date(p.sale_end_date) > now;
+        const now = new Date(); const isSaleActive = p.sale_end_date && new Date(p.sale_end_date) > now;
         const salePrice = parseFloat(defaultOffer.sale_price) || 0;
-        
         let finalPrice = basePrice;
-        if (isSaleActive && salePrice > 0) {
-            finalPrice = commissionRate > 0 ? salePrice + (salePrice * (commissionRate / 100)) : salePrice;
-        } else {
-            finalPrice = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice;
-        }
-
+        if (isSaleActive && salePrice > 0) { finalPrice = commissionRate > 0 ? salePrice + (salePrice * (commissionRate / 100)) : salePrice; } 
+        else { finalPrice = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice; }
         const priceStr = defaultOffer.price ? `${finalPrice.toFixed(2)} ${defaultOffer.currency || 'USD'}` : 'N/A';
         
         const isAvailable = p.is_available !== false;
@@ -237,7 +237,6 @@ window.deleteProduct = async function(id) {
 
 function setupProductForm() {
     const form = document.getElementById('productForm'); const cancelBtn = document.getElementById('cancelEditBtn'); if (!form) return;
-
     cancelBtn.addEventListener('click', () => {
         form.reset(); document.getElementById('variationsContainer').innerHTML = '';
         document.getElementById('pId').value = ''; document.getElementById('pOfferId').value = '';
@@ -283,9 +282,7 @@ function setupProductForm() {
             const vComm = vCommInput === '' ? commission : (parseFloat(vCommInput) || 0);
             const vUrl = row.querySelector('.var-url').value.trim() || mainOfferData.affiliate_url;
             
-            if (vName && !isNaN(vPrice)) { 
-                variations.push({ ...mainOfferData, price: vPrice, sale_price: vSalePrice, commission_rate: vComm, affiliate_url: vUrl, variation_name: vName }); 
-            }
+            if (vName && !isNaN(vPrice)) { variations.push({ ...mainOfferData, price: vPrice, sale_price: vSalePrice, commission_rate: vComm, affiliate_url: vUrl, variation_name: vName }); }
         });
 
         try {
@@ -296,10 +293,8 @@ function setupProductForm() {
             } else {
                 const { data: newProduct, error: prodErr } = await window.supabaseClient.from('products').insert([productData]).select().single(); if (prodErr) throw prodErr; productId = newProduct.id;
             }
-
             if (price > 0 || variations.length === 0) { mainOfferData.product_id = productId; await window.supabaseClient.from('affiliate_offers').insert([mainOfferData]); }
             if (variations.length > 0) { variations.forEach(v => v.product_id = productId); const { error: varErr } = await window.supabaseClient.from('affiliate_offers').insert(variations); if (varErr) throw varErr; }
-
             alert(`"${productData.title}" saved successfully!`); form.reset(); document.getElementById('variationsContainer').innerHTML = '';
             document.getElementById('pId').value = ''; document.getElementById('formTitle').innerText = "Add New Product"; document.getElementById('saveBtn').innerText = "Save Product"; cancelBtn.style.display = "none";
             await loadStats(); await loadProductsList();
