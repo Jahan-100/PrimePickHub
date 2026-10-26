@@ -14,11 +14,16 @@
         .admin-table th { background: #F8FAFC; font-weight: 600; }
         .btn-edit { background: #3B82F6; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
         .btn-delete { background: #EF4444; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; margin-left: 5px; }
-        .variation-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; background: #F8FAFC; padding: 10px; border-radius: 6px; border: 1px solid #E2E8F0; flex-wrap: wrap; }
-        .variation-row input { flex: 1; min-width: 100px; padding: 8px; border: 1px solid #CBD5E1; border-radius: 4px; }
-        .btn-remove-var { background: #EF4444; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
-        .btn-add-var { background: #10B981; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-bottom: 15px; font-weight: bold; }
+        
+        /* Variation Styles */
+        .variation-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; background: #F8FAFC; padding: 10px; border-radius: 6px; border: 1px solid #E2E8F0; flex-wrap: wrap; }
+        .variation-row input { flex: 1; min-width: 90px; padding: 8px; border: 1px solid #CBD5E1; border-radius: 4px; font-size: 0.9rem; }
+        .variation-row input.var-name { flex: 2; min-width: 120px; }
+        .btn-remove-var { background: #EF4444; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-add-var { background: #10B981; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; margin-bottom: 15px; font-weight: bold; width: auto; }
         .helper-text { color:#64748B; font-weight:400; font-size:0.8rem; }
+        
+        .form-section-title { margin-top: 25px; margin-bottom: 15px; border-bottom: 2px solid #E2E8F0; padding-bottom: 5px; color: #1E1B4B; font-size: 1.1rem; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -52,6 +57,7 @@
                     <div class="stat-card"><p style="color:#64748B;">Affiliate Clicks</p><h3 id="statClicks">0</h3></div>
                 </div>
 
+                <!-- Manage Products List -->
                 <div class="admin-card" style="margin-bottom: 30px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2 style="margin: 0;">Manage Products</h2>
@@ -86,6 +92,7 @@
                     </div>
                 </div>
 
+                <!-- Add / Edit Form -->
                 <div class="admin-card">
                     <h2 id="formTitle">Add New Product</h2>
                     <br>
@@ -93,6 +100,8 @@
                         <input type="hidden" id="pId" value="">
                         <input type="hidden" id="pOfferId" value="">
 
+                        <!-- BASIC INFO -->
+                        <div class="form-section-title">Basic Info</div>
                         <div class="form-group"><label>Product Title</label><input type="text" id="pTitle" required></div>
                         <div class="form-group"><label>URL Slug</label><input type="text" id="pSlug" required pattern="[a-z0-9-]+"></div>
                         
@@ -103,19 +112,22 @@
                         <div class="form-group"><label>Category</label><select id="pCategory"></select></div>
                         
                         <div class="form-group"><label>Badge (Optional)</label><input type="text" id="pBadge" placeholder="Best Seller"></div>
-                        <div class="form-group"><label>Rating (1-5)</label><input type="number" step="0.1" min="1" max="5" id="pRating"></div>
-                        <div class="form-group"><label>Reviews Count</label><input type="number" id="pReviewsCount"></div>
+                        <div style="display: flex; gap: 10px;">
+                            <div class="form-group" style="flex:1;"><label>Rating (1-5)</label><input type="number" step="0.1" min="1" max="5" id="pRating"></div>
+                            <div class="form-group" style="flex:1;"><label>Reviews Count</label><input type="number" id="pReviewsCount"></div>
+                        </div>
 
-                        <!-- Event / Flash Sale Section -->
-                        <h3 style="margin-top:20px; border-bottom:1px solid #ccc; padding-bottom:5px; color: #FF5A3C;">Flash Sale / Special Event (Optional)</h3>
+                        <!-- EVENT / FLASH SALE -->
+                        <div class="form-section-title" style="color: #FF5A3C;">Flash Sale / Special Event (Optional)</div>
                         <div class="form-group"><label>Event Name (e.g. 11.11 Sale)</label><input type="text" id="pEventName" placeholder="11.11 Mega Sale"></div>
                         <div class="form-group">
                             <label>Sale End Date & Time</label>
                             <input type="datetime-local" id="pSaleEndDate">
-                            <small style="color:#64748B; font-size:0.8rem;">Is date ke baad product automatically normal list mein chala jayega.</small>
+                            <small class="helper-text">Is date ke baad product automatically normal list mein chala jayega.</small>
                         </div>
 
-                        <h3 style="margin-top:20px; border-bottom:1px solid #ccc; padding-bottom:5px;">Offer Details</h3>
+                        <!-- MAIN OFFER DETAILS -->
+                        <div class="form-section-title">Main Offer Details</div>
                         <div class="form-group"><label>Store Name</label><input type="text" id="pStore" required placeholder="aliexpress, amazon, daraz"></div>
                         
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
@@ -146,13 +158,15 @@
 
                         <div class="form-group"><label>Affiliate URL</label><input type="url" id="pAffUrl" required placeholder="https://s.click.aliexpress.com/..."></div>
 
-                        <h3 style="margin-top:20px; border-bottom:1px solid #ccc; padding-bottom:5px;">Product Variations (Optional)</h3>
-                        <p class="helper-text" style="margin-bottom:10px;">Agar sizes (M, L, XL) ki price alag hai, toh yahan add karein.</p>
+                        <!-- VARIATIONS -->
+                        <div class="form-section-title">Product Variations (Size/Color - Optional)</div>
+                        <p class="helper-text" style="margin-bottom:10px;">Agar sizes (M, L, XL) ya colors ki price alag hai, toh yahan add karein.</p>
                         
                         <div id="variationsContainer"></div>
                         <button type="button" id="addVariationBtn" class="btn-add-var">+ Add Variation (Size/Color)</button>
 
-                        <h3 style="margin-top:20px; border-bottom:1px solid #ccc; padding-bottom:5px;">SEO Content</h3>
+                        <!-- SEO CONTENT -->
+                        <div class="form-section-title">SEO Content</div>
                         <div class="form-group"><label>Short Description</label><input type="text" id="pDesc" required></div>
                         <div class="form-group"><label>Detailed Review (HTML allowed)</label><textarea id="pReview" rows="6" required placeholder="<h3>Our Verdict</h3><p>This is a great product...</p>"></textarea></div>
 
@@ -161,9 +175,9 @@
                             <label style="margin-left:20px;"><input type="checkbox" id="pTrending"> Trending</label>
                         </div>
                         
-                        <div style="display: flex; gap: 10px;">
-                            <button type="submit" id="saveBtn" class="btn-check-price" style="width:auto;padding:10px 25px;">Save Product</button>
-                            <button type="button" id="cancelEditBtn" class="btn-check-price" style="width:auto;padding:10px 25px; background:#64748B; display:none;">Cancel Edit</button>
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button type="submit" id="saveBtn" class="btn-check-price" style="width:auto;padding:12px 30px; font-size: 1rem;">Save Product</button>
+                            <button type="button" id="cancelEditBtn" class="btn-check-price" style="width:auto;padding:12px 30px; background:#64748B; display:none; font-size: 1rem;">Cancel Edit</button>
                         </div>
                     </form>
                 </div>
