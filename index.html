@@ -31,7 +31,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,800;0,900;1,800&family=Roboto:wght@400;700;900&family=Oswald:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Lobster&family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
     
     <style>
-        /* Flash Sale Styles */
+        /* Flash Sale Banner Styles */
         .flash-sale-banner {
             background: linear-gradient(270deg, #FF2E2E, #FF5A3C, #FF8C00);
             background-size: 600% 600%;
@@ -49,8 +49,23 @@
         .marquee-container { overflow: hidden; white-space: nowrap; width: 100%; max-width: 600px; margin-top: 15px; mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent); }
         .marquee-text { display: inline-block; animation: marquee 12s linear infinite; font-size: 1.4rem; font-weight: 700; opacity: 0.95; margin: 0; letter-spacing: 1px; }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        .timer-box { background: rgba(0,0,0,0.35); padding: 15px 25px; border-radius: 12px; text-align: center; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); z-index: 1; box-shadow: inset 0 0 15px rgba(0,0,0,0.3); }
-        .timer-text { font-size: 1.8rem; font-weight: 900; font-family: 'Courier New', monospace; color: #fff; text-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700; }
+        
+        /* ⭐ Naya Style: Card ke andar ka Timer ⭐ */
+        .card-timer {
+            background: #FEF2F2;
+            color: #DC2626;
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 5px 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            text-align: center;
+            border: 1px solid #FECACA;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -74,7 +89,7 @@
 
     <main class="container">
         
-        <!-- ⭐ 1. Special Deal Section (Top) ⭐ -->
+        <!-- 1. Special Deal Section -->
         <div id="specialDealSection" class="alibaba-special-deal" style="margin-top: 10px;">
             <div class="special-deal-left">
                 <h2 id="specialDealTitle">First order deal</h2>
@@ -92,7 +107,7 @@
             </div>
         </div>
 
-        <!-- ⭐ 2. Flash Sale Section (Middle) ⭐ -->
+        <!-- 2. Flash Sale Section -->
         <div id="flashSaleSection" style="display: none; margin-bottom: 40px;">
             <div class="flash-sale-banner">
                 <div class="flash-light-effect"></div>
@@ -104,15 +119,15 @@
                         <p class="marquee-text">🔥 Hurry up! Offer ends soon. Limited stock available! &nbsp;&nbsp;&nbsp;&nbsp; 🔥 Hurry up! Offer ends soon. Limited stock available! &nbsp;&nbsp;&nbsp;&nbsp; 🔥 Hurry up! Offer ends soon. Limited stock available!</p>
                     </div>
                 </div>
-                <div class="timer-box" style="margin-top: 10px;">
-                    <p style="margin: 0 0 5px 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; color: #FFD700;">Ends In</p>
-                    <div id="countdownTimer" class="timer-text">00d 00h 00m 00s</div>
+                <!-- ⭐ Timer hata kar yahan static text laga diya hai ⭐ -->
+                <div style="z-index: 1; margin-top: 10px;">
+                    <p style="margin: 0; font-size: 1.2rem; font-weight: bold; background: rgba(0,0,0,0.3); padding: 10px 20px; border-radius: 8px;">Ending Soon!</p>
                 </div>
             </div>
             <div class="product-grid" id="flashSaleGrid"></div>
         </div>
 
-        <!-- ⭐ 3. Shop by Category (After Flash Sale) ⭐ -->
+        <!-- 3. Shop by Category -->
         <div id="categorySection" style="margin-bottom: 40px;">
             <h2 style="margin-bottom: 20px; font-family: 'Poppins', sans-serif; font-weight: 800; color: var(--text-dark);">Shop by Category</h2>
             <div class="category-grid">
@@ -124,7 +139,7 @@
             </div>
         </div>
 
-        <!-- ⭐ 4. Normal Products Section (Just For You) ⭐ -->
+        <!-- 4. Normal Products Section -->
         <div id="normalProductsSection">
             <h2 style="margin-bottom:10px; font-family: 'Poppins', sans-serif; font-weight: 800;">Just For You</h2>
             <p style="color:var(--text-muted);margin-bottom:20px;">Click any product to view live price on the official store.</p>
