@@ -58,6 +58,15 @@
                     <div class="stat-card"><p style="color:#64748B;">Affiliate Clicks</p><h3 id="statClicks">0</h3></div>
                 </div>
 
+                <!-- ⭐ Special Deal Title Setup ⭐ -->
+                <div class="admin-card" style="background: #fdf4ff; border: 1px solid #fbcfe8;">
+                    <h3 style="margin-top:0; color: #9d174d;">Special Deal Section Title (Homepage)</h3>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="text" id="specialDealTitleInput" style="flex:1; padding:10px; border:1px solid #cbd5e1; border-radius:6px;" placeholder="e.g. Hot Deal, Must Watch">
+                        <button type="button" id="saveTitleBtn" class="btn-check-price" style="width:auto; padding:10px 20px;">Update Title</button>
+                    </div>
+                </div>
+
                 <!-- Manage Products List -->
                 <div class="admin-card" style="margin-bottom: 30px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
@@ -171,9 +180,12 @@
                         <div class="form-group"><label>Short Description</label><input type="text" id="pDesc" required></div>
                         <div class="form-group"><label>Detailed Review (HTML allowed)</label><textarea id="pReview" rows="6" required placeholder="<h3>Our Verdict</h3><p>This is a great product...</p>"></textarea></div>
 
-                        <div class="form-group">
+                        <div class="form-group" style="display: flex; flex-direction: column; gap: 10px;">
                             <label><input type="checkbox" id="pFeatured"> Featured</label>
-                            <label style="margin-left:20px;"><input type="checkbox" id="pTrending"> Trending</label>
+                            <label><input type="checkbox" id="pTrending"> Trending</label>
+                            <label style="background: #fdf4ff; padding: 10px; border-radius: 6px; border: 1px solid #fbcfe8;">
+                                <input type="checkbox" id="pSpecialDeal"> <strong>Add to Special Deal Section (Horizontal Scroll)</strong>
+                            </label>
                         </div>
                         
                         <div style="display: flex; gap: 10px; margin-top: 20px;">
