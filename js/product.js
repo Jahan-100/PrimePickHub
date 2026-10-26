@@ -1,3 +1,6 @@
+/**
+ * Product Detail Page with Real-Time Currency Conversion & Sale Price
+ */
 function escapeHTML(s) {
     if (s === null || s === undefined) return '';
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -46,7 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelector('meta[property="og:description"]')?.setAttribute('content', product.description || '');
 
     const allOffers = product.affiliate_offers || [];
-    const defaultOffer = allOffers.find(o => !o.variation_name) || allOffers[0] || { price: '0', store_name: 'Store', currency: 'USD', commission_rate: 0 };
+    const defaultOffer = allOffers.find(o => !o.variation_name) || allOffers[0] || { price: '0', store_name: 'Store', currency: 'USD', commission_rate: 0, sale_price: null };
     const variations = allOffers.filter(o => o.variation_name);
 
     const baseCurrency = (defaultOffer.currency || 'USD').toUpperCase();
@@ -98,7 +101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 <div style="margin-bottom: 20px; background: #F8FAFC; padding: 15px; border-radius: 8px; border: 1px solid #E2E8F0;">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
-                        <span style="font-size: 1.4rem; font-weight: bold; color: #FF5A3C;" id="displayPrice"></span>
+                        <div id="displayPriceContainer"></div>
                         <select id="currencySelector" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #CBD5E1; font-weight: bold; color: #1E1B4B; background: #fff; cursor: pointer; font-size: 1rem;">
                             <option value="${baseCurrency}">${baseCurrency}</option>
                             <optgroup label="South Asia"><option value="PKR">PKR (Rs)</option><option value="INR">INR (₹)</option><option value="BDT">BDT (৳)</option></optgroup>
@@ -139,7 +142,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
 
     const currencySelector = document.getElementById('currencySelector');
-    const displayPrice = document.getElementById('displayPrice');
+    const displayPriceContainer = document.getElementById('displayPriceContainer');
     const buyButtonContainer = document.getElementById('buyButtonContainer');
     let exchangeRates = {};
 
@@ -155,12 +158,37 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function updateUI(currency) {
         const rate = exchangeRates[currency] || 1;
+        
         const basePrice = parseFloat(activeOffer.price) || 0;
+        const salePrice = parseFloat(activeOffer.sale_price) || 0;
         const commissionRate = parseFloat(activeOffer.commission_rate) || 0;
-        const finalBasePrice = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice;
-        const converted = finalBasePrice * rate;
-        const symbol = currencySymbols[currency] || currency + ' ';
-        displayPrice.innerText = `${symbol}${converted.toFixed(2)}`;
+        
+        const now = new Date();
+        const isSaleActive = product.sale_end_date && new Date(product.sale_end_date) > now;
+
+        let priceHtml = '';
+
+        if (isSaleActive && salePrice > 0) {
+            const finalSale = commissionRate > 0 ? salePrice + (salePrice * (commissionRate / 100)) : salePrice;
+            const finalOrig = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice;
+            
+            const convertedSale = finalSale * rate;
+            const convertedOrig = finalOrig * rate;
+            const symbol = currencySymbols[currency] || currency + ' ';
+
+            priceHtml = `
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="text-decoration:line-through; color:#94A3B8; font-size:1.2rem;">${symbol}${convertedOrig.toFixed(2)}</span>
+                    <span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${convertedSale.toFixed(2)}</span>
+                </div>`;
+        } else {
+            const finalBasePrice = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice;
+            const converted = finalBasePrice * rate;
+            const symbol = currencySymbols[currency] || currency + ' ';
+            priceHtml = `<span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${converted.toFixed(2)}</span>`;
+        }
+
+        displayPriceContainer.innerHTML = priceHtml;
         buyButtonContainer.innerHTML = renderBuyButton(activeOffer);
     }
 
@@ -192,8 +220,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         "image": [product.image_url].concat(product.gallery_images || []).filter(Boolean),
         "description": product.description || product.title,
         "offers": allOffers.map(o => {
-            const p = parseFloat(o.price) || 0; const c = parseFloat(o.commission_rate) || 0;
-            const finalP = c > 0 ? p + (p * (c / 100)) : p;
+            const p = parseFloat(o.price) || 0; 
+            const sp = parseFloat(o.sale_price) || 0;
+            const c = parseFloat(o.commission_rate) || 0;
+            const isSale = product.sale_end_date && new Date(product.sale_end_date) > new Date();
+            
+            const actualP = (isSale && sp > 0) ? sp : p;
+            const finalP = c > 0 ? actualP + (actualP * (c / 100)) : actualP;
+            
             return { "@type": "Offer", "url": o.affiliate_url, "priceCurrency": o.currency || "USD", "price": finalP.toFixed(2), "availability": "https://schema.org/InStock", "seller": { "@type": "Organization", "name": o.store_name } };
         })
     };
