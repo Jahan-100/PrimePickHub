@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer with Flash Sale & Sale Price
+ * PrimePickHub Homepage Renderer with Flash Sale & Availability Filter
  */
 
 function escapeHTML(str) {
@@ -150,7 +150,9 @@ async function loadHomepageProducts() {
         if (typeof API === 'undefined' || !API.getHomepageProducts) throw new Error('API missing');
         const data = await API.getHomepageProducts();
         const raw = [...(data.featured ?? []), ...(data.trending ?? []), ...(data.latest ?? [])];
-        const allProducts = deduplicateProducts(raw);
+        
+        // ⭐ YAHAN FILTER LAGA HAI: Sirf available products dikhayega
+        const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false);
 
         const now = new Date();
         const flashSaleProducts = [];
