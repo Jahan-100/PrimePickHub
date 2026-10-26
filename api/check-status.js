@@ -2,25 +2,30 @@
 const { createClient } = require('@supabase/supabase-js');
 
 module.exports = async function handler(req, res) {
-    // CORS Setup
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     if (req.method === 'OPTIONS') return res.status(200).end();
 
     try {
-        // Environment variables se keys uthayein
         const supabaseUrl = process.env.SUPABASE_URL || 'https://smxjiwywepeaybhekrck.supabase.co';
         const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
         
         if (!supabaseKey) {
-            return res.status(500).json({ success: false, error: 'Service Role Key missing in Vercel settings.' });
+            return res.status(500).json({ success: false, error: 'Service Role Key missing.' });
         }
 
         const supabase = createClient(supabaseUrl, supabaseKey);
 
+        // ⭐ Relationship ke zariye offers fetch karein
         const { data: products, error } = await supabase
             .from('products')
-            .select('id, affiliate_url, title');
+            .select(`
+                id, 
+                title, 
+                affiliate_offers (
+                    affiliate_url
+                )
+            `);
 
         if (error) throw error;
 
@@ -28,10 +33,13 @@ module.exports = async function handler(req, res) {
         let unavailableProducts = [];
 
         for (const product of products) {
-            if (!product.affiliate_url) continue;
+            if (!product.affiliate_offers || product.affiliate_offers.length === 0) continue;
+            
+            const link = product.affiliate_offers[0].affiliate_url;
+            if (!link) continue;
 
             try {
-                const response = await fetch(product.affiliate_url, {
+                const response = await fetch(link, {
                     method: 'GET',
                     redirect: 'follow',
                     headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
