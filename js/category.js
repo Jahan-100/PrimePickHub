@@ -5,16 +5,8 @@ function escapeHTML(s) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const path = window.location.pathname;
     const params = new URLSearchParams(window.location.search);
-    
-    let categorySlug = params.get('cat') || params.get('category');
-
-    // ⭐ Clean URL se category nikalne ka logic
-    if (!categorySlug && path.startsWith('/category/')) {
-        categorySlug = path.replace('/category/', '').split('/')[0];
-    }
-
+    const categorySlug = params.get('cat') || params.get('category');
     const grid = document.getElementById('categoryGrid');
     const titleEl = document.getElementById('categoryTitle');
     const bcEl = document.getElementById('breadcrumbCategory');
@@ -39,15 +31,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     grid.innerHTML = products.map(p => {
-        const offer = (p.affiliate_offers && p.affiliate_offers[0]) || null;
-        const storeName = offer ? offer.store_name : 'Amazon';
+        const primaryOffer = (p.affiliate_offers && p.affiliate_offers[0]) || {};
+        const storeName = primaryOffer.store_name || 'Amazon';
+        
+        // Network Config
         const cfg = CONFIG.networks[storeName.toLowerCase()] || CONFIG.networks.amazon;
         const bg = /^#[0-9a-fA-F]{6}$/.test(cfg.brandColor) ? cfg.brandColor : '#2563eb';
         const fg = /^#[0-9a-fA-F]{6}$/.test(cfg.textColor) ? cfg.textColor : '#ffffff';
-        const affUrl = offer ? offer.affiliate_url : '#';
+        const affUrl = primaryOffer.affiliate_url || '#';
+
+        // ⭐ Price Calculation (Same as app.js)
+        const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
+        const offerSymbol = currencySymbols[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
+        
+        const basePrice = parseFloat(primaryOffer.price) || 0;
+        const salePrice = parseFloat(primaryOffer.sale_price) || 0;
+        const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
+        
+        const now = new Date();
+        const isSaleActive = p.sale_end_date && new Date(p.sale_end_date) > now;
+
+        let finalPrice = basePrice;
+        let priceDisplay = '';
+
+        if (isSaleActive && salePrice > 0) {
+            const finalSale = commissionRate > 0 ? salePrice + (salePrice * (commissionRate / 100)) : salePrice;
+            const finalOrig = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice;
+            
+            priceDisplay = `
+                <div style="margin: 5px 0 10px 0; display:flex; align-items:center; gap:8px;">
+                    <span style="text-decoration:line-through; color:#94A3B8; font-size:0.9rem;">${offerSymbol}${finalOrig.toFixed(2)}</span>
+                    <span style="font-weight:bold; color:#FF5A3C; font-size:1.1rem;">${offerSymbol}${finalSale.toFixed(2)}</span>
+                </div>`;
+        } else {
+            finalPrice = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice;
+            priceDisplay = `<div style="font-weight:bold; color:#1E1B4B; margin: 5px 0 10px 0; font-size:1.1rem;">${offerSymbol}${finalPrice.toFixed(2)}</div>`;
+        }
 
         const pUrl = p.slug ? `/product/${encodeURIComponent(p.slug)}` : '#';
-        const imgSrc = p.image_url ? escapeHTML(p.image_url) : '/assets/icon-192.png';
+        const imgSrc = p.image_url ? escapeHTML(p.image_url) : 'assets/icon-192.png';
 
         return `
             <div class="product-card">
@@ -58,13 +80,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="card-body">
                     <a href="${pUrl}" class="card-title">${escapeHTML(p.title)}</a>
                     <div class="card-rating">★ ${p.rating || '—'} (${p.reviews_count || 0})</div>
+                    ${priceDisplay}
                     <a href="${escapeHTML(affUrl)}" target="_blank" rel="noopener noreferrer sponsored"
                        class="btn-check-price js-affiliate-link"
                        style="background-color:${bg};color:${fg};"
                        data-store="${escapeHTML(storeName)}"
                        data-product-id="${escapeHTML(String(p.id))}"
                        data-url="${escapeHTML(affUrl)}">
-                       Check Price on ${escapeHTML(storeName)}
+                       Check Price
                     </a>
                 </div>
             </div>`;
