@@ -14,16 +14,17 @@
         .admin-table th { background: #F8FAFC; font-weight: 600; }
         .btn-edit { background: #3B82F6; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
         .btn-delete { background: #EF4444; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; margin-left: 5px; }
-        
-        /* Variation Styles */
         .variation-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; background: #F8FAFC; padding: 10px; border-radius: 6px; border: 1px solid #E2E8F0; flex-wrap: wrap; }
         .variation-row input { flex: 1; min-width: 90px; padding: 8px; border: 1px solid #CBD5E1; border-radius: 4px; font-size: 0.9rem; }
         .variation-row input.var-name { flex: 2; min-width: 120px; }
         .btn-remove-var { background: #EF4444; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-add-var { background: #10B981; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; margin-bottom: 15px; font-weight: bold; width: auto; }
         .helper-text { color:#64748B; font-weight:400; font-size:0.8rem; }
-        
         .form-section-title { margin-top: 25px; margin-bottom: 15px; border-bottom: 2px solid #E2E8F0; padding-bottom: 5px; color: #1E1B4B; font-size: 1.1rem; font-weight: bold; }
+        
+        /* Unavailable Row Style */
+        tr.unavailable-row { background-color: #FEE2E2; opacity: 0.8; }
+        .badge-unavailable { background:#EF4444; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; margin-left:5px; }
     </style>
 </head>
 <body>
@@ -61,9 +62,14 @@
                 <div class="admin-card" style="margin-bottom: 30px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2 style="margin: 0;">Manage Products</h2>
-                        <button type="button" id="toggleProductListBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#3B82F6; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
-                            Show Product List
-                        </button>
+                        <div style="display: flex; gap: 10px;">
+                            <button type="button" id="checkAvailabilityBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#FF5A3C; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
+                                Check Availability
+                            </button>
+                            <button type="button" id="toggleProductListBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#3B82F6; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
+                                Show Product List
+                            </button>
+                        </div>
                     </div>
 
                     <div id="productListContainer" style="display: none; margin-top: 20px;">
@@ -100,7 +106,6 @@
                         <input type="hidden" id="pId" value="">
                         <input type="hidden" id="pOfferId" value="">
 
-                        <!-- BASIC INFO -->
                         <div class="form-section-title">Basic Info</div>
                         <div class="form-group"><label>Product Title</label><input type="text" id="pTitle" required></div>
                         <div class="form-group"><label>URL Slug</label><input type="text" id="pSlug" required pattern="[a-z0-9-]+"></div>
@@ -117,7 +122,6 @@
                             <div class="form-group" style="flex:1;"><label>Reviews Count</label><input type="number" id="pReviewsCount"></div>
                         </div>
 
-                        <!-- EVENT / FLASH SALE -->
                         <div class="form-section-title" style="color: #FF5A3C;">Flash Sale / Special Event (Optional)</div>
                         <div class="form-group"><label>Event Name (e.g. 11.11 Sale)</label><input type="text" id="pEventName" placeholder="11.11 Mega Sale"></div>
                         <div class="form-group">
@@ -126,7 +130,6 @@
                             <small class="helper-text">Is date ke baad product automatically normal list mein chala jayega.</small>
                         </div>
 
-                        <!-- MAIN OFFER DETAILS -->
                         <div class="form-section-title">Main Offer Details</div>
                         <div class="form-group"><label>Store Name</label><input type="text" id="pStore" required placeholder="aliexpress, amazon, daraz"></div>
                         
@@ -158,14 +161,12 @@
 
                         <div class="form-group"><label>Affiliate URL</label><input type="url" id="pAffUrl" required placeholder="https://s.click.aliexpress.com/..."></div>
 
-                        <!-- VARIATIONS -->
                         <div class="form-section-title">Product Variations (Size/Color - Optional)</div>
                         <p class="helper-text" style="margin-bottom:10px;">Agar sizes (M, L, XL) ya colors ki price alag hai, toh yahan add karein.</p>
                         
                         <div id="variationsContainer"></div>
                         <button type="button" id="addVariationBtn" class="btn-add-var">+ Add Variation (Size/Color)</button>
 
-                        <!-- SEO CONTENT -->
                         <div class="form-section-title">SEO Content</div>
                         <div class="form-group"><label>Short Description</label><input type="text" id="pDesc" required></div>
                         <div class="form-group"><label>Detailed Review (HTML allowed)</label><textarea id="pReview" rows="6" required placeholder="<h3>Our Verdict</h3><p>This is a great product...</p>"></textarea></div>
