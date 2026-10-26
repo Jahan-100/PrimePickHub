@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
     document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
     
-    // Check Availability Button
+    // Check Availability Button Logic
     document.getElementById('checkAvailabilityBtn')?.addEventListener('click', async function() {
         const btn = this;
         const originalText = btn.innerText;
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (data.success) {
                 alert(`Check Complete!\n${data.message}`);
                 if(data.unavailable && data.unavailable.length > 0) {
-                    alert(`Unavailable Products:\n\n- ${data.unavailable.join('\n- ')}`);
+                    alert(`Unavailable Products Found:\n\n- ${data.unavailable.join('\n- ')}`);
                 }
                 await loadProductsList(); 
             } else {
@@ -108,10 +108,20 @@ function renderTable() {
     const categoryFilter = document.getElementById('adminCategoryFilter')?.value || 'all';
     const searchQuery = document.getElementById('adminSearchInput')?.value.toLowerCase().trim() || '';
 
-    const filteredProducts = allProducts.filter(p => {
+    let filteredProducts = allProducts.filter(p => {
         const matchesCategory = categoryFilter === 'all' || p.category_slug === categoryFilter;
         const matchesSearch = p.title.toLowerCase().includes(searchQuery);
         return matchesCategory && matchesSearch;
+    });
+
+    // ⭐ SORTING LOGIC: Unavailable Products at the TOP
+    filteredProducts.sort((a, b) => {
+        const aIsAvailable = a.is_available !== false;
+        const bIsAvailable = b.is_available !== false;
+        // Agar dono ka status same hai, toh order change na karein
+        if (aIsAvailable === bIsAvailable) return 0;
+        // Agar 'a' unavailable hai (false) aur 'b' available hai (true), toh 'a' upar aayega (-1)
+        return aIsAvailable ? 1 : -1;
     });
 
     if (filteredProducts.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No products found.</td></tr>'; return; }
@@ -134,7 +144,7 @@ function renderTable() {
 
         const priceStr = defaultOffer.price ? `${finalPrice.toFixed(2)} ${defaultOffer.currency || 'USD'}` : 'N/A';
         
-        // ⭐ Availability Check UI
+        // ⭐ Availability UI Check
         const isAvailable = p.is_available !== false;
         const rowClass = isAvailable ? '' : 'unavailable-row';
         const statusBadge = isAvailable ? '' : `<span class="badge-unavailable">UNAVAILABLE</span>`;
