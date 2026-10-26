@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer with Special Deal & Flash Sale
+ * PrimePickHub Homepage Renderer with Dynamic Fonts
  */
 
 function escapeHTML(str) {
@@ -139,14 +139,22 @@ function startCountdown(endDateStr) {
     }, 1000);
 }
 
+// ⭐ Dynamic Fonts Special Deal Section ⭐
 async function loadSpecialDeals() {
-    // 1. Title Fetch Karein
-    const { data: setting } = await window.supabaseClient.from('site_settings').select('special_deal_title').eq('id', 1).single();
-    if (setting && setting.special_deal_title) {
-        document.getElementById('specialDealTitle').innerText = setting.special_deal_title;
+    const { data: setting } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).single();
+    
+    const titleEl = document.getElementById('specialDealTitle');
+    if (setting && titleEl) {
+        // Title Text
+        titleEl.innerText = setting.special_deal_title || 'Must Watch Deals';
+        
+        // Dynamic Fonts Apply
+        titleEl.style.fontFamily = setting.title_font_family || 'Poppins, sans-serif';
+        titleEl.style.fontSize = setting.title_font_size || '2.2rem';
+        titleEl.style.fontWeight = setting.title_font_weight || '800';
+        titleEl.style.fontStyle = setting.title_font_style || 'normal';
     }
 
-    // 2. Special Products Fetch Karein
     const { data: products } = await window.supabaseClient
         .from('products')
         .select('*, affiliate_offers(*)')
@@ -157,7 +165,7 @@ async function loadSpecialDeals() {
     const section = document.getElementById('specialDealSection');
 
     if (products && products.length > 0) {
-        section.style.display = 'flex'; // Flex to show 30/70 layout
+        section.style.display = 'flex'; // Show 30/70 layout
         
         container.innerHTML = products.map(p => {
             const offer = p.affiliate_offers?.[0] || {};
