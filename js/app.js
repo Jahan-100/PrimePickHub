@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer with Flash Sale & Availability Filter
+ * PrimePickHub Homepage Renderer with Special Deal & Flash Sale
  */
 
 function escapeHTML(str) {
@@ -139,6 +139,62 @@ function startCountdown(endDateStr) {
     }, 1000);
 }
 
+async function loadSpecialDeals() {
+    // 1. Title Fetch Karein
+    const { data: setting } = await window.supabaseClient.from('site_settings').select('special_deal_title').eq('id', 1).single();
+    if (setting && setting.special_deal_title) {
+        document.getElementById('specialDealTitle').innerText = setting.special_deal_title;
+    }
+
+    // 2. Special Products Fetch Karein
+    const { data: products } = await window.supabaseClient
+        .from('products')
+        .select('*, affiliate_offers(*)')
+        .eq('is_special_deal', true)
+        .eq('is_available', true);
+
+    const container = document.getElementById('specialDealScroll');
+    const section = document.getElementById('specialDealSection');
+
+    if (products && products.length > 0) {
+        section.style.display = 'block';
+        
+        container.innerHTML = products.map(p => {
+            const offer = p.affiliate_offers?.[0] || {};
+            const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
+            const sym = currencySymbols[(offer.currency || 'USD').toUpperCase()] || '$';
+            
+            const basePrice = parseFloat(offer.price) || 0;
+            const commission = parseFloat(offer.commission_rate) || 0;
+            const finalPrice = commission > 0 ? basePrice + (basePrice * (commission / 100)) : basePrice;
+            
+            const productUrl = `/product/${encodeURIComponent(p.slug)}`;
+
+            return `
+                <a href="${productUrl}" class="special-deal-card">
+                    <div class="img-box">
+                        <img src="${p.image_url || '/assets/icon-192.png'}" alt="${p.title}">
+                    </div>
+                    <div class="title">${p.title}</div>
+                    <div class="price">${sym}${finalPrice.toFixed(2)}</div>
+                </a>
+            `;
+        }).join('');
+    } else {
+        section.style.display = 'none';
+    }
+}
+
+window.scrollSpecial = function(direction) {
+    const container = document.getElementById('specialDealScroll');
+    const scrollAmount = 300;
+    if (direction === 'left') {
+        container.scrollLeft -= scrollAmount;
+    } else {
+        container.scrollLeft += scrollAmount;
+    }
+};
+
 async function loadHomepageProducts() {
     const grid = document.getElementById('productGrid');
     const flashGrid = document.getElementById('flashSaleGrid');
@@ -151,7 +207,6 @@ async function loadHomepageProducts() {
         const data = await API.getHomepageProducts();
         const raw = [...(data.featured ?? []), ...(data.trending ?? []), ...(data.latest ?? [])];
         
-        // ⭐ YAHAN FILTER LAGA HAI: Sirf available products dikhayega
         const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false);
 
         const now = new Date();
@@ -192,6 +247,7 @@ function handleSearch() {
 }
 document.addEventListener('DOMContentLoaded', () => {
     loadHomepageProducts();
+    loadSpecialDeals(); // ⭐ Special Deals Load Function Call
     const btn = document.getElementById('searchBtn');
     const input = document.getElementById('searchInput');
     if (btn) btn.addEventListener('click', handleSearch);
