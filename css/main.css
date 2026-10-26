@@ -53,19 +53,182 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .btn-check-price { display: block; width: 100%; border: none; background: var(--primary); color: #fff; padding: 10px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; transition: opacity 0.2s; }
 .btn-check-price:hover { opacity: 0.9; }
 
-/* ⭐ Horizontal Special Deal Section ⭐ */
-.horizontal-scroll-container { display: flex; gap: 15px; overflow-x: auto; scroll-behavior: smooth; padding-bottom: 15px; -ms-overflow-style: none; scrollbar-width: none; }
+/* ⭐ Alibaba Style Special Deal Section ⭐ */
+.alibaba-special-deal {
+    display: flex;
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 40px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    border: 1px solid var(--border);
+    min-height: 350px;
+}
+
+/* Left Side (30%) */
+.special-deal-left {
+    flex: 0 0 30%;
+    background: linear-gradient(135deg, #4A0E3F, #851760);
+    color: #fff;
+    padding: 35px 25px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+.special-deal-left::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+    animation: rotateLight 15s linear infinite;
+    pointer-events: none;
+}
+#specialDealTitle {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 800;
+    font-size: 2.2rem;
+    line-height: 1.2;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    z-index: 1;
+}
+.special-deal-subtitle {
+    color: #fbcfe8;
+    font-size: 1rem;
+    margin-bottom: 25px;
+    z-index: 1;
+}
+.special-deal-features {
+    list-style: none;
+    margin-bottom: 30px;
+    z-index: 1;
+}
+.special-deal-features li {
+    font-size: 0.95rem;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+}
+.special-deal-features li i {
+    color: #FFD700;
+}
+.explore-btn {
+    display: inline-block;
+    background: #fff;
+    color: #4A0E3F;
+    padding: 12px 25px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1rem;
+    width: fit-content;
+    transition: all 0.3s ease;
+    z-index: 1;
+}
+.explore-btn:hover {
+    background: #FFD700;
+    color: #4A0E3F;
+    transform: translateY(-2px);
+}
+
+/* Right Side (70%) */
+.special-deal-right {
+    flex: 1;
+    padding: 25px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: #fff;
+}
+
+.horizontal-scroll-container {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding-bottom: 10px;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    width: 100%;
+}
 .horizontal-scroll-container::-webkit-scrollbar { display: none; }
-.special-deal-card { min-width: 220px; max-width: 220px; background: #fff; border-radius: 12px; padding: 15px; text-decoration: none; display: flex; flex-direction: column; position: relative; transition: transform 0.2s; }
-.special-deal-card:hover { transform: translateY(-5px); }
-.special-deal-card .img-box { width: 100%; height: 160px; background: #F8FAFC; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.special-deal-card .img-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
-.special-deal-card .title { font-size: 0.9rem; font-weight: 600; color: #1E1B4B; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px; flex: 1; }
-.special-deal-card .price { font-size: 1.1rem; font-weight: 800; color: #FF5A3C; }
-.scroll-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; background: #fff; border: 1px solid #E2E8F0; border-radius: 50%; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); color: #1E1B4B; transition: all 0.2s; }
-.scroll-arrow:hover { background: #FF5A3C; color: #fff; }
-.left-arrow { left: -15px; }
-.right-arrow { right: -15px; }
+
+.special-deal-card {
+    min-width: 200px;
+    max-width: 200px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 10px;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: transform 0.2s;
+    border: 1px solid #F1F5F9;
+}
+.special-deal-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    border-color: #E2E8F0;
+}
+.special-deal-card .img-box {
+    width: 100%;
+    height: 160px;
+    background: #F8FAFC;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+.special-deal-card .img-box img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+.special-deal-card .title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1E1B4B;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 8px;
+    flex: 1;
+}
+.special-deal-card .price {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #FF5A3C;
+}
+
+.scroll-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    background: #fff;
+    border: 1px solid #E2E8F0;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    color: #1E1B4B;
+    transition: all 0.2s;
+}
+.scroll-arrow:hover { background: #FF5A3C; color: #fff; border-color: #FF5A3C; }
+.left-arrow { left: 5px; }
+.right-arrow { right: 5px; }
 
 /* Footer */
 .footer { background: var(--primary); color: #CBD5E1; padding: 40px 5% 20px; margin-top: 60px; font-size: 0.9rem; text-align: center; }
@@ -81,7 +244,12 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     .category-card span { font-size: 0.75rem; }
     .flash-title { font-size: 2.5rem; }
     .marquee-container { max-width: 100%; }
+    
+    /* Mobile Special Deal */
+    .alibaba-special-deal { flex-direction: column; }
+    .special-deal-left { flex: none; padding: 25px; text-align: center; align-items: center; }
+    .special-deal-right { padding: 15px; }
     .scroll-arrow { display: none; }
-    .special-deal-card { min-width: 160px; }
+    .special-deal-card { min-width: 160px; max-width: 160px; }
     .special-deal-card .img-box { height: 120px; }
 }
