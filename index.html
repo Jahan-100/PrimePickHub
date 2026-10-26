@@ -94,19 +94,27 @@
             <div class="product-grid" id="flashSaleGrid"></div>
         </div>
 
-        <!-- ⭐ 2. Alibaba Style Horizontal Special Deal Section ⭐ -->
-        <div id="specialDealSection" style="display: none; margin-bottom: 40px; background: linear-gradient(135deg, #4A0E3F, #851760); border-radius: 16px; padding: 25px; position: relative; overflow: hidden;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; color: #fff;">
-                <div>
-                    <h2 id="specialDealTitle" style="font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 2.2rem; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Special Deals</h2>
-                    <p style="margin: 5px 0 0 0; color: #fbcfe8; font-size: 1rem;">Exclusive offers just for you!</p>
-                </div>
+        <!-- ⭐ 2. Alibaba Style 30/70 Split Special Deal Section ⭐ -->
+        <div id="specialDealSection" class="alibaba-special-deal">
+            
+            <!-- Left Side (30% Text) -->
+            <div class="special-deal-left">
+                <h2 id="specialDealTitle">Must Watch Deals</h2>
+                <p class="special-deal-subtitle">Exclusive offers just for you!</p>
+                <ul class="special-deal-features">
+                    <li><i class="fa-solid fa-check-circle"></i> Limited Time Only</li>
+                    <li><i class="fa-solid fa-truck-fast"></i> Top Rated Products</li>
+                </ul>
+                <a href="search.html?q=" class="explore-btn">Explore now</a>
             </div>
-            <div style="position: relative;">
+
+            <!-- Right Side (70% Products) -->
+            <div class="special-deal-right">
                 <button class="scroll-arrow left-arrow" onclick="scrollSpecial('left')"><i class="fa-solid fa-chevron-left"></i></button>
                 <div id="specialDealScroll" class="horizontal-scroll-container"></div>
                 <button class="scroll-arrow right-arrow" onclick="scrollSpecial('right')"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
+
         </div>
 
         <!-- 3. Shop by Category Section -->
