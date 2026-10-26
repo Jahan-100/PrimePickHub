@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer with Flash Sale
+ * PrimePickHub Homepage Renderer with Flash Sale & Sale Price
  */
 
 function escapeHTML(str) {
@@ -26,11 +26,13 @@ function renderProductCard(product) {
     const productUrl = hasLink ? `/product/${id}` : '#';
     const disabledAttr = hasLink ? '' : 'aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:0.6;"';
     const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png';
+    
     const r = Number(product.rating);
     const rating = Number.isFinite(r) && r > 0 && r <= 5 ? r : null;
     const rc = Number(product.reviews_count);
     const reviewCount = Number.isInteger(rc) && rc >= 0 ? rc : 0;
     const ratingText = rating !== null ? `★ ${rating.toFixed(1)} (${reviewCount})` : 'Not yet rated';
+    
     const primaryOffer = getPrimaryOffer(product);
     const networks = (typeof CONFIG !== 'undefined' && CONFIG.networks) ? CONFIG.networks : {};
     let cta = '';
@@ -49,9 +51,28 @@ function renderProductCard(product) {
         const offerSymbol = currencySymbols[offerCurrency] || offerCurrency + ' ';
         
         const basePrice = parseFloat(primaryOffer.price) || 0;
+        const salePrice = parseFloat(primaryOffer.sale_price) || 0;
         const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
-        const finalPrice = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice;
-        const priceDisplay = primaryOffer.price ? `<div style="font-weight:bold; color:#1E1B4B; margin-bottom:5px;">${offerSymbol}${finalPrice.toFixed(2)}</div>` : '';
+        
+        const now = new Date();
+        const isSaleActive = product.sale_end_date && new Date(product.sale_end_date) > now;
+
+        let finalPrice = basePrice;
+        let priceDisplay = '';
+
+        if (isSaleActive && salePrice > 0) {
+            const finalSalePrice = commissionRate > 0 ? salePrice + (salePrice * (commissionRate / 100)) : salePrice;
+            const finalOriginalPrice = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice;
+            
+            priceDisplay = `
+                <div style="margin-bottom:5px; display:flex; align-items:center; gap:8px;">
+                    <span style="text-decoration:line-through; color:#94A3B8; font-size:0.9rem;">${offerSymbol}${finalOriginalPrice.toFixed(2)}</span>
+                    <span style="font-weight:bold; color:#FF5A3C; font-size:1.2rem;">${offerSymbol}${finalSalePrice.toFixed(2)}</span>
+                </div>`;
+        } else {
+            finalPrice = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice;
+            priceDisplay = `<div style="font-weight:bold; color:#1E1B4B; margin-bottom:5px;">${offerSymbol}${finalPrice.toFixed(2)}</div>`;
+        }
 
         cta = `
                ${priceDisplay}
