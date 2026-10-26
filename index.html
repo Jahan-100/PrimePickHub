@@ -32,14 +32,15 @@
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Flash Sale Animated Styles (FONTS MADE BIGGER) -->
+    <!-- Fonts & Flash Sale Styles -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,800;1,900&display=swap" rel="stylesheet">
     <style>
+        /* Flash Sale Styles */
         .flash-sale-banner {
             background: linear-gradient(270deg, #FF2E2E, #FF5A3C, #FF8C00);
             background-size: 600% 600%;
             animation: gradientBG 4s ease infinite;
-            border-radius: 16px; padding: 30px 25px; color: #fff; margin-bottom: 20px; 
+            border-radius: 16px; padding: 30px 25px; color: #fff; margin-bottom: 40px; 
             display: flex; justify-content: space-between; align-items: center; 
             flex-wrap: wrap; box-shadow: 0 10px 25px rgba(255, 90, 60, 0.4); 
             position: relative; overflow: hidden;
@@ -58,67 +59,36 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
-        /* ⭐ Bada aur Lamba Title Font ⭐ */
         .flash-title {
-            font-family: 'Poppins', sans-serif; 
-            font-weight: 900; 
-            font-style: italic;
-            font-size: 3.5rem; /* Pehle 2.2rem tha, ab 3.5rem kar diya */
-            letter-spacing: 2px; /* Text ko lamba karne ke liye */
-            text-shadow: 3px 3px 8px rgba(0,0,0,0.4);
-            animation: pulseText 1.5s infinite; 
-            margin: 0; 
-            display: flex; 
-            align-items: center; 
-            gap: 15px;
-            line-height: 1.2;
+            font-family: 'Poppins', sans-serif; font-weight: 900; font-style: italic;
+            font-size: 3.5rem; letter-spacing: 2px; text-shadow: 3px 3px 8px rgba(0,0,0,0.4);
+            animation: pulseText 1.5s infinite; margin: 0; display: flex; align-items: center; gap: 15px; line-height: 1.2;
         }
         @keyframes pulseText {
             0% { transform: scale(1); }
             50% { transform: scale(1.02); }
             100% { transform: scale(1); }
         }
-        
-        /* ⭐ Bada aur Lamba Marquee (Moving Text) ⭐ */
         .marquee-container {
-            overflow: hidden; 
-            white-space: nowrap; 
-            width: 100%; 
-            max-width: 600px; /* Pehle 350px tha, ab 600px kar diya */
-            margin-top: 15px;
+            overflow: hidden; white-space: nowrap; width: 100%; max-width: 600px; margin-top: 15px;
             mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
         }
         .marquee-text {
-            display: inline-block; 
-            animation: marquee 12s linear infinite;
-            font-size: 1.4rem; /* Pehle 1rem tha, ab 1.4rem kar diya */
-            font-weight: 700; 
-            opacity: 0.95; 
-            margin: 0;
-            letter-spacing: 1px;
+            display: inline-block; animation: marquee 12s linear infinite;
+            font-size: 1.4rem; font-weight: 700; opacity: 0.95; margin: 0; letter-spacing: 1px;
         }
         @keyframes marquee {
             0% { transform: translateX(0); }
             100% { transform: translateX(-50%); }
         }
-        
         .timer-box {
-            background: rgba(0,0,0,0.35); 
-            padding: 15px 25px; 
-            border-radius: 12px;
-            text-align: center; 
-            backdrop-filter: blur(10px); 
-            border: 1px solid rgba(255,255,255,0.2);
-            z-index: 1; 
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.35); padding: 15px 25px; border-radius: 12px;
+            text-align: center; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);
+            z-index: 1; box-shadow: inset 0 0 15px rgba(0,0,0,0.3);
         }
         .timer-text {
-            font-size: 1.8rem; 
-            font-weight: 900; 
-            font-family: 'Courier New', monospace;
-            color: #fff; 
-            text-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700;
+            font-size: 1.8rem; font-weight: 900; font-family: 'Courier New', monospace;
+            color: #fff; text-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700;
         }
     </style>
 
@@ -128,10 +98,14 @@
     <header class="header">
         <div class="nav-main">
             <a href="index.html" class="logo">PrimePick<span>Hub</span></a>
+            
+            <!-- ⭐ Modern Search Bar ⭐ -->
             <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Search products...">
+                <input type="text" id="searchInput" placeholder="Search products, brands, stores...">
                 <button id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i></button>
             </div>
+            
+            <!-- Admin link yahan se hata diya gaya hai -->
         </div>
         <nav class="categories-nav">
             <a href="category.html?cat=electronics">Electronics</a>
@@ -144,23 +118,48 @@
 
     <main class="container">
         
-        <!-- ⭐ Flash Sale Section (With Bigger Fonts) ⭐ -->
+        <!-- ⭐ Shop by Category Section ⭐ -->
+        <div id="categorySection" style="margin-bottom: 40px; margin-top: 10px;">
+            <h2 style="margin-bottom: 20px; font-family: 'Poppins', sans-serif; font-weight: 800; color: var(--text-dark);">Shop by Category</h2>
+            
+            <div class="category-grid">
+                <a href="category.html?cat=electronics" class="category-card">
+                    <div class="cat-img-wrapper"><img src="https://images.unsplash.com/photo-1498049794561-7780e7231661?w=200&h=200&fit=crop" alt="Electronics"></div>
+                    <span>Electronics</span>
+                </a>
+                <a href="category.html?cat=fashion" class="category-card">
+                    <div class="cat-img-wrapper"><img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=200&h=200&fit=crop" alt="Fashion"></div>
+                    <span>Fashion</span>
+                </a>
+                <a href="category.html?cat=home-kitchen" class="category-card">
+                    <div class="cat-img-wrapper"><img src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=200&h=200&fit=crop" alt="Home & Kitchen"></div>
+                    <span>Home & Kitchen</span>
+                </a>
+                <a href="category.html?cat=beauty" class="category-card">
+                    <div class="cat-img-wrapper"><img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=200&h=200&fit=crop" alt="Beauty"></div>
+                    <span>Beauty</span>
+                </a>
+                <a href="category.html?cat=sports" class="category-card">
+                    <div class="cat-img-wrapper"><img src="https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=200&h=200&fit=crop" alt="Sports"></div>
+                    <span>Sports</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- ⭐ Flash Sale Section ⭐ -->
         <div id="flashSaleSection" style="display: none; margin-bottom: 40px;">
             <div class="flash-sale-banner">
                 <div class="flash-light-effect"></div>
-                
                 <div style="z-index: 1; width: 100%; max-width: 650px;">
                     <h2 class="flash-title">
                         ⚡ <span id="flashSaleTitle">Limited Time Offer</span>
                     </h2>
                     <div class="marquee-container">
-                        <!-- Text ko 3 baar likha hai taake lamba ho jaye -->
                         <p class="marquee-text">
                             🔥 Hurry up! Offer ends soon. Limited stock available! &nbsp;&nbsp;&nbsp;&nbsp; 🔥 Hurry up! Offer ends soon. Limited stock available! &nbsp;&nbsp;&nbsp;&nbsp; 🔥 Hurry up! Offer ends soon. Limited stock available!
                         </p>
                     </div>
                 </div>
-                
                 <div class="timer-box" style="margin-top: 10px;">
                     <p style="margin: 0 0 5px 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; color: #FFD700;">Ends In</p>
                     <div id="countdownTimer" class="timer-text">00d 00h 00m 00s</div>
@@ -171,7 +170,7 @@
 
         <!-- Normal Products Section -->
         <div id="normalProductsSection">
-            <h2 style="margin-bottom:10px;">🔥 Top Trending Deals</h2>
+            <h2 style="margin-bottom:10px; font-family: 'Poppins', sans-serif; font-weight: 800;">Just For You</h2>
             <p style="color:var(--text-muted);margin-bottom:20px;">Click any product to view live price on the official store.</p>
             <div class="product-grid" id="productGrid"></div>
         </div>
