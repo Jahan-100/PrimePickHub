@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer with Auto-Update Flash Sale
+ * PrimePickHub Homepage Renderer with Individual Card Timers
  */
 
 function escapeHTML(str) {
@@ -18,6 +18,7 @@ function deduplicateProducts(list) {
 }
 function showGridMessage(grid, msg) { if (!grid) return; grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;"><p>${escapeHTML(msg)}</p></div>`; }
 
+// ⭐ 1. Har Product Card Ke Liye Alag Timer HTML ⭐
 function renderProductCard(product) {
     if (!product || typeof product !== 'object') return '';
     const title = escapeHTML(product.title || 'Untitled');
@@ -33,6 +34,15 @@ function renderProductCard(product) {
     const reviewCount = Number.isInteger(rc) && rc >= 0 ? rc : 0;
     const ratingText = rating !== null ? `★ ${rating.toFixed(1)} (${reviewCount})` : 'Not yet rated';
     
+    // ⭐ Check karein agar product ka sale time active hai toh timer banayein
+    let timerHtml = '';
+    if (product.sale_end_date) {
+        const endDate = new Date(product.sale_end_date).getTime();
+        if (endDate > new Date().getTime()) {
+            timerHtml = `<div class="card-timer" data-endtime="${product.sale_end_date}">⏳ Calculating...</div>`;
+        }
+    }
+
     const primaryOffer = getPrimaryOffer(product);
     const networks = (typeof CONFIG !== 'undefined' && CONFIG.networks) ? CONFIG.networks : {};
     let cta = '';
@@ -98,6 +108,8 @@ function renderProductCard(product) {
             <div class="card-body">
                 <a href="${productUrl}" ${disabledAttr} class="card-title">${title}</a>
                 <div class="card-rating">${escapeHTML(ratingText)}</div>
+                <!-- ⭐ Timer Yahan Show Hoga ⭐ -->
+                ${timerHtml}
                 ${cta}
             </div>
         </div>`;
@@ -115,42 +127,34 @@ function renderProductsGrid(products, grid) {
     });
 }
 
-let countdownInterval;
-function startCountdown(endDateStr) {
-    const countdownEl = document.getElementById('countdownTimer');
-    if (!countdownEl) return;
-    const endDate = new Date(endDateStr).getTime();
-    clearInterval(countdownInterval);
-
-    countdownInterval = setInterval(() => {
+// ⭐ 2. Timer ko Har Second Update Karne Ka Function ⭐
+setInterval(() => {
+    document.querySelectorAll('.card-timer').forEach(el => {
+        const endTime = new Date(el.dataset.endtime).getTime();
         const now = new Date().getTime();
-        const distance = endDate - now;
-        
-        // ⭐ AUTO-UPDATE LOGIC: Agar time khatam ho jaye
-        if (distance < 0) {
-            clearInterval(countdownInterval);
-            countdownEl.innerHTML = "EXPIRED";
-            
-            // 2 second baad page refresh nahi karna, balke data ko smoothly reload karna hai
-            setTimeout(() => {
-                // Section ko hide karein
-                const flashSection = document.getElementById('flashSaleSection');
-                if(flashSection) flashSection.style.display = 'none';
-                // Products ko normal grid mein move karne ke liye data reload karein
-                loadHomepageProducts();
-            }, 2000);
-            return;
-        }
-        
-        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-        countdownEl.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-    }, 1000);
-}
+        const distance = endTime - now;
 
-// ⭐ EXACT Alibaba Style Special Deal Section ⭐
+        if (distance < 0) {
+            el.innerHTML = "❌ EXPIRED";
+            el.style.background = "#F1F5F9";
+            el.style.color = "#64748B";
+            el.style.borderColor = "#E2E8F0";
+        } else {
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            // Agar 1 din se zyada bacha hai toh days show karein, warna sirf hours
+            if (days > 0) {
+                el.innerHTML = `⏳ ${days}d ${hours}h ${minutes}m`;
+            } else {
+                el.innerHTML = `🔥 ${hours}h ${minutes}m ${seconds}s`;
+            }
+        }
+    });
+}, 1000);
+
 async function loadSpecialDeals() {
     const { data: setting } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).single();
     
@@ -233,7 +237,6 @@ async function loadHomepageProducts() {
 
         allProducts.forEach(p => {
             const endDate = p.sale_end_date ? new Date(p.sale_end_date) : null;
-            // Check if sale is active
             if (endDate && endDate > now) {
                 flashSaleProducts.push(p);
             } else {
@@ -244,7 +247,6 @@ async function loadHomepageProducts() {
         if (flashSaleProducts.length > 0) {
             flashSection.style.display = 'block';
             document.getElementById('flashSaleTitle').innerText = flashSaleProducts[0].event_name || 'Limited Time Offer';
-            startCountdown(flashSaleProducts[0].sale_end_date);
             renderProductsGrid(flashSaleProducts, flashGrid);
         } else {
             flashSection.style.display = 'none';
