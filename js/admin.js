@@ -92,15 +92,16 @@ function renderTable() {
         const basePrice = parseFloat(defaultOffer.price) || 0;
         const commissionRate = parseFloat(defaultOffer.commission_rate) || 0;
         
-        let finalPrice = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice;
-        
-        // Check if sale is active
+        // Check if sale is active for Admin view
         const now = new Date();
         const isSaleActive = p.sale_end_date && new Date(p.sale_end_date) > now;
         const salePrice = parseFloat(defaultOffer.sale_price) || 0;
         
+        let finalPrice = basePrice;
         if (isSaleActive && salePrice > 0) {
             finalPrice = commissionRate > 0 ? salePrice + (salePrice * (commissionRate / 100)) : salePrice;
+        } else {
+            finalPrice = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice;
         }
 
         const priceStr = defaultOffer.price ? `${finalPrice.toFixed(2)} ${defaultOffer.currency || 'USD'}` : 'N/A';
@@ -118,16 +119,17 @@ function renderTable() {
     }).join('');
 }
 
+// ⭐ Variation Row Generation (With Sale Price)
 window.addVariationRow = function(name = '', price = '', salePrice = '', commission = '', url = '') {
     const container = document.getElementById('variationsContainer');
     const div = document.createElement('div');
     div.className = 'variation-row';
     div.innerHTML = `
-        <input type="text" placeholder="Size/Color" value="${name}" class="var-name" required>
-        <input type="number" step="0.01" placeholder="Price" value="${price}" class="var-price" required>
+        <input type="text" placeholder="Size/Color (e.g. M, L, Red)" value="${name}" class="var-name" required>
+        <input type="number" step="0.01" placeholder="Base Price" value="${price}" class="var-price" required>
         <input type="number" step="0.01" placeholder="Sale Price" value="${salePrice}" class="var-sale-price">
         <input type="number" step="0.1" placeholder="Comm %" value="${commission}" class="var-comm">
-        <input type="url" placeholder="Aff URL" value="${url}" class="var-url">
+        <input type="url" placeholder="Aff URL (Opt)" value="${url}" class="var-url">
         <button type="button" class="btn-remove-var" onclick="this.parentElement.remove()">X</button>
     `;
     container.appendChild(div);
@@ -152,7 +154,8 @@ window.editProduct = async function(id) {
             document.getElementById('pSaleEndDate').value = d.toISOString().slice(0,16);
         } else { document.getElementById('pSaleEndDate').value = ''; }
 
-        document.getElementById('pStore').value = defaultOffer.store_name || ''; document.getElementById('pPrice').value = defaultOffer.price || '';
+        document.getElementById('pStore').value = defaultOffer.store_name || ''; 
+        document.getElementById('pPrice').value = defaultOffer.price || '';
         document.getElementById('pSalePrice').value = defaultOffer.sale_price || '';
         document.getElementById('pCommission').value = (defaultOffer.commission_rate && defaultOffer.commission_rate > 0) ? defaultOffer.commission_rate : '';
         document.getElementById('pCurrency').value = defaultOffer.currency || 'USD'; document.getElementById('pAffUrl').value = defaultOffer.affiliate_url || '';
@@ -214,11 +217,16 @@ function setupProductForm() {
 
         const variations = [];
         document.querySelectorAll('.variation-row').forEach(row => {
-            const vName = row.querySelector('.var-name').value.trim(); const vPrice = parseFloat(row.querySelector('.var-price').value);
+            const vName = row.querySelector('.var-name').value.trim(); 
+            const vPrice = parseFloat(row.querySelector('.var-price').value);
             const vSalePrice = row.querySelector('.var-sale-price').value ? parseFloat(row.querySelector('.var-sale-price').value) : null;
-            const vCommInput = row.querySelector('.var-comm').value.trim(); const vComm = vCommInput === '' ? commission : (parseFloat(vCommInput) || 0);
+            const vCommInput = row.querySelector('.var-comm').value.trim(); 
+            const vComm = vCommInput === '' ? commission : (parseFloat(vCommInput) || 0);
             const vUrl = row.querySelector('.var-url').value.trim() || mainOfferData.affiliate_url;
-            if (vName && !isNaN(vPrice)) { variations.push({ ...mainOfferData, price: vPrice, sale_price: vSalePrice, commission_rate: vComm, affiliate_url: vUrl, variation_name: vName }); }
+            
+            if (vName && !isNaN(vPrice)) { 
+                variations.push({ ...mainOfferData, price: vPrice, sale_price: vSalePrice, commission_rate: vComm, affiliate_url: vUrl, variation_name: vName }); 
+            }
         });
 
         try {
