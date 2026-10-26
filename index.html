@@ -7,7 +7,6 @@
     <title>PrimePickHub - Compare & Click The Best Deals</title>
     <meta name="description" content="Compare products across Daraz, Amazon, AliExpress & eBay. Check live prices instantly.">
 
-    <!-- OpenGraph -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="PrimePickHub - Compare & Click The Best Deals">
     <meta property="og:description" content="Compare products across top stores. Live prices.">
@@ -15,7 +14,6 @@
     <meta property="og:url" content="https://www.primepickhub.com/">
     <meta property="og:site_name" content="PrimePickHub">
 
-    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-7VE3L1Y8PQ"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -30,7 +28,6 @@
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- ⭐ Google Fonts (Dynamic Fonts ke liye) ⭐ -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,800;0,900;1,800&family=Roboto:wght@400;700;900&family=Oswald:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Lobster&family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
     
     <style>
@@ -55,15 +52,12 @@
         .timer-box { background: rgba(0,0,0,0.35); padding: 15px 25px; border-radius: 12px; text-align: center; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); z-index: 1; box-shadow: inset 0 0 15px rgba(0,0,0,0.3); }
         .timer-text { font-size: 1.8rem; font-weight: 900; font-family: 'Courier New', monospace; color: #fff; text-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700; }
     </style>
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <header class="header">
         <div class="nav-main">
             <a href="index.html" class="logo">PrimePick<span>Hub</span></a>
-            
-            <!-- Modern Search Bar -->
             <div class="search-box">
                 <input type="text" id="searchInput" placeholder="Search products, brands, stores...">
                 <button id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i></button>
@@ -100,21 +94,21 @@
             <div class="product-grid" id="flashSaleGrid"></div>
         </div>
 
-        <!-- ⭐ 2. Alibaba Style 30/70 Split Special Deal Section ⭐ -->
+        <!-- ⭐ 2. EXACT Alibaba Style Special Deal Section ⭐ -->
         <div id="specialDealSection" class="alibaba-special-deal">
             
-            <!-- Left Side (30% Text) -->
+            <!-- Left Side (Text) -->
             <div class="special-deal-left">
-                <h2 id="specialDealTitle">Must Watch Deals</h2>
+                <h2 id="specialDealTitle">First order deal</h2>
                 <p class="special-deal-subtitle">Exclusive offers just for you!</p>
                 <ul class="special-deal-features">
-                    <li><i class="fa-solid fa-check-circle"></i> Limited Time Only</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Limited Time Only</li>
                     <li><i class="fa-solid fa-truck-fast"></i> Top Rated Products</li>
                 </ul>
                 <a href="search.html?q=" class="explore-btn">Explore now</a>
             </div>
 
-            <!-- Right Side (70% Products) -->
+            <!-- Right Side (Products) -->
             <div class="special-deal-right">
                 <button class="scroll-arrow left-arrow" onclick="scrollSpecial('left')"><i class="fa-solid fa-chevron-left"></i></button>
                 <div id="specialDealScroll" class="horizontal-scroll-container"></div>
@@ -156,10 +150,5 @@
     <script src="js/api.js"></script>
     <script src="js/app.js"></script>
     <script src="js/affiliate.js"></script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js').catch(() => {});
-        }
-    </script>
 </body>
 </html>
