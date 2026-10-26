@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer with Dynamic Fonts
+ * PrimePickHub Homepage Renderer with Dynamic Fonts & Alibaba Layout
  */
 
 function escapeHTML(str) {
@@ -139,18 +139,15 @@ function startCountdown(endDateStr) {
     }, 1000);
 }
 
-// ⭐ Dynamic Fonts Special Deal Section ⭐
+// ⭐ EXACT Alibaba Style Special Deal Section ⭐
 async function loadSpecialDeals() {
     const { data: setting } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).single();
     
     const titleEl = document.getElementById('specialDealTitle');
     if (setting && titleEl) {
-        // Title Text
-        titleEl.innerText = setting.special_deal_title || 'Must Watch Deals';
-        
-        // Dynamic Fonts Apply
+        titleEl.innerText = setting.special_deal_title || 'First order deal';
         titleEl.style.fontFamily = setting.title_font_family || 'Poppins, sans-serif';
-        titleEl.style.fontSize = setting.title_font_size || '2.2rem';
+        titleEl.style.fontSize = setting.title_font_size || '2rem';
         titleEl.style.fontWeight = setting.title_font_weight || '800';
         titleEl.style.fontStyle = setting.title_font_style || 'normal';
     }
@@ -165,7 +162,7 @@ async function loadSpecialDeals() {
     const section = document.getElementById('specialDealSection');
 
     if (products && products.length > 0) {
-        section.style.display = 'flex'; // Show 30/70 layout
+        section.style.display = 'flex'; 
         
         container.innerHTML = products.map(p => {
             const offer = p.affiliate_offers?.[0] || {};
@@ -178,13 +175,16 @@ async function loadSpecialDeals() {
             
             const productUrl = `/product/${encodeURIComponent(p.slug)}`;
 
+            // ⭐ Alibaba Card Structure ⭐
             return `
                 <a href="${productUrl}" class="special-deal-card">
                     <div class="img-box">
                         <img src="${p.image_url || '/assets/icon-192.png'}" alt="${p.title}">
                     </div>
-                    <div class="title">${p.title}</div>
-                    <div class="price">${sym}${finalPrice.toFixed(2)}</div>
+                    <div class="info-box">
+                        <div class="price">${sym}${finalPrice.toFixed(2)}</div>
+                        <div class="title">${p.title}</div>
+                    </div>
                 </a>
             `;
         }).join('');
