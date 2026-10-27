@@ -14,7 +14,7 @@
 body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 
 /* Header & Modern Search Bar */
-.header { position: sticky; top: 0; z-index: 9999; background: var(--card-bg); border-bottom: 1px solid var(--border); }
+.header { position: sticky; top: 0; z-index: 99990 !important; background: var(--card-bg); border-bottom: 1px solid var(--border); }
 .nav-main { display: flex; align-items: center; justify-content: space-between; padding: 15px 5%; gap: 20px; }
 .logo { font-size: 1.8rem; font-weight: 800; color: var(--primary); text-decoration: none; font-family: 'Poppins', sans-serif; letter-spacing: -0.5px; }
 .logo span { color: var(--accent); }
@@ -27,12 +27,12 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     align-items: center; 
     border: 2px solid #94A3B8; 
     border-radius: 8px; 
-    overflow: visible !important; /* Dropdown ko bahar aane ke liye */
+    overflow: visible !important; /* Zaroori hai taake dropdown bahar aaye */
     background: #fff; 
+    position: relative;
+    z-index: 99990 !important;
     transition: all 0.3s ease; 
     box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
-    position: relative;
-    z-index: 9999;
 }
 .search-box:focus-within { 
     border-color: var(--accent); 
@@ -70,24 +70,22 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 }
 
 .category-dropdown-menu {
-    display: none;
+    display: none; /* JS isko 'block' karega */
     position: absolute;
-    top: calc(100% + 2px);
+    top: 100%;
     left: -2px;
-    background: #fff;
+    background: #fff !important;
     border: 1px solid #cdcdcd;
     border-radius: 0 0 8px 8px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     width: 220px;
     max-height: 350px;
     overflow-y: auto;
-    z-index: 99999 !important; /* Force taake sab ke upar dikhe */
+    z-index: 999999 !important; /* Sab se upar dikhne ke liye */
     list-style: none;
     padding: 5px 0;
     margin: 0;
 }
-
-.category-dropdown-menu.show { display: block; }
 
 .category-dropdown-menu li {
     padding: 10px 15px;
@@ -109,7 +107,6 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     font-size: 0.95rem; 
     color: var(--text-dark); 
     background: transparent; 
-    border-radius: 0;
 }
 .search-box input::placeholder { color: #94A3B8; }
 
@@ -278,6 +275,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 @media (max-width: 768px) {
     .nav-main { flex-wrap: wrap; padding: 10px 5%; }
     .search-box { order: 3; width: 100%; max-width: none; flex-basis: 100%; margin-top: 10px; }
+    
     .alibaba-special-deal { flex-direction: column; min-height: auto; }
     .special-deal-left { flex: none; padding: 12px 15px; text-align: center; align-items: center; background: rgba(105, 20, 76, 0.95); }
     #specialDealTitle { font-size: 1.4rem !important; margin-bottom: 4px; }
@@ -287,11 +285,13 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     .explore-btn { padding: 6px 15px !important; font-size: 0.8rem !important; }
     .special-deal-right { padding: 10px 15px; }
     .scroll-arrow { display: none; }
+    
     .special-deal-card { min-width: 140px; max-width: 140px; height: 190px; }
     .special-deal-card .img-box { flex: 8; }
     .special-deal-card .info-box { flex: 2; padding: 4px 6px; }
     .special-deal-card .price { font-size: 0.85rem; }
     .special-deal-card .title { font-size: 0.65rem; }
+
     .flash-sale-split { min-height: auto; }
     .flash-sale-left { padding: 15px 10px; align-items: center; text-align: center; }
     .flash-title-area { justify-content: center; margin-bottom: 8px; }
@@ -300,12 +300,16 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     .blinking-ending-soon { font-size: 1.4rem; padding: 6px 20px; line-height: 1.1; }
     .flash-marquee-container { width: 100%; -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%); mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%); }
     .marquee-content span { font-size: 0.85rem; }
+    
     .flash-sale-right { padding: 10px 15px 15px 15px; align-items: center; justify-content: flex-start; }
     .flash-card { min-width: 160px; max-width: 160px; height: 230px; }
+
     .category-item { min-width: 60px; }
     .category-item .cat-icon { width: 50px; height: 50px; font-size: 1.5rem; }
     .category-item span { font-size: 0.7rem; }
+
     .product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 15px; }
+
     .product-card { border-radius: 8px; }
     .card-img-wrap { height: 150px; }
     .card-img-wrap img { padding: 10px; }
@@ -315,6 +319,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     .card-rating { font-size: 0.75rem; margin-bottom: 2px; }
     .card-timer { font-size: 0.65rem; padding: 3px 5px; margin-bottom: 5px; }
     .btn-check-price { padding: 8px; font-size: 0.8rem; }
+
     .card-body div[style*="font-weight:bold"] { font-size: 0.9rem !important; }
     .card-body div[style*="display:flex"] span[style*="font-weight:bold"] { font-size: 1rem !important; }
     .card-body div[style*="display:flex"] span[style*="text-decoration:line-through"] { font-size: 0.75rem !important; }
