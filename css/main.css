@@ -72,10 +72,9 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     white-space: nowrap;
     transition: color 0.2s;
     position: relative;
-    padding-bottom: 6px; /* Space for the line */
+    padding-bottom: 6px;
 }
 
-/* ⭐ Active State: Icon gets slightly colored, Text turns orange, and an Underline appears */
 .category-item.active .cat-icon {
     border-color: var(--accent);
     background: #FFF5F3;
@@ -100,7 +99,6 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     border-radius: 2px;
 }
 
-
 /* Container & Product Grid */
 .container { padding: 30px 5%; max-width: 1400px; margin: 0 auto; }
 .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; margin-top: 20px; }
@@ -121,8 +119,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .btn-check-price { display: block; width: 100%; border: none; background: var(--primary); color: #fff; padding: 10px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; transition: opacity 0.2s; }
 .btn-check-price:hover { opacity: 0.9; }
 
-
-/* ⭐ Alibaba Style Special Deal Section ⭐ */
+/* ⭐ 1. Alibaba Style Special Deal Section ⭐ */
 .alibaba-special-deal { display: flex; position: relative; background: #fff; border-radius: 12px; overflow: hidden; margin-bottom: 40px; min-height: 185px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #E2E8F0; }
 .alibaba-special-deal::before { content: ""; position: absolute; inset: 0; background-image: url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'); background-size: cover; background-position: center; opacity: 0.4; z-index: 0; }
 .special-deal-left { flex: 0 0 28%; padding: 20px 25px; display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 1; background: rgba(105, 20, 76, 0.85); }
@@ -149,6 +146,115 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .left-arrow { left: 2px; }
 .right-arrow { right: 2px; }
 
+
+/* ⭐ 2. NEW Flash Sale Split Section (Dark Red Theme) ⭐ */
+.flash-sale-split { 
+    display: flex; 
+    position: relative; 
+    background: #fff; 
+    border-radius: 12px; 
+    overflow: hidden; 
+    margin-bottom: 40px; 
+    min-height: 185px; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+    border: 1px solid #E2E8F0; 
+}
+
+/* Background Image Different */
+.flash-sale-split::before { 
+    content: ""; 
+    position: absolute; 
+    inset: 0; 
+    background-image: url('https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'); 
+    background-size: cover; 
+    background-position: center; 
+    opacity: 0.2; 
+    z-index: 0; 
+}
+
+/* Left Side Red Area */
+.flash-sale-left { 
+    flex: 0 0 28%; 
+    padding: 20px 25px; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    position: relative; 
+    z-index: 1; 
+    background: rgba(185, 28, 28, 0.9); /* Dark Red */
+    color: #fff;
+}
+.flash-sale-left h2 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 800;
+    font-size: 1.8rem;
+    line-height: 1.1;
+    margin-bottom: 15px;
+    color: #fff;
+}
+
+/* Blinking Ending Soon Box */
+.blinking-ending-soon {
+    background: #fbbf24;
+    color: #7f1d1d;
+    font-weight: 800;
+    padding: 8px 15px;
+    border-radius: 6px;
+    display: inline-block;
+    text-align: center;
+    margin-bottom: 15px;
+    animation: blinkBox 1s infinite alternate;
+    width: fit-content;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+@keyframes blinkBox {
+    0% { background: #fbbf24; color: #7f1d1d; transform: scale(1); }
+    100% { background: #ef4444; color: #fff; transform: scale(1.05); }
+}
+
+.flash-sale-text {
+    font-size: 0.85rem;
+    color: #fecaca;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.flash-sale-right { 
+    flex: 1; 
+    padding: 12px 15px; 
+    position: relative; 
+    z-index: 1; 
+    display: flex; 
+    align-items: center; 
+    overflow: hidden; 
+}
+
+/* Flash Sale Card Size & Timer */
+.flash-card {
+    display: flex;
+    flex-direction: column;
+}
+.flash-card .info-box {
+    flex: 2; /* Slightly taller to fit timer */
+    padding: 8px;
+}
+.flash-card .price {
+    font-size: 1.05rem;
+    color: #DC2626;
+}
+.flash-card .card-timer {
+    background: #FEF2F2; 
+    color: #DC2626; 
+    font-size: 0.8rem; 
+    font-weight: 900; 
+    padding: 4px 6px; 
+    border-radius: 4px; 
+    margin-top: 5px; 
+    text-align: center; 
+    border: 1px solid #FECACA;
+}
+
 /* Footer */
 .footer { background: var(--primary); color: #CBD5E1; padding: 40px 5% 20px; margin-top: 60px; font-size: 0.9rem; text-align: center; }
 .footer a { text-decoration: none; }
@@ -160,15 +266,18 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     .nav-main { flex-wrap: wrap; padding: 10px 5%; }
     .search-box { order: 3; width: 100%; max-width: none; flex-basis: 100%; margin-top: 10px; }
     
-    .flash-title { font-size: 2.2rem; }
-    .marquee-container { max-width: 100%; }
-    
     /* Special Deal Mobile */
     .alibaba-special-deal { flex-direction: column; min-height: auto; }
     .special-deal-left { flex: none; padding: 20px; text-align: center; align-items: center; background: rgba(105, 20, 76, 0.9); }
     .special-deal-right { padding: 15px; }
     .scroll-arrow { display: none; }
     .special-deal-card { min-width: 160px; max-width: 160px; height: 220px; }
+
+    /* Flash Sale Mobile */
+    .flash-sale-split { flex-direction: column; min-height: auto; }
+    .flash-sale-left { flex: none; padding: 20px; text-align: center; align-items: center; background: rgba(185, 28, 28, 0.95); }
+    .flash-sale-right { padding: 15px; }
+    .flash-card { min-width: 160px; max-width: 160px; height: 230px; }
 
     /* Category Mobile Adjustments */
     .category-item { min-width: 60px; }
