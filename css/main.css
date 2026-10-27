@@ -43,13 +43,15 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     height: 100%;
     display: flex;
     align-items: center;
-    background-color: #f3f3f3;
+    /* Light Gray Background */
+    background-color: #f0f0f0; 
     border-right: 1px solid #cdcdcd;
-    border-radius: 6px 0 0 6px;
+    border-radius: 5px 0 0 5px;
     cursor: pointer;
+    transition: background 0.2s;
 }
 
-.custom-category-dropdown:hover { background-color: #e3e3e3; }
+.custom-category-dropdown:hover { background-color: #e0e0e0; }
 
 .category-btn {
     background: transparent;
