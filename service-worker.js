@@ -1,4 +1,4 @@
-const CACHE = 'primepickhub-v2'; // ⭐ Version update kiya gaya hai
+const CACHE = 'primepickhub-v3'; // ⭐ Version update kiya gaya hai
 const ASSETS = ['/', '/index.html', '/css/main.css', '/js/config.js', '/js/api.js', '/js/app.js'];
 
 self.addEventListener('install', e => {
