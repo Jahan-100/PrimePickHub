@@ -179,5 +179,27 @@
             }
         });
     </script>
+        <!-- ⭐ App Download Popup ⭐ -->
+    <div id="appDownloadPopup" class="app-popup" style="display: none;">
+        <div class="app-popup-content">
+            <span class="close-popup" onclick="closeAppPopup()">&times;</span>
+            <div class="app-icon">
+                <img src="assets/icon-192.png" alt="App Icon">
+            </div>
+            <h3>Get the PrimePickHub App</h3>
+            <p>Better experience, exclusive deals & faster checkout!</p>
+            
+            <!-- Desktop View: QR Code -->
+            <div id="desktopAppContent" style="display: none; text-align: center;">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://primepickhub.vercel.app/app-download.html" alt="Scan QR Code" style="border-radius: 10px; border: 2px solid #E2E8F0; padding: 5px; margin-bottom: 10px;">
+                <p style="font-size: 0.85rem; color: #64748B;">Scan with your phone to download</p>
+            </div>
+
+            <!-- Mobile View: Direct Button -->
+            <div id="mobileAppContent" style="display: none;">
+                <button class="btn-app-download" onclick="redirectToStore()">Download Now</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
