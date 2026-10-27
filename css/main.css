@@ -50,198 +50,36 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .card-title { font-size: 0.95rem; font-weight: 600; color: var(--text-dark); text-decoration: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.6em; }
 .card-rating { font-size: 0.85rem; color: #F59E0B; margin-bottom: 6px; }
 
+/* Card Timer */
+.card-timer { background: #FEF2F2; color: #DC2626; font-size: 0.75rem; font-weight: 800; padding: 5px 8px; border-radius: 4px; margin-bottom: 8px; text-align: center; border: 1px solid #FECACA; display: flex; align-items: center; justify-content: center; gap: 5px; }
+
 .btn-check-price { display: block; width: 100%; border: none; background: var(--primary); color: #fff; padding: 10px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; transition: opacity 0.2s; }
 .btn-check-price:hover { opacity: 0.9; }
 
 
 /* ⭐ Alibaba Style Special Deal Section ⭐ */
-.alibaba-special-deal {
-    display: flex;
-    position: relative;
-    background: #fff;
-    border-radius: 12px; 
-    overflow: hidden;
-    margin-bottom: 40px;
-    min-height: 185px; /* Compact Height */
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    border: 1px solid #E2E8F0;
-}
-
-/* Background Image */
-.alibaba-special-deal::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-image: url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');
-    background-size: cover;
-    background-position: center;
-    opacity: 0.4; 
-    z-index: 0;
-}
-
-/* Left Side */
-.special-deal-left {
-    flex: 0 0 28%;
-    padding: 20px 25px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    position: relative;
-    z-index: 1;
-    background: rgba(105, 20, 76, 0.85); 
-}
-
-#specialDealTitle {
-    font-family: 'Poppins', sans-serif;
-    font-weight: 800;
-    font-size: 1.8rem; 
-    line-height: 1.1;
-    margin-bottom: 6px;
-    color: #fff; 
-}
-
-.special-deal-subtitle {
-    color: #E2E8F0;
-    font-size: 0.85rem;
-    margin-bottom: 15px;
-    font-weight: 500;
-}
-
+.alibaba-special-deal { display: flex; position: relative; background: #fff; border-radius: 12px; overflow: hidden; margin-bottom: 40px; min-height: 185px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #E2E8F0; }
+.alibaba-special-deal::before { content: ""; position: absolute; inset: 0; background-image: url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'); background-size: cover; background-position: center; opacity: 0.4; z-index: 0; }
+.special-deal-left { flex: 0 0 28%; padding: 20px 25px; display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 1; background: rgba(105, 20, 76, 0.85); }
+#specialDealTitle { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1.8rem; line-height: 1.1; margin-bottom: 6px; color: #fff; }
+.special-deal-subtitle { color: #E2E8F0; font-size: 0.85rem; margin-bottom: 15px; font-weight: 500; }
 .special-deal-features { list-style: none; margin-bottom: 15px; }
 .special-deal-features li { font-size: 0.8rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 500; }
 .special-deal-features li i { color: #FFD700; font-size: 0.9rem; }
-
-.explore-btn {
-    display: inline-block;
-    background: #fff;
-    color: #69144c;
-    padding: 8px 18px;
-    border-radius: 20px;
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 0.8rem;
-    width: fit-content;
-    transition: all 0.2s;
-}
+.explore-btn { display: inline-block; background: #fff; color: #69144c; padding: 8px 18px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 0.8rem; width: fit-content; transition: all 0.2s; }
 .explore-btn:hover { background: #FFD700; color: #69144c; }
-
-/* Right Side */
-.special-deal-right {
-    flex: 1;
-    padding: 12px 15px;
-    position: relative;
-    z-index: 1; 
-    display: flex;
-    align-items: center;
-    overflow: hidden;
-}
-
-.horizontal-scroll-container {
-    display: flex;
-    gap: 15px;
-    overflow-x: auto;
-    scroll-behavior: smooth;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-    width: 100%;
-}
+.special-deal-right { flex: 1; padding: 12px 15px; position: relative; z-index: 1; display: flex; align-items: center; overflow: hidden; }
+.horizontal-scroll-container { display: flex; gap: 15px; overflow-x: auto; scroll-behavior: smooth; -ms-overflow-style: none; scrollbar-width: none; width: 100%; }
 .horizontal-scroll-container::-webkit-scrollbar { display: none; }
-
-/* ⭐ Product Card (85% Image / 15% Details) ⭐ */
-.special-deal-card {
-    min-width: 190px; 
-    max-width: 190px;
-    height: 250px; 
-    background: #fff;
-    border-radius: 8px;
-    text-decoration: none;
-    display: flex;
-    flex-direction: column; 
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.2s;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.special-deal-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-}
-
-/* Image Box - 85% of card height */
-.special-deal-card .img-box {
-    flex: 8.5; /* 85% */
-    width: 100%;
-    background: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
-
-/* Image fills the entire top box */
-.special-deal-card .img-box img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* Fills the space completely */
-    transition: transform 0.3s;
-}
-
-.special-deal-card:hover .img-box img {
-    transform: scale(1.05); 
-}
-
-/* Info Box - 15% of card height */
-.special-deal-card .info-box {
-    flex: 1.5; /* 15% */
-    padding: 4px 8px; /* Reduced padding for tight space */
-    background: #fff;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    border-top: 1px solid #f1f1f1;
-}
-
-.special-deal-card .price {
-    font-size: 0.95rem; /* Slightly smaller to fit 15% */
-    font-weight: 800;
-    color: #FF5A3C;
-    margin-bottom: 0px;
-    line-height: 1.1;
-}
-
-.special-deal-card .title {
-    font-size: 0.7rem; /* Smaller text */
-    color: #475569;
-    font-weight: 500;
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    line-height: 1.1;
-}
-
-/* Arrows */
-.scroll-arrow {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 32px;
-    height: 32px;
-    background: #fff;
-    border: 1px solid #E2E8F0;
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    color: #1E1B4B;
-    transition: all 0.2s;
-}
+.special-deal-card { min-width: 190px; max-width: 190px; height: 250px; background: #fff; border-radius: 8px; text-decoration: none; display: flex; flex-direction: column; position: relative; overflow: hidden; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.special-deal-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+.special-deal-card .img-box { flex: 8.5; width: 100%; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.special-deal-card .img-box img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+.special-deal-card:hover .img-box img { transform: scale(1.05); }
+.special-deal-card .info-box { flex: 1.5; padding: 4px 8px; background: #fff; display: flex; flex-direction: column; justify-content: center; border-top: 1px solid #f1f1f1; }
+.special-deal-card .price { font-size: 0.95rem; font-weight: 800; color: #FF5A3C; margin-bottom: 0px; line-height: 1.1; }
+.special-deal-card .title { font-size: 0.7rem; color: #475569; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; line-height: 1.1; }
+.scroll-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; background: #fff; border: 1px solid #E2E8F0; border-radius: 50%; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); color: #1E1B4B; transition: all 0.2s; }
 .scroll-arrow:hover { background: #FF5A3C; color: #fff; border-color: #FF5A3C; }
 .left-arrow { left: 2px; }
 .right-arrow { right: 2px; }
@@ -251,19 +89,75 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .footer a { text-decoration: none; }
 .footer-disclaimer { border-top: 1px solid #334155; padding-top: 20px; margin-top: 20px; font-size: 0.8rem; opacity: 0.8; }
 
-/* Mobile Responsive */
+
+/* ⭐ MOBILE RESPONSIVE (2-Column Grid & Compact Cards) ⭐ */
 @media (max-width: 768px) {
     .nav-main { flex-wrap: wrap; padding: 10px 5%; }
     .search-box { order: 3; width: 100%; max-width: none; flex-basis: 100%; margin-top: 10px; }
-    .category-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
+    .category-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; }
     .cat-img-wrapper { width: 60px; height: 60px; }
     .category-card span { font-size: 0.75rem; }
-    .flash-title { font-size: 2.5rem; }
+    .flash-title { font-size: 2.2rem; }
     .marquee-container { max-width: 100%; }
     
+    /* Special Deal Mobile */
     .alibaba-special-deal { flex-direction: column; min-height: auto; }
     .special-deal-left { flex: none; padding: 20px; text-align: center; align-items: center; background: rgba(105, 20, 76, 0.9); }
     .special-deal-right { padding: 15px; }
     .scroll-arrow { display: none; }
-    .special-deal-card { min-width: 170px; max-width: 170px; height: 230px; }
+    .special-deal-card { min-width: 160px; max-width: 160px; height: 220px; }
+
+    /* ⭐ Product Grid: 2 Columns ⭐ */
+    .product-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-top: 15px;
+    }
+
+    /* ⭐ Compact Card Design ⭐ */
+    .product-card {
+        border-radius: 8px;
+    }
+    .card-img-wrap {
+        height: 150px; /* Image height reduced */
+    }
+    .card-img-wrap img {
+        padding: 10px;
+    }
+    .card-badge {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+    }
+    .card-body {
+        padding: 10px;
+        gap: 5px;
+    }
+    .card-title {
+        font-size: 0.8rem;
+        min-height: 2.4em;
+    }
+    .card-rating {
+        font-size: 0.75rem;
+        margin-bottom: 2px;
+    }
+    .card-timer {
+        font-size: 0.65rem;
+        padding: 3px 5px;
+        margin-bottom: 5px;
+    }
+    .btn-check-price {
+        padding: 8px;
+        font-size: 0.8rem;
+    }
+
+    /* Price font size fix inside cards */
+    .card-body div[style*="font-weight:bold"] {
+        font-size: 0.9rem !important;
+    }
+    .card-body div[style*="display:flex"] span[style*="font-weight:bold"] {
+        font-size: 1rem !important;
+    }
+    .card-body div[style*="display:flex"] span[style*="text-decoration:line-through"] {
+        font-size: 0.75rem !important;
+    }
 }
