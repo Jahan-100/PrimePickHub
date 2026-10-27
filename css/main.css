@@ -42,14 +42,14 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     background-color: #f3f3f3; 
     border: none;
     border-right: 1px solid #cdcdcd;
-    padding: 0 14px 0 4px; /* Width reduced (Right padding for arrow, Left padding very small) */
+    padding: 0 8px 0 4px; /* Width reduced (Right padding for arrow, Left padding very small) */
     height: 45px;
     outline: none;
-    font-size: 0.85rem; /* Slightly increased text size */
+    font-size: 0.95rem; /* Slightly increased text size */
     font-weight: 600;
     color: #0f1111;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.6s;
     
     /* Remove default arrow */
     appearance: none; 
