@@ -271,6 +271,131 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .footer a { text-decoration: none; }
 .footer-disclaimer { border-top: 1px solid #334155; padding-top: 20px; margin-top: 20px; font-size: 0.8rem; opacity: 0.8; }
 
+/* ⭐ App Download Popup Overlay (Background) ⭐ */
+.app-popup-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999998;
+    backdrop-filter: blur(2px);
+}
+
+/* ⭐ App Download Popup ⭐ */
+.app-popup {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 999999;
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+    from { transform: translate(-50%, -40%); opacity: 0; scale: 0.9; }
+    to { transform: translate(-50%, -50%); opacity: 1; scale: 1; }
+}
+
+.app-popup-content {
+    background: #fff;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    border: 1px solid var(--border);
+    position: relative;
+    width: 320px;
+    text-align: center;
+}
+
+.close-popup {
+    position: absolute;
+    top: 10px; right: 15px;
+    font-size: 1.8rem;
+    color: #94A3B8;
+    cursor: pointer;
+    transition: color 0.2s;
+    line-height: 1;
+}
+
+.close-popup:hover { color: #EF4444; }
+
+.app-icon img {
+    width: 70px; height: 70px;
+    border-radius: 18px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.app-popup-content h3 {
+    font-size: 1.2rem;
+    color: var(--text-dark);
+    margin-bottom: 5px;
+    font-family: 'Poppins', sans-serif;
+}
+
+.app-popup-content p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}
+
+.btn-app-download {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.2s;
+}
+
+.btn-app-download:hover { background: #e0482d; }
+
+/* ⭐ Floating Highlighted Icon ⭐ */
+.floating-app-btn {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid var(--accent);
+    box-shadow: 0 4px 15px rgba(255, 90, 60, 0.4);
+    cursor: pointer;
+    z-index: 999997;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: transform 0.2s;
+}
+
+.floating-app-btn img {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+}
+
+.floating-app-btn:hover {
+    transform: scale(1.1);
+}
+
+/* Pulsing animation for highlight */
+.pulse-ring {
+    position: absolute;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    animation: pulseRing 1.5s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+@keyframes pulseRing {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1.6); opacity: 0; }
+}
+
 /* ⭐ MOBILE RESPONSIVE ⭐ */
 @media (max-width: 768px) {
     .nav-main { flex-wrap: wrap; padding: 10px 5%; }
@@ -323,86 +448,20 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     .card-body div[style*="font-weight:bold"] { font-size: 0.9rem !important; }
     .card-body div[style*="display:flex"] span[style*="font-weight:bold"] { font-size: 1rem !important; }
     .card-body div[style*="display:flex"] span[style*="text-decoration:line-through"] { font-size: 0.75rem !important; }
-}
-/* ⭐ App Download Popup Styling ⭐ */
-.app-popup {
-    position: fixed;
-    bottom: 20px;
-    left: 20px; /* Desktop par neeche left corner mein */
-    z-index: 999999;
-    animation: slideUp 0.5s ease-out;
-}
 
-@keyframes slideUp {
-    from { transform: translateY(100px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-
-.app-popup-content {
-    background: #fff;
-    border-radius: 12px;
-    padding: 20px 25px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    border: 1px solid var(--border);
-    position: relative;
-    max-width: 280px;
-    text-align: center;
-}
-
-.close-popup {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 1.5rem;
-    color: #94A3B8;
-    cursor: pointer;
-    transition: color 0.2s;
-}
-
-.close-popup:hover { color: #EF4444; }
-
-.app-icon img {
-    width: 60px;
-    height: 60px;
-    border-radius: 15px;
-    margin-bottom: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-
-.app-popup-content h3 {
-    font-size: 1.1rem;
-    color: var(--text-dark);
-    margin-bottom: 5px;
-    font-family: 'Poppins', sans-serif;
-}
-
-.app-popup-content p {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    margin-bottom: 15px;
-}
-
-.btn-app-download {
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    width: 100%;
-    transition: background 0.2s;
-}
-
-.btn-app-download:hover { background: #e0482d; }
-
-@media (max-width: 768px) {
-    .app-popup {
-        left: 50%;
-        transform: translateX(-50%);
-        width: 90%;
+    /* Mobile Floating Icon */
+    .floating-app-btn {
         bottom: 15px;
+        right: 15px;
+        width: 50px;
+        height: 50px;
     }
-    .app-popup-content { max-width: 100%; }
+    .floating-app-btn img {
+        width: 32px;
+        height: 32px;
+    }
+    .app-popup-content {
+        width: 90vw;
+        max-width: 320px;
+    }
 }
