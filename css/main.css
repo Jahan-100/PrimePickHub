@@ -100,8 +100,8 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 }
 
 /* Container & Product Grid */
-.container { padding: 20px 5%; max-width: 1400px; margin: 0 auto; } /* Top padding reduced to 20px */
-.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; margin-top: 10px; } /* Reduced top margin */
+.container { padding: 20px 5%; max-width: 1400px; margin: 0 auto; } 
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; margin-top: 10px; } 
 
 /* Standard Product Card */
 .product-card { background: var(--card-bg); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow); transition: transform 0.2s; display: flex; flex-direction: column; }
@@ -120,7 +120,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .btn-check-price:hover { opacity: 0.9; }
 
 /* ⭐ 1. Alibaba Style Special Deal Section ⭐ */
-.alibaba-special-deal { display: flex; position: relative; background: #fff; border-radius: 12px; overflow: hidden; margin-bottom: 20px; /* Reduced gap */ min-height: 185px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #E2E8F0; }
+.alibaba-special-deal { display: flex; position: relative; background: #fff; border-radius: 12px; overflow: hidden; margin-bottom: 20px; min-height: 185px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #E2E8F0; }
 .alibaba-special-deal::before { content: ""; position: absolute; inset: 0; background-image: url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'); background-size: cover; background-position: center; opacity: 0.4; z-index: 0; }
 .special-deal-left { flex: 0 0 28%; padding: 20px 25px; display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 1; background: rgba(105, 20, 76, 0.85); }
 #specialDealTitle { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1.8rem; line-height: 1.1; margin-bottom: 6px; color: #fff; }
@@ -155,7 +155,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     background: #fff; 
     border-radius: 12px; 
     overflow: hidden; 
-    margin-bottom: 20px; /* Reduced gap */
+    margin-bottom: 20px; 
     min-height: 245px; 
     box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
     border: 1px solid #E2E8F0; 
@@ -278,7 +278,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .flash-card .card-timer { background: #FEF2F2; color: #DC2626; font-size: 0.8rem; font-weight: 900; padding: 4px 6px; border-radius: 4px; margin-top: 5px; text-align: center; border: 1px solid #FECACA; }
 
 /* Footer */
-.footer { background: var(--primary); color: #CBD5E1; padding: 40px 5% 20px; margin-top: 30px; /* Reduced top margin */ font-size: 0.9rem; text-align: center; }
+.footer { background: var(--primary); color: #CBD5E1; padding: 40px 5% 20px; margin-top: 30px; font-size: 0.9rem; text-align: center; }
 .footer a { text-decoration: none; }
 .footer-disclaimer { border-top: 1px solid #334155; padding-top: 20px; margin-top: 20px; font-size: 0.8rem; opacity: 0.8; }
 
@@ -288,12 +288,47 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     .nav-main { flex-wrap: wrap; padding: 10px 5%; }
     .search-box { order: 3; width: 100%; max-width: none; flex-basis: 100%; margin-top: 10px; }
     
-    /* Special Deal Mobile */
+    /* ⭐ Special Deal Mobile (Compact) ⭐ */
     .alibaba-special-deal { flex-direction: column; min-height: auto; }
-    .special-deal-left { flex: none; padding: 20px; text-align: center; align-items: center; background: rgba(105, 20, 76, 0.9); }
-    .special-deal-right { padding: 15px; }
+    .special-deal-left { 
+        flex: none; 
+        padding: 12px 15px; /* Reduced padding */
+        text-align: center; 
+        align-items: center; 
+        background: rgba(105, 20, 76, 0.95); 
+    }
+    #specialDealTitle { 
+        font-size: 1.4rem !important; /* Smaller font */
+        margin-bottom: 4px; 
+    }
+    .special-deal-subtitle { 
+        font-size: 0.8rem !important; 
+        margin-bottom: 8px; 
+    }
+    .special-deal-features { 
+        display: flex; 
+        gap: 10px; 
+        margin-bottom: 10px; 
+        justify-content: center; 
+        flex-wrap: wrap; 
+    }
+    .special-deal-features li { 
+        font-size: 0.75rem !important; 
+        margin-bottom: 0; 
+    }
+    .explore-btn { 
+        padding: 6px 15px !important; 
+        font-size: 0.8rem !important; 
+    }
+    .special-deal-right { padding: 10px 15px; }
     .scroll-arrow { display: none; }
-    .special-deal-card { min-width: 160px; max-width: 160px; height: 220px; }
+    
+    /* Smaller Cards */
+    .special-deal-card { min-width: 140px; max-width: 140px; height: 190px; }
+    .special-deal-card .img-box { flex: 8; }
+    .special-deal-card .info-box { flex: 2; padding: 4px 6px; }
+    .special-deal-card .price { font-size: 0.85rem; }
+    .special-deal-card .title { font-size: 0.65rem; }
 
     /* Flash Sale Mobile */
     .flash-sale-split { min-height: auto; }
