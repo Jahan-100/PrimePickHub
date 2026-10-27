@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download PrimePickHub App</title>
+    <link rel="stylesheet" href="css/main.css">
+    <script>
+        window.onload = function() {
+            const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+            
+            // 🔴 YAHAN APNE APP STORES KE ASAL LINKS DAALEIN 🔴
+            const playStoreLink = 'https://play.google.com/store/apps/details?id=your.package.name';
+            const appStoreLink = 'https://apps.apple.com/app/idYOUR_APP_ID';
+            const appGalleryLink = 'https://appgallery.huawei.com/app/C_YOUR_APP_ID';
+
+            if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+                window.location.replace(appStoreLink);
+            } else if (/Huawei|HONOR/i.test(userAgent)) {
+                window.location.replace(appGalleryLink);
+            } else if (/android/i.test(userAgent)) {
+                window.location.replace(playStoreLink);
+            }
+        }
+    </script>
+</head>
+<body style="display:flex; justify-content:center; align-items:center; height:100vh; text-align:center;">
+    <div>
+        <h2>Redirecting to App Store...</h2>
+        <p>If you are not redirected, click one of the links below:</p>
+        <div style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">
+            <a href="https://play.google.com/store/apps/details?id=your.package.name" class="btn-check-price">Google Play Store</a>
+            <a href="https://apps.apple.com/app/idYOUR_APP_ID" class="btn-check-price" style="background:#000;">Apple App Store</a>
+            <a href="https://appgallery.huawei.com/app/C_YOUR_APP_ID" class="btn-check-price" style="background:#E11D48;">Huawei AppGallery</a>
+        </div>
+    </div>
+</body>
+</html>
