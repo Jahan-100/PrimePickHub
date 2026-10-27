@@ -226,8 +226,8 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     background: #fbbf24;
     color: #7f1d1d;
     font-weight: 900;
-    font-size: 2.2rem; /* Doubled */
-    padding: 20px 40px; /* Doubled */
+    font-size: 2.2rem; 
+    padding: 20px 40px; 
     border-radius: 12px;
     text-align: center;
     animation: blink3Colors 1.5s infinite;
@@ -243,11 +243,10 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     100% { background-color: #fbbf24; color: #7f1d1d; transform: scale(1); }
 }
 
-/* ⭐ NEW: Marquee with Fade-in/out effect ⭐ */
+/* Marquee */
 .flash-marquee-container {
     overflow: hidden; 
     flex: 1;
-    /* Creates the 0% to 100% to 0% visibility effect */
     mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
     -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
 }
@@ -265,7 +264,6 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     padding-right: 20px;
 }
 
-/* Starts from left, moves right-to-left seamlessly */
 @keyframes marquee {
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
@@ -294,7 +292,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .footer-disclaimer { border-top: 1px solid #334155; padding-top: 20px; margin-top: 20px; font-size: 0.8rem; opacity: 0.8; }
 
 
-/* ⭐ MOBILE RESPONSIVE ⭐ */
+/* ⭐ MOBILE RESPONSIVE (FIXED FOR FLASH SALE) ⭐ */
 @media (max-width: 768px) {
     .nav-main { flex-wrap: wrap; padding: 10px 5%; }
     .search-box { order: 3; width: 100%; max-width: none; flex-basis: 100%; margin-top: 10px; }
@@ -306,17 +304,55 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     .scroll-arrow { display: none; }
     .special-deal-card { min-width: 160px; max-width: 160px; height: 220px; }
 
-    /* Flash Sale Mobile */
-    .flash-sale-split { min-height: 450px; }
-    .flash-sale-left { padding: 20px; align-items: center; text-align: center; }
-    .flash-title-area { justify-content: center; }
-    .flash-controls { flex-direction: column; gap: 15px; }
+    /* ⭐ Flash Sale Mobile Overrides ⭐ */
+    .flash-sale-split { min-height: auto; }
     
-    /* Smaller box on mobile to fit screen */
-    .blinking-ending-soon { font-size: 1.5rem; padding: 12px 25px; }
-    .flash-marquee-container { width: 100%; mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%); -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%); }
+    .flash-sale-left { 
+        padding: 15px 10px; 
+        align-items: center; /* Center everything */
+        text-align: center; 
+    }
     
-    .flash-sale-right { padding: 15px; align-items: center; justify-content: center; }
+    .flash-title-area { 
+        flex-direction: column; /* Stack fireworks and title */
+        gap: 5px; 
+        margin-bottom: 10px; 
+    }
+    
+    .fireworks-icon { font-size: 1.8rem; }
+    
+    #flashSaleTitle { 
+        font-size: 1.5rem !important; /* Force smaller font on mobile */
+    }
+    
+    .flash-controls { 
+        flex-direction: column; /* Stack Ending Soon and Marquee */
+        gap: 10px; 
+        width: 100%;
+        align-items: center;
+    }
+    
+    .blinking-ending-soon { 
+        font-size: 1.1rem; /* Much smaller for mobile */
+        padding: 8px 20px; 
+    }
+    
+    .flash-marquee-container {
+        width: 100%;
+        -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+        mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+    }
+    
+    .marquee-content span {
+        font-size: 0.85rem; /* Smaller text */
+    }
+    
+    .flash-sale-right { 
+        padding: 15px; 
+        align-items: center; 
+        justify-content: flex-start; 
+        overflow-x: auto; 
+    }
     .flash-card { min-width: 160px; max-width: 160px; height: 230px; }
 
     /* Category Mobile Adjustments */
