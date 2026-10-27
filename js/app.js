@@ -362,4 +362,45 @@ document.addEventListener('DOMContentLoaded', () => {
     const input = document.getElementById('searchInput');
     if (btn) btn.addEventListener('click', handleSearch);
     if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') handleSearch(); });
+
+    // ⭐ Custom Dropdown Logic ⭐
+    const catBtn = document.getElementById('categoryDropdownBtn');
+    const catMenu = document.getElementById('categoryDropdownMenu');
+    const catText = document.getElementById('categoryDropdownText');
+    const catInput = document.getElementById('searchCategory');
+
+    if (catBtn && catMenu) {
+        // Toggle dropdown on button click
+        catBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            catMenu.classList.toggle('show');
+        });
+
+        // Handle item selection
+        catMenu.querySelectorAll('li').forEach(li => {
+            li.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const val = this.getAttribute('data-value');
+                const text = this.innerText;
+                
+                // Update text and hidden input
+                catText.innerText = text;
+                catInput.value = val;
+                
+                // Update active state
+                catMenu.querySelectorAll('li').forEach(item => item.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Close menu
+                catMenu.classList.remove('show');
+            });
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!catBtn.contains(e.target) && !catMenu.contains(e.target)) {
+                catMenu.classList.remove('show');
+            }
+        });
+    }
 });
