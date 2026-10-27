@@ -37,20 +37,20 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     box-shadow: 0 4px 15px rgba(255, 90, 60, 0.15); 
 }
 
-/* ⭐ Dropdown Style (50% Smaller Box, Auto Width based on Text) ⭐ */
+/* ⭐ Dropdown Style (Ultra Small Closed Tab, Auto-expand for long text) ⭐ */
 .search-select {
     background: #F1F5F9;
     border: none;
     border-right: 1px solid #CBD5E1;
-    padding: 0 6px; /* Kam padding */
-    height: 100%; /* Full height of search box */
+    padding: 0 4px; /* Bohot kam padding */
+    height: 100%; 
     outline: none;
-    font-size: 0.7rem; /* Chota font */
-    font-weight: 600;
+    font-size: 0.6rem; /* Bohot chota font (lagbhag half) */
+    font-weight: 700;
     color: var(--text-dark);
     cursor: pointer;
     transition: background 0.2s;
-    /* Width is now auto based on option text, no max-width */
+    /* Koi max-width nahi, yeh selected text ke hisaab se auto adjust hoga */
 }
 .search-select:hover { background: #E2E8F0; }
 
