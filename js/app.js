@@ -342,14 +342,13 @@ async function loadHomepageProducts() {
 
 function handleSearch() {
     const input = document.getElementById('searchInput');
-    const select = document.getElementById('searchCategory'); // Yeh hidden input hai
+    const select = document.getElementById('searchCategory');
     if (!input) return;
     const q = input.value.trim();
     const cat = select ? select.value : 'all';
     
     if (q) {
         let url = `search.html?q=${encodeURIComponent(q)}`;
-        // Agar category 'all' nahi hai, toh URL mein category add karo
         if (cat !== 'all') {
             url += `&cat=${encodeURIComponent(cat)}`;
         }
@@ -364,55 +363,51 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btn) btn.addEventListener('click', handleSearch);
     if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') handleSearch(); });
 
-    // ⭐ Custom Dropdown Logic ⭐
+    // Custom Dropdown Logic (If inline script fails)
     const catBtn = document.getElementById('categoryDropdownBtn');
     const catMenu = document.getElementById('categoryDropdownMenu');
-    const catText = document.getElementById('categoryDropdownText');
-    const catInput = document.getElementById('searchCategory');
-
-    if (catBtn && catMenu) {
-        // Dropdown toggle on click
+    if (catBtn && catMenu && typeof toggleCatDropdown === 'undefined') {
         catBtn.addEventListener('click', (e) => {
+            e.preventDefault();
             e.stopPropagation();
-            catMenu.classList.toggle('show');
-        });
-
-        // Dropdown item selection
-        catMenu.querySelectorAll('li').forEach(li => {
-            li.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const val = this.getAttribute('data-value');
-                const text = this.innerText;
-                
-                // Update button text and hidden input value
-                catText.innerText = text;
-                catInput.value = val;
-                
-                // Update active state in dropdown list
-                catMenu.querySelectorAll('li').forEach(item => item.classList.remove('active'));
-                this.classList.add('active');
-                
-                // Close menu
-                catMenu.classList.remove('show');
-            });
-        });
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!catBtn.contains(e.target) && !catMenu.contains(e.target)) {
-                catMenu.classList.remove('show');
-            }
+            catMenu.style.display = catMenu.style.display === 'block' ? 'none' : 'block';
         });
     }
 });
 
-// ⭐ App Download Popup Logic ⭐
-function closeAppPopup() {
-    document.getElementById('appDownloadPopup').style.display = 'none';
-    // Agar aap chahein ke user ise dobara na dekhe (24 ghante ke liye)
-    localStorage.setItem('appPopupClosed', 'true');
+// ⭐ App Download Popup Toggle Logic ⭐
+function toggleAppPopup() {
+    const popup = document.getElementById('appDownloadPopup');
+    const overlay = document.getElementById('appPopupOverlay');
+    const desktopContent = document.getElementById('desktopAppContent');
+    const mobileContent = document.getElementById('mobileAppContent');
+    
+    if (!popup || !overlay) return;
+
+    // Agar popup band hai, toh open karein
+    if (popup.style.display === 'none' || popup.style.display === '') {
+        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+
+        if (isMobile) {
+            if(mobileContent) mobileContent.style.display = 'block';
+            if(desktopContent) desktopContent.style.display = 'none';
+        } else {
+            if(desktopContent) desktopContent.style.display = 'block';
+            if(mobileContent) mobileContent.style.display = 'none';
+        }
+
+        popup.style.display = 'block';
+        overlay.style.display = 'block';
+    } 
+    // Agar popup open hai, toh band karein
+    else {
+        popup.style.display = 'none';
+        overlay.style.display = 'none';
+    }
 }
 
+// App Store Redirect Logic
 function redirectToStore() {
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     
@@ -428,31 +423,16 @@ function redirectToStore() {
     } else if (/android/i.test(userAgent)) {
         window.location.href = playStoreLink; // Google Play Store
     } else {
-        // Fallback
         window.location.href = playStoreLink;
     }
 }
 
+// Pehli dafa popup automatically dikhane ke liye (Sirf 1 dafa per session)
 document.addEventListener('DOMContentLoaded', function() {
-    const popup = document.getElementById('appDownloadPopup');
-    const desktopContent = document.getElementById('desktopAppContent');
-    const mobileContent = document.getElementById('mobileAppContent');
-    
-    // Check karein ke user ne pehle popup band kiya tha ya nahi
-    if (!localStorage.getItem('appPopupClosed') && popup) {
-        
-        // 3 second baad popup dikhayein
+    if (!sessionStorage.getItem('appPopupShown')) {
         setTimeout(() => {
-            const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-
-            if (isMobile) {
-                mobileContent.style.display = 'block';
-            } else {
-                desktopContent.style.display = 'block';
-            }
-            
-            popup.style.display = 'block';
-        }, 3000); // 3000 = 3 seconds
+            toggleAppPopup();
+            sessionStorage.setItem('appPopupShown', 'true');
+        }, 3000); // 3 second baad khulega
     }
 });
