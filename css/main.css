@@ -147,7 +147,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .right-arrow { right: 2px; }
 
 
-/* ⭐ 2. NEW Flash Sale Split Section (Dark Red Theme) ⭐ */
+/* ⭐ 2. NEW Flash Sale Split Section (Top Text / Bottom Cards) ⭐ */
 .flash-sale-split { 
     display: flex; 
     position: relative; 
@@ -155,12 +155,12 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     border-radius: 12px; 
     overflow: hidden; 
     margin-bottom: 40px; 
-    min-height: 185px; 
+    min-height: 260px; /* Increased height to fit top text and bottom cards */
     box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
     border: 1px solid #E2E8F0; 
 }
 
-/* Background Image Different */
+/* Background Image */
 .flash-sale-split::before { 
     content: ""; 
     position: absolute; 
@@ -168,44 +168,62 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     background-image: url('https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'); 
     background-size: cover; 
     background-position: center; 
-    opacity: 0.2; 
+    opacity: 0.15; 
     z-index: 0; 
 }
 
-/* Left Side Red Area */
+/* Left Side Text (Aligned Top) */
 .flash-sale-left { 
-    flex: 0 0 28%; 
-    padding: 20px 25px; 
+    flex: 0 0 32%; /* Slightly wider for moving text */
+    padding: 25px 25px 15px 25px; 
     display: flex; 
     flex-direction: column; 
-    justify-content: center; 
+    justify-content: flex-start; /* Aligns text to Top */
     position: relative; 
     z-index: 1; 
-    background: rgba(185, 28, 28, 0.9); /* Dark Red */
-    color: #fff;
-}
-.flash-sale-left h2 {
-    font-family: 'Poppins', sans-serif;
-    font-weight: 800;
-    font-size: 1.8rem;
-    line-height: 1.1;
-    margin-bottom: 15px;
+    background: rgba(185, 28, 28, 0.95); /* Dark Red */
     color: #fff;
 }
 
-/* Blinking Ending Soon Box */
+/* Fireworks Animation */
+.fireworks-icon {
+    font-size: 2.2rem;
+    margin-bottom: 5px;
+    animation: floatAnim 2s ease-in-out infinite;
+    display: inline-block;
+    width: fit-content;
+}
+@keyframes floatAnim {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+    100% { transform: translateY(0); }
+}
+
+.flash-sale-left h2 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 900;
+    font-size: 1.9rem;
+    line-height: 1.1;
+    margin-bottom: 12px;
+    color: #fff;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+/* Bigger Blinking Ending Soon Box */
 .blinking-ending-soon {
     background: #fbbf24;
     color: #7f1d1d;
-    font-weight: 800;
-    padding: 8px 15px;
-    border-radius: 6px;
+    font-weight: 900;
+    font-size: 1.2rem; /* Bigger font */
+    padding: 12px 25px; /* Bigger padding */
+    border-radius: 8px;
     display: inline-block;
     text-align: center;
     margin-bottom: 15px;
     animation: blinkBox 1s infinite alternate;
     width: fit-content;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    border: 2px solid #fff;
 }
 
 @keyframes blinkBox {
@@ -213,20 +231,36 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     100% { background: #ef4444; color: #fff; transform: scale(1.05); }
 }
 
-.flash-sale-text {
-    font-size: 0.85rem;
+/* Marquee Moving Text */
+.flash-marquee-container {
+    overflow: hidden; 
+    white-space: nowrap; 
+    width: 100%; 
+    margin-top: 5px;
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+.flash-marquee-text {
+    display: inline-block; 
+    animation: marquee 8s linear infinite;
+    font-size: 0.95rem; 
+    font-weight: 600; 
     color: #fecaca;
-    font-weight: 500;
-    line-height: 1.5;
+    margin: 0;
+    letter-spacing: 0.5px;
+}
+@keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
 }
 
+/* Right Side Cards (Aligned Bottom) */
 .flash-sale-right { 
     flex: 1; 
-    padding: 12px 15px; 
+    padding: 15px 15px 20px 15px; /* Extra bottom padding to push cards up slightly from edge */
     position: relative; 
     z-index: 1; 
     display: flex; 
-    align-items: center; 
+    align-items: flex-end; /* Aligns cards to Bottom */
     overflow: hidden; 
 }
 
@@ -275,8 +309,11 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 
     /* Flash Sale Mobile */
     .flash-sale-split { flex-direction: column; min-height: auto; }
-    .flash-sale-left { flex: none; padding: 20px; text-align: center; align-items: center; background: rgba(185, 28, 28, 0.95); }
-    .flash-sale-right { padding: 15px; }
+    .flash-sale-left { flex: none; padding: 20px; text-align: center; align-items: center; background: rgba(185, 28, 28, 0.95); justify-content: flex-start; }
+    .fireworks-icon { font-size: 2rem; }
+    .flash-sale-left h2 { font-size: 1.8rem; }
+    .blinking-ending-soon { font-size: 1rem; padding: 8px 15px; }
+    .flash-sale-right { padding: 15px; align-items: center; } /* Center cards on mobile */
     .flash-card { min-width: 160px; max-width: 160px; height: 230px; }
 
     /* Category Mobile Adjustments */
