@@ -405,3 +405,54 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// ⭐ App Download Popup Logic ⭐
+function closeAppPopup() {
+    document.getElementById('appDownloadPopup').style.display = 'none';
+    // Agar aap chahein ke user ise dobara na dekhe (24 ghante ke liye)
+    localStorage.setItem('appPopupClosed', 'true');
+}
+
+function redirectToStore() {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    
+    // 🔴 YAHAN APNE APP STORES KE ASAL LINKS DAALEIN 🔴
+    const playStoreLink = 'https://play.google.com/store/apps/details?id=your.package.name';
+    const appStoreLink = 'https://apps.apple.com/app/idYOUR_APP_ID';
+    const appGalleryLink = 'https://appgallery.huawei.com/app/C_YOUR_APP_ID';
+
+    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+        window.location.href = appStoreLink; // Apple App Store
+    } else if (/Huawei|HONOR/i.test(userAgent)) {
+        window.location.href = appGalleryLink; // Huawei AppGallery
+    } else if (/android/i.test(userAgent)) {
+        window.location.href = playStoreLink; // Google Play Store
+    } else {
+        // Fallback
+        window.location.href = playStoreLink;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const popup = document.getElementById('appDownloadPopup');
+    const desktopContent = document.getElementById('desktopAppContent');
+    const mobileContent = document.getElementById('mobileAppContent');
+    
+    // Check karein ke user ne pehle popup band kiya tha ya nahi
+    if (!localStorage.getItem('appPopupClosed') && popup) {
+        
+        // 3 second baad popup dikhayein
+        setTimeout(() => {
+            const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+
+            if (isMobile) {
+                mobileContent.style.display = 'block';
+            } else {
+                desktopContent.style.display = 'block';
+            }
+            
+            popup.style.display = 'block';
+        }, 3000); // 3000 = 3 seconds
+    }
+});
