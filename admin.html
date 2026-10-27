@@ -24,6 +24,12 @@
         
         tr.unavailable-row { background-color: #FEE2E2; opacity: 0.8; }
         .badge-unavailable { background:#EF4444; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; margin-left:5px; }
+
+        /* Upload Button Styling */
+        .upload-btn-wrap { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+        .btn-upload { background: #E2E8F0; color: #1E1B4B; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; border: 1px solid #CBD5E1; transition: 0.2s; display: inline-block; }
+        .btn-upload:hover { background: #CBD5E1; }
+        .file-name { font-size: 0.8rem; color: #64748B; }
     </style>
 </head>
 <body>
@@ -179,8 +185,28 @@
                         <div class="form-group"><label>Product Title</label><input type="text" id="pTitle" required></div>
                         <div class="form-group"><label>URL Slug</label><input type="text" id="pSlug" required pattern="[a-z0-9-]+"></div>
                         
-                        <div class="form-group"><label>Primary Image URL</label><input type="url" id="pImg" required placeholder="https://...main-image.jpg"></div>
-                        <div class="form-group"><label>Gallery Images (Har Line Mein Ek URL)</label><textarea id="pGallery" rows="3" placeholder="https://...image2.jpg&#10;https://...image3.jpg"></textarea></div>
+                        <!-- Primary Image with Upload Option -->
+                        <div class="form-group">
+                            <label>Primary Image (URL or Upload)</label>
+                            <input type="url" id="pImg" placeholder="https://...main-image.jpg">
+                            <div class="upload-btn-wrap">
+                                <input type="file" id="pImgFile" accept="image/*" style="display: none;" onchange="document.getElementById('pImgFileName').innerText = this.files[0] ? this.files[0].name : 'No file chosen'">
+                                <button type="button" class="btn-upload" onclick="document.getElementById('pImgFile').click()">📁 Choose from PC</button>
+                                <span id="pImgFileName" class="file-name">No file chosen</span>
+                            </div>
+                        </div>
+
+                        <!-- Gallery Images with Upload Option -->
+                        <div class="form-group">
+                            <label>Gallery Images (URLs or Upload)</label>
+                            <textarea id="pGallery" rows="3" placeholder="https://...image2.jpg&#10;https://...image3.jpg"></textarea>
+                            <div class="upload-btn-wrap">
+                                <input type="file" id="pGalleryFile" accept="image/*" multiple style="display: none;" onchange="document.getElementById('pGalleryFileName').innerText = this.files.length > 0 ? this.files.length + ' files selected' : 'No files chosen'">
+                                <button type="button" class="btn-upload" onclick="document.getElementById('pGalleryFile').click()">📁 Choose Multiple from PC</button>
+                                <span id="pGalleryFileName" class="file-name">No files chosen</span>
+                            </div>
+                        </div>
+
                         <div class="form-group"><label>Video URL (YouTube - Optional)</label><input type="url" id="pVideo" placeholder="https://www.youtube.com/watch?v=..."></div>
                         <div class="form-group"><label>Category</label><select id="pCategory"></select></div>
                         
@@ -221,7 +247,6 @@
                         <div class="form-group"><label>Short Description</label><input type="text" id="pDesc" required></div>
                         <div class="form-group"><label>Detailed Review (HTML allowed)</label><textarea id="pReview" rows="6" required></textarea></div>
 
-                        <!-- ⭐ YAHAN CHECKBOXES FIX KIYE GAYE HAIN ⭐ -->
                         <div class="form-group" style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
                             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600;">
                                 <input type="checkbox" id="pFeatured" style="width: auto; margin: 0;"> Featured
@@ -233,7 +258,6 @@
                                 <input type="checkbox" id="pSpecialDeal" style="width: auto; margin: 0;"> Add to Special Deal Section
                             </label>
                         </div>
-                        <!-- ⭐ CHECKBOXES FIX END ⭐ -->
                         
                         <div style="display: flex; gap: 10px; margin-top: 20px;">
                             <button type="submit" id="saveBtn" class="btn-check-price" style="width:auto;padding:12px 30px;">Save Product</button>
