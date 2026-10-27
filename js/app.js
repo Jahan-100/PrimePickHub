@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer
+ * PrimePickHub Homepage Renderer with Live Fireworks
  */
 
 function escapeHTML(str) {
@@ -189,6 +189,49 @@ setInterval(() => {
     }
 }, 1000);
 
+// ⭐ Fireworks Logic ⭐
+let fireworksInterval;
+function startFireworks() {
+    const canvas = document.getElementById('fireworksCanvas');
+    if (!canvas || typeof confetti === 'undefined') return;
+    
+    // Create instance bound to canvas
+    const myConfetti = confetti.create(canvas, { resize: true, useWorker: true });
+    
+    clearInterval(fireworksInterval);
+    fireworksInterval = setInterval(() => {
+        // Randomly choose between Rocket (explosion) and Sparkler (fountain)
+        const type = Math.random() > 0.5 ? 'rocket' : 'sparkler';
+        
+        if (type === 'rocket') {
+            // Firework burst
+            myConfetti({
+                particleCount: 40,
+                spread: 70,
+                origin: { x: Math.random() * 0.8 + 0.1, y: Math.random() * 0.5 + 0.1 },
+                colors: ['#fbbf24', '#ef4444', '#3b82f6', '#ffffff', '#ff8c00'],
+                scalar: 1.2
+            });
+        } else {
+            // Sparkler Fountain
+            myConfetti({
+                particleCount: 15,
+                angle: 90,
+                spread: 60,
+                origin: { x: Math.random() * 0.8 + 0.1, y: 1 },
+                colors: ['#fbbf24', '#ffffff'],
+                startVelocity: 45,
+                gravity: 1.2,
+                scalar: 0.8
+            });
+        }
+    }, 800); // Trigger every 0.8s
+}
+
+function stopFireworks() {
+    clearInterval(fireworksInterval);
+}
+
 window.scrollFlash = function(direction) {
     const container = document.getElementById('flashSaleScroll');
     const scrollAmount = 300;
@@ -292,8 +335,10 @@ async function loadHomepageProducts() {
             flashSection.style.display = 'flex';
             document.getElementById('flashSaleTitle').innerText = flashSaleProducts[0].event_name || 'Mega Sale 11.11';
             flashScroll.innerHTML = flashSaleProducts.map(renderFlashCard).join('');
+            startFireworks(); // ⭐ Start Fireworks
         } else {
             flashSection.style.display = 'none';
+            stopFireworks(); // ⭐ Stop Fireworks
         }
 
         renderProductsGrid(normalProducts, grid);
