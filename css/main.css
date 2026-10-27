@@ -26,19 +26,54 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .search-box button { background: var(--accent); border: none; color: #fff; padding: 0 25px; height: 45px; cursor: pointer; font-size: 1.1rem; transition: background 0.2s; display: flex; align-items: center; justify-content: center; }
 .search-box button:hover { background: #e0482d; }
 
-/* Restored Top Nav */
-.categories-nav { display: flex; gap: 20px; padding: 10px 5%; overflow-x: auto; background: var(--card-bg); border-top: 1px solid var(--border); scrollbar-width: none; }
-.categories-nav::-webkit-scrollbar { display: none; }
-.categories-nav a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 600; white-space: nowrap; padding: 8px 12px; border-radius: 6px; transition: all 0.2s; }
-.categories-nav a:hover { color: var(--accent); background: #FFF5F3; }
+/* ⭐ Scrollable Category Nav ⭐ */
+.horizontal-category-scroll {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    padding: 15px 5%;
+    background: var(--card-bg);
+    border-top: 1px solid var(--border);
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.horizontal-category-scroll::-webkit-scrollbar { display: none; }
 
-/* Restored Category Grid (Shop by Category) */
-.category-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; }
-.category-card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 15px 10px; display: flex; flex-direction: column; align-items: center; text-decoration: none; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-.category-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.08); border-color: var(--accent); }
-.cat-img-wrapper { width: 80px; height: 80px; margin-bottom: 12px; border-radius: 50%; overflow: hidden; background: #F8FAFC; display: flex; align-items: center; justify-content: center; padding: 5px; }
-.cat-img-wrapper img { width: 100%; height: 100%; object-fit: contain; }
-.category-card span { font-size: 0.85rem; font-weight: 600; color: var(--text-dark); text-align: center; line-height: 1.2; }
+.category-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    min-width: 65px;
+    gap: 6px;
+}
+
+.category-item .cat-icon {
+    font-size: 1.8rem;
+    background: #F8FAFC;
+    width: 55px;
+    height: 55px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: transform 0.2s, background 0.2s;
+    border: 1px solid var(--border);
+}
+
+.category-item:hover .cat-icon {
+    transform: scale(1.1);
+    background: #FFF5F3;
+    border-color: var(--accent);
+}
+
+.category-item span {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    text-align: center;
+    white-space: nowrap;
+}
 
 /* Container & Product Grid */
 .container { padding: 30px 5%; max-width: 1400px; margin: 0 auto; }
@@ -94,16 +129,17 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .footer-disclaimer { border-top: 1px solid #334155; padding-top: 20px; margin-top: 20px; font-size: 0.8rem; opacity: 0.8; }
 
 
-/* ⭐ MOBILE RESPONSIVE (2-Column Grid & Compact Cards) ⭐ */
+/* ⭐ MOBILE RESPONSIVE (2-Column Grid) ⭐ */
 @media (max-width: 768px) {
     .nav-main { flex-wrap: wrap; padding: 10px 5%; }
     .search-box { order: 3; width: 100%; max-width: none; flex-basis: 100%; margin-top: 10px; }
     
-    /* Category Grid Mobile (2-3 items per row) */
-    .category-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; }
-    .cat-img-wrapper { width: 60px; height: 60px; }
-    .category-card span { font-size: 0.75rem; }
-    
+    /* Category Mobile Adjustments */
+    .horizontal-category-scroll { padding: 10px 5%; gap: 15px; }
+    .category-item .cat-icon { width: 50px; height: 50px; font-size: 1.5rem; }
+    .category-item span { font-size: 0.7rem; }
+
+    /* Flash Sale Mobile */
     .flash-title { font-size: 2.2rem; }
     .marquee-container { max-width: 100%; }
     
