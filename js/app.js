@@ -18,7 +18,6 @@ function deduplicateProducts(list) {
 }
 function showGridMessage(grid, msg) { if (!grid) return; grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;"><p>${escapeHTML(msg)}</p></div>`; }
 
-// Standard Product Card (For "For You" and Category Grids)
 function renderProductCard(product) {
     if (!product || typeof product !== 'object') return '';
     const title = escapeHTML(product.title || 'Untitled');
@@ -113,7 +112,6 @@ function renderProductCard(product) {
         </div>`;
 }
 
-// ⭐ NEW: Flash Sale Horizontal Card Renderer ⭐
 function renderFlashCard(product) {
     const title = escapeHTML(product.title || 'Untitled');
     const productUrl = `/product/${encodeURIComponent(product.slug)}`;
@@ -158,7 +156,6 @@ function renderProductsGrid(products, grid) {
     });
 }
 
-// ⭐ UPDATED Timer Logic: Auto-hide expired Flash Sale Cards smoothly ⭐
 setInterval(() => {
     let flashSaleChanged = false;
     document.querySelectorAll('.card-timer').forEach(el => {
@@ -172,7 +169,6 @@ setInterval(() => {
                 el.style.background = "#F1F5F9";
                 el.style.color = "#64748B";
                 el.style.borderColor = "#E2E8F0";
-                // If this is inside a Flash Card, mark for removal
                 if (el.closest('.flash-card')) flashSaleChanged = true;
             }
         } else {
@@ -193,7 +189,6 @@ setInterval(() => {
     }
 }, 1000);
 
-// Flash Sale Scroll
 window.scrollFlash = function(direction) {
     const container = document.getElementById('flashSaleScroll');
     const scrollAmount = 300;
@@ -293,7 +288,6 @@ async function loadHomepageProducts() {
             }
         });
 
-        // Render Flash Sale horizontally
         if (flashSaleProducts.length > 0) {
             flashSection.style.display = 'flex';
             document.getElementById('flashSaleTitle').innerText = flashSaleProducts[0].event_name || 'Mega Sale 11.11';
