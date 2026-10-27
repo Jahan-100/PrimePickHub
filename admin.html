@@ -58,14 +58,12 @@
                 </div>
 
                 <!-- ⭐ Special Deal Title Setup ⭐ -->
-                <div class="admin-card" style="background: #fdf4ff; border: 1px solid #fbcfe8;">
+                <div class="admin-card" style="background: #fdf4ff; border: 1px solid #fbcfe8; margin-bottom: 20px;">
                     <h3 style="margin-top:0; color: #9d174d;">Special Deal Section Customization</h3>
-                    
                     <div class="form-group">
-                        <label>Section Title (e.g. Hot Deal, Must Watch)</label>
-                        <input type="text" id="specialDealTitleInput" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;" placeholder="e.g. Hot Deal">
+                        <label>Section Title</label>
+                        <input type="text" id="specialDealTitleInput" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;" placeholder="e.g. First order deal">
                     </div>
-
                     <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
                         <div class="form-group" style="flex: 1; min-width: 150px; margin-bottom:0;">
                             <label>Font Style</label>
@@ -79,8 +77,8 @@
                             </select>
                         </div>
                         <div class="form-group" style="flex: 1; min-width: 100px; margin-bottom:0;">
-                            <label>Size (e.g. 2.5rem)</label>
-                            <input type="text" id="titleFontSize" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;" placeholder="2.5rem">
+                            <label>Size (e.g. 2rem)</label>
+                            <input type="text" id="titleFontSize" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;" placeholder="2rem">
                         </div>
                         <div class="form-group" style="flex: 1; min-width: 100px; margin-bottom:0;">
                             <label>Weight</label>
@@ -99,8 +97,50 @@
                             </select>
                         </div>
                     </div>
-                    
-                    <button type="button" id="saveTitleBtn" class="btn-check-price" style="width:auto; padding:10px 20px;">Update Section Design</button>
+                    <button type="button" id="saveTitleBtn" class="btn-check-price" style="width:auto; padding:10px 20px;">Update Special Deal Design</button>
+                </div>
+
+                <!-- ⭐ Flash Sale Title Setup (NEW) ⭐ -->
+                <div class="admin-card" style="background: #fff7ed; border: 1px solid #fdba74; margin-bottom: 30px;">
+                    <h3 style="margin-top:0; color: #9a3412;">Flash Sale Section Customization</h3>
+                    <div class="form-group">
+                        <label>Section Title</label>
+                        <input type="text" id="flashTitleText" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;" placeholder="e.g. Mega Sale 11.11">
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                        <div class="form-group" style="flex: 1; min-width: 150px; margin-bottom:0;">
+                            <label>Font Style</label>
+                            <select id="flashTitleFontFamily" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
+                                <option value="Poppins">Poppins (Modern)</option>
+                                <option value="Roboto">Roboto (Clean)</option>
+                                <option value="Oswald">Oswald (Bold)</option>
+                                <option value="Playfair Display">Playfair (Elegant)</option>
+                                <option value="Lobster">Lobster (Stylish)</option>
+                                <option value="Montserrat">Montserrat (Classic)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 100px; margin-bottom:0;">
+                            <label>Size (e.g. 2rem)</label>
+                            <input type="text" id="flashTitleFontSize" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;" placeholder="2rem">
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 100px; margin-bottom:0;">
+                            <label>Weight</label>
+                            <select id="flashTitleFontWeight" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
+                                <option value="400">Normal</option>
+                                <option value="600">Semi Bold</option>
+                                <option value="800">Extra Bold</option>
+                                <option value="900">Black</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 100px; margin-bottom:0;">
+                            <label>Style</label>
+                            <select id="flashTitleFontStyle" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
+                                <option value="normal">Normal</option>
+                                <option value="italic">Italic</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="button" id="saveFlashSettingsBtn" class="btn-check-price" style="width:auto; padding:10px 20px; background: #ea580c;">Update Flash Sale Design</button>
                 </div>
 
                 <!-- Manage Products List -->
