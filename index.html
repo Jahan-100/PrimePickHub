@@ -66,44 +66,12 @@
                 <button id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i></button>
             </div>
         </div>
-        
-        <!-- ⭐ Scrollable Category List (Daraz Style) ⭐ -->
-        <div class="horizontal-category-scroll">
-            <a href="index.html" class="category-item">
-                <div class="cat-icon" style="color: #EF4444;">❤️</div>
-                <span>For you</span>
-            </a>
-            <a href="category.html?cat=electronics" class="category-item">
-                <div class="cat-icon">📱</div>
-                <span>Electronics</span>
-            </a>
-            <a href="category.html?cat=home-kitchen" class="category-item">
-                <div class="cat-icon">🛋️</div>
-                <span>Home Supply</span>
-            </a>
-            <a href="category.html?cat=toys" class="category-item">
-                <div class="cat-icon">🧸</div>
-                <span>Toys</span>
-            </a>
-            <a href="category.html?cat=sports" class="category-item">
-                <div class="cat-icon">🏋️</div>
-                <span>Sports</span>
-            </a>
-            <a href="category.html?cat=fashion" class="category-item">
-                <div class="cat-icon">👗</div>
-                <span>Fashion</span>
-            </a>
-            <a href="category.html?cat=beauty" class="category-item">
-                <div class="cat-icon">💄</div>
-                <span>Beauty</span>
-            </a>
-        </div>
     </header>
 
     <main class="container">
         
-        <!-- ⭐ 1. Special Deal Section ⭐ -->
-        <div id="specialDealSection" class="alibaba-special-deal" style="margin-top: 20px;">
+        <!-- ⭐ 1. Special Deal Section (Top) ⭐ -->
+        <div id="specialDealSection" class="alibaba-special-deal" style="margin-top: 10px;">
             <div class="special-deal-left">
                 <h2 id="specialDealTitle">First order deal</h2>
                 <p class="special-deal-subtitle">Exclusive offers just for you!</p>
@@ -120,7 +88,7 @@
             </div>
         </div>
 
-        <!-- ⭐ 2. Flash Sale Section ⭐ -->
+        <!-- ⭐ 2. Flash Sale Section (Middle) ⭐ -->
         <div id="flashSaleSection" style="display: none; margin-bottom: 40px;">
             <div class="flash-sale-banner">
                 <div class="flash-light-effect"></div>
@@ -139,20 +107,43 @@
             <div class="product-grid" id="flashSaleGrid"></div>
         </div>
 
-        <!-- ⭐ 3. Shop by Category (Grid) ⭐ -->
-        <div id="categorySection" style="margin-bottom: 40px;">
-            <h2 style="margin-bottom: 20px; font-family: 'Poppins', sans-serif; font-weight: 800; color: var(--text-dark);">Shop by Category</h2>
-            <div class="category-grid">
-                <a href="category.html?cat=electronics" class="category-card"><div class="cat-img-wrapper"><img src="https://images.unsplash.com/photo-1498049794561-7780e7231661?w=200&h=200&fit=crop" alt="Electronics"></div><span>Electronics</span></a>
-                <a href="category.html?cat=fashion" class="category-card"><div class="cat-img-wrapper"><img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=200&h=200&fit=crop" alt="Fashion"></div><span>Fashion</span></a>
-                <a href="category.html?cat=home-kitchen" class="category-card"><div class="cat-img-wrapper"><img src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=200&h=200&fit=crop" alt="Home & Kitchen"></div><span>Home & Kitchen</span></a>
-                <a href="category.html?cat=beauty" class="category-card"><div class="cat-img-wrapper"><img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=200&h=200&fit=crop" alt="Beauty"></div><span>Beauty</span></a>
-                <a href="category.html?cat=sports" class="category-card"><div class="cat-img-wrapper"><img src="https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=200&h=200&fit=crop" alt="Sports"></div><span>Sports</span></a>
-                <a href="category.html?cat=toys" class="category-card"><div class="cat-img-wrapper"><img src="https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?w=200&h=200&fit=crop" alt="Toys"></div><span>Toys</span></a>
+        <!-- ⭐ 3. Shop by Category (Scrollable List) ⭐ -->
+        <div style="margin-bottom: 40px;">
+            <h2 style="margin-bottom: 15px; font-family: 'Poppins', sans-serif; font-weight: 800; color: var(--text-dark);">Shop by Category</h2>
+            
+            <div class="horizontal-category-scroll">
+                <a href="index.html" class="category-item">
+                    <div class="cat-icon" style="color: #EF4444;">❤️</div>
+                    <span>For you</span>
+                </a>
+                <a href="category.html?cat=electronics" class="category-item">
+                    <div class="cat-icon">📱</div>
+                    <span>Electronics</span>
+                </a>
+                <a href="category.html?cat=home-kitchen" class="category-item">
+                    <div class="cat-icon">🛋️</div>
+                    <span>Home Supply</span>
+                </a>
+                <a href="category.html?cat=toys" class="category-item">
+                    <div class="cat-icon">🧸</div>
+                    <span>Toys</span>
+                </a>
+                <a href="category.html?cat=sports" class="category-item">
+                    <div class="cat-icon">🏋️</div>
+                    <span>Sports</span>
+                </a>
+                <a href="category.html?cat=fashion" class="category-item">
+                    <div class="cat-icon">👗</div>
+                    <span>Fashion</span>
+                </a>
+                <a href="category.html?cat=beauty" class="category-item">
+                    <div class="cat-icon">💄</div>
+                    <span>Beauty</span>
+                </a>
             </div>
         </div>
 
-        <!-- ⭐ 4. For You Section (Products) ⭐ -->
+        <!-- ⭐ 4. For You Section (Products Grid) ⭐ -->
         <div id="normalProductsSection" style="margin-bottom: 40px;">
             <h2 style="margin-bottom:10px; font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1.5rem;">❤️ For You</h2>
             <p style="color:var(--text-muted);margin-bottom:20px; font-size: 0.9rem;">Click any product to view live price on the official store.</p>
