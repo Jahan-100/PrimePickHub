@@ -26,6 +26,81 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .search-box button { background: var(--accent); border: none; color: #fff; padding: 0 25px; height: 45px; cursor: pointer; font-size: 1.1rem; transition: background 0.2s; display: flex; align-items: center; justify-content: center; }
 .search-box button:hover { background: #e0482d; }
 
+/* ⭐ Scrollable Category Section ⭐ */
+.horizontal-category-scroll {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    padding: 5px 0 15px 0;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.horizontal-category-scroll::-webkit-scrollbar { display: none; }
+
+.category-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    min-width: 70px;
+    gap: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.category-item .cat-icon {
+    font-size: 1.8rem;
+    background: #fff;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    margin-bottom: 5px;
+}
+
+.category-item span {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-align: center;
+    white-space: nowrap;
+    transition: color 0.2s;
+    position: relative;
+    padding-bottom: 6px; /* Space for the line */
+}
+
+/* ⭐ Active State: Icon gets slightly colored, Text turns orange, and an Underline appears */
+.category-item.active .cat-icon {
+    border-color: var(--accent);
+    background: #FFF5F3;
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(255, 90, 60, 0.2);
+}
+
+.category-item.active span {
+    color: var(--accent);
+    font-weight: 800;
+}
+
+.category-item.active span::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 3px;
+    background-color: var(--accent);
+    border-radius: 2px;
+}
+
+
 /* Container & Product Grid */
 .container { padding: 30px 5%; max-width: 1400px; margin: 0 auto; }
 .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; margin-top: 20px; }
@@ -47,56 +122,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .btn-check-price:hover { opacity: 0.9; }
 
 
-/* ⭐ 1. Scrollable Category Section ⭐ */
-.horizontal-category-scroll {
-    display: flex;
-    gap: 20px;
-    overflow-x: auto;
-    padding: 5px 0 15px 0;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-.horizontal-category-scroll::-webkit-scrollbar { display: none; }
-
-.category-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-decoration: none;
-    min-width: 70px;
-    gap: 8px;
-}
-
-.category-item .cat-icon {
-    font-size: 1.8rem;
-    background: #fff;
-    width: 60px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: transform 0.2s, box-shadow 0.2s;
-    border: 1px solid var(--border);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-}
-
-.category-item:hover .cat-icon {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.08);
-    border-color: var(--accent);
-}
-
-.category-item span {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--text-dark);
-    text-align: center;
-    white-space: nowrap;
-}
-
-
-/* ⭐ 2. Alibaba Style Special Deal Section ⭐ */
+/* ⭐ Alibaba Style Special Deal Section ⭐ */
 .alibaba-special-deal { display: flex; position: relative; background: #fff; border-radius: 12px; overflow: hidden; margin-bottom: 40px; min-height: 185px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #E2E8F0; }
 .alibaba-special-deal::before { content: ""; position: absolute; inset: 0; background-image: url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'); background-size: cover; background-position: center; opacity: 0.4; z-index: 0; }
 .special-deal-left { flex: 0 0 28%; padding: 20px 25px; display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 1; background: rgba(105, 20, 76, 0.85); }
