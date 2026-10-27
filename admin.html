@@ -221,11 +221,19 @@
                         <div class="form-group"><label>Short Description</label><input type="text" id="pDesc" required></div>
                         <div class="form-group"><label>Detailed Review (HTML allowed)</label><textarea id="pReview" rows="6" required></textarea></div>
 
-                        <div class="form-group" style="display: flex; flex-direction: column; gap: 10px;">
-                            <label><input type="checkbox" id="pFeatured"> Featured</label>
-                            <label><input type="checkbox" id="pTrending"> Trending</label>
-                            <label style="background: #fdf4ff; padding: 10px; border-radius: 6px; border: 1px solid #fbcfe8;"><input type="checkbox" id="pSpecialDeal"> <strong>Add to Special Deal Section</strong></label>
+                        <!-- ⭐ YAHAN CHECKBOXES FIX KIYE GAYE HAIN ⭐ -->
+                        <div class="form-group" style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600;">
+                                <input type="checkbox" id="pFeatured" style="width: auto; margin: 0;"> Featured
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600;">
+                                <input type="checkbox" id="pTrending" style="width: auto; margin: 0;"> Trending
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px; background: #fdf4ff; padding: 10px; border-radius: 6px; border: 1px solid #fbcfe8; cursor: pointer; font-weight: 600;">
+                                <input type="checkbox" id="pSpecialDeal" style="width: auto; margin: 0;"> Add to Special Deal Section
+                            </label>
                         </div>
+                        <!-- ⭐ CHECKBOXES FIX END ⭐ -->
                         
                         <div style="display: flex; gap: 10px; margin-top: 20px;">
                             <button type="submit" id="saveBtn" class="btn-check-price" style="width:auto;padding:12px 30px;">Save Product</button>
