@@ -178,7 +178,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     position: relative;
     z-index: 2;
     width: 100%;
-    padding: 15px 25px 10px 25px; /* Reduced padding to fit smaller height */
+    padding: 15px 25px 10px 25px; 
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -186,7 +186,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     color: #fff;
 }
 
-/* Title Area (Emoji Removed) */
+/* Title Area */
 .flash-title-area {
     display: flex;
     align-items: center;
@@ -211,13 +211,14 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     width: 100%;
 }
 
-/* ⭐ Ending Soon Box (20% Reduced Height) ⭐ */
+/* ⭐ Ending Soon Box (Height Reduced 20%, Text Increased 20%) ⭐ */
 .blinking-ending-soon {
     background: #fbbf24;
     color: #7f1d1d;
     font-weight: 900;
-    font-size: 1.8rem; /* Reduced font size */
-    padding: 16px 32px; /* Reduced padding */
+    font-size: 2.2rem; /* ⭐ Writing 20% Increased (Pehle 1.8rem tha) */
+    padding: 8px 30px; /* ⭐ Height 20% Reduced (Vertical padding 16px se 8px kiya) */
+    line-height: 1.1; /* Text ko tight rakhne ke liye */
     border-radius: 10px;
     text-align: center;
     animation: blink3Colors 1.5s infinite;
@@ -262,7 +263,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 /* Bottom Cards Area */
 .flash-sale-right { 
     flex: 1; 
-    padding: 10px 25px 20px 25px; /* Reduced padding */
+    padding: 10px 25px 20px 25px; 
     position: relative; 
     z-index: 1; 
     display: flex; 
@@ -303,8 +304,9 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     .flash-controls { flex-direction: column; gap: 10px; width: 100%; align-items: center; }
     
     .blinking-ending-soon { 
-        font-size: 1.1rem; 
-        padding: 8px 20px; 
+        font-size: 1.4rem; /* Mobile par bhi font barha diya */
+        padding: 6px 20px; /* Mobile par height kam ki */
+        line-height: 1.1;
     }
     
     .flash-marquee-container {
