@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer with Individual Card Timers & Auto-Hide
+ * PrimePickHub Homepage Renderer with Dynamic Category Filtering
  */
 
 function escapeHTML(str) {
@@ -18,7 +18,6 @@ function deduplicateProducts(list) {
 }
 function showGridMessage(grid, msg) { if (!grid) return; grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;"><p>${escapeHTML(msg)}</p></div>`; }
 
-// ⭐ 1. Har Product Card Ke Liye Alag Timer HTML ⭐
 function renderProductCard(product) {
     if (!product || typeof product !== 'object') return '';
     const title = escapeHTML(product.title || 'Untitled');
@@ -34,7 +33,6 @@ function renderProductCard(product) {
     const reviewCount = Number.isInteger(rc) && rc >= 0 ? rc : 0;
     const ratingText = rating !== null ? `★ ${rating.toFixed(1)} (${reviewCount})` : 'Not yet rated';
     
-    // ⭐ Check karein agar product ka sale time active hai toh timer banayein
     let timerHtml = '';
     if (product.sale_end_date) {
         const endDate = new Date(product.sale_end_date).getTime();
@@ -117,7 +115,7 @@ function renderProductCard(product) {
 function renderProductsGrid(products, grid) {
     if (!grid) return;
     if (!products || products.length === 0) {
-        showGridMessage(grid, 'No products found. Please check back later!');
+        showGridMessage(grid, 'No products found in this category.');
         return;
     }
     grid.innerHTML = products.map(renderProductCard).join('');
@@ -126,32 +124,26 @@ function renderProductsGrid(products, grid) {
     });
 }
 
-// ⭐ 2. Timer Update aur Auto-Reload Logic ⭐
-let isReloading = false; // Prevent multiple reloads at the same time
-
 setInterval(() => {
     let expiredFound = false;
-
     document.querySelectorAll('.card-timer').forEach(el => {
         const endTime = new Date(el.dataset.endtime).getTime();
         const now = new Date().getTime();
         const distance = endTime - now;
 
         if (distance < 0) {
-            // Agar pehle se EXPIRED nahi likha, toh likhein
             if (el.innerHTML !== "❌ EXPIRED") {
                 el.innerHTML = "❌ EXPIRED";
                 el.style.background = "#F1F5F9";
                 el.style.color = "#64748B";
                 el.style.borderColor = "#E2E8F0";
-                expiredFound = true; // Mark ke koi product expire ho gaya hai
+                expiredFound = true;
             }
         } else {
             const days = Math.floor(distance / (1000 * 60 * 60 * 24));
             const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
             if (days > 0) {
                 el.innerHTML = `⏳ ${days}d ${hours}h ${minutes}m`;
             } else {
@@ -159,22 +151,59 @@ setInterval(() => {
             }
         }
     });
-
-    // ⭐ Auto-Reload Action: Agar koi product expire hua hai
-    if (expiredFound && !isReloading) {
-        isReloading = true;
-        // 2 second wait karein taake user "EXPIRED" parh le
-        setTimeout(() => {
-            loadHomepageProducts().then(() => {
-                isReloading = false; // Reload complete hone ke baad reset
-            });
-        }, 2000);
-    }
 }, 1000);
+
+
+// ⭐ DYNAMIC CATEGORY SELECTION FUNCTION ⭐
+window.selectCategory = async function(catSlug, element) {
+    // 1. Highlight active category
+    document.querySelectorAll('.category-item').forEach(el => el.classList.remove('active'));
+    if (element) {
+        element.classList.add('active');
+    } else {
+        const target = document.querySelector(`.category-item[data-cat="${catSlug}"]`);
+        if (target) target.classList.add('active');
+    }
+
+    // 2. Update Title (Only category name)
+    const titleEl = document.getElementById('productSectionTitle');
+    const grid = document.getElementById('productGrid');
+    
+    if (catSlug === 'all') {
+        titleEl.innerHTML = 'For You';
+    } else {
+        const formatted = catSlug.charAt(0).toUpperCase() + catSlug.slice(1).replace('-', ' ');
+        titleEl.innerHTML = formatted; // Sirf category ka naam
+    }
+
+    // 3. Show Loading
+    showGridMessage(grid, 'Loading products...');
+
+    // 4. Fetch and Render
+    try {
+        if (catSlug === 'all') {
+            const data = await API.getHomepageProducts();
+            const raw = [...(data.featured ?? []), ...(data.trending ?? []), ...(data.latest ?? [])];
+            const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false);
+            
+            const now = new Date();
+            const normalProducts = allProducts.filter(p => {
+                const endDate = p.sale_end_date ? new Date(p.sale_end_date) : null;
+                return !(endDate && endDate > now);
+            });
+            renderProductsGrid(normalProducts, grid);
+        } else {
+            const products = await API.searchProducts({ category: catSlug });
+            renderProductsGrid(products.filter(p => p.is_available !== false), grid);
+        }
+    } catch (err) {
+        console.error('Category fetch error:', err);
+        showGridMessage(grid, 'Failed to load category products.');
+    }
+};
 
 async function loadSpecialDeals() {
     const { data: setting } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).single();
-    
     const titleEl = document.getElementById('specialDealTitle');
     if (setting && titleEl) {
         titleEl.innerText = setting.special_deal_title || 'First order deal';
@@ -184,34 +213,23 @@ async function loadSpecialDeals() {
         titleEl.style.fontStyle = setting.title_font_style || 'normal';
     }
 
-    const { data: products } = await window.supabaseClient
-        .from('products')
-        .select('*, affiliate_offers(*)')
-        .eq('is_special_deal', true)
-        .eq('is_available', true);
-
+    const { data: products } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').eq('is_special_deal', true).eq('is_available', true);
     const container = document.getElementById('specialDealScroll');
     const section = document.getElementById('specialDealSection');
 
     if (products && products.length > 0) {
         section.style.display = 'flex'; 
-        
         container.innerHTML = products.map(p => {
             const offer = p.affiliate_offers?.[0] || {};
             const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
             const sym = currencySymbols[(offer.currency || 'USD').toUpperCase()] || '$';
-            
             const basePrice = parseFloat(offer.price) || 0;
             const commission = parseFloat(offer.commission_rate) || 0;
             const finalPrice = commission > 0 ? basePrice + (basePrice * (commission / 100)) : basePrice;
-            
             const productUrl = `/product/${encodeURIComponent(p.slug)}`;
-
             return `
                 <a href="${productUrl}" class="special-deal-card">
-                    <div class="img-box">
-                        <img src="${p.image_url || '/assets/icon-192.png'}" alt="${p.title}">
-                    </div>
+                    <div class="img-box"><img src="${p.image_url || '/assets/icon-192.png'}" alt="${p.title}"></div>
                     <div class="info-box">
                         <div class="price">${sym}${finalPrice.toFixed(2)}</div>
                         <div class="title">${p.title}</div>
@@ -227,11 +245,8 @@ async function loadSpecialDeals() {
 window.scrollSpecial = function(direction) {
     const container = document.getElementById('specialDealScroll');
     const scrollAmount = 300;
-    if (direction === 'left') {
-        container.scrollLeft -= scrollAmount;
-    } else {
-        container.scrollLeft += scrollAmount;
-    }
+    if (direction === 'left') container.scrollLeft -= scrollAmount;
+    else container.scrollLeft += scrollAmount;
 };
 
 async function loadHomepageProducts() {
@@ -245,7 +260,6 @@ async function loadHomepageProducts() {
         if (typeof API === 'undefined' || !API.getHomepageProducts) throw new Error('API missing');
         const data = await API.getHomepageProducts();
         const raw = [...(data.featured ?? []), ...(data.trending ?? []), ...(data.latest ?? [])];
-        
         const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false);
 
         const now = new Date();
@@ -283,6 +297,7 @@ function handleSearch() {
     const q = input.value.trim();
     if (q) window.location.href = `search.html?q=${encodeURIComponent(q)}`;
 }
+
 document.addEventListener('DOMContentLoaded', () => {
     loadHomepageProducts();
     loadSpecialDeals();
