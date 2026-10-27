@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer with Dynamic Category Filtering
+ * PrimePickHub Homepage Renderer
  */
 
 function escapeHTML(str) {
@@ -18,6 +18,7 @@ function deduplicateProducts(list) {
 }
 function showGridMessage(grid, msg) { if (!grid) return; grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;"><p>${escapeHTML(msg)}</p></div>`; }
 
+// Standard Product Card (For "For You" and Category Grids)
 function renderProductCard(product) {
     if (!product || typeof product !== 'object') return '';
     const title = escapeHTML(product.title || 'Untitled');
@@ -112,6 +113,39 @@ function renderProductCard(product) {
         </div>`;
 }
 
+// ⭐ NEW: Flash Sale Horizontal Card Renderer ⭐
+function renderFlashCard(product) {
+    const title = escapeHTML(product.title || 'Untitled');
+    const productUrl = `/product/${encodeURIComponent(product.slug)}`;
+    const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png';
+    
+    const primaryOffer = getPrimaryOffer(product) || {};
+    const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
+    const sym = currencySymbols[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
+    
+    const basePrice = parseFloat(primaryOffer.price) || 0;
+    const salePrice = parseFloat(primaryOffer.sale_price) || 0;
+    const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
+    
+    const isSaleActive = product.sale_end_date && new Date(product.sale_end_date) > new Date();
+    const finalPrice = (isSaleActive && salePrice > 0) 
+        ? (commissionRate > 0 ? salePrice + (salePrice * (commissionRate / 100)) : salePrice)
+        : (commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice);
+
+    return `
+        <a href="${productUrl}" class="special-deal-card flash-card">
+            <div class="img-box">
+                <img src="${imageSrc}" alt="${title}">
+            </div>
+            <div class="info-box">
+                <div class="price">${sym}${finalPrice.toFixed(2)}</div>
+                <div class="title">${title}</div>
+                <div class="card-timer" data-endtime="${product.sale_end_date}">⏳ Calculating...</div>
+            </div>
+        </a>
+    `;
+}
+
 function renderProductsGrid(products, grid) {
     if (!grid) return;
     if (!products || products.length === 0) {
@@ -124,8 +158,9 @@ function renderProductsGrid(products, grid) {
     });
 }
 
+// ⭐ UPDATED Timer Logic: Auto-hide expired Flash Sale Cards smoothly ⭐
 setInterval(() => {
-    let expiredFound = false;
+    let flashSaleChanged = false;
     document.querySelectorAll('.card-timer').forEach(el => {
         const endTime = new Date(el.dataset.endtime).getTime();
         const now = new Date().getTime();
@@ -137,7 +172,8 @@ setInterval(() => {
                 el.style.background = "#F1F5F9";
                 el.style.color = "#64748B";
                 el.style.borderColor = "#E2E8F0";
-                expiredFound = true;
+                // If this is inside a Flash Card, mark for removal
+                if (el.closest('.flash-card')) flashSaleChanged = true;
             }
         } else {
             const days = Math.floor(distance / (1000 * 60 * 60 * 24));
@@ -151,41 +187,35 @@ setInterval(() => {
             }
         }
     });
+
+    if (flashSaleChanged) {
+        setTimeout(() => loadHomepageProducts(), 2000);
+    }
 }, 1000);
 
+// Flash Sale Scroll
+window.scrollFlash = function(direction) {
+    const container = document.getElementById('flashSaleScroll');
+    const scrollAmount = 300;
+    if (direction === 'left') container.scrollLeft -= scrollAmount;
+    else container.scrollLeft += scrollAmount;
+};
 
-// ⭐ DYNAMIC CATEGORY SELECTION FUNCTION ⭐
 window.selectCategory = async function(catSlug, element) {
-    // 1. Highlight active category
     document.querySelectorAll('.category-item').forEach(el => el.classList.remove('active'));
-    if (element) {
-        element.classList.add('active');
-    } else {
-        const target = document.querySelector(`.category-item[data-cat="${catSlug}"]`);
-        if (target) target.classList.add('active');
-    }
-
-    // 2. Update Title (Only category name)
+    if (element) element.classList.add('active');
+    
     const titleEl = document.getElementById('productSectionTitle');
     const grid = document.getElementById('productGrid');
     
-    if (catSlug === 'all') {
-        titleEl.innerHTML = 'For You';
-    } else {
-        const formatted = catSlug.charAt(0).toUpperCase() + catSlug.slice(1).replace('-', ' ');
-        titleEl.innerHTML = formatted; // Sirf category ka naam
-    }
-
-    // 3. Show Loading
+    titleEl.innerHTML = (catSlug === 'all') ? 'For You' : catSlug.charAt(0).toUpperCase() + catSlug.slice(1).replace('-', ' ');
     showGridMessage(grid, 'Loading products...');
 
-    // 4. Fetch and Render
     try {
         if (catSlug === 'all') {
             const data = await API.getHomepageProducts();
             const raw = [...(data.featured ?? []), ...(data.trending ?? []), ...(data.latest ?? [])];
             const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false);
-            
             const now = new Date();
             const normalProducts = allProducts.filter(p => {
                 const endDate = p.sale_end_date ? new Date(p.sale_end_date) : null;
@@ -197,8 +227,7 @@ window.selectCategory = async function(catSlug, element) {
             renderProductsGrid(products.filter(p => p.is_available !== false), grid);
         }
     } catch (err) {
-        console.error('Category fetch error:', err);
-        showGridMessage(grid, 'Failed to load category products.');
+        showGridMessage(grid, 'Failed to load products.');
     }
 };
 
@@ -221,25 +250,15 @@ async function loadSpecialDeals() {
         section.style.display = 'flex'; 
         container.innerHTML = products.map(p => {
             const offer = p.affiliate_offers?.[0] || {};
-            const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
-            const sym = currencySymbols[(offer.currency || 'USD').toUpperCase()] || '$';
-            const basePrice = parseFloat(offer.price) || 0;
-            const commission = parseFloat(offer.commission_rate) || 0;
-            const finalPrice = commission > 0 ? basePrice + (basePrice * (commission / 100)) : basePrice;
-            const productUrl = `/product/${encodeURIComponent(p.slug)}`;
+            const sym = { USD: '$', PKR: 'Rs. ', EUR: '€' }[(offer.currency || 'USD').toUpperCase()] || '$';
+            const finalPrice = (parseFloat(offer.price) || 0) + ((parseFloat(offer.price) || 0) * ((parseFloat(offer.commission_rate) || 0) / 100));
             return `
-                <a href="${productUrl}" class="special-deal-card">
+                <a href="/product/${encodeURIComponent(p.slug)}" class="special-deal-card">
                     <div class="img-box"><img src="${p.image_url || '/assets/icon-192.png'}" alt="${p.title}"></div>
-                    <div class="info-box">
-                        <div class="price">${sym}${finalPrice.toFixed(2)}</div>
-                        <div class="title">${p.title}</div>
-                    </div>
-                </a>
-            `;
+                    <div class="info-box"><div class="price">${sym}${finalPrice.toFixed(2)}</div><div class="title">${p.title}</div></div>
+                </a>`;
         }).join('');
-    } else {
-        section.style.display = 'none';
-    }
+    } else { section.style.display = 'none'; }
 }
 
 window.scrollSpecial = function(direction) {
@@ -251,10 +270,9 @@ window.scrollSpecial = function(direction) {
 
 async function loadHomepageProducts() {
     const grid = document.getElementById('productGrid');
-    const flashGrid = document.getElementById('flashSaleGrid');
+    const flashScroll = document.getElementById('flashSaleScroll');
     const flashSection = document.getElementById('flashSaleSection');
     if (!grid) return;
-    showGridMessage(grid, 'Loading products...');
 
     try {
         if (typeof API === 'undefined' || !API.getHomepageProducts) throw new Error('API missing');
@@ -275,10 +293,11 @@ async function loadHomepageProducts() {
             }
         });
 
+        // Render Flash Sale horizontally
         if (flashSaleProducts.length > 0) {
-            flashSection.style.display = 'block';
-            document.getElementById('flashSaleTitle').innerText = flashSaleProducts[0].event_name || 'Limited Time Offer';
-            renderProductsGrid(flashSaleProducts, flashGrid);
+            flashSection.style.display = 'flex';
+            document.getElementById('flashSaleTitle').innerText = flashSaleProducts[0].event_name || 'Mega Sale 11.11';
+            flashScroll.innerHTML = flashSaleProducts.map(renderFlashCard).join('');
         } else {
             flashSection.style.display = 'none';
         }
