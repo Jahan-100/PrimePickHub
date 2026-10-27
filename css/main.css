@@ -324,3 +324,85 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     .card-body div[style*="display:flex"] span[style*="font-weight:bold"] { font-size: 1rem !important; }
     .card-body div[style*="display:flex"] span[style*="text-decoration:line-through"] { font-size: 0.75rem !important; }
 }
+/* ⭐ App Download Popup Styling ⭐ */
+.app-popup {
+    position: fixed;
+    bottom: 20px;
+    left: 20px; /* Desktop par neeche left corner mein */
+    z-index: 999999;
+    animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.app-popup-content {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    border: 1px solid var(--border);
+    position: relative;
+    max-width: 280px;
+    text-align: center;
+}
+
+.close-popup {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 1.5rem;
+    color: #94A3B8;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close-popup:hover { color: #EF4444; }
+
+.app-icon img {
+    width: 60px;
+    height: 60px;
+    border-radius: 15px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.app-popup-content h3 {
+    font-size: 1.1rem;
+    color: var(--text-dark);
+    margin-bottom: 5px;
+    font-family: 'Poppins', sans-serif;
+}
+
+.app-popup-content p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 15px;
+}
+
+.btn-app-download {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.2s;
+}
+
+.btn-app-download:hover { background: #e0482d; }
+
+@media (max-width: 768px) {
+    .app-popup {
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        bottom: 15px;
+    }
+    .app-popup-content { max-width: 100%; }
+}
