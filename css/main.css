@@ -19,8 +19,23 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .logo { font-size: 1.8rem; font-weight: 800; color: var(--primary); text-decoration: none; font-family: 'Poppins', sans-serif; letter-spacing: -0.5px; }
 .logo span { color: var(--accent); }
 
-.search-box { flex: 1; max-width: 700px; display: flex; align-items: center; border: 1px solid var(--border); border-radius: 30px; overflow: hidden; background: #fff; transition: all 0.3s ease; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
-.search-box:focus-within { border-color: var(--accent); box-shadow: 0 4px 15px rgba(255, 90, 60, 0.15); }
+/* ⭐ Search Box Border (40% Darker Grey) ⭐ */
+.search-box { 
+    flex: 1; 
+    max-width: 700px; 
+    display: flex; 
+    align-items: center; 
+    border: 2px solid #94A3B8; /* 40% Darker Grey */
+    border-radius: 30px; 
+    overflow: hidden; 
+    background: #fff; 
+    transition: all 0.3s ease; 
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03); 
+}
+.search-box:focus-within { 
+    border-color: var(--accent); /* Turns Orange on click */
+    box-shadow: 0 4px 15px rgba(255, 90, 60, 0.15); 
+}
 .search-box input { flex: 1; border: none; padding: 12px 20px; outline: none; font-size: 0.95rem; color: var(--text-dark); background: transparent; }
 .search-box input::placeholder { color: #94A3B8; }
 .search-box button { background: var(--accent); border: none; color: #fff; padding: 0 25px; height: 45px; cursor: pointer; font-size: 1.1rem; transition: background 0.2s; display: flex; align-items: center; justify-content: center; }
@@ -292,13 +307,13 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     .alibaba-special-deal { flex-direction: column; min-height: auto; }
     .special-deal-left { 
         flex: none; 
-        padding: 12px 15px; /* Reduced padding */
+        padding: 12px 15px; 
         text-align: center; 
         align-items: center; 
         background: rgba(105, 20, 76, 0.95); 
     }
     #specialDealTitle { 
-        font-size: 1.4rem !important; /* Smaller font */
+        font-size: 1.4rem !important; 
         margin-bottom: 4px; 
     }
     .special-deal-subtitle { 
