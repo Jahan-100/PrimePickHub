@@ -173,7 +173,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     z-index: 0; 
 }
 
-/* ⭐ Top Text Area (FIXED COLOR HERE) ⭐ */
+/* Top Text Area */
 .flash-sale-left {
     position: relative;
     z-index: 2;
@@ -182,7 +182,6 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    /* NAYA COLOR: Premium Navy to Purple Gradient */
     background: linear-gradient(135deg, #1e1b4b, #4c1d95); 
     color: #fff;
 }
@@ -214,27 +213,27 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
 }
 
-/* Ending Soon + Marquee Row */
+/* ⭐ Ending Soon + Marquee Row ⭐ */
 .flash-controls {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 20px;
     width: 100%;
 }
 
-/* 3 Color Blinking Box */
+/* ⭐ 2x BIGGER Blinking Ending Soon Box ⭐ */
 .blinking-ending-soon {
     background: #fbbf24;
     color: #7f1d1d;
     font-weight: 900;
-    font-size: 1.1rem;
-    padding: 10px 20px;
-    border-radius: 8px;
+    font-size: 2.2rem; /* Doubled */
+    padding: 20px 40px; /* Doubled */
+    border-radius: 12px;
     text-align: center;
     animation: blink3Colors 1.5s infinite;
     white-space: nowrap;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    border: 2px solid #fff;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+    border: 3px solid #fff;
 }
 
 @keyframes blink3Colors {
@@ -244,22 +243,29 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     100% { background-color: #fbbf24; color: #7f1d1d; transform: scale(1); }
 }
 
-/* Marquee */
+/* ⭐ NEW: Marquee with Fade-in/out effect ⭐ */
 .flash-marquee-container {
     overflow: hidden; 
-    white-space: nowrap; 
     flex: 1;
-    mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+    /* Creates the 0% to 100% to 0% visibility effect */
+    mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
 }
-.flash-marquee-text {
-    display: inline-block; 
-    animation: marquee 10s linear infinite;
-    font-size: 1rem; 
-    font-weight: 600; 
-    color: #e2e8f0; /* Light text for readability */
-    margin: 0;
-    letter-spacing: 0.5px;
+
+.marquee-content {
+    display: inline-flex;
+    white-space: nowrap;
+    animation: marquee 15s linear infinite;
 }
+
+.marquee-content span {
+    font-size: 1.2rem; 
+    font-weight: 700; 
+    color: #e2e8f0; 
+    padding-right: 20px;
+}
+
+/* Starts from left, moves right-to-left seamlessly */
 @keyframes marquee {
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
@@ -272,34 +278,15 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     position: relative; 
     z-index: 1; 
     display: flex; 
-    align-items: flex-end; /* Push cards to bottom */
+    align-items: flex-end; 
     overflow: hidden; 
 }
 
 /* Flash Sale Card Size & Timer */
-.flash-card {
-    display: flex;
-    flex-direction: column;
-}
-.flash-card .info-box {
-    flex: 2; 
-    padding: 8px;
-}
-.flash-card .price {
-    font-size: 1.05rem;
-    color: #DC2626;
-}
-.flash-card .card-timer {
-    background: #FEF2F2; 
-    color: #DC2626; 
-    font-size: 0.8rem; 
-    font-weight: 900; 
-    padding: 4px 6px; 
-    border-radius: 4px; 
-    margin-top: 5px; 
-    text-align: center; 
-    border: 1px solid #FECACA;
-}
+.flash-card { display: flex; flex-direction: column; }
+.flash-card .info-box { flex: 2; padding: 8px; }
+.flash-card .price { font-size: 1.05rem; color: #DC2626; }
+.flash-card .card-timer { background: #FEF2F2; color: #DC2626; font-size: 0.8rem; font-weight: 900; padding: 4px 6px; border-radius: 4px; margin-top: 5px; text-align: center; border: 1px solid #FECACA; }
 
 /* Footer */
 .footer { background: var(--primary); color: #CBD5E1; padding: 40px 5% 20px; margin-top: 60px; font-size: 0.9rem; text-align: center; }
@@ -320,11 +307,15 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     .special-deal-card { min-width: 160px; max-width: 160px; height: 220px; }
 
     /* Flash Sale Mobile */
-    .flash-sale-split { min-height: 400px; }
+    .flash-sale-split { min-height: 450px; }
     .flash-sale-left { padding: 20px; align-items: center; text-align: center; }
     .flash-title-area { justify-content: center; }
-    .flash-controls { flex-direction: column; gap: 10px; }
-    .blinking-ending-soon { font-size: 1rem; padding: 8px 15px; }
+    .flash-controls { flex-direction: column; gap: 15px; }
+    
+    /* Smaller box on mobile to fit screen */
+    .blinking-ending-soon { font-size: 1.5rem; padding: 12px 25px; }
+    .flash-marquee-container { width: 100%; mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%); -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%); }
+    
     .flash-sale-right { padding: 15px; align-items: center; justify-content: center; }
     .flash-card { min-width: 160px; max-width: 160px; height: 230px; }
 
