@@ -173,8 +173,8 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     z-index: 0; 
 }
 
-/* ⭐ Top Text Area (NEW CATCHY COLOR) ⭐ */
-.flash-sale-top {
+/* ⭐ Top Text Area (FIXED COLOR HERE) ⭐ */
+.flash-sale-left {
     position: relative;
     z-index: 2;
     width: 100%;
@@ -266,7 +266,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 }
 
 /* Bottom Cards Area */
-.flash-sale-bottom { 
+.flash-sale-right { 
     flex: 1; 
     padding: 15px 25px 25px 25px; 
     position: relative; 
@@ -321,11 +321,11 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 
     /* Flash Sale Mobile */
     .flash-sale-split { min-height: 400px; }
-    .flash-sale-top { padding: 20px; align-items: center; text-align: center; }
+    .flash-sale-left { padding: 20px; align-items: center; text-align: center; }
     .flash-title-area { justify-content: center; }
     .flash-controls { flex-direction: column; gap: 10px; }
     .blinking-ending-soon { font-size: 1rem; padding: 8px 15px; }
-    .flash-sale-bottom { padding: 15px; align-items: center; justify-content: center; }
+    .flash-sale-right { padding: 15px; align-items: center; justify-content: center; }
     .flash-card { min-width: 160px; max-width: 160px; height: 230px; }
 
     /* Category Mobile Adjustments */
