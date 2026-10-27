@@ -7,14 +7,19 @@ function escapeHTML(s) {
 document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(window.location.search);
     const query = params.get('q') || '';
+    const category = params.get('cat') || '';
     const grid = document.getElementById('searchGrid');
     const title = document.getElementById('searchTitle');
 
-    if (title) title.innerText = query ? `Results for "${query}"` : 'All Products';
+    if (title) {
+        let titleText = query ? `Results for "${query}"` : 'All Products';
+        if (category) titleText += ` in ${category}`;
+        title.innerText = titleText;
+    }
 
     grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;padding:40px;">Searching...</p>';
 
-    const results = await API.searchProducts({ query });
+    const results = await API.searchProducts({ query, category });
 
     if (!results || results.length === 0) {
         grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;padding:40px;">No products found.</p>';
@@ -25,13 +30,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const primaryOffer = (p.affiliate_offers && p.affiliate_offers[0]) || {};
         const storeName = primaryOffer.store_name || 'Amazon';
         
-        // Network Config
         const cfg = CONFIG.networks[storeName.toLowerCase()] || CONFIG.networks.amazon;
         const bg = /^#[0-9a-fA-F]{6}$/.test(cfg.brandColor) ? cfg.brandColor : '#2563eb';
         const fg = /^#[0-9a-fA-F]{6}$/.test(cfg.textColor) ? cfg.textColor : '#ffffff';
         const affUrl = primaryOffer.affiliate_url || '#';
 
-        // ⭐ Price Calculation (Same as app.js)
         const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
         const offerSymbol = currencySymbols[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
         
