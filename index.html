@@ -22,6 +22,9 @@
       gtag('config', 'G-7VE3L1Y8PQ');
     </script>
 
+    <!-- Fireworks Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
     <link rel="canonical" href="https://www.primepickhub.com/">
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="manifest" href="manifest.json">
@@ -31,7 +34,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,800;0,900;1,800&family=Roboto:wght@400;700;900&family=Oswald:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Lobster&family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
     
     <style>
-        /* Card Timer Style (For For You section) */
         .card-timer {
             background: #FEF2F2; color: #DC2626; font-size: 0.75rem; font-weight: 800; padding: 5px 8px; border-radius: 4px; margin-bottom: 8px; text-align: center; border: 1px solid #FECACA; display: flex; align-items: center; justify-content: center; gap: 5px;
         }
@@ -69,22 +71,32 @@
             </div>
         </div>
 
-        <!-- ⭐ 2. Flash Sale Section (New Layout) ⭐ -->
+        <!-- ⭐ 2. Flash Sale Section (Top Text, Bottom Cards, Fireworks) ⭐ -->
         <div id="flashSaleSection" class="flash-sale-split" style="display: none; margin-bottom: 40px;">
+            
+            <!-- Live Fireworks Canvas -->
+            <canvas id="fireworksCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;"></canvas>
+
             <div class="flash-sale-left">
-                <!-- Fireworks Animation -->
-                <div class="fireworks-icon">🎆</div>
-                
-                <h2 id="flashSaleTitle">Mega Sale 11.11</h2>
-                <div class="blinking-ending-soon">Ending Soon!</div>
-                
-                <!-- Moving Text (Marquee) -->
-                <div class="flash-marquee-container">
-                    <p class="flash-marquee-text">
-                        🔥 Limited stock available! &nbsp;&nbsp;&nbsp; 🔥 Hurry up! Offer ends soon. &nbsp;&nbsp;&nbsp; 🔥 Limited stock available! &nbsp;&nbsp;&nbsp; 🔥 Hurry up! Offer ends soon.
-                    </p>
+                <!-- 1. Fireworks & Title -->
+                <div class="flash-title-area">
+                    <span class="fireworks-icon">🎆</span>
+                    <h2 id="flashSaleTitle">Mega Sale 11.11</h2>
+                </div>
+
+                <!-- 2. Ending Soon + Marquee (Same Line) -->
+                <div class="flash-controls">
+                    <div class="blinking-ending-soon">Ending Soon!</div>
+                    
+                    <div class="flash-marquee-container">
+                        <p class="flash-marquee-text">
+                            🔥 Hurry up! Offer ends soon. &nbsp;&nbsp;&nbsp; 🔥 Limited stock available! &nbsp;&nbsp;&nbsp; 🔥 Hurry up! Offer ends soon.
+                        </p>
+                    </div>
                 </div>
             </div>
+
+            <!-- 3. Cards at Bottom -->
             <div class="flash-sale-right">
                 <button class="scroll-arrow left-arrow" onclick="scrollFlash('left')"><i class="fa-solid fa-chevron-left"></i></button>
                 <div id="flashSaleScroll" class="horizontal-scroll-container"></div>
@@ -92,7 +104,7 @@
             </div>
         </div>
 
-        <!-- ⭐ 3. Shop by Category (Scrollable) ⭐ -->
+        <!-- ⭐ 3. Shop by Category ⭐ -->
         <div style="margin-bottom: 20px;">
             <h2 style="margin-bottom: 15px; font-family: 'Poppins', sans-serif; font-weight: 800; color: var(--text-dark);">Shop by Category</h2>
             
@@ -128,7 +140,7 @@
             </div>
         </div>
 
-        <!-- ⭐ 4. Products Section (Dynamic Heading) ⭐ -->
+        <!-- ⭐ 4. Products Section ⭐ -->
         <div id="normalProductsSection" style="margin-bottom: 40px;">
             <h2 id="productSectionTitle" style="margin-bottom:10px; font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1.5rem;">For You</h2>
             <p style="color:var(--text-muted);margin-bottom:20px; font-size: 0.9rem;">Click any product to view live price on the official store.</p>
