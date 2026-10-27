@@ -342,13 +342,14 @@ async function loadHomepageProducts() {
 
 function handleSearch() {
     const input = document.getElementById('searchInput');
-    const select = document.getElementById('searchCategory');
+    const select = document.getElementById('searchCategory'); // Yeh hidden input hai
     if (!input) return;
     const q = input.value.trim();
     const cat = select ? select.value : 'all';
     
     if (q) {
         let url = `search.html?q=${encodeURIComponent(q)}`;
+        // Agar category 'all' nahi hai, toh URL mein category add karo
         if (cat !== 'all') {
             url += `&cat=${encodeURIComponent(cat)}`;
         }
@@ -370,24 +371,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const catInput = document.getElementById('searchCategory');
 
     if (catBtn && catMenu) {
-        // Toggle dropdown on button click
+        // Dropdown toggle on click
         catBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             catMenu.classList.toggle('show');
         });
 
-        // Handle item selection
+        // Dropdown item selection
         catMenu.querySelectorAll('li').forEach(li => {
             li.addEventListener('click', function(e) {
                 e.stopPropagation();
                 const val = this.getAttribute('data-value');
                 const text = this.innerText;
                 
-                // Update text and hidden input
+                // Update button text and hidden input value
                 catText.innerText = text;
                 catInput.value = val;
                 
-                // Update active state
+                // Update active state in dropdown list
                 catMenu.querySelectorAll('li').forEach(item => item.classList.remove('active'));
                 this.classList.add('active');
                 
