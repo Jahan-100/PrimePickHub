@@ -147,7 +147,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .right-arrow { right: 2px; }
 
 
-/* ⭐ 2. Flash Sale Split Section (Top Text, Bottom Cards) ⭐ */
+/* ⭐ 2. Flash Sale Split Section (Reduced Height & Smaller Ending Soon) ⭐ */
 .flash-sale-split { 
     display: flex; 
     flex-direction: column; 
@@ -156,7 +156,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     border-radius: 12px; 
     overflow: hidden; 
     margin-bottom: 40px; 
-    min-height: 350px; 
+    min-height: 245px; /* 30% Reduced from 350px */
     box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
     border: 1px solid #E2E8F0; 
 }
@@ -178,7 +178,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     position: relative;
     z-index: 2;
     width: 100%;
-    padding: 25px 25px 15px 25px;
+    padding: 15px 25px 10px 25px; /* Reduced padding to fit smaller height */
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -186,21 +186,11 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     color: #fff;
 }
 
-/* Fireworks & Title Row */
+/* Title Area (Emoji Removed) */
 .flash-title-area {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-.fireworks-icon {
-    font-size: 2.5rem;
-    animation: floatAnim 1s ease-in-out infinite alternate;
-}
-@keyframes floatAnim {
-    0% { transform: translateY(0) scale(1); }
-    100% { transform: translateY(-5px) scale(1.1); }
+    margin-bottom: 10px;
 }
 
 .flash-sale-left h2 {
@@ -221,19 +211,19 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     width: 100%;
 }
 
-/* ⭐ 2x BIGGER Blinking Ending Soon Box ⭐ */
+/* ⭐ Ending Soon Box (20% Reduced Height) ⭐ */
 .blinking-ending-soon {
     background: #fbbf24;
     color: #7f1d1d;
     font-weight: 900;
-    font-size: 2.2rem; 
-    padding: 20px 40px; 
-    border-radius: 12px;
+    font-size: 1.8rem; /* Reduced font size */
+    padding: 16px 32px; /* Reduced padding */
+    border-radius: 10px;
     text-align: center;
     animation: blink3Colors 1.5s infinite;
     white-space: nowrap;
-    box-shadow: 0 6px 15px rgba(0,0,0,0.4);
-    border: 3px solid #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    border: 2px solid #fff;
 }
 
 @keyframes blink3Colors {
@@ -258,7 +248,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 }
 
 .marquee-content span {
-    font-size: 1.2rem; 
+    font-size: 1.1rem; 
     font-weight: 700; 
     color: #e2e8f0; 
     padding-right: 20px;
@@ -272,7 +262,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 /* Bottom Cards Area */
 .flash-sale-right { 
     flex: 1; 
-    padding: 15px 25px 25px 25px; 
+    padding: 10px 25px 20px 25px; /* Reduced padding */
     position: relative; 
     z-index: 1; 
     display: flex; 
@@ -292,7 +282,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .footer-disclaimer { border-top: 1px solid #334155; padding-top: 20px; margin-top: 20px; font-size: 0.8rem; opacity: 0.8; }
 
 
-/* ⭐ MOBILE RESPONSIVE (FIXED FOR FLASH SALE) ⭐ */
+/* ⭐ MOBILE RESPONSIVE ⭐ */
 @media (max-width: 768px) {
     .nav-main { flex-wrap: wrap; padding: 10px 5%; }
     .search-box { order: 3; width: 100%; max-width: none; flex-basis: 100%; margin-top: 10px; }
@@ -304,36 +294,16 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     .scroll-arrow { display: none; }
     .special-deal-card { min-width: 160px; max-width: 160px; height: 220px; }
 
-    /* ⭐ Flash Sale Mobile Overrides ⭐ */
+    /* Flash Sale Mobile */
     .flash-sale-split { min-height: auto; }
+    .flash-sale-left { padding: 15px 10px; align-items: center; text-align: center; }
+    .flash-title-area { justify-content: center; margin-bottom: 8px; }
+    .flash-sale-left h2 { font-size: 1.5rem !important; }
     
-    .flash-sale-left { 
-        padding: 15px 10px; 
-        align-items: center; /* Center everything */
-        text-align: center; 
-    }
-    
-    .flash-title-area { 
-        flex-direction: column; /* Stack fireworks and title */
-        gap: 5px; 
-        margin-bottom: 10px; 
-    }
-    
-    .fireworks-icon { font-size: 1.8rem; }
-    
-    #flashSaleTitle { 
-        font-size: 1.5rem !important; /* Force smaller font on mobile */
-    }
-    
-    .flash-controls { 
-        flex-direction: column; /* Stack Ending Soon and Marquee */
-        gap: 10px; 
-        width: 100%;
-        align-items: center;
-    }
+    .flash-controls { flex-direction: column; gap: 10px; width: 100%; align-items: center; }
     
     .blinking-ending-soon { 
-        font-size: 1.1rem; /* Much smaller for mobile */
+        font-size: 1.1rem; 
         padding: 8px 20px; 
     }
     
@@ -342,17 +312,9 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
         -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
         mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
     }
+    .marquee-content span { font-size: 0.85rem; }
     
-    .marquee-content span {
-        font-size: 0.85rem; /* Smaller text */
-    }
-    
-    .flash-sale-right { 
-        padding: 15px; 
-        align-items: center; 
-        justify-content: flex-start; 
-        overflow-x: auto; 
-    }
+    .flash-sale-right { padding: 10px 15px 15px 15px; align-items: center; justify-content: flex-start; }
     .flash-card { min-width: 160px; max-width: 160px; height: 230px; }
 
     /* Category Mobile Adjustments */
