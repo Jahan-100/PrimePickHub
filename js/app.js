@@ -229,7 +229,11 @@ window.selectCategory = async function(catSlug, element) {
     const titleEl = document.getElementById('productSectionTitle');
     const grid = document.getElementById('productGrid');
     
-    titleEl.innerHTML = (catSlug === 'all') ? 'For You' : catSlug.charAt(0).toUpperCase() + catSlug.slice(1).replace('-', ' ');
+    // ⭐ Safe Guard added here ⭐
+    if (titleEl) {
+        titleEl.innerHTML = (catSlug === 'all') ? 'For You' : catSlug.charAt(0).toUpperCase() + catSlug.slice(1).replace('-', ' ');
+    }
+    
     showGridMessage(grid, 'Loading products...');
 
     try {
@@ -261,7 +265,7 @@ async function loadHomepageProducts() {
     try {
         if (typeof API === 'undefined' || !API.getHomepageProducts) throw new Error('API missing');
         
-        // Fetch Global Settings First (For Flash & Special Titles)
+        // Fetch Global Settings First
         const { data: settings } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).single();
         
         // Apply Special Deal Settings
@@ -304,7 +308,6 @@ async function loadHomepageProducts() {
 
         if (flashSaleProducts.length > 0) {
             flashSection.style.display = 'flex';
-            // If user didn't set a global title, fallback to first product's event name
             if (!settings || !settings.flash_title_text) {
                  document.getElementById('flashSaleTitle').innerText = flashSaleProducts[0].event_name || 'Mega Sale 11.11';
             }
