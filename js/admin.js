@@ -1,5 +1,25 @@
 let allProducts = [];
 
+// ⭐ Helper Function: Upload Image to Supabase Storage
+async function uploadFileToSupabase(file) {
+    const fileExt = file.name.split('.').pop();
+    // Unique name banane ke liye timestamp aur random string
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+    
+    const { data, error } = await window.supabaseClient.storage
+        .from('product-images')
+        .upload(fileName, file);
+
+    if (error) throw error;
+
+    // Public URL get karein
+    const { data: publicUrlData } = window.supabaseClient.storage
+        .from('product-images')
+        .getPublicUrl(fileName);
+        
+    return publicUrlData.publicUrl;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     if (typeof API === 'undefined' || !API.getCurrentUser) { alert('API not loaded. Refresh the page.'); return; }
     const auth = await API.getCurrentUser();
@@ -38,7 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         else alert("Special Deal Design updated successfully!");
     });
 
-    // Save Flash Sale Settings (NEW)
+    // Save Flash Sale Settings
     document.getElementById('saveFlashSettingsBtn')?.addEventListener('click', async function() {
         const newTitle = document.getElementById('flashTitleText').value.trim();
         const fontFamily = document.getElementById('flashTitleFontFamily').value;
@@ -256,6 +276,12 @@ window.editProduct = async function(id) {
         const variations = p.affiliate_offers?.filter(o => o.variation_name) || [];
         variations.forEach(v => addVariationRow(v.variation_name, v.price, v.sale_price, (v.commission_rate > 0 ? v.commission_rate : ''), v.affiliate_url));
 
+        // Reset File Inputs on Edit
+        document.getElementById('pImgFile').value = '';
+        document.getElementById('pGalleryFile').value = '';
+        document.getElementById('pImgFileName').innerText = 'No file chosen';
+        document.getElementById('pGalleryFileName').innerText = 'No files chosen';
+
         document.getElementById('formTitle').innerText = "Edit Product"; document.getElementById('saveBtn').innerText = "Update Product"; document.getElementById('cancelEditBtn').style.display = "block";
         const listContainer = document.getElementById('productListContainer'); if(listContainer && listContainer.style.display === 'none') document.getElementById('toggleProductListBtn').click();
         document.getElementById('productForm').scrollIntoView({ behavior: 'smooth' });
@@ -272,52 +298,87 @@ function setupProductForm() {
     cancelBtn.addEventListener('click', () => {
         form.reset(); document.getElementById('variationsContainer').innerHTML = '';
         document.getElementById('pId').value = ''; document.getElementById('pOfferId').value = '';
+        
+        // Reset File Inputs
+        document.getElementById('pImgFile').value = '';
+        document.getElementById('pGalleryFile').value = '';
+        document.getElementById('pImgFileName').innerText = 'No file chosen';
+        document.getElementById('pGalleryFileName').innerText = 'No files chosen';
+
         document.getElementById('formTitle').innerText = "Add New Product"; document.getElementById('saveBtn').innerText = "Save Product"; cancelBtn.style.display = "none";
     });
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const id = document.getElementById('pId').value; const isEditing = id !== '';
-        const eventName = document.getElementById('pEventName').value.trim(); const saleEndDate = document.getElementById('pSaleEndDate').value;
-        const commInput = document.getElementById('pCommission').value.trim(); const commission = commInput === '' ? 0 : (parseFloat(commInput) || 0);
-        const price = parseFloat(document.getElementById('pPrice').value) || 0;
-        const salePrice = document.getElementById('pSalePrice').value ? parseFloat(document.getElementById('pSalePrice').value) : null;
-
-        const productData = {
-            title: document.getElementById('pTitle').value.trim(), slug: document.getElementById('pSlug').value.trim(),
-            image_url: document.getElementById('pImg').value.trim(), category_slug: document.getElementById('pCategory').value,
-            description: document.getElementById('pDesc').value.trim(), review_html: document.getElementById('pReview').value.trim(),
-            is_featured: document.getElementById('pFeatured').checked, is_trending: document.getElementById('pTrending').checked,
-            is_special_deal: document.getElementById('pSpecialDeal').checked,
-            badge: document.getElementById('pBadge').value.trim() || null, rating: document.getElementById('pRating').value ? parseFloat(document.getElementById('pRating').value) : null,
-            reviews_count: document.getElementById('pReviewsCount').value ? parseInt(document.getElementById('pReviewsCount').value) : 0,
-            gallery_images: document.getElementById('pGallery').value.trim() ? document.getElementById('pGallery').value.split('\n').map(u=>u.trim()).filter(Boolean) : [],
-            video_url: document.getElementById('pVideo').value.trim() || null,
-            event_name: eventName || null, sale_end_date: saleEndDate ? new Date(saleEndDate).toISOString() : null,
-            is_available: true
-        };
-
-        if (!productData.title || !productData.slug || !productData.image_url) return alert('Please fill required fields.');
-
-        const mainOfferData = {
-            store_name: document.getElementById('pStore').value.trim().toLowerCase(), price: price, sale_price: salePrice,
-            commission_rate: commission, currency: document.getElementById('pCurrency').value,
-            affiliate_url: document.getElementById('pAffUrl').value.trim(), variation_name: null
-        };
-
-        const variations = [];
-        document.querySelectorAll('.variation-row').forEach(row => {
-            const vName = row.querySelector('.var-name').value.trim(); 
-            const vPrice = parseFloat(row.querySelector('.var-price').value);
-            const vSalePrice = row.querySelector('.var-sale-price').value ? parseFloat(row.querySelector('.var-sale-price').value) : null;
-            const vCommInput = row.querySelector('.var-comm').value.trim(); 
-            const vComm = vCommInput === '' ? commission : (parseFloat(vCommInput) || 0);
-            const vUrl = row.querySelector('.var-url').value.trim() || mainOfferData.affiliate_url;
-            
-            if (vName && !isNaN(vPrice)) { variations.push({ ...mainOfferData, price: vPrice, sale_price: vSalePrice, commission_rate: vComm, affiliate_url: vUrl, variation_name: vName }); }
-        });
+        
+        const saveBtn = document.getElementById('saveBtn');
+        const originalBtnText = saveBtn.innerText;
+        saveBtn.innerText = "Saving... Please wait";
+        saveBtn.disabled = true;
 
         try {
+            const id = document.getElementById('pId').value; const isEditing = id !== '';
+            const eventName = document.getElementById('pEventName').value.trim(); const saleEndDate = document.getElementById('pSaleEndDate').value;
+            const commInput = document.getElementById('pCommission').value.trim(); const commission = commInput === '' ? 0 : (parseFloat(commInput) || 0);
+            const price = parseFloat(document.getElementById('pPrice').value) || 0;
+            const salePrice = document.getElementById('pSalePrice').value ? parseFloat(document.getElementById('pSalePrice').value) : null;
+
+            // ⭐ 1. Handle Primary Image Upload
+            let finalImageUrl = document.getElementById('pImg').value.trim();
+            const primaryFileInput = document.getElementById('pImgFile');
+            if (primaryFileInput.files.length > 0) {
+                saveBtn.innerText = "Uploading Main Image...";
+                finalImageUrl = await uploadFileToSupabase(primaryFileInput.files[0]);
+            }
+
+            // ⭐ 2. Handle Gallery Images Upload
+            let finalGalleryUrls = document.getElementById('pGallery').value.trim() ? document.getElementById('pGallery').value.split('\n').map(u=>u.trim()).filter(Boolean) : [];
+            const galleryFileInput = document.getElementById('pGalleryFile');
+            if (galleryFileInput.files.length > 0) {
+                saveBtn.innerText = "Uploading Gallery...";
+                for (let i = 0; i < galleryFileInput.files.length; i++) {
+                    const url = await uploadFileToSupabase(galleryFileInput.files[i]);
+                    finalGalleryUrls.push(url);
+                }
+            }
+
+            if (!finalImageUrl) throw new Error("Primary Image is required (URL or Upload)");
+
+            const productData = {
+                title: document.getElementById('pTitle').value.trim(), slug: document.getElementById('pSlug').value.trim(),
+                image_url: finalImageUrl, 
+                category_slug: document.getElementById('pCategory').value,
+                description: document.getElementById('pDesc').value.trim(), review_html: document.getElementById('pReview').value.trim(),
+                is_featured: document.getElementById('pFeatured').checked, is_trending: document.getElementById('pTrending').checked,
+                is_special_deal: document.getElementById('pSpecialDeal').checked,
+                badge: document.getElementById('pBadge').value.trim() || null, rating: document.getElementById('pRating').value ? parseFloat(document.getElementById('pRating').value) : null,
+                reviews_count: document.getElementById('pReviewsCount').value ? parseInt(document.getElementById('pReviewsCount').value) : 0,
+                gallery_images: finalGalleryUrls,
+                video_url: document.getElementById('pVideo').value.trim() || null,
+                event_name: eventName || null, sale_end_date: saleEndDate ? new Date(saleEndDate).toISOString() : null,
+                is_available: true
+            };
+
+            if (!productData.title || !productData.slug) throw new Error('Please fill required fields (Title, Slug).');
+
+            const mainOfferData = {
+                store_name: document.getElementById('pStore').value.trim().toLowerCase(), price: price, sale_price: salePrice,
+                commission_rate: commission, currency: document.getElementById('pCurrency').value,
+                affiliate_url: document.getElementById('pAffUrl').value.trim(), variation_name: null
+            };
+
+            const variations = [];
+            document.querySelectorAll('.variation-row').forEach(row => {
+                const vName = row.querySelector('.var-name').value.trim(); 
+                const vPrice = parseFloat(row.querySelector('.var-price').value);
+                const vSalePrice = row.querySelector('.var-sale-price').value ? parseFloat(row.querySelector('.var-sale-price').value) : null;
+                const vCommInput = row.querySelector('.var-comm').value.trim(); 
+                const vComm = vCommInput === '' ? commission : (parseFloat(vCommInput) || 0);
+                const vUrl = row.querySelector('.var-url').value.trim() || mainOfferData.affiliate_url;
+                
+                if (vName && !isNaN(vPrice)) { variations.push({ ...mainOfferData, price: vPrice, sale_price: vSalePrice, commission_rate: vComm, affiliate_url: vUrl, variation_name: vName }); }
+            });
+
             let productId = id;
             if (isEditing) {
                 const { error: prodErr } = await window.supabaseClient.from('products').update(productData).eq('id', id); if (prodErr) throw prodErr;
@@ -327,10 +388,29 @@ function setupProductForm() {
             }
             if (price > 0 || variations.length === 0) { mainOfferData.product_id = productId; await window.supabaseClient.from('affiliate_offers').insert([mainOfferData]); }
             if (variations.length > 0) { variations.forEach(v => v.product_id = productId); const { error: varErr } = await window.supabaseClient.from('affiliate_offers').insert(variations); if (varErr) throw varErr; }
-            alert(`"${productData.title}" saved successfully!`); form.reset(); document.getElementById('variationsContainer').innerHTML = '';
-            document.getElementById('pId').value = ''; document.getElementById('formTitle').innerText = "Add New Product"; document.getElementById('saveBtn').innerText = "Save Product"; cancelBtn.style.display = "none";
-            await loadStats(); await loadProductsList();
-        } catch (err) { alert('Save error: ' + (err.message || 'Check RLS policies.')); }
+            
+            alert(`"${productData.title}" saved successfully!`); 
+            form.reset(); 
+            document.getElementById('variationsContainer').innerHTML = '';
+            document.getElementById('pId').value = ''; 
+            document.getElementById('formTitle').innerText = "Add New Product"; 
+            cancelBtn.style.display = "none";
+            
+            // Reset File Inputs
+            primaryFileInput.value = '';
+            galleryFileInput.value = '';
+            document.getElementById('pImgFileName').innerText = 'No file chosen';
+            document.getElementById('pGalleryFileName').innerText = 'No files chosen';
+
+            await loadStats(); 
+            await loadProductsList();
+
+        } catch (err) { 
+            alert('Error: ' + (err.message || 'Check RLS policies and Storage Bucket.')); 
+        } finally {
+            saveBtn.innerText = originalBtnText;
+            saveBtn.disabled = false;
+        }
     });
 
     document.getElementById('logoutBtn')?.addEventListener('click', async () => { await API.signOut(); window.location.reload(); });
