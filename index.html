@@ -44,16 +44,28 @@
     <header class="header">
         <div class="nav-main">
             <a href="index.html" class="logo">PrimePick<span>Hub</span></a>
+            
+            <!-- ⭐ Search Box with Category Dropdown ⭐ -->
             <div class="search-box">
+                <select id="searchCategory" class="search-select">
+                    <option value="all">All</option>
+                    <option value="electronics">Electronics</option>
+                    <option value="fashion">Fashion</option>
+                    <option value="home-kitchen">Home & Kitchen</option>
+                    <option value="beauty">Beauty</option>
+                    <option value="sports">Sports</option>
+                    <option value="toys">Toys</option>
+                </select>
                 <input type="text" id="searchInput" placeholder="Search products, brands, stores...">
                 <button id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i></button>
             </div>
+            
         </div>
     </header>
 
     <main class="container">
         
-        <!-- ⭐ 1. Special Deal Section (Top Space Reduced) ⭐ -->
+        <!-- ⭐ 1. Special Deal Section ⭐ -->
         <div id="specialDealSection" class="alibaba-special-deal" style="margin-top: 5px;">
             <div class="special-deal-left">
                 <h2 id="specialDealTitle">First order deal</h2>
@@ -73,20 +85,13 @@
 
         <!-- ⭐ 2. Flash Sale Section ⭐ -->
         <div id="flashSaleSection" class="flash-sale-split" style="display: none;">
-            
-            <!-- Live Fireworks Canvas -->
             <canvas id="fireworksCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;"></canvas>
-
             <div class="flash-sale-left">
-                <!-- Title -->
                 <div class="flash-title-area">
                     <h2 id="flashSaleTitle">Mega Sale 11.11</h2>
                 </div>
-
-                <!-- Ending Soon + Marquee -->
                 <div class="flash-controls">
                     <div class="blinking-ending-soon">Ending Soon!</div>
-                    
                     <div class="flash-marquee-container">
                         <div class="marquee-content">
                             <span>🔥 Hurry up! Offer ends soon. &nbsp;&nbsp;&nbsp; 🔥 Limited stock available! &nbsp;&nbsp;&nbsp; 🔥 Hurry up! Offer ends soon.</span>
@@ -95,8 +100,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Cards at Bottom -->
             <div class="flash-sale-right">
                 <button class="scroll-arrow left-arrow" onclick="scrollFlash('left')"><i class="fa-solid fa-chevron-left"></i></button>
                 <div id="flashSaleScroll" class="horizontal-scroll-container"></div>
@@ -107,7 +110,6 @@
         <!-- ⭐ 3. Shop by Category ⭐ -->
         <div style="margin-bottom: 20px;">
             <h2 style="margin-bottom: 15px; font-family: 'Poppins', sans-serif; font-weight: 800; color: var(--text-dark);">Shop by Category</h2>
-            
             <div class="horizontal-category-scroll">
                 <a href="javascript:void(0)" onclick="selectCategory('all', this)" class="category-item active" data-cat="all">
                     <div class="cat-icon" style="color: #EF4444;">❤️</div>
@@ -140,9 +142,8 @@
             </div>
         </div>
 
-        <!-- ⭐ 4. Products Section (For You Text Removed) ⭐ -->
+        <!-- ⭐ 4. Products Section ⭐ -->
         <div id="normalProductsSection" style="margin-bottom: 20px;">
-            <!-- Hidden element for JS compatibility, no space taken -->
             <h2 id="productSectionTitle" style="display: none;"></h2>
             <div class="product-grid" id="productGrid"></div>
         </div>
