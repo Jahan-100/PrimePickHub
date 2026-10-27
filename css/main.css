@@ -147,15 +147,16 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .right-arrow { right: 2px; }
 
 
-/* ⭐ 2. NEW Flash Sale Split Section (Top Text / Bottom Cards) ⭐ */
+/* ⭐ 2. Flash Sale Split Section (Top Text, Bottom Cards) ⭐ */
 .flash-sale-split { 
     display: flex; 
+    flex-direction: column; 
     position: relative; 
     background: #fff; 
     border-radius: 12px; 
     overflow: hidden; 
     margin-bottom: 40px; 
-    min-height: 260px; /* Increased height to fit top text and bottom cards */
+    min-height: 350px; /* Taller box */
     box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
     border: 1px solid #E2E8F0; 
 }
@@ -172,77 +173,87 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     z-index: 0; 
 }
 
-/* Left Side Text (Aligned Top) */
-.flash-sale-left { 
-    flex: 0 0 32%; /* Slightly wider for moving text */
-    padding: 25px 25px 15px 25px; 
-    display: flex; 
-    flex-direction: column; 
-    justify-content: flex-start; /* Aligns text to Top */
-    position: relative; 
-    z-index: 1; 
+/* Top Text Area */
+.flash-sale-top {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    padding: 25px 25px 10px 25px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
     background: rgba(185, 28, 28, 0.95); /* Dark Red */
     color: #fff;
 }
 
-/* Fireworks Animation */
+/* Fireworks & Title Row */
+.flash-title-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
 .fireworks-icon {
-    font-size: 2.2rem;
-    margin-bottom: 5px;
-    animation: floatAnim 2s ease-in-out infinite;
-    display: inline-block;
-    width: fit-content;
+    font-size: 2.5rem;
+    animation: floatAnim 1s ease-in-out infinite alternate;
 }
 @keyframes floatAnim {
-    0% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
-    100% { transform: translateY(0); }
+    0% { transform: translateY(0) scale(1); }
+    100% { transform: translateY(-5px) scale(1.1); }
 }
 
 .flash-sale-left h2 {
     font-family: 'Poppins', sans-serif;
     font-weight: 900;
-    font-size: 1.9rem;
+    font-size: 2rem;
     line-height: 1.1;
-    margin-bottom: 12px;
+    margin: 0;
     color: #fff;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
-/* Bigger Blinking Ending Soon Box */
+/* Ending Soon + Marquee Row */
+.flash-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+}
+
+/* 3 Color Blinking Box */
 .blinking-ending-soon {
     background: #fbbf24;
     color: #7f1d1d;
     font-weight: 900;
-    font-size: 1.2rem; /* Bigger font */
-    padding: 12px 25px; /* Bigger padding */
+    font-size: 1.1rem;
+    padding: 10px 20px;
     border-radius: 8px;
-    display: inline-block;
     text-align: center;
-    margin-bottom: 15px;
-    animation: blinkBox 1s infinite alternate;
-    width: fit-content;
+    animation: blink3Colors 1.5s infinite;
+    white-space: nowrap;
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     border: 2px solid #fff;
 }
 
-@keyframes blinkBox {
-    0% { background: #fbbf24; color: #7f1d1d; transform: scale(1); }
-    100% { background: #ef4444; color: #fff; transform: scale(1.05); }
+@keyframes blink3Colors {
+    0% { background-color: #fbbf24; color: #7f1d1d; transform: scale(1); }
+    33% { background-color: #ef4444; color: white; transform: scale(1.05); }
+    66% { background-color: #3b82f6; color: white; transform: scale(1.05); }
+    100% { background-color: #fbbf24; color: #7f1d1d; transform: scale(1); }
 }
 
-/* Marquee Moving Text */
+/* Marquee */
 .flash-marquee-container {
     overflow: hidden; 
     white-space: nowrap; 
-    width: 100%; 
-    margin-top: 5px;
-    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    flex: 1;
+    mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
 }
 .flash-marquee-text {
     display: inline-block; 
-    animation: marquee 8s linear infinite;
-    font-size: 0.95rem; 
+    animation: marquee 10s linear infinite;
+    font-size: 1rem; 
     font-weight: 600; 
     color: #fecaca;
     margin: 0;
@@ -253,14 +264,14 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     100% { transform: translateX(-50%); }
 }
 
-/* Right Side Cards (Aligned Bottom) */
-.flash-sale-right { 
+/* Bottom Cards Area */
+.flash-sale-bottom { 
     flex: 1; 
-    padding: 15px 15px 20px 15px; /* Extra bottom padding to push cards up slightly from edge */
+    padding: 15px 25px 25px 25px; 
     position: relative; 
     z-index: 1; 
     display: flex; 
-    align-items: flex-end; /* Aligns cards to Bottom */
+    align-items: flex-end; /* Push cards to bottom */
     overflow: hidden; 
 }
 
@@ -270,7 +281,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     flex-direction: column;
 }
 .flash-card .info-box {
-    flex: 2; /* Slightly taller to fit timer */
+    flex: 2; 
     padding: 8px;
 }
 .flash-card .price {
@@ -308,12 +319,12 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     .special-deal-card { min-width: 160px; max-width: 160px; height: 220px; }
 
     /* Flash Sale Mobile */
-    .flash-sale-split { flex-direction: column; min-height: auto; }
-    .flash-sale-left { flex: none; padding: 20px; text-align: center; align-items: center; background: rgba(185, 28, 28, 0.95); justify-content: flex-start; }
-    .fireworks-icon { font-size: 2rem; }
-    .flash-sale-left h2 { font-size: 1.8rem; }
+    .flash-sale-split { min-height: 400px; }
+    .flash-sale-top { padding: 20px; align-items: center; text-align: center; }
+    .flash-title-area { justify-content: center; }
+    .flash-controls { flex-direction: column; gap: 10px; }
     .blinking-ending-soon { font-size: 1rem; padding: 8px 15px; }
-    .flash-sale-right { padding: 15px; align-items: center; } /* Center cards on mobile */
+    .flash-sale-bottom { padding: 15px; align-items: center; justify-content: center; }
     .flash-card { min-width: 160px; max-width: 160px; height: 230px; }
 
     /* Category Mobile Adjustments */
