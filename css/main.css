@@ -27,10 +27,13 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     align-items: center; 
     border: 2px solid #94A3B8; 
     border-radius: 8px; 
-    overflow: hidden; 
+    /* overflow: hidden; <-- YEH HATA DIYA GAYA HAI TAAKE DROPDOWN BAHAR NIKAL SAKE */
+    overflow: visible; 
     background: #fff; 
     transition: all 0.3s ease; 
     box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+    position: relative;
+    z-index: 999;
 }
 .search-box:focus-within { 
     border-color: var(--accent); 
@@ -45,7 +48,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     align-items: center;
     background-color: #f3f3f3;
     border-right: 1px solid #cdcdcd;
-    border-radius: 5px 0 0 5px;
+    border-radius: 6px 0 0 6px;
     cursor: pointer;
     transition: background 0.2s;
 }
@@ -53,13 +56,13 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .custom-category-dropdown:hover { background-color: #e3e3e3; }
 
 .category-btn {
-    background: transparent !important; /* Force transparent taake orange na ho */
+    background: transparent !important;
     border: none !important;
     padding: 0 12px;
     height: 45px;
     font-size: 0.9rem;
     font-weight: 500;
-    color: #0f1111 !important; /* Dark text */
+    color: #0f1111 !important;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -79,7 +82,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     width: 220px;
     max-height: 350px;
     overflow-y: auto;
-    z-index: 1000;
+    z-index: 9999;
     list-style: none;
     padding: 5px 0;
     margin: 0;
@@ -107,10 +110,11 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     font-size: 0.95rem; 
     color: var(--text-dark); 
     background: transparent; 
+    border-radius: 0;
 }
 .search-box input::placeholder { color: #94A3B8; }
 
-/* ⭐ Search Button (Orange) - Sirf Search Icon ke liye ⭐ */
+/* ⭐ Search Button (Orange) ⭐ */
 .search-box #searchBtn { 
     background: var(--accent); 
     border: none; 
@@ -123,6 +127,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     display: flex; 
     align-items: center; 
     justify-content: center; 
+    border-radius: 0 6px 6px 0;
 }
 .search-box #searchBtn:hover { background: #e0482d; }
 
