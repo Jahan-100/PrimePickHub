@@ -70,7 +70,7 @@
 
     <main class="container">
         
-        <!-- ⭐ 1. Special Deal Section (Top) ⭐ -->
+        <!-- ⭐ 1. Special Deal Section ⭐ -->
         <div id="specialDealSection" class="alibaba-special-deal" style="margin-top: 10px;">
             <div class="special-deal-left">
                 <h2 id="specialDealTitle">First order deal</h2>
@@ -88,7 +88,7 @@
             </div>
         </div>
 
-        <!-- ⭐ 2. Flash Sale Section (Middle) ⭐ -->
+        <!-- ⭐ 2. Flash Sale Section ⭐ -->
         <div id="flashSaleSection" style="display: none; margin-bottom: 40px;">
             <div class="flash-sale-banner">
                 <div class="flash-light-effect"></div>
@@ -107,45 +107,52 @@
             <div class="product-grid" id="flashSaleGrid"></div>
         </div>
 
-        <!-- ⭐ 3. Shop by Category (Scrollable List) ⭐ -->
-        <div style="margin-bottom: 40px;">
+        <!-- ⭐ 3. Shop by Category (Scrollable) ⭐ -->
+        <div style="margin-bottom: 20px;">
             <h2 style="margin-bottom: 15px; font-family: 'Poppins', sans-serif; font-weight: 800; color: var(--text-dark);">Shop by Category</h2>
             
             <div class="horizontal-category-scroll">
-                <a href="index.html" class="category-item">
+                <!-- For You -->
+                <a href="javascript:void(0)" onclick="selectCategory('all', this)" class="category-item active" data-cat="all">
                     <div class="cat-icon" style="color: #EF4444;">❤️</div>
                     <span>For you</span>
                 </a>
-                <a href="category.html?cat=electronics" class="category-item">
+                <!-- Electronics -->
+                <a href="javascript:void(0)" onclick="selectCategory('electronics', this)" class="category-item" data-cat="electronics">
                     <div class="cat-icon">📱</div>
                     <span>Electronics</span>
                 </a>
-                <a href="category.html?cat=home-kitchen" class="category-item">
+                <!-- Home Supply -->
+                <a href="javascript:void(0)" onclick="selectCategory('home-kitchen', this)" class="category-item" data-cat="home-kitchen">
                     <div class="cat-icon">🛋️</div>
                     <span>Home Supply</span>
                 </a>
-                <a href="category.html?cat=toys" class="category-item">
+                <!-- Toys -->
+                <a href="javascript:void(0)" onclick="selectCategory('toys', this)" class="category-item" data-cat="toys">
                     <div class="cat-icon">🧸</div>
                     <span>Toys</span>
                 </a>
-                <a href="category.html?cat=sports" class="category-item">
+                <!-- Sports -->
+                <a href="javascript:void(0)" onclick="selectCategory('sports', this)" class="category-item" data-cat="sports">
                     <div class="cat-icon">🏋️</div>
                     <span>Sports</span>
                 </a>
-                <a href="category.html?cat=fashion" class="category-item">
+                <!-- Fashion -->
+                <a href="javascript:void(0)" onclick="selectCategory('fashion', this)" class="category-item" data-cat="fashion">
                     <div class="cat-icon">👗</div>
                     <span>Fashion</span>
                 </a>
-                <a href="category.html?cat=beauty" class="category-item">
+                <!-- Beauty -->
+                <a href="javascript:void(0)" onclick="selectCategory('beauty', this)" class="category-item" data-cat="beauty">
                     <div class="cat-icon">💄</div>
                     <span>Beauty</span>
                 </a>
             </div>
         </div>
 
-        <!-- ⭐ 4. For You Section (Products Grid) ⭐ -->
+        <!-- ⭐ 4. Products Section (Dynamic Heading) ⭐ -->
         <div id="normalProductsSection" style="margin-bottom: 40px;">
-            <h2 style="margin-bottom:10px; font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1.5rem;">❤️ For You</h2>
+            <h2 id="productSectionTitle" style="margin-bottom:10px; font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1.5rem;">❤️ For You</h2>
             <p style="color:var(--text-muted);margin-bottom:20px; font-size: 0.9rem;">Click any product to view live price on the official store.</p>
             <div class="product-grid" id="productGrid"></div>
         </div>
