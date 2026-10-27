@@ -229,7 +229,6 @@ window.selectCategory = async function(catSlug, element) {
     const titleEl = document.getElementById('productSectionTitle');
     const grid = document.getElementById('productGrid');
     
-    // ⭐ Safe Guard added here ⭐
     if (titleEl) {
         titleEl.innerHTML = (catSlug === 'all') ? 'For You' : catSlug.charAt(0).toUpperCase() + catSlug.slice(1).replace('-', ' ');
     }
@@ -265,10 +264,8 @@ async function loadHomepageProducts() {
     try {
         if (typeof API === 'undefined' || !API.getHomepageProducts) throw new Error('API missing');
         
-        // Fetch Global Settings First
         const { data: settings } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).single();
         
-        // Apply Special Deal Settings
         if (settings && document.getElementById('specialDealTitle')) {
             const spTitle = document.getElementById('specialDealTitle');
             spTitle.innerText = settings.special_deal_title || 'First order deal';
@@ -278,7 +275,6 @@ async function loadHomepageProducts() {
             spTitle.style.fontStyle = settings.title_font_style || 'normal';
         }
         
-        // Apply Flash Sale Settings
         if (settings && document.getElementById('flashSaleTitle')) {
             const flTitle = document.getElementById('flashSaleTitle');
             flTitle.innerText = settings.flash_title_text || 'Mega Sale 11.11';
@@ -288,7 +284,6 @@ async function loadHomepageProducts() {
             flTitle.style.fontStyle = settings.flash_title_font_style || 'normal';
         }
 
-        // Fetch Products
         const data = await API.getHomepageProducts();
         const raw = [...(data.featured ?? []), ...(data.trending ?? []), ...(data.latest ?? [])];
         const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false);
@@ -320,7 +315,6 @@ async function loadHomepageProducts() {
 
         renderProductsGrid(normalProducts, grid);
         
-        // Load Special Deal Scroll
         if (settings) {
             const { data: specialProducts } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').eq('is_special_deal', true).eq('is_available', true);
             const container = document.getElementById('specialDealScroll');
@@ -348,9 +342,18 @@ async function loadHomepageProducts() {
 
 function handleSearch() {
     const input = document.getElementById('searchInput');
+    const select = document.getElementById('searchCategory');
     if (!input) return;
     const q = input.value.trim();
-    if (q) window.location.href = `search.html?q=${encodeURIComponent(q)}`;
+    const cat = select ? select.value : 'all';
+    
+    if (q) {
+        let url = `search.html?q=${encodeURIComponent(q)}`;
+        if (cat !== 'all') {
+            url += `&cat=${encodeURIComponent(cat)}`;
+        }
+        window.location.href = url;
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
