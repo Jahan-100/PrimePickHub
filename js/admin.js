@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     showDashboard(); 
     await loadStats(); 
-    await loadSpecialSettings(); 
+    await loadSiteSettings(); 
     await loadProductsList(); 
     setupProductForm(); 
     setupToggleList();
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
     document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
     
-    // Special Deal Settings Save Button
+    // Save Special Deal Settings
     document.getElementById('saveTitleBtn')?.addEventListener('click', async function() {
         const newTitle = document.getElementById('specialDealTitleInput').value.trim();
         const fontFamily = document.getElementById('titleFontFamily').value;
@@ -35,9 +35,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         }).eq('id', 1);
 
         if (error) alert("Error: " + error.message);
-        else alert("Homepage Special Deal Design updated successfully!");
+        else alert("Special Deal Design updated successfully!");
     });
 
+    // Save Flash Sale Settings (NEW)
+    document.getElementById('saveFlashSettingsBtn')?.addEventListener('click', async function() {
+        const newTitle = document.getElementById('flashTitleText').value.trim();
+        const fontFamily = document.getElementById('flashTitleFontFamily').value;
+        const fontSize = document.getElementById('flashTitleFontSize').value.trim() || '2rem';
+        const fontWeight = document.getElementById('flashTitleFontWeight').value;
+        const fontStyle = document.getElementById('flashTitleFontStyle').value;
+
+        if(!newTitle) return alert("Flash Sale Title cannot be empty");
+        
+        const { error } = await window.supabaseClient.from('site_settings').update({ 
+            flash_title_text: newTitle,
+            flash_title_font_family: fontFamily,
+            flash_title_font_size: fontSize,
+            flash_title_font_weight: fontWeight,
+            flash_title_font_style: fontStyle
+        }).eq('id', 1);
+
+        if (error) alert("Error: " + error.message);
+        else alert("Flash Sale Design updated successfully!");
+    });
+
+    // Check Availability Button
     document.getElementById('checkAvailabilityBtn')?.addEventListener('click', async function() {
         const btn = this;
         const originalText = btn.innerText;
@@ -55,15 +78,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
-async function loadSpecialSettings() {
+async function loadSiteSettings() {
     const { data } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).single();
     if (data) {
+        // Special Deal
         if(document.getElementById('specialDealTitleInput')) {
-            document.getElementById('specialDealTitleInput').value = data.special_deal_title || 'Must Watch Deals';
+            document.getElementById('specialDealTitleInput').value = data.special_deal_title || 'First order deal';
             document.getElementById('titleFontFamily').value = data.title_font_family || 'Poppins';
-            document.getElementById('titleFontSize').value = data.title_font_size || '2.2rem';
+            document.getElementById('titleFontSize').value = data.title_font_size || '2rem';
             document.getElementById('titleFontWeight').value = data.title_font_weight || '800';
             document.getElementById('titleFontStyle').value = data.title_font_style || 'normal';
+        }
+        // Flash Sale
+        if(document.getElementById('flashTitleText')) {
+            document.getElementById('flashTitleText').value = data.flash_title_text || 'Mega Sale 11.11';
+            document.getElementById('flashTitleFontFamily').value = data.flash_title_font_family || 'Poppins';
+            document.getElementById('flashTitleFontSize').value = data.flash_title_font_size || '2rem';
+            document.getElementById('flashTitleFontWeight').value = data.flash_title_font_weight || '900';
+            document.getElementById('flashTitleFontStyle').value = data.flash_title_font_style || 'normal';
         }
     }
 }
