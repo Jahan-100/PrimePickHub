@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer with Live Fireworks
+ * PrimePickHub Homepage Renderer
  */
 
 function escapeHTML(str) {
@@ -195,42 +195,25 @@ function startFireworks() {
     const canvas = document.getElementById('fireworksCanvas');
     if (!canvas || typeof confetti === 'undefined') return;
     
-    // Create instance bound to canvas
     const myConfetti = confetti.create(canvas, { resize: true, useWorker: true });
     
     clearInterval(fireworksInterval);
     fireworksInterval = setInterval(() => {
-        // Randomly choose between Rocket (explosion) and Sparkler (fountain)
         const type = Math.random() > 0.5 ? 'rocket' : 'sparkler';
-        
         if (type === 'rocket') {
-            // Firework burst
             myConfetti({
-                particleCount: 40,
-                spread: 70,
-                origin: { x: Math.random() * 0.8 + 0.1, y: Math.random() * 0.5 + 0.1 },
-                colors: ['#fbbf24', '#ef4444', '#3b82f6', '#ffffff', '#ff8c00'],
-                scalar: 1.2
+                particleCount: 40, spread: 70, origin: { x: Math.random() * 0.8 + 0.1, y: Math.random() * 0.5 + 0.1 },
+                colors: ['#fbbf24', '#ef4444', '#3b82f6', '#ffffff', '#ff8c00'], scalar: 1.2
             });
         } else {
-            // Sparkler Fountain
             myConfetti({
-                particleCount: 15,
-                angle: 90,
-                spread: 60,
-                origin: { x: Math.random() * 0.8 + 0.1, y: 1 },
-                colors: ['#fbbf24', '#ffffff'],
-                startVelocity: 45,
-                gravity: 1.2,
-                scalar: 0.8
+                particleCount: 15, angle: 90, spread: 60, origin: { x: Math.random() * 0.8 + 0.1, y: 1 },
+                colors: ['#fbbf24', '#ffffff'], startVelocity: 45, gravity: 1.2, scalar: 0.8
             });
         }
-    }, 800); // Trigger every 0.8s
+    }, 800);
 }
-
-function stopFireworks() {
-    clearInterval(fireworksInterval);
-}
+function stopFireworks() { clearInterval(fireworksInterval); }
 
 window.scrollFlash = function(direction) {
     const container = document.getElementById('flashSaleScroll');
@@ -269,43 +252,6 @@ window.selectCategory = async function(catSlug, element) {
     }
 };
 
-async function loadSpecialDeals() {
-    const { data: setting } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).single();
-    const titleEl = document.getElementById('specialDealTitle');
-    if (setting && titleEl) {
-        titleEl.innerText = setting.special_deal_title || 'First order deal';
-        titleEl.style.fontFamily = setting.title_font_family || 'Poppins, sans-serif';
-        titleEl.style.fontSize = setting.title_font_size || '2rem';
-        titleEl.style.fontWeight = setting.title_font_weight || '800';
-        titleEl.style.fontStyle = setting.title_font_style || 'normal';
-    }
-
-    const { data: products } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').eq('is_special_deal', true).eq('is_available', true);
-    const container = document.getElementById('specialDealScroll');
-    const section = document.getElementById('specialDealSection');
-
-    if (products && products.length > 0) {
-        section.style.display = 'flex'; 
-        container.innerHTML = products.map(p => {
-            const offer = p.affiliate_offers?.[0] || {};
-            const sym = { USD: '$', PKR: 'Rs. ', EUR: '€' }[(offer.currency || 'USD').toUpperCase()] || '$';
-            const finalPrice = (parseFloat(offer.price) || 0) + ((parseFloat(offer.price) || 0) * ((parseFloat(offer.commission_rate) || 0) / 100));
-            return `
-                <a href="/product/${encodeURIComponent(p.slug)}" class="special-deal-card">
-                    <div class="img-box"><img src="${p.image_url || '/assets/icon-192.png'}" alt="${p.title}"></div>
-                    <div class="info-box"><div class="price">${sym}${finalPrice.toFixed(2)}</div><div class="title">${p.title}</div></div>
-                </a>`;
-        }).join('');
-    } else { section.style.display = 'none'; }
-}
-
-window.scrollSpecial = function(direction) {
-    const container = document.getElementById('specialDealScroll');
-    const scrollAmount = 300;
-    if (direction === 'left') container.scrollLeft -= scrollAmount;
-    else container.scrollLeft += scrollAmount;
-};
-
 async function loadHomepageProducts() {
     const grid = document.getElementById('productGrid');
     const flashScroll = document.getElementById('flashSaleScroll');
@@ -314,6 +260,31 @@ async function loadHomepageProducts() {
 
     try {
         if (typeof API === 'undefined' || !API.getHomepageProducts) throw new Error('API missing');
+        
+        // Fetch Global Settings First (For Flash & Special Titles)
+        const { data: settings } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).single();
+        
+        // Apply Special Deal Settings
+        if (settings && document.getElementById('specialDealTitle')) {
+            const spTitle = document.getElementById('specialDealTitle');
+            spTitle.innerText = settings.special_deal_title || 'First order deal';
+            spTitle.style.fontFamily = settings.title_font_family || 'Poppins, sans-serif';
+            spTitle.style.fontSize = settings.title_font_size || '2rem';
+            spTitle.style.fontWeight = settings.title_font_weight || '800';
+            spTitle.style.fontStyle = settings.title_font_style || 'normal';
+        }
+        
+        // Apply Flash Sale Settings
+        if (settings && document.getElementById('flashSaleTitle')) {
+            const flTitle = document.getElementById('flashSaleTitle');
+            flTitle.innerText = settings.flash_title_text || 'Mega Sale 11.11';
+            flTitle.style.fontFamily = settings.flash_title_font_family || 'Poppins, sans-serif';
+            flTitle.style.fontSize = settings.flash_title_font_size || '2rem';
+            flTitle.style.fontWeight = settings.flash_title_font_weight || '900';
+            flTitle.style.fontStyle = settings.flash_title_font_style || 'normal';
+        }
+
+        // Fetch Products
         const data = await API.getHomepageProducts();
         const raw = [...(data.featured ?? []), ...(data.trending ?? []), ...(data.latest ?? [])];
         const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false);
@@ -333,15 +304,38 @@ async function loadHomepageProducts() {
 
         if (flashSaleProducts.length > 0) {
             flashSection.style.display = 'flex';
-            document.getElementById('flashSaleTitle').innerText = flashSaleProducts[0].event_name || 'Mega Sale 11.11';
+            // If user didn't set a global title, fallback to first product's event name
+            if (!settings || !settings.flash_title_text) {
+                 document.getElementById('flashSaleTitle').innerText = flashSaleProducts[0].event_name || 'Mega Sale 11.11';
+            }
             flashScroll.innerHTML = flashSaleProducts.map(renderFlashCard).join('');
-            startFireworks(); // ⭐ Start Fireworks
+            startFireworks(); 
         } else {
             flashSection.style.display = 'none';
-            stopFireworks(); // ⭐ Stop Fireworks
+            stopFireworks(); 
         }
 
         renderProductsGrid(normalProducts, grid);
+        
+        // Load Special Deal Scroll
+        if (settings) {
+            const { data: specialProducts } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').eq('is_special_deal', true).eq('is_available', true);
+            const container = document.getElementById('specialDealScroll');
+            const section = document.getElementById('specialDealSection');
+            if (specialProducts && specialProducts.length > 0) {
+                section.style.display = 'flex'; 
+                container.innerHTML = specialProducts.map(p => {
+                    const offer = p.affiliate_offers?.[0] || {};
+                    const sym = { USD: '$', PKR: 'Rs. ', EUR: '€' }[(offer.currency || 'USD').toUpperCase()] || '$';
+                    const finalPrice = (parseFloat(offer.price) || 0) + ((parseFloat(offer.price) || 0) * ((parseFloat(offer.commission_rate) || 0) / 100));
+                    return `
+                        <a href="/product/${encodeURIComponent(p.slug)}" class="special-deal-card">
+                            <div class="img-box"><img src="${p.image_url || '/assets/icon-192.png'}" alt="${p.title}"></div>
+                            <div class="info-box"><div class="price">${sym}${finalPrice.toFixed(2)}</div><div class="title">${p.title}</div></div>
+                        </a>`;
+                }).join('');
+            } else { section.style.display = 'none'; }
+        }
 
     } catch (err) {
         console.error('Load failed:', err);
@@ -358,7 +352,6 @@ function handleSearch() {
 
 document.addEventListener('DOMContentLoaded', () => {
     loadHomepageProducts();
-    loadSpecialDeals();
     const btn = document.getElementById('searchBtn');
     const input = document.getElementById('searchInput');
     if (btn) btn.addEventListener('click', handleSearch);
