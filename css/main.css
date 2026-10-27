@@ -156,7 +156,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     border-radius: 12px; 
     overflow: hidden; 
     margin-bottom: 40px; 
-    min-height: 350px; /* Taller box */
+    min-height: 350px; 
     box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
     border: 1px solid #E2E8F0; 
 }
@@ -173,16 +173,17 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     z-index: 0; 
 }
 
-/* Top Text Area */
+/* ⭐ Top Text Area (NEW CATCHY COLOR) ⭐ */
 .flash-sale-top {
     position: relative;
     z-index: 2;
     width: 100%;
-    padding: 25px 25px 10px 25px;
+    padding: 25px 25px 15px 25px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    background: rgba(185, 28, 28, 0.95); /* Dark Red */
+    /* NAYA COLOR: Premium Navy to Purple Gradient */
+    background: linear-gradient(135deg, #1e1b4b, #4c1d95); 
     color: #fff;
 }
 
@@ -210,7 +211,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     line-height: 1.1;
     margin: 0;
     color: #fff;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
 }
 
 /* Ending Soon + Marquee Row */
@@ -255,7 +256,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     animation: marquee 10s linear infinite;
     font-size: 1rem; 
     font-weight: 600; 
-    color: #fecaca;
+    color: #e2e8f0; /* Light text for readability */
     margin: 0;
     letter-spacing: 0.5px;
 }
