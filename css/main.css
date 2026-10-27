@@ -43,24 +43,23 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     height: 100%;
     display: flex;
     align-items: center;
-    /* Light Gray Background */
-    background-color: #f0f0f0; 
+    background-color: #f3f3f3;
     border-right: 1px solid #cdcdcd;
     border-radius: 5px 0 0 5px;
     cursor: pointer;
     transition: background 0.2s;
 }
 
-.custom-category-dropdown:hover { background-color: #e0e0e0; }
+.custom-category-dropdown:hover { background-color: #e3e3e3; }
 
 .category-btn {
-    background: transparent;
-    border: none;
+    background: transparent !important; /* Force transparent taake orange na ho */
+    border: none !important;
     padding: 0 12px;
     height: 45px;
     font-size: 0.9rem;
     font-weight: 500;
-    color: #0f1111;
+    color: #0f1111 !important; /* Dark text */
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -111,8 +110,8 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 }
 .search-box input::placeholder { color: #94A3B8; }
 
-/* ⭐ Search Button (Orange) ⭐ */
-.search-box button { 
+/* ⭐ Search Button (Orange) - Sirf Search Icon ke liye ⭐ */
+.search-box #searchBtn { 
     background: var(--accent); 
     border: none; 
     color: #fff; 
@@ -125,7 +124,7 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     align-items: center; 
     justify-content: center; 
 }
-.search-box button:hover { background: #e0482d; }
+.search-box #searchBtn:hover { background: #e0482d; }
 
 /* ⭐ Scrollable Category Section ⭐ */
 .horizontal-category-scroll {
@@ -247,132 +246,20 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .left-arrow { left: 2px; }
 .right-arrow { right: 2px; }
 
-
 /* ⭐ 2. Flash Sale Split Section ⭐ */
-.flash-sale-split { 
-    display: flex; 
-    flex-direction: column; 
-    position: relative; 
-    background: #fff; 
-    border-radius: 12px; 
-    overflow: hidden; 
-    margin-bottom: 20px; 
-    min-height: 245px; 
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
-    border: 1px solid #E2E8F0; 
-}
-
-/* Background Image */
-.flash-sale-split::before { 
-    content: ""; 
-    position: absolute; 
-    inset: 0; 
-    background-image: url('https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'); 
-    background-size: cover; 
-    background-position: center; 
-    opacity: 0.15; 
-    z-index: 0; 
-}
-
-/* Top Text Area */
-.flash-sale-left {
-    position: relative;
-    z-index: 2;
-    width: 100%;
-    padding: 15px 25px 10px 25px; 
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    background: linear-gradient(135deg, #1e1b4b, #4c1d95); 
-    color: #fff;
-}
-
-/* Title Area */
-.flash-title-area {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.flash-sale-left h2 {
-    font-family: 'Poppins', sans-serif;
-    font-weight: 900;
-    font-size: 2rem;
-    line-height: 1.1;
-    margin: 0;
-    color: #fff;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-}
-
-/* ⭐ Ending Soon + Marquee Row ⭐ */
-.flash-controls {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    width: 100%;
-}
-
-/* ⭐ Ending Soon Box ⭐ */
-.blinking-ending-soon {
-    background: #fbbf24;
-    color: #7f1d1d;
-    font-weight: 900;
-    font-size: 2.2rem; 
-    padding: 8px 30px; 
-    line-height: 1.1; 
-    border-radius: 10px;
-    text-align: center;
-    animation: blink3Colors 1.5s infinite;
-    white-space: nowrap;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    border: 2px solid #fff;
-}
-
-@keyframes blink3Colors {
-    0% { background-color: #fbbf24; color: #7f1d1d; transform: scale(1); }
-    33% { background-color: #ef4444; color: white; transform: scale(1.05); }
-    66% { background-color: #3b82f6; color: white; transform: scale(1.05); }
-    100% { background-color: #fbbf24; color: #7f1d1d; transform: scale(1); }
-}
-
-/* Marquee */
-.flash-marquee-container {
-    overflow: hidden; 
-    flex: 1;
-    mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
-}
-
-.marquee-content {
-    display: inline-flex;
-    white-space: nowrap;
-    animation: marquee 15s linear infinite;
-}
-
-.marquee-content span {
-    font-size: 1.1rem; 
-    font-weight: 700; 
-    color: #e2e8f0; 
-    padding-right: 20px;
-}
-
-@keyframes marquee {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-}
-
-/* Bottom Cards Area */
-.flash-sale-right { 
-    flex: 1; 
-    padding: 10px 25px 20px 25px; 
-    position: relative; 
-    z-index: 1; 
-    display: flex; 
-    align-items: flex-end; 
-    overflow: hidden; 
-}
-
-/* Flash Sale Card Size & Timer */
+.flash-sale-split { display: flex; flex-direction: column; position: relative; background: #fff; border-radius: 12px; overflow: hidden; margin-bottom: 20px; min-height: 245px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #E2E8F0; }
+.flash-sale-split::before { content: ""; position: absolute; inset: 0; background-image: url('https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'); background-size: cover; background-position: center; opacity: 0.15; z-index: 0; }
+.flash-sale-left { position: relative; z-index: 2; width: 100%; padding: 15px 25px 10px 25px; display: flex; flex-direction: column; align-items: flex-start; background: linear-gradient(135deg, #1e1b4b, #4c1d95); color: #fff; }
+.flash-title-area { display: flex; align-items: center; margin-bottom: 10px; }
+.flash-sale-left h2 { font-family: 'Poppins', sans-serif; font-weight: 900; font-size: 2rem; line-height: 1.1; margin: 0; color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+.flash-controls { display: flex; align-items: center; gap: 20px; width: 100%; }
+.blinking-ending-soon { background: #fbbf24; color: #7f1d1d; font-weight: 900; font-size: 2.2rem; padding: 8px 30px; line-height: 1.1; border-radius: 10px; text-align: center; animation: blink3Colors 1.5s infinite; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 2px solid #fff; }
+@keyframes blink3Colors { 0% { background-color: #fbbf24; color: #7f1d1d; transform: scale(1); } 33% { background-color: #ef4444; color: white; transform: scale(1.05); } 66% { background-color: #3b82f6; color: white; transform: scale(1.05); } 100% { background-color: #fbbf24; color: #7f1d1d; transform: scale(1); } }
+.flash-marquee-container { overflow: hidden; flex: 1; mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%); -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%); }
+.marquee-content { display: inline-flex; white-space: nowrap; animation: marquee 15s linear infinite; }
+.marquee-content span { font-size: 1.1rem; font-weight: 700; color: #e2e8f0; padding-right: 20px; }
+@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.flash-sale-right { flex: 1; padding: 10px 25px 20px 25px; position: relative; z-index: 1; display: flex; align-items: flex-end; overflow: hidden; }
 .flash-card { display: flex; flex-direction: column; }
 .flash-card .info-box { flex: 2; padding: 8px; }
 .flash-card .price { font-size: 1.05rem; color: #DC2626; }
@@ -383,91 +270,38 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 .footer a { text-decoration: none; }
 .footer-disclaimer { border-top: 1px solid #334155; padding-top: 20px; margin-top: 20px; font-size: 0.8rem; opacity: 0.8; }
 
-
 /* ⭐ MOBILE RESPONSIVE ⭐ */
 @media (max-width: 768px) {
     .nav-main { flex-wrap: wrap; padding: 10px 5%; }
     .search-box { order: 3; width: 100%; max-width: none; flex-basis: 100%; margin-top: 10px; }
-    
-    /* ⭐ Special Deal Mobile (Compact) ⭐ */
     .alibaba-special-deal { flex-direction: column; min-height: auto; }
-    .special-deal-left { 
-        flex: none; 
-        padding: 12px 15px; 
-        text-align: center; 
-        align-items: center; 
-        background: rgba(105, 20, 76, 0.95); 
-    }
-    #specialDealTitle { 
-        font-size: 1.4rem !important; 
-        margin-bottom: 4px; 
-    }
-    .special-deal-subtitle { 
-        font-size: 0.8rem !important; 
-        margin-bottom: 8px; 
-    }
-    .special-deal-features { 
-        display: flex; 
-        gap: 10px; 
-        margin-bottom: 10px; 
-        justify-content: center; 
-        flex-wrap: wrap; 
-    }
-    .special-deal-features li { 
-        font-size: 0.75rem !important; 
-        margin-bottom: 0; 
-    }
-    .explore-btn { 
-        padding: 6px 15px !important; 
-        font-size: 0.8rem !important; 
-    }
+    .special-deal-left { flex: none; padding: 12px 15px; text-align: center; align-items: center; background: rgba(105, 20, 76, 0.95); }
+    #specialDealTitle { font-size: 1.4rem !important; margin-bottom: 4px; }
+    .special-deal-subtitle { font-size: 0.8rem !important; margin-bottom: 8px; }
+    .special-deal-features { display: flex; gap: 10px; margin-bottom: 10px; justify-content: center; flex-wrap: wrap; }
+    .special-deal-features li { font-size: 0.75rem !important; margin-bottom: 0; }
+    .explore-btn { padding: 6px 15px !important; font-size: 0.8rem !important; }
     .special-deal-right { padding: 10px 15px; }
     .scroll-arrow { display: none; }
-    
-    /* Smaller Cards */
     .special-deal-card { min-width: 140px; max-width: 140px; height: 190px; }
     .special-deal-card .img-box { flex: 8; }
     .special-deal-card .info-box { flex: 2; padding: 4px 6px; }
     .special-deal-card .price { font-size: 0.85rem; }
     .special-deal-card .title { font-size: 0.65rem; }
-
-    /* Flash Sale Mobile */
     .flash-sale-split { min-height: auto; }
     .flash-sale-left { padding: 15px 10px; align-items: center; text-align: center; }
     .flash-title-area { justify-content: center; margin-bottom: 8px; }
     .flash-sale-left h2 { font-size: 1.5rem !important; }
-    
     .flash-controls { flex-direction: column; gap: 10px; width: 100%; align-items: center; }
-    
-    .blinking-ending-soon { 
-        font-size: 1.4rem; 
-        padding: 6px 20px; 
-        line-height: 1.1;
-    }
-    
-    .flash-marquee-container {
-        width: 100%;
-        -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
-        mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
-    }
+    .blinking-ending-soon { font-size: 1.4rem; padding: 6px 20px; line-height: 1.1; }
+    .flash-marquee-container { width: 100%; -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%); mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%); }
     .marquee-content span { font-size: 0.85rem; }
-    
     .flash-sale-right { padding: 10px 15px 15px 15px; align-items: center; justify-content: flex-start; }
     .flash-card { min-width: 160px; max-width: 160px; height: 230px; }
-
-    /* Category Mobile Adjustments */
     .category-item { min-width: 60px; }
     .category-item .cat-icon { width: 50px; height: 50px; font-size: 1.5rem; }
     .category-item span { font-size: 0.7rem; }
-
-    /* Product Grid: 2 Columns */
-    .product-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-        margin-top: 15px;
-    }
-
-    /* Compact Card Design */
+    .product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 15px; }
     .product-card { border-radius: 8px; }
     .card-img-wrap { height: 150px; }
     .card-img-wrap img { padding: 10px; }
@@ -477,8 +311,6 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     .card-rating { font-size: 0.75rem; margin-bottom: 2px; }
     .card-timer { font-size: 0.65rem; padding: 3px 5px; margin-bottom: 5px; }
     .btn-check-price { padding: 8px; font-size: 0.8rem; }
-
-    /* Price font size fixes inside cards */
     .card-body div[style*="font-weight:bold"] { font-size: 0.9rem !important; }
     .card-body div[style*="display:flex"] span[style*="font-weight:bold"] { font-size: 1rem !important; }
     .card-body div[style*="display:flex"] span[style*="text-decoration:line-through"] { font-size: 0.75rem !important; }
