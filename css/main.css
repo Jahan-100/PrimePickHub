@@ -14,7 +14,7 @@
 body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
 
 /* Header & Modern Search Bar */
-.header { position: sticky; top: 0; z-index: 100; background: var(--card-bg); border-bottom: 1px solid var(--border); }
+.header { position: sticky; top: 0; z-index: 9999; background: var(--card-bg); border-bottom: 1px solid var(--border); }
 .nav-main { display: flex; align-items: center; justify-content: space-between; padding: 15px 5%; gap: 20px; }
 .logo { font-size: 1.8rem; font-weight: 800; color: var(--primary); text-decoration: none; font-family: 'Poppins', sans-serif; letter-spacing: -0.5px; }
 .logo span { color: var(--accent); }
@@ -27,13 +27,12 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     align-items: center; 
     border: 2px solid #94A3B8; 
     border-radius: 8px; 
-    /* overflow: hidden; <-- YEH HATA DIYA GAYA HAI TAAKE DROPDOWN BAHAR NIKAL SAKE */
-    overflow: visible; 
+    overflow: visible !important; /* Dropdown ko bahar aane ke liye */
     background: #fff; 
     transition: all 0.3s ease; 
     box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
     position: relative;
-    z-index: 999;
+    z-index: 9999;
 }
 .search-box:focus-within { 
     border-color: var(--accent); 
@@ -78,11 +77,11 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     background: #fff;
     border: 1px solid #cdcdcd;
     border-radius: 0 0 8px 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     width: 220px;
     max-height: 350px;
     overflow-y: auto;
-    z-index: 9999;
+    z-index: 99999 !important; /* Force taake sab ke upar dikhe */
     list-style: none;
     padding: 5px 0;
     margin: 0;
