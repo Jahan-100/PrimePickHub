@@ -37,19 +37,23 @@ body { background: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
     box-shadow: 0 4px 15px rgba(255, 90, 60, 0.15); 
 }
 
-/* New Dropdown Style */
+/* ⭐ Dropdown Style (Reduced 70%) ⭐ */
 .search-select {
     background: #F1F5F9;
     border: none;
     border-right: 1px solid #CBD5E1;
-    padding: 0 10px;
+    padding: 0 5px; /* Kam padding */
     height: 45px;
     outline: none;
-    font-size: 0.85rem;
+    font-size: 0.75rem; /* Chota font */
     font-weight: 600;
     color: var(--text-dark);
     cursor: pointer;
     transition: background 0.2s;
+    max-width: 90px; /* Width restricted */
+    text-overflow: ellipsis; /* Agar text bada ho toh ... aayega */
+    white-space: nowrap;
+    overflow: hidden;
 }
 .search-select:hover { background: #E2E8F0; }
 
