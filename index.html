@@ -48,18 +48,18 @@
             <!-- ⭐ Custom Amazon Style Search Box ⭐ -->
             <div class="search-box">
                 <div class="custom-category-dropdown" id="categoryDropdownWrap">
-                    <button type="button" class="category-btn" id="categoryDropdownBtn">
+                    <button type="button" class="category-btn" id="categoryDropdownBtn" onclick="toggleCatDropdown(event)">
                         <span id="categoryDropdownText">All</span>
                         <i class="fa-solid fa-caret-down" style="font-size: 0.75rem; color: #555;"></i>
                     </button>
                     <ul class="category-dropdown-menu" id="categoryDropdownMenu">
-                        <li data-value="all" class="active">All Departments</li>
-                        <li data-value="electronics">Electronics</li>
-                        <li data-value="fashion">Fashion</li>
-                        <li data-value="home-kitchen">Home & Kitchen</li>
-                        <li data-value="beauty">Beauty</li>
-                        <li data-value="sports">Sports</li>
-                        <li data-value="toys">Toys</li>
+                        <li data-value="all" class="active" onclick="selectCatDropdown('all', 'All Departments', this)">All Departments</li>
+                        <li data-value="electronics" onclick="selectCatDropdown('electronics', 'Electronics', this)">Electronics</li>
+                        <li data-value="fashion" onclick="selectCatDropdown('fashion', 'Fashion', this)">Fashion</li>
+                        <li data-value="home-kitchen" onclick="selectCatDropdown('home-kitchen', 'Home & Kitchen', this)">Home & Kitchen</li>
+                        <li data-value="beauty" onclick="selectCatDropdown('beauty', 'Beauty', this)">Beauty</li>
+                        <li data-value="sports" onclick="selectCatDropdown('sports', 'Sports', this)">Sports</li>
+                        <li data-value="toys" onclick="selectCatDropdown('toys', 'Toys', this)">Toys</li>
                     </ul>
                     <!-- Hidden input taake search JS ko koi masla na ho -->
                     <input type="hidden" id="searchCategory" value="all">
@@ -172,44 +172,35 @@
     <script src="js/app.js"></script>
     <script src="js/affiliate.js"></script>
 
-    <!-- ⭐ Dropdown Inline Script (Taake 100% kaam kare) ⭐ -->
+    <!-- ⭐ Dropdown 100% Working Script ⭐ -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const catBtn = document.getElementById('categoryDropdownBtn');
-            const catMenu = document.getElementById('categoryDropdownMenu');
-            const catText = document.getElementById('categoryDropdownText');
-            const catInput = document.getElementById('searchCategory');
+        // Dropdown Open/Close Function
+        function toggleCatDropdown(event) {
+            if(event) event.stopPropagation();
+            var menu = document.getElementById('categoryDropdownMenu');
+            if(menu) menu.classList.toggle('show');
+        }
 
-            if (catBtn && catMenu) {
-                catBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    catMenu.classList.toggle('show');
-                });
+        // Category Select Function
+        function selectCatDropdown(val, text, element) {
+            document.getElementById('categoryDropdownText').innerText = text;
+            document.getElementById('searchCategory').value = val;
+            
+            var items = document.querySelectorAll('#categoryDropdownMenu li');
+            for(var i=0; i<items.length; i++) {
+                items[i].classList.remove('active');
+            }
+            if(element) element.classList.add('active');
+            
+            document.getElementById('categoryDropdownMenu').classList.remove('show');
+        }
 
-                catMenu.querySelectorAll('li').forEach(function(li) {
-                    li.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const val = this.getAttribute('data-value');
-                        const text = this.innerText;
-                        
-                        catText.innerText = text;
-                        catInput.value = val;
-                        
-                        catMenu.querySelectorAll('li').forEach(function(item) {
-                            item.classList.remove('active');
-                        });
-                        this.classList.add('active');
-                        catMenu.classList.remove('show');
-                    });
-                });
-
-                document.addEventListener('click', function(e) {
-                    if (!catBtn.contains(e.target) && !catMenu.contains(e.target)) {
-                        catMenu.classList.remove('show');
-                    }
-                });
+        // Bahar click karne par dropdown band ho jaye
+        document.addEventListener('click', function(e) {
+            var wrap = document.getElementById('categoryDropdownWrap');
+            if (wrap && !wrap.contains(e.target)) {
+                var menu = document.getElementById('categoryDropdownMenu');
+                if(menu) menu.classList.remove('show');
             }
         });
     </script>
