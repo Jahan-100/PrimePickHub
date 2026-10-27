@@ -45,17 +45,26 @@
         <div class="nav-main">
             <a href="index.html" class="logo">PrimePick<span>Hub</span></a>
             
-            <!-- ⭐ Search Box with Category Dropdown ⭐ -->
+            <!-- ⭐ Custom Amazon Style Search Box ⭐ -->
             <div class="search-box">
-                <select id="searchCategory" class="search-select">
-                    <option value="all">All</option>
-                    <option value="electronics">Electronics</option>
-                    <option value="fashion">Fashion</option>
-                    <option value="home-kitchen">Home & Kitchen</option>
-                    <option value="beauty">Beauty</option>
-                    <option value="sports">Sports</option>
-                    <option value="toys">Toys</option>
-                </select>
+                <div class="custom-category-dropdown" id="categoryDropdownWrap">
+                    <button type="button" class="category-btn" id="categoryDropdownBtn">
+                        <span id="categoryDropdownText">All</span>
+                        <i class="fa-solid fa-caret-down" style="font-size: 0.75rem; color: #555;"></i>
+                    </button>
+                    <ul class="category-dropdown-menu" id="categoryDropdownMenu">
+                        <li data-value="all" class="active">All</li>
+                        <li data-value="electronics">Electronics</li>
+                        <li data-value="fashion">Fashion</li>
+                        <li data-value="home-kitchen">Home & Kitchen</li>
+                        <li data-value="beauty">Beauty</li>
+                        <li data-value="sports">Sports</li>
+                        <li data-value="toys">Toys</li>
+                    </ul>
+                    <!-- Hidden input taake search JS ko koi masla na ho -->
+                    <input type="hidden" id="searchCategory" value="all">
+                </div>
+                
                 <input type="text" id="searchInput" placeholder="Search products, brands, stores...">
                 <button id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i></button>
             </div>
