@@ -63,6 +63,19 @@
                     <div class="stat-card"><p style="color:#64748B;">Affiliate Clicks</p><h3 id="statClicks">0</h3></div>
                 </div>
 
+                <!-- ⭐ App Download Live/Stop Setting ⭐ -->
+                <div class="admin-card" style="background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 20px;">
+                    <h3 style="margin-top:0; color: #166534;">App Download Popup Settings</h3>
+                    <div class="form-group">
+                        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:600;">
+                            <input type="checkbox" id="appDownloadStatusToggle" style="width:auto; margin:0; transform: scale(1.3);">
+                            Show App Download Popup & Floating Button (Live)
+                        </label>
+                        <p class="helper-text" style="margin-top:8px;">Agar aap yeh box uncheck karenge, toh website par na toh QR popup aayega aur na hi corner wala floating button nazar aayega.</p>
+                    </div>
+                    <button type="button" id="saveAppSettingsBtn" class="btn-check-price" style="width:auto; padding:10px 20px; background: #16a34a;">Update App Settings</button>
+                </div>
+
                 <!-- Special Deal Title Setup -->
                 <div class="admin-card" style="background: #fdf4ff; border: 1px solid #fbcfe8; margin-bottom: 20px;">
                     <h3 style="margin-top:0; color: #9d174d;">Special Deal Section Customization</h3>
@@ -184,7 +197,6 @@
                         <div class="form-section-title">Basic Info</div>
                         <div class="form-group"><label>Product Title</label><input type="text" id="pTitle" required></div>
                         
-                        <!-- ⭐ YAHAN REGEX FIX KIYA GAYA HAI ( [a-z0-9\-]+ ) ⭐ -->
                         <div class="form-group"><label>URL Slug</label><input type="text" id="pSlug" required pattern="[a-z0-9\-]+"></div>
                         
                         <!-- Primary Image with Upload Option -->
