@@ -162,12 +162,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const basePrice = parseFloat(activeOffer.price) || 0;
         const salePrice = parseFloat(activeOffer.sale_price) || 0;
         
-        const now = new Date();
-        const isSaleActive = product.sale_end_date && new Date(product.sale_end_date) > now;
-
         let priceHtml = '';
 
-        if (isSaleActive && salePrice > 0) {
+        // ⭐ FIX: Check salePrice > 0 instead of date
+        if (salePrice > 0) {
             const convertedSale = salePrice * rate;
             const convertedOrig = basePrice * rate;
             const symbol = currencySymbols[currency] || currency + ' ';
@@ -217,8 +215,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         "offers": allOffers.map(o => {
             const p = parseFloat(o.price) || 0; 
             const sp = parseFloat(o.sale_price) || 0;
-            const isSale = product.sale_end_date && new Date(product.sale_end_date) > new Date();
-            const finalP = (isSale && sp > 0) ? sp : p;
+            const finalP = (sp > 0) ? sp : p;
             
             return { "@type": "Offer", "url": o.affiliate_url, "priceCurrency": o.currency || "USD", "price": finalP.toFixed(2), "availability": "https://schema.org/InStock", "seller": { "@type": "Organization", "name": o.store_name } };
         })
