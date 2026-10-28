@@ -453,8 +453,9 @@ function setupProductForm() {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // ⭐ VALIDATION LOGIC START ⭐
+        // ⭐ VALIDATION LOGIC WITH SCROLL & FOCUS ⭐
         let hasError = false;
+        let firstErrorElement = null;
         const requiredInputs = form.querySelectorAll('[required]');
         
         requiredInputs.forEach(input => {
@@ -462,6 +463,7 @@ function setupProductForm() {
             if (!input.value.trim()) {
                 input.classList.add('error-input');
                 hasError = true;
+                if (!firstErrorElement) firstErrorElement = input;
             }
         });
 
@@ -471,10 +473,16 @@ function setupProductForm() {
         if (!imgUrl.value.trim() && imgFile.files.length === 0) {
             imgUrl.classList.add('error-input');
             hasError = true;
+            if (!firstErrorElement) firstErrorElement = imgUrl;
         }
 
         if (hasError) {
             alert('Please fill all the required fields marked with a red star (*).');
+            if (firstErrorElement) {
+                // Scroll to the first error field and focus it
+                firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => { firstErrorElement.focus(); }, 500);
+            }
             return; // Stop form submission
         }
         // ⭐ VALIDATION LOGIC END ⭐
