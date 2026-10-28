@@ -17,6 +17,11 @@
     font-family: -apple-system, 'Segoe UI', system-ui, sans-serif; 
 }
 
+html, body {
+    overflow-x: hidden; /* Screen side mein drag/scroll na ho */
+    width: 100%;
+}
+
 body { 
     background: var(--bg-light); 
     color: var(--text-dark); 
@@ -999,17 +1004,21 @@ body {
     .nav-main { 
         flex-wrap: wrap; 
         padding: 10px 5%; 
-        gap: 10px;
+        gap: 10px; 
+        align-items: center;
     }
     
+    /* Search bar ko screen ke andar fit karne ke liye */
     .search-box { 
         order: 3; 
-        width: 100%; 
+        width: 100% !important; 
         max-width: 100%; 
         flex-basis: 100%; 
         margin-top: 10px; 
+        box-sizing: border-box;
     }
     
+    /* Notification panel ko screen ke andar adjust kiya */
     .notif-panel { 
         position: fixed; 
         top: 70px; 
