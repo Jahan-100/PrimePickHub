@@ -9,7 +9,19 @@ function escapeHTML(str) {
 function isValidExternalURL(url) { if (typeof url !== 'string') return false; try { const p = new URL(url); return p.protocol === 'https:' || p.protocol === 'http:'; } catch { return false; } }
 function isValidURL(url) { if (!url || typeof url !== 'string') return false; try { const p = new URL(url, window.location.origin); return p.protocol === 'http:' || p.protocol === 'https:'; } catch { return false; } }
 function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb; }
-function getPrimaryOffer(product) { if (!product || !Array.isArray(product.affiliate_offers)) return null; return product.affiliate_offers.find(o => o && typeof o.store_name === 'string' && isValidExternalURL(o.affiliate_url)) || null; }
+
+// ⭐ UPDATE: Card aur Product Page ki price match karne ke liye logic update kiya gaya hai
+function getPrimaryOffer(product) { 
+    if (!product || !Array.isArray(product.affiliate_offers)) return null; 
+    const offers = product.affiliate_offers.filter(o => o && isValidExternalURL(o.affiliate_url));
+    const variations = offers.filter(o => o.variation_name);
+    const defaultOffer = offers.find(o => !o.variation_name);
+    
+    // Detail page pehli variation select karta hai, isliye card par bhi pehli variation dikhayenge
+    if (variations.length > 0) return variations[0];
+    if (defaultOffer) return defaultOffer;
+    return offers[0] || null;
+}
 
 function deduplicateProducts(list) {
     if (!Array.isArray(list)) return [];
@@ -87,7 +99,6 @@ function renderProductCard(product) {
         let finalBasePrice = basePrice;
         let finalSalePrice = salePrice;
 
-        // ⭐ Commission Add Logic ⭐
         if (commissionRate > 0) {
             finalBasePrice = basePrice + (basePrice * (commissionRate / 100));
             if (salePrice > 0) {
@@ -147,15 +158,28 @@ function renderFlashCard(product) {
     const salePrice = parseFloat(primaryOffer.sale_price) || 0;
     const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
     
-    let displayPrice = salePrice > 0 ? salePrice : basePrice;
+    let finalBasePrice = basePrice;
+    let finalSalePrice = salePrice;
+
     if (commissionRate > 0) {
-        displayPrice = displayPrice + (displayPrice * (commissionRate / 100));
+        finalBasePrice = basePrice + (basePrice * (commissionRate / 100));
+        if (salePrice > 0) {
+            finalSalePrice = salePrice + (salePrice * (commissionRate / 100));
+        }
     }
     
-    let priceDisplay = `
-        <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; width: 100%;">
-            <div style="font-weight:bold; color:#FF5A3C; font-size:0.95rem;">${sym}${displayPrice.toFixed(2)}</div>
-        </div>`;
+    let priceDisplay = '';
+    if (salePrice > 0) {
+        priceDisplay = `
+            <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; width: 100%;">
+                <div style="display:flex; align-items:center; gap:4px;">
+                    <span style="text-decoration:line-through; color:#94A3B8; font-size:0.75rem;">${sym}${finalBasePrice.toFixed(2)}</span>
+                    <span style="font-weight:bold; color:#FF5A3C; font-size:0.95rem;">${sym}${finalSalePrice.toFixed(2)}</span>
+                </div>
+            </div>`;
+    } else {
+        priceDisplay = `<div class="price" style="font-size:0.95rem;">${sym}${finalBasePrice.toFixed(2)}</div>`;
+    }
 
     return `
         <a href="${productUrl}" class="special-deal-card flash-card">
@@ -356,12 +380,12 @@ async function loadHomepageProducts() {
             if (specialProducts && specialProducts.length > 0) {
                 section.style.display = 'flex'; 
                 container.innerHTML = specialProducts.map(p => {
-                    const offer = p.affiliate_offers?.[0] || {};
-                    const sym = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' }[(offer.currency || 'USD').toUpperCase()] || '$';
+                    const primaryOffer = getPrimaryOffer(p) || {};
+                    const sym = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' }[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
                     
-                    const basePrice = parseFloat(offer.price) || 0;
-                    const salePrice = parseFloat(offer.sale_price) || 0;
-                    const commissionRate = parseFloat(offer.commission_rate) || 0;
+                    const basePrice = parseFloat(primaryOffer.price) || 0;
+                    const salePrice = parseFloat(primaryOffer.sale_price) || 0;
+                    const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
                     
                     let finalBasePrice = basePrice;
                     let finalSalePrice = salePrice;
