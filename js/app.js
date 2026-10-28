@@ -328,13 +328,36 @@ async function loadHomepageProducts() {
             spTitle.style.fontStyle = settings.title_font_style || 'normal';
         }
         
+        // ⭐ Update: Flash Sale Title aur Ending Soon Button font match karne ka logic
         if (settings && document.getElementById('flashSaleTitle')) {
             const flTitle = document.getElementById('flashSaleTitle');
+            const endingSoonBtn = document.querySelector('.blinking-ending-soon');
+
+            const titleFontFamily = settings.flash_title_font_family || 'Poppins, sans-serif';
+            const titleBaseSize = settings.flash_title_font_size || '2rem';
+            const titleFontWeight = settings.flash_title_font_weight || '900';
+            const titleFontStyle = settings.flash_title_font_style || 'normal';
+
             flTitle.innerText = settings.flash_title_text || 'Mega Sale 11.11';
-            flTitle.style.fontFamily = settings.flash_title_font_family || 'Poppins, sans-serif';
-            flTitle.style.fontSize = settings.flash_title_font_size || '2rem';
-            flTitle.style.fontWeight = settings.flash_title_font_weight || '900';
-            flTitle.style.fontStyle = settings.flash_title_font_style || 'normal';
+            flTitle.style.fontFamily = titleFontFamily;
+            flTitle.style.fontSize = titleBaseSize;
+            flTitle.style.fontWeight = titleFontWeight;
+            flTitle.style.fontStyle = titleFontStyle;
+
+            if (endingSoonBtn) {
+                // Requirement 3: Match Title Font
+                endingSoonBtn.style.fontFamily = titleFontFamily;
+                endingSoonBtn.style.fontWeight = titleFontWeight;
+                endingSoonBtn.style.fontStyle = titleFontStyle;
+                
+                // Requirement 2: Font size increased by 30%
+                // Agar base font 1.2rem tha, toh 30% barhane ke baad 1.56rem hoga. Hum 1.6rem use kar rahe hain.
+                endingSoonBtn.style.fontSize = '1.6rem';
+                
+                // Requirement 1: Button size increased by 20%
+                // Padding ko 4px 15px se 5px 18px kar diya hai (taqreeban 20% zyada)
+                endingSoonBtn.style.padding = '6px 20px';
+            }
         }
 
         const data = await API.getHomepageProducts();
@@ -359,7 +382,6 @@ async function loadHomepageProducts() {
                  document.getElementById('flashSaleTitle').innerText = flashSaleProducts[0].event_name || 'Mega Sale 11.11';
             }
 
-            // ⭐ Update Explore Button Link dynamically
             const exploreBtn = document.querySelector('#flashSaleSection .explore-btn');
             if (exploreBtn) {
                 const currentEventName = flashSaleProducts[0].event_name || (settings && settings.flash_title_text) || 'Mega Sale 11.11';
@@ -644,7 +666,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('/service-worker.js')
-                .then(registration => console.log('✅ Service Worker registered! PWA is ready.'))
+                .then(registration => console.log('✅ Service Worker Registered! PWA is ready.'))
                 .catch(err => console.log('❌ Service Worker failed:', err));
         });
     }
