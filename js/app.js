@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer + Realtime Sync (Debug Version)
+ * PrimePickHub Homepage Renderer + Realtime Sync
  */
 
 function escapeHTML(str) {
@@ -267,12 +267,10 @@ async function loadHomepageProducts() {
         
         const { data: settings } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).single();
         
-        // ⭐ App Download Popup Check (Live/Stop) ⭐
         if (settings) {
-            const showApp = settings.show_app_download !== false; // Default true
+            const showApp = settings.show_app_download !== false;
             if (showApp) {
                 if (floatingAppIcon) floatingAppIcon.style.display = 'flex';
-                // Auto popup logic
                 if (!sessionStorage.getItem('appPopupShown')) {
                     setTimeout(() => {
                         toggleAppPopup();
@@ -358,7 +356,6 @@ async function loadHomepageProducts() {
 
     } catch (err) {
         console.error('Load failed:', err);
-        showGridMessage(grid, 'Products could not be loaded. Please refresh.');
     }
 }
 
@@ -386,17 +383,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const input = document.getElementById('searchInput');
     if (btn) btn.addEventListener('click', handleSearch);
     if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') handleSearch(); });
-
-    // Custom Dropdown Logic
-    const catBtn = document.getElementById('categoryDropdownBtn');
-    const catMenu = document.getElementById('categoryDropdownMenu');
-    if (catBtn && catMenu && typeof toggleCatDropdown === 'undefined') {
-        catBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            catMenu.style.display = catMenu.style.display === 'block' ? 'none' : 'block';
-        });
-    }
 });
 
 // ⭐ App Download Popup Toggle Logic ⭐
@@ -431,7 +417,6 @@ function toggleAppPopup() {
 // App Store Redirect Logic
 function redirectToStore() {
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-    
     const playStoreLink = 'https://play.google.com/store/apps/details?id=your.package.name';
     const appStoreLink = 'https://apps.apple.com/app/idYOUR_APP_ID';
     const appGalleryLink = 'https://appgallery.huawei.com/app/CYOUR_APP_ID';
@@ -447,10 +432,12 @@ function redirectToStore() {
     }
 }
 
-// ⭐ REALTIME DATABASE LISTENER (Debugging Added) ⭐
+// ⭐ REALTIME DATABASE LISTENER ⭐
 let realtimeTimeout;
 function triggerRealtimeUpdate(payload) {
-    console.log('🔥 Change Detected in Database:', payload); // Console mein dikhega
+    // Console mein data dikhane ke liye
+    console.log('🔥 Change Detected in Database:', payload); 
+    
     clearTimeout(realtimeTimeout);
     realtimeTimeout = setTimeout(() => {
         console.log('🔄 Updating Website automatically...');
@@ -459,12 +446,7 @@ function triggerRealtimeUpdate(payload) {
 }
 
 function setupRealtime() {
-    if (!window.supabaseClient) {
-        console.error('❌ Supabase Client not found. Realtime cannot start.');
-        return;
-    }
-
-    console.log('⏳ Connecting to Realtime...');
+    if (!window.supabaseClient) return;
 
     window.supabaseClient
         .channel('schema-db-changes')
