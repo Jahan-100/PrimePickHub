@@ -1,5 +1,6 @@
-const CACHE = 'primepickhub-v5'; 
-const ASSETS = ['/', '/index.html', '/css/main.css', '/js/config.js', '/js/api.js', '/js/app.js'];
+// ⭐ Naya Version v6 taake purana cache foran delete ho jaye ⭐
+const CACHE = 'primepickhub-v6'; 
+const ASSETS = ['/assets/icon-192.png', '/assets/icon-512.png']; // Sirf images cache karenge
 
 self.addEventListener('install', e => {
     e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS).catch(() => {})));
@@ -16,19 +17,13 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
     if (e.request.method !== 'GET') return;
     
-    // ⭐ NETWORK-FIRST STRATEGY (Hamesha nayi file layega, agar internet na ho toh cache se dega)
+    // ⭐ HTML, JS, aur CSS ko hamesha Network se layega (Kabhi cache nahi karega) ⭐
     if (e.request.url.includes('.html') || e.request.url.includes('.js') || e.request.url.includes('.css')) {
         e.respondWith(
-            fetch(e.request)
-                .then(response => {
-                    const responseClone = response.clone();
-                    caches.open(CACHE).then(cache => cache.put(e.request, responseClone));
-                    return response;
-                })
-                .catch(() => caches.match(e.request)) // Agar internet na ho toh cache se do
+            fetch(e.request, { cache: 'no-store' }) // 'no-store' ka matlab hai latest file lao
         );
     } else {
-        // Cache-First for images, fonts
+        // Images aur fonts ke liye pehle cache check karega, warna network se layega
         e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
     }
 });
