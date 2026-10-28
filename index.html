@@ -34,6 +34,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,800;0,900;1,800&family=Roboto:wght@400;700;900&family=Oswald:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Lobster&family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
     
     <style>
+        /* ⭐ FIX: White screen se bachne ke liye Body ka background dark kar diya hai ⭐ */
+        body.app-loading {
+            background: linear-gradient(135deg, #0f172a 0%, #1E1B4B 50%, #4c1d95 100%) !important;
+            overflow: hidden; /* Splash ke dauran scroll lock */
+            margin: 0; padding: 0;
+        }
+
         .card-timer {
             background: #FEF2F2; color: #DC2626; font-size: 0.75rem; font-weight: 800; padding: 5px 8px; border-radius: 4px; margin-bottom: 8px; text-align: center; border: 1px solid #FECACA; display: flex; align-items: center; justify-content: center; gap: 5px;
         }
@@ -41,7 +48,6 @@
         /* ⭐ SPLASH SCREEN STYLES (Modern & Trendy) ⭐ */
         #splash-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            /* Premium Dark Gradient */
             background: linear-gradient(135deg, #0f172a 0%, #1E1B4B 50%, #4c1d95 100%);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 9999999;
@@ -53,7 +59,6 @@
             opacity: 0; visibility: hidden;
         }
 
-        /* Background Animated Circles for visual appeal */
         .splash-bg-circle {
             position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.5;
             animation: float 6s ease-in-out infinite;
@@ -93,7 +98,6 @@
             animation: fadeIn 1.5s ease-in-out;
         }
 
-        /* Premium Spinner */
         .splash-loader-wrap {
             margin-top: 40px; z-index: 2; display: flex; flex-direction: column; align-items: center;
         }
@@ -117,7 +121,8 @@
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body>
+<!-- ⭐ Body par 'app-loading' class lagayi hai ⭐ -->
+<body class="app-loading">
     
     <!-- ⭐ 0. Modern Splash Screen (Preloader) ⭐ -->
     <div id="splash-screen">
@@ -125,7 +130,6 @@
         <div class="splash-bg-circle c2"></div>
         
         <div class="splash-content">
-            <!-- Logo Image (Aapka assets folder wala logo) -->
             <img src="assets/icon-192.png" alt="PrimePickHub Logo" class="splash-logo-img" onerror="this.style.display='none'">
             <h1 class="splash-title">PrimePick<span>Hub</span></h1>
             <div class="splash-subtitle">Smart Shopping · Better Choices</div>
@@ -262,7 +266,6 @@
     <script src="js/affiliate.js"></script>
 
     <script>
-        // Custom Dropdown Functions
         function toggleCatDropdown(event) {
             if(event) { event.preventDefault(); event.stopPropagation(); }
             var menu = document.getElementById('categoryDropdownMenu');
@@ -278,43 +281,40 @@
         function selectCatDropdown(val, text, element) {
             document.getElementById('categoryDropdownText').innerText = text;
             document.getElementById('searchCategory').value = val;
-            
             var items = document.querySelectorAll('#categoryDropdownMenu li');
-            for(var i=0; i<items.length; i++) {
-                items[i].classList.remove('active');
-            }
+            for(var i=0; i<items.length; i++) { items[i].classList.remove('active'); }
             if(element) element.classList.add('active');
-            
             document.getElementById('categoryDropdownMenu').style.display = 'none';
         }
 
         document.addEventListener('click', function(e) {
             var wrap = document.getElementById('categoryDropdownWrap');
             var menu = document.getElementById('categoryDropdownMenu');
-            if (wrap && !wrap.contains(e.target) && menu) {
-                menu.style.display = 'none';
+            if (wrap && !wrap.contains(e.target) && menu) { menu.style.display = 'none'; }
+        });
+
+        // ⭐ Splash Screen Fade Out Logic ⭐
+        function hideSplash() {
+            var splash = document.getElementById('splash-screen');
+            if (splash) {
+                splash.classList.add('hidden');
+                // Body se loading class hatayein taake normal background wapas aaye
+                document.body.classList.remove('app-loading');
+                // 800ms baad DOM se hata dein
+                setTimeout(() => { splash.style.display = 'none'; }, 800); 
             }
-        });
+        }
 
-        // ⭐ Splash Screen Logic (Fade Out after load) ⭐
+        // Jab page load ho jaye toh 1.5 second baad hide karein
         window.addEventListener('load', function() {
-            // 1.5 seconds wait karein taake user animation dekh sake
-            setTimeout(function() {
-                var splash = document.getElementById('splash-screen');
-                if (splash) {
-                    splash.classList.add('hidden');
-                    // Animation ke baad DOM se hide kar dein taake memory free ho
-                    setTimeout(() => { splash.style.display = 'none'; }, 800); 
-                }
-            }, 1500); 
+            setTimeout(hideSplash, 1500); 
         });
 
-        // Ek fallback timer bhi laga dein (agar koi image load na ho toh 3.5 second baad splash hat jaye)
+        // Fallback timer (Agar koi image load na ho toh 3.5 second baad khud hat jaye)
         setTimeout(function() {
             var splash = document.getElementById('splash-screen');
             if (splash && !splash.classList.contains('hidden')) {
-                splash.classList.add('hidden');
-                setTimeout(() => { splash.style.display = 'none'; }, 800);
+                hideSplash();
             }
         }, 3500);
     </script>
