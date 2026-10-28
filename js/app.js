@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer
+ * PrimePickHub Homepage Renderer + Realtime Sync
  */
 
 function escapeHTML(str) {
@@ -380,6 +380,8 @@ function handleSearch() {
 
 document.addEventListener('DOMContentLoaded', () => {
     loadHomepageProducts();
+    setupRealtime(); // ⭐ Realtime Start ⭐
+
     const btn = document.getElementById('searchBtn');
     const input = document.getElementById('searchInput');
     if (btn) btn.addEventListener('click', handleSearch);
@@ -443,4 +445,30 @@ function redirectToStore() {
     } else {
         window.location.href = playStoreLink;
     }
+}
+
+// ⭐ REALTIME DATABASE LISTENER (Bina refresh live update) ⭐
+let realtimeTimeout;
+function triggerRealtimeUpdate() {
+    clearTimeout(realtimeTimeout);
+    // 500ms ka delay taake multiple database changes ek sath process hon
+    realtimeTimeout = setTimeout(() => {
+        console.log('Realtime update received! Refreshing data...');
+        loadHomepageProducts();
+    }, 500); 
+}
+
+function setupRealtime() {
+    if (!window.supabaseClient) return;
+
+    window.supabaseClient
+        .channel('schema-db-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, triggerRealtimeUpdate)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'affiliate_offers' }, triggerRealtimeUpdate)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'site_settings' }, triggerRealtimeUpdate)
+        .subscribe((status) => {
+            if (status === 'SUBSCRIBED') {
+                console.log('✅ Realtime connected! Live updates are ON.');
+            }
+        });
 }
