@@ -80,7 +80,6 @@ function renderProductCard(product) {
         const offerCurrency = (primaryOffer.currency || 'USD').toUpperCase();
         const offerSymbol = currencySymbols[offerCurrency] || offerCurrency + ' ';
         
-        // ⭐ FIX: Only use Base Price and Sale Price (No Commission addition) ⭐
         const basePrice = parseFloat(primaryOffer.price) || 0;
         const salePrice = parseFloat(primaryOffer.sale_price) || 0;
         
@@ -90,14 +89,12 @@ function renderProductCard(product) {
         let priceDisplay = '';
 
         if (isSaleActive && salePrice > 0) {
-            // Show Base Price Strikethrough + Sale Price Bold
             priceDisplay = `
                 <div style="margin-bottom:5px; display:flex; align-items:center; gap:8px;">
                     <span style="text-decoration:line-through; color:#94A3B8; font-size:0.9rem;">${offerSymbol}${basePrice.toFixed(2)}</span>
                     <span style="font-weight:bold; color:#FF5A3C; font-size:1.2rem;">${offerSymbol}${salePrice.toFixed(2)}</span>
                 </div>`;
         } else {
-            // Show only Base Price
             priceDisplay = `<div style="font-weight:bold; color:#1E1B4B; margin-bottom:5px;">${offerSymbol}${basePrice.toFixed(2)}</div>`;
         }
 
