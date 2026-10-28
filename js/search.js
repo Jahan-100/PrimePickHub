@@ -57,15 +57,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
         const offerSymbol = currencySymbols[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
         
+        // ⭐ FIX: Check salePrice > 0 instead of date
         const basePrice = parseFloat(primaryOffer.price) || 0;
         const salePrice = parseFloat(primaryOffer.sale_price) || 0;
         
-        const now = new Date();
-        const isSaleActive = p.sale_end_date && new Date(p.sale_end_date) > now;
-
         let priceDisplay = '';
 
-        if (isSaleActive && salePrice > 0) {
+        if (salePrice > 0) {
             priceDisplay = `
                 <div style="margin: 5px 0 10px 0; display:flex; align-items:center; gap:8px;">
                     <span style="text-decoration:line-through; color:#94A3B8; font-size:0.9rem;">${offerSymbol}${basePrice.toFixed(2)}</span>
