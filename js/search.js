@@ -9,12 +9,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const query = params.get('q') || '';
     const category = params.get('cat') || '';
     const isSpecial = params.get('special') === 'true';
+    const isFlash = params.get('flash') === 'true';
+    const flashEvent = params.get('event'); // ⭐ Flash Event Name
     const grid = document.getElementById('searchGrid');
     const title = document.getElementById('searchTitle');
 
     if (title) {
         if (isSpecial) {
             title.innerText = 'Special Deals';
+        } else if (isFlash) {
+            title.innerText = flashEvent ? `${flashEvent} Deals` : 'Flash Sale Deals';
         } else {
             let titleText = query ? `Results for "${query}"` : 'All Products';
             if (category) titleText += ` in ${category}`;
@@ -32,6 +36,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .select('*, affiliate_offers(*)')
                 .eq('is_special_deal', true)
                 .eq('is_available', true);
+            if (!error) results = data || [];
+        } else if (isFlash) {
+            const now = new Date().toISOString();
+            let req = window.supabaseClient
+                .from('products')
+                .select('*, affiliate_offers(*)')
+                .gt('sale_end_date', now) 
+                .eq('is_available', true);
+            
+            // ⭐ Agar specific event ka naam URL mein hai toh sirf usi ki products layein
+            if (flashEvent) {
+                req = req.eq('event_name', flashEvent);
+            }
+            
+            const { data, error } = await req;
             if (!error) results = data || [];
         } else {
             results = await API.searchProducts({ query, category });
