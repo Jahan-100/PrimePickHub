@@ -103,19 +103,39 @@
                             </div>
 
                             <div class="form-group"><label>Video URL (YouTube - Optional)</label><input type="url" id="pVideo" placeholder="https://www.youtube.com/watch?v=..."></div>
-                            <div class="form-group"><label>Category</label><select id="pCategory"></select></div>
-                            
-                            <div class="form-group"><label>Badge (Optional)</label><input type="text" id="pBadge" placeholder="Best Seller"></div>
-                            <div style="display: flex; gap: 10px;">
-                                <div class="form-group" style="flex:1;"><label>Rating (1-5)</label><input type="number" step="0.1" min="1" max="5" id="pRating"></div>
-                                <div class="form-group" style="flex:1;"><label>Reviews Count</label><input type="number" id="pReviewsCount"></div>
+
+                            <!-- ⭐ Ek hi line mein Category, Badge, Rating, Reviews ⭐ -->
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <div class="form-group" style="flex: 1; min-width: 120px;">
+                                    <label>Category</label>
+                                    <select id="pCategory" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></select>
+                                </div>
+                                <div class="form-group" style="flex: 1; min-width: 120px;">
+                                    <label>Badge (Optional)</label>
+                                    <input type="text" id="pBadge" placeholder="Best Seller" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
+                                </div>
+                                <div class="form-group" style="flex: 1; min-width: 100px;">
+                                    <label>Rating (1-5)</label>
+                                    <input type="number" step="0.1" min="1" max="5" id="pRating" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
+                                </div>
+                                <div class="form-group" style="flex: 1; min-width: 100px;">
+                                    <label>Reviews Count</label>
+                                    <input type="number" id="pReviewsCount" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
+                                </div>
                             </div>
 
                             <div class="form-section-title" style="color: #FF5A3C;">Flash Sale / Special Event (Optional)</div>
-                            <div class="form-group"><label>Event Name (e.g. 11.11 Sale)</label><input type="text" id="pEventName" placeholder="11.11 Mega Sale"></div>
-                            <div class="form-group">
-                                <label>Sale End Date & Time</label>
-                                <input type="datetime-local" id="pSaleEndDate">
+                            
+                            <!-- ⭐ Ek hi line mein Event Name aur Sale End Date ⭐ -->
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <div class="form-group" style="flex: 1; min-width: 150px;">
+                                    <label>Event Name (e.g. 11.11 Sale)</label>
+                                    <input type="text" id="pEventName" placeholder="11.11 Mega Sale" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
+                                </div>
+                                <div class="form-group" style="flex: 1; min-width: 150px;">
+                                    <label>Sale End Date & Time</label>
+                                    <input type="datetime-local" id="pSaleEndDate" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
+                                </div>
                             </div>
 
                             <div class="form-section-title">Main Offer Details</div>
