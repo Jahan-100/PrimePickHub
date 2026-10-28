@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer + Realtime Sync
+ * PrimePickHub Homepage Renderer + Realtime Sync (Debug Version)
  */
 
 function escapeHTML(str) {
@@ -447,19 +447,24 @@ function redirectToStore() {
     }
 }
 
-// ⭐ REALTIME DATABASE LISTENER (Bina refresh live update) ⭐
+// ⭐ REALTIME DATABASE LISTENER (Debugging Added) ⭐
 let realtimeTimeout;
-function triggerRealtimeUpdate() {
+function triggerRealtimeUpdate(payload) {
+    console.log('🔥 Change Detected in Database:', payload); // Console mein dikhega
     clearTimeout(realtimeTimeout);
-    // 500ms ka delay taake multiple database changes ek sath process hon
     realtimeTimeout = setTimeout(() => {
-        console.log('Realtime update received! Refreshing data...');
+        console.log('🔄 Updating Website automatically...');
         loadHomepageProducts();
     }, 500); 
 }
 
 function setupRealtime() {
-    if (!window.supabaseClient) return;
+    if (!window.supabaseClient) {
+        console.error('❌ Supabase Client not found. Realtime cannot start.');
+        return;
+    }
+
+    console.log('⏳ Connecting to Realtime...');
 
     window.supabaseClient
         .channel('schema-db-changes')
@@ -469,6 +474,8 @@ function setupRealtime() {
         .subscribe((status) => {
             if (status === 'SUBSCRIBED') {
                 console.log('✅ Realtime connected! Live updates are ON.');
+            } else {
+                console.log('⚠️ Realtime Status:', status);
             }
         });
 }
