@@ -350,13 +350,11 @@ async function loadHomepageProducts() {
                 endingSoonBtn.style.fontWeight = titleFontWeight;
                 endingSoonBtn.style.fontStyle = titleFontStyle;
                 
-                // Requirement 2: Font size increased by 30%
-                // Agar base font 1.2rem tha, toh 30% barhane ke baad 1.56rem hoga. Hum 1.6rem use kar rahe hain.
-                endingSoonBtn.style.fontSize = '1.6rem';
+                // Requirement 2: Font size increased by 20% (pichle 1.6rem se 1.92rem)
+                endingSoonBtn.style.fontSize = '1.92rem';
                 
-                // Requirement 1: Button size increased by 20%
-                // Padding ko 4px 15px se 5px 18px kar diya hai (taqreeban 20% zyada)
-                endingSoonBtn.style.padding = '6px 20px';
+                // Requirement 1: Button size increased by 20% (pichle 6px 20px se 7px 24px)
+                endingSoonBtn.style.padding = '7px 24px';
             }
         }
 
@@ -666,7 +664,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('/service-worker.js')
-                .then(registration => console.log('✅ Service Worker Registered! PWA is ready.'))
+                .then(registration => console.log('✅ Service Worker registered! PWA is ready.'))
                 .catch(err => console.log('❌ Service Worker failed:', err));
         });
     }
