@@ -42,20 +42,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
         const offerSymbol = currencySymbols[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
         
-        // ⭐ FIX: Check salePrice > 0 instead of date
         const basePrice = parseFloat(primaryOffer.price) || 0;
         const salePrice = parseFloat(primaryOffer.sale_price) || 0;
+        const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
+        
+        let finalBasePrice = basePrice;
+        let finalSalePrice = salePrice;
+
+        if (commissionRate > 0) {
+            finalBasePrice = basePrice + (basePrice * (commissionRate / 100));
+            if (salePrice > 0) {
+                finalSalePrice = salePrice + (salePrice * (commissionRate / 100));
+            }
+        }
         
         let priceDisplay = '';
 
         if (salePrice > 0) {
             priceDisplay = `
                 <div style="margin: 5px 0 10px 0; display:flex; align-items:center; gap:8px;">
-                    <span style="text-decoration:line-through; color:#94A3B8; font-size:0.9rem;">${offerSymbol}${basePrice.toFixed(2)}</span>
-                    <span style="font-weight:bold; color:#FF5A3C; font-size:1.1rem;">${offerSymbol}${salePrice.toFixed(2)}</span>
+                    <span style="text-decoration:line-through; color:#94A3B8; font-size:0.9rem;">${offerSymbol}${finalBasePrice.toFixed(2)}</span>
+                    <span style="font-weight:bold; color:#FF5A3C; font-size:1.1rem;">${offerSymbol}${finalSalePrice.toFixed(2)}</span>
                 </div>`;
         } else {
-            priceDisplay = `<div style="font-weight:bold; color:#1E1B4B; margin: 5px 0 10px 0; font-size:1.1rem;">${offerSymbol}${basePrice.toFixed(2)}</div>`;
+            priceDisplay = `<div style="font-weight:bold; color:#1E1B4B; margin: 5px 0 10px 0; font-size:1.1rem;">${offerSymbol}${finalBasePrice.toFixed(2)}</div>`;
         }
 
         const pUrl = p.slug ? `/product/${encodeURIComponent(p.slug)}` : '#';
