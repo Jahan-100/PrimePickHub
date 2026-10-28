@@ -10,14 +10,11 @@ function isValidExternalURL(url) { if (typeof url !== 'string') return false; tr
 function isValidURL(url) { if (!url || typeof url !== 'string') return false; try { const p = new URL(url, window.location.origin); return p.protocol === 'http:' || p.protocol === 'https:'; } catch { return false; } }
 function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb; }
 
-// ⭐ UPDATE: Hamesha Main Offer (Base Price) ko priority dein
+// ⭐ Update: Hamesha Pehla Offer (Main Offer) pick karein
 function getPrimaryOffer(product) { 
     if (!product || !Array.isArray(product.affiliate_offers)) return null; 
     const offers = product.affiliate_offers.filter(o => o && isValidExternalURL(o.affiliate_url));
-    const defaultOffer = offers.find(o => !o.variation_name);
-    
-    // Return main offer if it exists, otherwise fallback to first available
-    return defaultOffer || offers[0] || null;
+    return offers[0] || null;
 }
 
 function deduplicateProducts(list) {
