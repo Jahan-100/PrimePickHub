@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(window.location.search);
     const query = params.get('q') || '';
     const category = params.get('cat') || '';
-    const isSpecial = params.get('special') === 'true'; // ⭐ Special Deal check
+    const isSpecial = params.get('special') === 'true';
     const grid = document.getElementById('searchGrid');
     const title = document.getElementById('searchTitle');
 
@@ -27,16 +27,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     let results = [];
     try {
         if (isSpecial) {
-            // ⭐ صرف اسپیشل ڈیلز والی پروڈکٹس لائیں
             const { data, error } = await window.supabaseClient
                 .from('products')
                 .select('*, affiliate_offers(*)')
                 .eq('is_special_deal', true)
                 .eq('is_available', true);
-            
             if (!error) results = data || [];
         } else {
-            // باقی نارمل سرچ
             results = await API.searchProducts({ query, category });
         }
     } catch (err) {
@@ -44,9 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (!results || results.length === 0) {
-        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;">
-            <p>No products found.</p>
-        </div>`;
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;"><p>No products found.</p></div>`;
         return;
     }
 
@@ -62,28 +57,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
         const offerSymbol = currencySymbols[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
         
+        // ⭐ FIX: Only base price and sale price (No commission addition)
         const basePrice = parseFloat(primaryOffer.price) || 0;
         const salePrice = parseFloat(primaryOffer.sale_price) || 0;
-        const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
         
         const now = new Date();
         const isSaleActive = p.sale_end_date && new Date(p.sale_end_date) > now;
 
-        let finalPrice = basePrice;
         let priceDisplay = '';
 
         if (isSaleActive && salePrice > 0) {
-            const finalSale = commissionRate > 0 ? salePrice + (salePrice * (commissionRate / 100)) : salePrice;
-            const finalOrig = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice;
-            
             priceDisplay = `
                 <div style="margin: 5px 0 10px 0; display:flex; align-items:center; gap:8px;">
-                    <span style="text-decoration:line-through; color:#94A3B8; font-size:0.9rem;">${offerSymbol}${finalOrig.toFixed(2)}</span>
-                    <span style="font-weight:bold; color:#FF5A3C; font-size:1.1rem;">${offerSymbol}${finalSale.toFixed(2)}</span>
+                    <span style="text-decoration:line-through; color:#94A3B8; font-size:0.9rem;">${offerSymbol}${basePrice.toFixed(2)}</span>
+                    <span style="font-weight:bold; color:#FF5A3C; font-size:1.1rem;">${offerSymbol}${salePrice.toFixed(2)}</span>
                 </div>`;
         } else {
-            finalPrice = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice;
-            priceDisplay = `<div style="font-weight:bold; color:#1E1B4B; margin: 5px 0 10px 0; font-size:1.1rem;">${offerSymbol}${finalPrice.toFixed(2)}</div>`;
+            priceDisplay = `<div style="font-weight:bold; color:#1E1B4B; margin: 5px 0 10px 0; font-size:1.1rem;">${offerSymbol}${basePrice.toFixed(2)}</div>`;
         }
 
         const pUrl = p.slug ? `/product/${encodeURIComponent(p.slug)}` : '#';
