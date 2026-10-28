@@ -1188,3 +1188,19 @@ body {
         min-width: 0 !important;
     }
 }
+/* ⭐ Mobile Notification Panel Overflow Fix ⭐ */
+@media (max-width: 768px) {
+    .notif-panel {
+        position: fixed !important;
+        top: 130px !important; /* Search bar ke bilkul neeche adjust kiya hai */
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important; /* Perfect center karne ke liye */
+        width: 92vw !important; /* Screen ki width ke hisaab se fit ho jaye */
+        max-width: 400px !important;
+        max-height: 75vh !important;
+        z-index: 999999 !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important;
+        border-radius: 12px !important;
+    }
+}
