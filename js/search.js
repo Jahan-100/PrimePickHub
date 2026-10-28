@@ -46,7 +46,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     grid.innerHTML = results.map(p => {
-        const primaryOffer = (p.affiliate_offers && p.affiliate_offers[0]) || {};
+        // ⭐ UPDATE: Get First Variation or Default Offer (Same as Product Page)
+        const offers = p.affiliate_offers || [];
+        const variations = offers.filter(o => o.variation_name);
+        const defaultOffer = offers.find(o => !o.variation_name);
+        const primaryOffer = (variations.length > 0 ? variations[0] : defaultOffer) || offers[0] || {};
+        
         const storeName = primaryOffer.store_name || 'Amazon';
         
         const cfg = CONFIG.networks[storeName.toLowerCase()] || CONFIG.networks.amazon;
