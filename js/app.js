@@ -259,6 +259,7 @@ async function loadHomepageProducts() {
     const grid = document.getElementById('productGrid');
     const flashScroll = document.getElementById('flashSaleScroll');
     const flashSection = document.getElementById('flashSaleSection');
+    const floatingAppIcon = document.getElementById('floatingAppIcon');
     if (!grid) return;
 
     try {
@@ -266,6 +267,27 @@ async function loadHomepageProducts() {
         
         const { data: settings } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).single();
         
+        // ⭐ App Download Popup Check (Live/Stop) ⭐
+        if (settings) {
+            const showApp = settings.show_app_download !== false; // Default true
+            if (showApp) {
+                if (floatingAppIcon) floatingAppIcon.style.display = 'flex';
+                // Auto popup logic
+                if (!sessionStorage.getItem('appPopupShown')) {
+                    setTimeout(() => {
+                        toggleAppPopup();
+                        sessionStorage.setItem('appPopupShown', 'true');
+                    }, 3000);
+                }
+            } else {
+                if (floatingAppIcon) floatingAppIcon.style.display = 'none';
+                const popup = document.getElementById('appDownloadPopup');
+                const overlay = document.getElementById('appPopupOverlay');
+                if (popup) popup.style.display = 'none';
+                if (overlay) overlay.style.display = 'none';
+            }
+        }
+
         if (settings && document.getElementById('specialDealTitle')) {
             const spTitle = document.getElementById('specialDealTitle');
             spTitle.innerText = settings.special_deal_title || 'First order deal';
@@ -363,7 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btn) btn.addEventListener('click', handleSearch);
     if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') handleSearch(); });
 
-    // Custom Dropdown Logic (If inline script fails)
+    // Custom Dropdown Logic
     const catBtn = document.getElementById('categoryDropdownBtn');
     const catMenu = document.getElementById('categoryDropdownMenu');
     if (catBtn && catMenu && typeof toggleCatDropdown === 'undefined') {
@@ -384,7 +406,6 @@ function toggleAppPopup() {
     
     if (!popup || !overlay) return;
 
-    // Agar popup band hai, toh open karein
     if (popup.style.display === 'none' || popup.style.display === '') {
         const userAgent = navigator.userAgent || navigator.vendor || window.opera;
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
@@ -399,9 +420,7 @@ function toggleAppPopup() {
 
         popup.style.display = 'block';
         overlay.style.display = 'block';
-    } 
-    // Agar popup open hai, toh band karein
-    else {
+    } else {
         popup.style.display = 'none';
         overlay.style.display = 'none';
     }
@@ -411,28 +430,17 @@ function toggleAppPopup() {
 function redirectToStore() {
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     
-    // 🔴 YAHAN APNE APP STORES KE ASAL LINKS DAALEIN 🔴
     const playStoreLink = 'https://play.google.com/store/apps/details?id=your.package.name';
     const appStoreLink = 'https://apps.apple.com/app/idYOUR_APP_ID';
-    const appGalleryLink = 'https://appgallery.huawei.com/app/C_YOUR_APP_ID';
+    const appGalleryLink = 'https://appgallery.huawei.com/app/CYOUR_APP_ID';
 
     if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-        window.location.href = appStoreLink; // Apple App Store
+        window.location.href = appStoreLink;
     } else if (/Huawei|HONOR/i.test(userAgent)) {
-        window.location.href = appGalleryLink; // Huawei AppGallery
+        window.location.href = appGalleryLink;
     } else if (/android/i.test(userAgent)) {
-        window.location.href = playStoreLink; // Google Play Store
+        window.location.href = playStoreLink;
     } else {
         window.location.href = playStoreLink;
     }
 }
-
-// Pehli dafa popup automatically dikhane ke liye (Sirf 1 dafa per session)
-document.addEventListener('DOMContentLoaded', function() {
-    if (!sessionStorage.getItem('appPopupShown')) {
-        setTimeout(() => {
-            toggleAppPopup();
-            sessionStorage.setItem('appPopupShown', 'true');
-        }, 3000); // 3 second baad khulega
-    }
-});
