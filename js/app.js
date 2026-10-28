@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer + Realtime + Notifications + PWA
+ * PrimePickHub Homepage Renderer + Realtime + Notifications + PWA + Tracking
  */
 
 function escapeHTML(str) {
@@ -273,8 +273,6 @@ async function loadHomepageProducts() {
         
         if (settings) {
             const showApp = settings.show_app_download !== false;
-            
-            // ⭐ PWA Detection: Agar app standalone mode (PWA) mein chal rahi hai toh popup mat dikhao ⭐
             const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
             if (showApp && !isPWA) {
@@ -286,7 +284,6 @@ async function loadHomepageProducts() {
                     }, 3000);
                 }
             } else {
-                // Hide both if PWA or if admin stopped it
                 if (floatingAppIcon) floatingAppIcon.style.display = 'none';
                 const popup = document.getElementById('appDownloadPopup');
                 const overlay = document.getElementById('appPopupOverlay');
@@ -538,7 +535,41 @@ function setupRealtime() {
         });
 }
 
+// ⭐ NEW TRACKING FUNCTIONS ⭐
+async function trackVisitor() {
+    if (!window.supabaseClient) return;
+    let visitorId = localStorage.getItem('visitor_id');
+    if (!visitorId) {
+        visitorId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
+        localStorage.setItem('visitor_id', visitorId);
+    }
+    await window.supabaseClient.from('website_visitors').upsert({
+        visitor_id: visitorId,
+        last_seen: new Date().toISOString()
+    }, { onConflict: 'visitor_id' });
+}
+
+async function trackActiveApp() {
+    if (!window.supabaseClient) return;
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (!isPWA) return;
+
+    let deviceId = localStorage.getItem('device_id');
+    if (!deviceId) {
+        deviceId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
+        localStorage.setItem('device_id', deviceId);
+    }
+    await window.supabaseClient.from('active_app_installs').upsert({
+        device_id: deviceId,
+        last_active: new Date().toISOString()
+    }, { onConflict: 'device_id' });
+}
+
+// ⭐ DOMContentLoaded Initialization ⭐
 document.addEventListener('DOMContentLoaded', () => {
+    trackVisitor(); // Track website visitors
+    trackActiveApp(); // Track app installs
+    
     loadHomepageProducts();
     setupRealtime(); 
     loadNotifications();
