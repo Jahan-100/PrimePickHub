@@ -1,7 +1,7 @@
 :root {
     --primary: #1E1B4B;
     --accent: #FF5A3C;
-    --bg-light: #F8FAFC;
+    --bg-light: #f8fafc;
     --card-bg: #FFFFFF;
     --text-dark: #0F172A;
     --text-muted: #64748B;
@@ -18,23 +18,36 @@
 }
 
 html, body {
-    overflow-x: hidden; /* Screen side mein drag na ho */
+    overflow-x: hidden;
     width: 100%;
 }
 
+/* ⭐ NEW TRENDY MESH GRADIENT BACKGROUND ⭐ */
 body { 
-    background: var(--bg-light); 
+    background-color: #f8fafc;
+    background-image: 
+        radial-gradient(at 0% 0%, hsla(253,16%,7%,0) 0, transparent 50%), 
+        radial-gradient(at 50% 0%, hsla(225,39%,30%,0) 0, transparent 50%), 
+        radial-gradient(at 100% 0%, hsla(339,49%,30%,0) 0, transparent 50%),
+        radial-gradient(at 0% 50%, rgba(224, 195, 252, 0.4) 0px, transparent 50%),
+        radial-gradient(at 100% 50%, rgba(142, 197, 252, 0.4) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, rgba(161, 255, 206, 0.4) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(252, 182, 159, 0.4) 0px, transparent 50%);
+    background-attachment: fixed;
     color: var(--text-dark); 
     line-height: 1.5; 
 }
 
-/* ⭐ Header & Search Bar ⭐ */
+/* ⭐ Header with Glassmorphism (Transparent Blur) ⭐ */
 .header { 
     position: sticky; 
     top: 0; 
     z-index: 99990 !important; 
-    background: var(--card-bg); 
-    border-bottom: 1px solid var(--border); 
+    background: rgba(255, 255, 255, 0.85); 
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.3); 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
 }
 
 .nav-main { 
@@ -56,6 +69,7 @@ body {
 
 .logo span { color: var(--accent); }
 
+/* ⭐ Amazon Style Search Box ⭐ */
 .search-box { 
     flex: 1; 
     max-width: 700px; 
@@ -142,7 +156,7 @@ body {
     font-size: 0.95rem; 
     color: var(--text-dark); 
     background: transparent; 
-    min-width: 0; /* Input shrink fix */
+    min-width: 0; 
 }
 
 .search-box input::placeholder { color: #94A3B8; }
@@ -250,7 +264,10 @@ body {
     flex-direction: column; 
 }
 
-.product-card:hover { transform: translateY(-4px); }
+.product-card:hover { 
+    transform: translateY(-4px); 
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+}
 
 .card-img-wrap { height: 200px; position: relative; overflow: hidden; background: #fff; }
 .card-img-wrap img { width: 100%; height: 100%; object-fit: contain; padding: 15px; }
@@ -539,7 +556,6 @@ body {
 /* ⭐ MOBILE RESPONSIVE (Merged & Cleaned) ⭐ */
 /* ⭐ ========================================= ⭐ */
 @media (max-width: 768px) {
-    /* Header layout */
     .nav-main { 
         flex-wrap: wrap; 
         padding: 10px 4%; 
@@ -548,7 +564,6 @@ body {
         justify-content: space-between;
     }
     
-    /* Un-nest the wrapper div to arrange items */
     .nav-main > div { display: contents !important; }
 
     .logo { order: 1; font-size: 1.5rem; }
@@ -559,7 +574,6 @@ body {
         margin-right: 0 !important; 
     }
 
-    /* Search Box Fit */
     .search-box { 
         order: 3; 
         width: 100% !important; 
@@ -579,7 +593,6 @@ body {
         white-space: nowrap;
     }
 
-    /* Notification Panel attached to Bell & fitting screen */
     .notif-panel { 
         position: absolute !important; 
         top: 45px !important;
@@ -592,7 +605,6 @@ body {
         z-index: 100000 !important;
     }
 
-    /* Special Deal Adjustments */
     .alibaba-special-deal { flex-direction: column; min-height: auto; }
     .special-deal-left { flex: none; padding: 12px 15px; text-align: center; align-items: center; background: rgba(105, 20, 76, 0.95); }
     #specialDealTitle { font-size: 1.4rem !important; margin-bottom: 4px; }
@@ -608,7 +620,6 @@ body {
     .special-deal-card .price { font-size: 0.85rem; }
     .special-deal-card .title { font-size: 0.65rem; }
 
-    /* Flash Sale Adjustments */
     .flash-sale-split { min-height: auto; }
     .flash-sale-left { padding: 15px 10px; align-items: center; text-align: center; }
     .flash-title-area { justify-content: center; margin-bottom: 8px; }
@@ -620,12 +631,10 @@ body {
     .flash-sale-right { padding: 10px 15px 15px 15px; align-items: center; justify-content: flex-start; }
     .flash-card { min-width: 160px; max-width: 160px; height: 230px; }
 
-    /* Categories Adjustments */
     .category-item { min-width: 60px; }
     .category-item .cat-icon { width: 50px; height: 50px; font-size: 1.5rem; }
     .category-item span { font-size: 0.7rem; }
 
-    /* Product Grid Adjustments */
     .product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 15px; }
     .product-card { border-radius: 8px; }
     .card-img-wrap { height: 150px; }
@@ -637,12 +646,10 @@ body {
     .card-timer { font-size: 0.65rem; padding: 3px 5px; margin-bottom: 5px; }
     .btn-check-price { padding: 8px; font-size: 0.8rem; }
 
-    /* Price Font Size Fixes */
     .card-body div[style*="font-weight:bold"] { font-size: 0.9rem !important; }
     .card-body div[style*="display:flex"] span[style*="font-weight:bold"] { font-size: 1rem !important; }
     .card-body div[style*="display:flex"] span[style*="text-decoration:line-through"] { font-size: 0.75rem !important; }
 
-    /* Mobile Floating Icon & Popup */
     .floating-app-btn { bottom: 15px; right: 15px; width: 50px; height: 50px; }
     .floating-app-btn img { width: 32px; height: 32px; }
     .app-popup-content { width: 90vw; max-width: 320px; }
