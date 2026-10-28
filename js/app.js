@@ -554,6 +554,15 @@ document.addEventListener('DOMContentLoaded', () => {
     setupRealtime(); 
     loadNotifications();
 
+    // ⭐ PWA Service Worker Register ⭐
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(registration => console.log('✅ Service Worker registered! PWA is ready.'))
+                .catch(err => console.log('❌ Service Worker failed:', err));
+        });
+    }
+
     const btn = document.getElementById('searchBtn');
     const input = document.getElementById('searchInput');
     if (btn) btn.addEventListener('click', handleSearch);
