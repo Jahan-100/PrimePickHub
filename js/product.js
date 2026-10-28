@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const allOffers = product.affiliate_offers || [];
     const defaultOffer = allOffers[0] || { price: '0', store_name: 'Store', currency: 'USD', commission_rate: 0, sale_price: null };
     
-    // ⭐ UPDATE: Ab saare offers (Main + Variations) is list mein aayenge
+    // Ab saare offers (Main + Variations) is list mein aayenge
     const variations = allOffers; 
 
     const baseCurrency = (defaultOffer.currency || 'USD').toUpperCase();
@@ -183,9 +183,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         let priceHtml = '';
 
-        // ⭐ Price ke sath Variation Name bhi show karein
-        const varLabel = activeOffer.variation_name ? `<span style="font-weight:bold; color:#1E1B4B; font-size:1.1rem; margin-right:5px; background:#F1F5F9; padding:2px 6px; border-radius:4px;">${escapeHTML(activeOffer.variation_name)}:</span>` : '';
-
+        // ⭐ Yahan se extra label (M (UK 10):) hata diya gaya hai
         if (salePrice > 0) {
             const convertedSale = finalSalePrice * rate;
             const convertedOrig = finalBasePrice * rate;
@@ -193,7 +191,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             priceHtml = `
                 <div style="display:flex; align-items:center; gap:10px;">
-                    ${varLabel}
                     <span style="text-decoration:line-through; color:#94A3B8; font-size:1.2rem;">${symbol}${convertedOrig.toFixed(2)}</span>
                     <span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${convertedSale.toFixed(2)}</span>
                 </div>`;
@@ -201,7 +198,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             const converted = finalBasePrice * rate;
             const symbol = currencySymbols[currency] || currency + ' ';
             priceHtml = `<div style="display:flex; align-items:center; gap:10px;">
-                            ${varLabel}
                             <span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${converted.toFixed(2)}</span>
                         </div>`;
         }
