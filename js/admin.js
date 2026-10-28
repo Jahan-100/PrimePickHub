@@ -30,7 +30,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadProductsList(); 
     setupProductForm(); 
     setupToggleList();
-    setupToggleAddProduct(); // ⭐ Naya Toggle Setup ⭐
+    setupToggleAddProduct(); 
+    setupToggleSpecialDeal(); 
+    setupToggleFlashSale(); // ⭐ Naye Toggles Setup ⭐
     
     document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
     document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
@@ -108,7 +110,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
-// ⭐ Naya Function: Add Product Form ko Show/Hide karne ke liye ⭐
+// ⭐ Naye Toggle Functions ⭐
 function setupToggleAddProduct() {
     const toggleBtn = document.getElementById('toggleAddProductBtn');
     const formContainer = document.getElementById('addProductContainer');
@@ -121,6 +123,42 @@ function setupToggleAddProduct() {
             } else {
                 formContainer.style.display = 'none'; 
                 toggleBtn.textContent = 'Show Add Product Form'; 
+                toggleBtn.style.background = '#3B82F6';
+            }
+        });
+    }
+}
+
+function setupToggleSpecialDeal() {
+    const toggleBtn = document.getElementById('toggleSpecialDealBtn');
+    const container = document.getElementById('specialDealContainer');
+    if (toggleBtn && container) {
+        toggleBtn.addEventListener('click', () => {
+            if (container.style.display === 'none') {
+                container.style.display = 'block'; 
+                toggleBtn.textContent = 'Hide Settings'; 
+                toggleBtn.style.background = '#EF4444';
+            } else {
+                container.style.display = 'none'; 
+                toggleBtn.textContent = 'Show Settings'; 
+                toggleBtn.style.background = '#3B82F6';
+            }
+        });
+    }
+}
+
+function setupToggleFlashSale() {
+    const toggleBtn = document.getElementById('toggleFlashSaleBtn');
+    const container = document.getElementById('flashSaleContainer');
+    if (toggleBtn && container) {
+        toggleBtn.addEventListener('click', () => {
+            if (container.style.display === 'none') {
+                container.style.display = 'block'; 
+                toggleBtn.textContent = 'Hide Settings'; 
+                toggleBtn.style.background = '#EF4444';
+            } else {
+                container.style.display = 'none'; 
+                toggleBtn.textContent = 'Show Settings'; 
                 toggleBtn.style.background = '#3B82F6';
             }
         });
