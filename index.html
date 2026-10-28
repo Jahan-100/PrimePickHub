@@ -2,24 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="theme-color" content="#f8fafc">
+    <style> html, body { background-color: #f8fafc !important; margin: 0; padding: 0; } </style>
     
-    <!-- ⭐ White Flash Rokne Ka Sab Se Strong Code ⭐ -->
-    <style>
-        html, body { background-color: #1E1B4B !important; margin: 0; padding: 0; }
-    </style>
-    
-    <meta name="theme-color" content="#1E1B4B">
     <meta name="mitgo-verification" content="e3f69518-ab0c-46db-a669-34aacd83fd21" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PrimePickHub - Compare & Click The Best Deals</title>
-    <meta name="description" content="Compare products across Daraz, Amazon, AliExpress & eBay. Check live prices instantly.">
-
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="PrimePickHub - Compare & Click The Best Deals">
-    <meta property="og:description" content="Compare products across top stores. Live prices.">
-    <meta property="og:image" content="https://www.primepickhub.com/assets/og-image.jpg">
-    <meta property="og:url" content="https://www.primepickhub.com/">
-    <meta property="og:site_name" content="PrimePickHub">
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-7VE3L1Y8PQ"></script>
     <script>
@@ -31,10 +19,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-    <link rel="canonical" href="https://www.primepickhub.com/">
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/main.css?v=5">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,800;0,900;1,800&family=Roboto:wght@400;700;900&family=Oswald:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Lobster&family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
@@ -43,7 +30,6 @@
         .card-timer { background: #FEF2F2; color: #DC2626; font-size: 0.75rem; font-weight: 800; padding: 5px 8px; border-radius: 4px; margin-bottom: 8px; text-align: center; border: 1px solid #FECACA; display: flex; align-items: center; justify-content: center; gap: 5px; }
         body.app-loading { overflow: hidden; }
 
-        /* ⭐ NEW CATCHY & MODERN SPLASH SCREEN (Float Animation) ⭐ */
         #splash-screen { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: linear-gradient(135deg, #1E1B4B 0%, #4c1d95 50%, #FF5A3C 100%); 
@@ -51,51 +37,18 @@
             z-index: 9999999; transition: opacity 0.6s ease-out, visibility 0.6s ease-out; 
         }
         #splash-screen.hidden { opacity: 0; visibility: hidden; }
-        
-        /* Glowing blurred circles in background */
         .splash-bg-circle { position: absolute; border-radius: 50%; filter: blur(70px); opacity: 0.6; animation: pulseBg 4s infinite alternate; }
         .splash-bg-circle.c1 { width: 300px; height: 300px; background: #FF5A3C; top: -50px; left: -50px; }
         .splash-bg-circle.c2 { width: 250px; height: 250px; background: #3b82f6; bottom: -50px; right: -50px; animation-delay: -2s; }
         @keyframes pulseBg { 0% { transform: scale(1); } 100% { transform: scale(1.3); } }
-        
-        /* Floating Content */
         .splash-content { text-align: center; z-index: 2; display: flex; flex-direction: column; align-items: center; }
-        
-        .splash-logo-img { 
-            width: 120px; height: 120px; border-radius: 30px; margin-bottom: 25px; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3), 0 0 0 5px rgba(255,255,255,0.1); 
-            background: #fff; padding: 8px; 
-            animation: floatLogo 3s ease-in-out infinite; /* Logo Float Animation */
-        }
-        
-        @keyframes floatLogo {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-15px); }
-            100% { transform: translateY(0px); }
-        }
-
-        .splash-title { 
-            font-family: 'Poppins', sans-serif; font-weight: 900; font-size: 2.4rem; 
-            color: #fff; margin: 0; letter-spacing: -1px;
-            text-shadow: 0 5px 15px rgba(0,0,0,0.4);
-        }
+        .splash-logo-img { width: 120px; height: 120px; border-radius: 30px; margin-bottom: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.3), 0 0 0 5px rgba(255,255,255,0.1); background: #fff; padding: 8px; animation: floatLogo 3s ease-in-out infinite; }
+        @keyframes floatLogo { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
+        .splash-title { font-family: 'Poppins', sans-serif; font-weight: 900; font-size: 2.4rem; color: #fff; margin: 0; letter-spacing: -1px; text-shadow: 0 5px 15px rgba(0,0,0,0.4); }
         .splash-title span { color: #FFD700; text-shadow: 0 0 20px rgba(255, 215, 0, 0.6); }
-        
-        .splash-subtitle { 
-            color: #E2E8F0; font-size: 0.95rem; font-weight: 500; 
-            margin-top: 8px; letter-spacing: 2px; text-transform: uppercase; 
-            animation: fadeIn 1.5s ease-in-out;
-        }
-        
+        .splash-subtitle { color: #E2E8F0; font-size: 0.95rem; font-weight: 500; margin-top: 8px; letter-spacing: 2px; text-transform: uppercase; animation: fadeIn 1.5s ease-in-out; }
         .splash-loader-wrap { margin-top: 50px; z-index: 2; }
-        .splash-loader { 
-            width: 45px; height: 45px; 
-            border: 4px solid rgba(255,255,255,0.2); 
-            border-top-color: #FF5A3C; border-right-color: #FF5A3C; 
-            border-radius: 50%; animation: spin 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite; 
-            box-shadow: 0 0 20px rgba(255, 90, 60, 0.4);
-        }
-        
+        .splash-loader { width: 45px; height: 45px; border: 4px solid rgba(255,255,255,0.2); border-top-color: #FF5A3C; border-right-color: #FF5A3C; border-radius: 50%; animation: spin 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite; box-shadow: 0 0 20px rgba(255, 90, 60, 0.4); }
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -103,12 +56,11 @@
 </head>
 <body class="app-loading">
     
-    <!-- ⭐ Modern Splash Screen ⭐ -->
     <div id="splash-screen">
         <div class="splash-bg-circle c1"></div>
         <div class="splash-bg-circle c2"></div>
         <div class="splash-content">
-            <img src="assets/icon-192.png" alt="PrimePickHub Logo" class="splash-logo-img" onerror="this.style.display='none'">
+            <img src="assets/icon-192.png" alt="Logo" class="splash-logo-img" onerror="this.style.display='none'">
             <h1 class="splash-title">PrimePick<span>Hub</span></h1>
             <div class="splash-subtitle">Smart Shopping · Better Choices</div>
         </div>
@@ -223,10 +175,11 @@
         <img src="assets/icon-192.png" alt="Download App"><span class="pulse-ring"></span>
     </button>
 
-    <script src="js/config.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/affiliate.js"></script>
+    <!-- ⭐ Version v=5 lagaya gaya hai taake cache clear ho ⭐ -->
+    <script src="js/config.js?v=5"></script>
+    <script src="js/api.js?v=5"></script>
+    <script src="js/app.js?v=5"></script>
+    <script src="js/affiliate.js?v=5"></script>
     <script>
         function toggleCatDropdown(event) {
             if(event) { event.preventDefault(); event.stopPropagation(); }
