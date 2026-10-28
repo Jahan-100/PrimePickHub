@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer + Realtime + Notifications + PWA + Tracking
+ * PrimePickHub Homepage Renderer + Realtime + Notifications + PWA + Auto-Refresh
  */
 
 function escapeHTML(str) {
@@ -535,7 +535,6 @@ function setupRealtime() {
         });
 }
 
-// ⭐ NEW TRACKING FUNCTIONS ⭐
 async function trackVisitor() {
     if (!window.supabaseClient) return;
     let visitorId = localStorage.getItem('visitor_id');
@@ -565,14 +564,22 @@ async function trackActiveApp() {
     }, { onConflict: 'device_id' });
 }
 
-// ⭐ DOMContentLoaded Initialization ⭐
 document.addEventListener('DOMContentLoaded', () => {
-    trackVisitor(); // Track website visitors
-    trackActiveApp(); // Track app installs
+    trackVisitor();
+    trackActiveApp();
     
     loadHomepageProducts();
     setupRealtime(); 
     loadNotifications();
+
+    // ⭐ FALLBACK: Auto-refresh every 15 seconds (Realtime fail hone par bhi kaam karega) ⭐
+    setInterval(() => {
+        const popup = document.getElementById('appDownloadPopup');
+        // Agar popup open nahi hai aur user website par hai
+        if (document.getElementById('productGrid') && (!popup || popup.style.display !== 'block')) {
+            loadHomepageProducts();
+        }
+    }, 15000);
 
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
