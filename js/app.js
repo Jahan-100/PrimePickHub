@@ -19,13 +19,10 @@ function deduplicateProducts(list) {
 }
 function showGridMessage(grid, msg) { if (!grid) return; grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;"><p>${escapeHTML(msg)}</p></div>`; }
 
-// ⭐ Dynamic Categories Render Karna ⭐
 function renderDynamicCategories(allProducts) {
     const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
     const dbCats = [...new Set(allProducts.map(p => p.category_slug).filter(Boolean))];
-    
     const activeCats = masterCats.filter(c => c.slug === 'all' || dbCats.includes(c.slug));
-    
     const catContainer = document.getElementById('categoryScrollContainer');
     if (catContainer) {
         catContainer.innerHTML = activeCats.map(c => `
@@ -35,7 +32,6 @@ function renderDynamicCategories(allProducts) {
             </a>
         `).join('');
     }
-
     const dropdownMenu = document.getElementById('categoryDropdownMenu');
     if (dropdownMenu) {
         dropdownMenu.innerHTML = activeCats.map(c => `
@@ -44,7 +40,6 @@ function renderDynamicCategories(allProducts) {
     }
 }
 
-// ⭐ Product Cards Render Karna ⭐
 function renderProductCard(product) {
     if (!product || typeof product !== 'object') return '';
     const title = escapeHTML(product.title || 'Untitled');
@@ -98,7 +93,6 @@ function renderProductCard(product) {
         if (isSaleActive && salePrice > 0) {
             const finalSalePrice = commissionRate > 0 ? salePrice + (salePrice * (commissionRate / 100)) : salePrice;
             const finalOriginalPrice = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice;
-            
             priceDisplay = `
                 <div style="margin-bottom:5px; display:flex; align-items:center; gap:8px;">
                     <span style="text-decoration:line-through; color:#94A3B8; font-size:0.9rem;">${offerSymbol}${finalOriginalPrice.toFixed(2)}</span>
@@ -111,10 +105,7 @@ function renderProductCard(product) {
 
         cta = `
                ${priceDisplay}
-               <a href="${affUrl}" target="_blank" rel="noopener noreferrer sponsored"
-                 class="btn-check-price js-affiliate-link"
-                 style="background-color:${bg};color:${fg};"
-                 data-store="${storeName}" data-product-id="${pid}" data-url="${affUrl}">
+               <a href="${affUrl}" target="_blank" rel="noopener noreferrer sponsored" class="btn-check-price js-affiliate-link" style="background-color:${bg};color:${fg};" data-store="${storeName}" data-product-id="${pid}" data-url="${affUrl}">
                  Check Price on ${storeName}
                </a>`;
     } else {
@@ -183,7 +174,6 @@ function renderProductsGrid(products, grid) {
     });
 }
 
-// ⭐ Timers ⭐
 setInterval(() => {
     let flashSaleChanged = false;
     document.querySelectorAll('.card-timer').forEach(el => {
@@ -211,7 +201,6 @@ setInterval(() => {
     if (flashSaleChanged) setTimeout(() => loadHomepageProducts(), 2000);
 }, 1000);
 
-// ⭐ Fireworks Logic ⭐
 let fireworksInterval;
 function startFireworks() {
     const canvas = document.getElementById('fireworksCanvas');
@@ -284,7 +273,11 @@ async function loadHomepageProducts() {
         
         if (settings) {
             const showApp = settings.show_app_download !== false;
-            if (showApp) {
+            
+            // ⭐ PWA Detection: Agar app standalone mode (PWA) mein chal rahi hai toh popup mat dikhao ⭐
+            const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+            if (showApp && !isPWA) {
                 if (floatingAppIcon) floatingAppIcon.style.display = 'flex';
                 if (!sessionStorage.getItem('appPopupShown')) {
                     setTimeout(() => {
@@ -293,6 +286,7 @@ async function loadHomepageProducts() {
                     }, 3000);
                 }
             } else {
+                // Hide both if PWA or if admin stopped it
                 if (floatingAppIcon) floatingAppIcon.style.display = 'none';
                 const popup = document.getElementById('appDownloadPopup');
                 const overlay = document.getElementById('appPopupOverlay');
@@ -386,7 +380,6 @@ function handleSearch() {
     }
 }
 
-// ⭐ NOTIFICATION LOGIC ⭐
 let userDeletedNotifs = JSON.parse(localStorage.getItem('deleted_notifs') || '[]');
 let currentNotifs = [];
 
@@ -460,7 +453,6 @@ function showBrowserNotification(title, body) {
     }
 }
 
-// ⭐ PWA INSTALL LOGIC ⭐
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
@@ -481,7 +473,6 @@ window.triggerPWAInstall = function() {
     }
 }
 
-// App Popup Toggle
 window.toggleAppPopup = function() {
     const popup = document.getElementById('appDownloadPopup');
     const overlay = document.getElementById('appPopupOverlay');
@@ -521,7 +512,6 @@ function redirectToStore() {
     else window.location.href = playStoreLink;
 }
 
-// ⭐ REALTIME DATABASE LISTENER ⭐
 let realtimeTimeout;
 function triggerRealtimeUpdate(payload) {
     clearTimeout(realtimeTimeout);
@@ -548,13 +538,11 @@ function setupRealtime() {
         });
 }
 
-// ⭐ DOMContentLoaded Initialization ⭐
 document.addEventListener('DOMContentLoaded', () => {
     loadHomepageProducts();
     setupRealtime(); 
     loadNotifications();
 
-    // ⭐ PWA Service Worker Register ⭐
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('/service-worker.js')
