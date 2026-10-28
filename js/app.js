@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer + Realtime + Notifications + PWA + Auto-Refresh
+ * PrimePickHub Homepage Renderer + Realtime + Notifications + PWA + Tracking
  */
 
 function escapeHTML(str) {
@@ -80,27 +80,25 @@ function renderProductCard(product) {
         const offerCurrency = (primaryOffer.currency || 'USD').toUpperCase();
         const offerSymbol = currencySymbols[offerCurrency] || offerCurrency + ' ';
         
+        // ⭐ FIX: Only use Base Price and Sale Price (No Commission addition) ⭐
         const basePrice = parseFloat(primaryOffer.price) || 0;
         const salePrice = parseFloat(primaryOffer.sale_price) || 0;
-        const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
         
         const now = new Date();
         const isSaleActive = product.sale_end_date && new Date(product.sale_end_date) > now;
 
-        let finalPrice = basePrice;
         let priceDisplay = '';
 
         if (isSaleActive && salePrice > 0) {
-            const finalSalePrice = commissionRate > 0 ? salePrice + (salePrice * (commissionRate / 100)) : salePrice;
-            const finalOriginalPrice = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice;
+            // Show Base Price Strikethrough + Sale Price Bold
             priceDisplay = `
                 <div style="margin-bottom:5px; display:flex; align-items:center; gap:8px;">
-                    <span style="text-decoration:line-through; color:#94A3B8; font-size:0.9rem;">${offerSymbol}${finalOriginalPrice.toFixed(2)}</span>
-                    <span style="font-weight:bold; color:#FF5A3C; font-size:1.2rem;">${offerSymbol}${finalSalePrice.toFixed(2)}</span>
+                    <span style="text-decoration:line-through; color:#94A3B8; font-size:0.9rem;">${offerSymbol}${basePrice.toFixed(2)}</span>
+                    <span style="font-weight:bold; color:#FF5A3C; font-size:1.2rem;">${offerSymbol}${salePrice.toFixed(2)}</span>
                 </div>`;
         } else {
-            finalPrice = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice;
-            priceDisplay = `<div style="font-weight:bold; color:#1E1B4B; margin-bottom:5px;">${offerSymbol}${finalPrice.toFixed(2)}</div>`;
+            // Show only Base Price
+            priceDisplay = `<div style="font-weight:bold; color:#1E1B4B; margin-bottom:5px;">${offerSymbol}${basePrice.toFixed(2)}</div>`;
         }
 
         cta = `
@@ -141,12 +139,9 @@ function renderFlashCard(product) {
     
     const basePrice = parseFloat(primaryOffer.price) || 0;
     const salePrice = parseFloat(primaryOffer.sale_price) || 0;
-    const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
     
     const isSaleActive = product.sale_end_date && new Date(product.sale_end_date) > new Date();
-    const finalPrice = (isSaleActive && salePrice > 0) 
-        ? (commissionRate > 0 ? salePrice + (salePrice * (commissionRate / 100)) : salePrice)
-        : (commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice);
+    const displayPrice = (isSaleActive && salePrice > 0) ? salePrice : basePrice;
 
     return `
         <a href="${productUrl}" class="special-deal-card flash-card">
@@ -154,7 +149,7 @@ function renderFlashCard(product) {
                 <img src="${imageSrc}" alt="${title}">
             </div>
             <div class="info-box">
-                <div class="price">${sym}${finalPrice.toFixed(2)}</div>
+                <div class="price">${sym}${displayPrice.toFixed(2)}</div>
                 <div class="title">${title}</div>
                 <div class="card-timer" data-endtime="${product.sale_end_date}">⏳ Calculating...</div>
             </div>
@@ -348,12 +343,16 @@ async function loadHomepageProducts() {
                 section.style.display = 'flex'; 
                 container.innerHTML = specialProducts.map(p => {
                     const offer = p.affiliate_offers?.[0] || {};
-                    const sym = { USD: '$', PKR: 'Rs. ', EUR: '€' }[(offer.currency || 'USD').toUpperCase()] || '$';
-                    const finalPrice = (parseFloat(offer.price) || 0) + ((parseFloat(offer.price) || 0) * ((parseFloat(offer.commission_rate) || 0) / 100));
+                    const sym = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' }[(offer.currency || 'USD').toUpperCase()] || '$';
+                    const basePrice = parseFloat(offer.price) || 0;
+                    const salePrice = parseFloat(offer.sale_price) || 0;
+                    const isSaleActive = p.sale_end_date && new Date(p.sale_end_date) > new Date();
+                    const displayPrice = (isSaleActive && salePrice > 0) ? salePrice : basePrice;
+                    
                     return `
                         <a href="/product/${encodeURIComponent(p.slug)}" class="special-deal-card">
                             <div class="img-box"><img src="${p.image_url || '/assets/icon-192.png'}" alt="${p.title}"></div>
-                            <div class="info-box"><div class="price">${sym}${finalPrice.toFixed(2)}</div><div class="title">${p.title}</div></div>
+                            <div class="info-box"><div class="price">${sym}${displayPrice.toFixed(2)}</div><div class="title">${p.title}</div></div>
                         </a>`;
                 }).join('');
             } else { section.style.display = 'none'; }
@@ -572,10 +571,8 @@ document.addEventListener('DOMContentLoaded', () => {
     setupRealtime(); 
     loadNotifications();
 
-    // ⭐ FALLBACK: Auto-refresh every 15 seconds (Realtime fail hone par bhi kaam karega) ⭐
     setInterval(() => {
         const popup = document.getElementById('appDownloadPopup');
-        // Agar popup open nahi hai aur user website par hai
         if (document.getElementById('productGrid') && (!popup || popup.style.display !== 'block')) {
             loadHomepageProducts();
         }
