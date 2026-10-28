@@ -37,10 +37,105 @@
         .card-timer {
             background: #FEF2F2; color: #DC2626; font-size: 0.75rem; font-weight: 800; padding: 5px 8px; border-radius: 4px; margin-bottom: 8px; text-align: center; border: 1px solid #FECACA; display: flex; align-items: center; justify-content: center; gap: 5px;
         }
+
+        /* ⭐ SPLASH SCREEN STYLES (Modern & Trendy) ⭐ */
+        #splash-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            /* Premium Dark Gradient */
+            background: linear-gradient(135deg, #0f172a 0%, #1E1B4B 50%, #4c1d95 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9999999;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.8s;
+            overflow: hidden;
+        }
+        
+        #splash-screen.hidden {
+            opacity: 0; visibility: hidden;
+        }
+
+        /* Background Animated Circles for visual appeal */
+        .splash-bg-circle {
+            position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.5;
+            animation: float 6s ease-in-out infinite;
+        }
+        .splash-bg-circle.c1 { width: 300px; height: 300px; background: #FF5A3C; top: -100px; left: -100px; }
+        .splash-bg-circle.c2 { width: 250px; height: 250px; background: #3b82f6; bottom: -50px; right: -50px; animation-delay: -3s; }
+
+        @keyframes float {
+            0% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(20px) scale(1.1); }
+            100% { transform: translateY(0) scale(1); }
+        }
+
+        .splash-content {
+            text-align: center;
+            z-index: 2;
+            animation: pulseLogo 2s infinite ease-in-out;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .splash-logo-img {
+            width: 110px; height: 110px; border-radius: 24px; margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 0 4px rgba(255,255,255,0.1);
+            background: #fff; padding: 5px; object-fit: contain;
+        }
+
+        .splash-title {
+            font-family: 'Poppins', sans-serif; font-weight: 900; font-size: 2.2rem;
+            color: #fff; letter-spacing: -0.5px; margin: 0;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .splash-title span { color: #FF5A3C; text-shadow: 0 0 15px rgba(255, 90, 60, 0.8); }
+
+        .splash-subtitle {
+            color: #94A3B8; font-size: 0.9rem; font-weight: 500; margin-top: 5px; letter-spacing: 1px;
+            text-transform: uppercase;
+            animation: fadeIn 1.5s ease-in-out;
+        }
+
+        /* Premium Spinner */
+        .splash-loader-wrap {
+            margin-top: 40px; z-index: 2; display: flex; flex-direction: column; align-items: center;
+        }
+        .splash-loader {
+            width: 50px; height: 50px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: #FF5A3C;
+            border-right-color: #FF5A3C;
+            border-radius: 50%;
+            animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+            box-shadow: 0 0 15px rgba(255, 90, 60, 0.4);
+        }
+
+        @keyframes pulseLogo {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+    
+    <!-- ⭐ 0. Modern Splash Screen (Preloader) ⭐ -->
+    <div id="splash-screen">
+        <div class="splash-bg-circle c1"></div>
+        <div class="splash-bg-circle c2"></div>
+        
+        <div class="splash-content">
+            <!-- Logo Image (Aapka assets folder wala logo) -->
+            <img src="assets/icon-192.png" alt="PrimePickHub Logo" class="splash-logo-img" onerror="this.style.display='none'">
+            <h1 class="splash-title">PrimePick<span>Hub</span></h1>
+            <div class="splash-subtitle">Smart Shopping · Better Choices</div>
+        </div>
+
+        <div class="splash-loader-wrap">
+            <div class="splash-loader"></div>
+        </div>
+    </div>
+
     <header class="header">
         <div class="nav-main">
             <a href="index.html" class="logo">PrimePick<span>Hub</span></a>
@@ -167,6 +262,7 @@
     <script src="js/affiliate.js"></script>
 
     <script>
+        // Custom Dropdown Functions
         function toggleCatDropdown(event) {
             if(event) { event.preventDefault(); event.stopPropagation(); }
             var menu = document.getElementById('categoryDropdownMenu');
@@ -199,6 +295,28 @@
                 menu.style.display = 'none';
             }
         });
+
+        // ⭐ Splash Screen Logic (Fade Out after load) ⭐
+        window.addEventListener('load', function() {
+            // 1.5 seconds wait karein taake user animation dekh sake
+            setTimeout(function() {
+                var splash = document.getElementById('splash-screen');
+                if (splash) {
+                    splash.classList.add('hidden');
+                    // Animation ke baad DOM se hide kar dein taake memory free ho
+                    setTimeout(() => { splash.style.display = 'none'; }, 800); 
+                }
+            }, 1500); 
+        });
+
+        // Ek fallback timer bhi laga dein (agar koi image load na ho toh 3.5 second baad splash hat jaye)
+        setTimeout(function() {
+            var splash = document.getElementById('splash-screen');
+            if (splash && !splash.classList.contains('hidden')) {
+                splash.classList.add('hidden');
+                setTimeout(() => { splash.style.display = 'none'; }, 800);
+            }
+        }, 3500);
     </script>
 </body>
 </html>
