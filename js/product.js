@@ -53,7 +53,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const variations = allOffers.filter(o => o.variation_name);
 
     const baseCurrency = (defaultOffer.currency || 'USD').toUpperCase();
-    let activeOffer = variations.length > 0 ? variations[0] : defaultOffer;
+    
+    // ⭐ Yahan defaultOffer set kiya hai taake pehle Base Price show ho
+    let activeOffer = defaultOffer;
 
     const renderBuyButton = (offer) => {
         const cfg = CONFIG.networks[offer.store_name?.toLowerCase()] || CONFIG.networks.amazon;
@@ -74,7 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p style="font-weight:bold; margin-bottom:8px;">Select Option:</p>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
                     ${variations.map((v, i) => `
-                        <button class="var-btn" data-index="${i}" style="padding:8px 16px; border:2px solid ${i===0?'#FF5A3C':'#E2E8F0'}; background:#fff; border-radius:6px; cursor:pointer; font-weight:bold; color:${i===0?'#FF5A3C':'#1E1B4B'}; transition:all 0.2s;">
+                        <button class="var-btn" data-index="${i}" style="padding:8px 16px; border:2px solid #E2E8F0; background:#fff; border-radius:6px; cursor:pointer; font-weight:bold; color:#1E1B4B; transition:all 0.2s;">
                             ${escapeHTML(v.variation_name)}
                         </button>
                     `).join('')}
