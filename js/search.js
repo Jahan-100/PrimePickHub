@@ -57,7 +57,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
         const offerSymbol = currencySymbols[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
         
-        // ⭐ FIX: Only base price and sale price (No commission addition)
         const basePrice = parseFloat(primaryOffer.price) || 0;
         const salePrice = parseFloat(primaryOffer.sale_price) || 0;
         
