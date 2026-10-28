@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <!-- ⭐ Theme Color for Mobile App Top Bar ⭐ -->
+    <meta name="theme-color" content="#0f172a">
+    
     <meta name="mitgo-verification" content="e3f69518-ab0c-46db-a669-34aacd83fd21" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PrimePickHub - Compare & Click The Best Deals</title>
@@ -14,6 +17,15 @@
     <meta property="og:url" content="https://www.primepickhub.com/">
     <meta property="og:site_name" content="PrimePickHub">
 
+    <!-- ⭐ CRITICAL FIX: White flash khatam karne ke liye inline CSS ⭐ -->
+    <style>
+        html, body {
+            background-color: #0f172a !important; /* WebView ka background dark */
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-7VE3L1Y8PQ"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -22,7 +34,6 @@
       gtag('config', 'G-7VE3L1Y8PQ');
     </script>
 
-    <!-- Fireworks Library -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <link rel="canonical" href="https://www.primepickhub.com/">
@@ -34,18 +45,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,800;0,900;1,800&family=Roboto:wght@400;700;900&family=Oswald:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Lobster&family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
     
     <style>
-        /* ⭐ FIX: White screen se bachne ke liye Body ka background dark kar diya hai ⭐ */
-        body.app-loading {
-            background: linear-gradient(135deg, #0f172a 0%, #1E1B4B 50%, #4c1d95 100%) !important;
-            overflow: hidden; /* Splash ke dauran scroll lock */
-            margin: 0; padding: 0;
-        }
-
         .card-timer {
             background: #FEF2F2; color: #DC2626; font-size: 0.75rem; font-weight: 800; padding: 5px 8px; border-radius: 4px; margin-bottom: 8px; text-align: center; border: 1px solid #FECACA; display: flex; align-items: center; justify-content: center; gap: 5px;
         }
 
-        /* ⭐ SPLASH SCREEN STYLES (Modern & Trendy) ⭐ */
+        body.app-loading {
+            overflow: hidden; 
+        }
+
+        /* ⭐ SPLASH SCREEN STYLES ⭐ */
         #splash-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, #0f172a 0%, #1E1B4B 50%, #4c1d95 100%);
@@ -73,9 +81,7 @@
         }
 
         .splash-content {
-            text-align: center;
-            z-index: 2;
-            animation: pulseLogo 2s infinite ease-in-out;
+            text-align: center; z-index: 2; animation: pulseLogo 2s infinite ease-in-out;
             display: flex; flex-direction: column; align-items: center;
         }
 
@@ -87,85 +93,65 @@
 
         .splash-title {
             font-family: 'Poppins', sans-serif; font-weight: 900; font-size: 2.2rem;
-            color: #fff; letter-spacing: -0.5px; margin: 0;
-            text-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            color: #fff; letter-spacing: -0.5px; margin: 0; text-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         .splash-title span { color: #FF5A3C; text-shadow: 0 0 15px rgba(255, 90, 60, 0.8); }
 
         .splash-subtitle {
             color: #94A3B8; font-size: 0.9rem; font-weight: 500; margin-top: 5px; letter-spacing: 1px;
-            text-transform: uppercase;
-            animation: fadeIn 1.5s ease-in-out;
+            text-transform: uppercase; animation: fadeIn 1.5s ease-in-out;
         }
 
-        .splash-loader-wrap {
-            margin-top: 40px; z-index: 2; display: flex; flex-direction: column; align-items: center;
-        }
+        .splash-loader-wrap { margin-top: 40px; z-index: 2; display: flex; flex-direction: column; align-items: center; }
         .splash-loader {
-            width: 50px; height: 50px;
-            border: 3px solid rgba(255,255,255,0.1);
-            border-top-color: #FF5A3C;
-            border-right-color: #FF5A3C;
-            border-radius: 50%;
+            width: 50px; height: 50px; border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: #FF5A3C; border-right-color: #FF5A3C; border-radius: 50%;
             animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
             box-shadow: 0 0 15px rgba(255, 90, 60, 0.4);
         }
 
-        @keyframes pulseLogo {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.03); }
-            100% { transform: scale(1); }
-        }
+        @keyframes pulseLogo { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<!-- ⭐ Body par 'app-loading' class lagayi hai ⭐ -->
 <body class="app-loading">
     
-    <!-- ⭐ 0. Modern Splash Screen (Preloader) ⭐ -->
+    <!-- ⭐ Splash Screen bilkul body ke shuru mein ⭐ -->
     <div id="splash-screen">
         <div class="splash-bg-circle c1"></div>
         <div class="splash-bg-circle c2"></div>
-        
         <div class="splash-content">
             <img src="assets/icon-192.png" alt="PrimePickHub Logo" class="splash-logo-img" onerror="this.style.display='none'">
             <h1 class="splash-title">PrimePick<span>Hub</span></h1>
             <div class="splash-subtitle">Smart Shopping · Better Choices</div>
         </div>
-
         <div class="splash-loader-wrap">
             <div class="splash-loader"></div>
         </div>
     </div>
 
+    <!-- Baaki aapka pura code waisa hi hai -->
     <header class="header">
         <div class="nav-main">
             <a href="index.html" class="logo">PrimePick<span>Hub</span></a>
-            
-            <!-- ⭐ Custom Amazon Style Search Box ⭐ -->
             <div class="search-box">
                 <div class="custom-category-dropdown" id="categoryDropdownWrap">
                     <button type="button" class="category-btn" id="categoryDropdownBtn" onclick="toggleCatDropdown(event)">
                         <span id="categoryDropdownText">All</span>
                         <i class="fa-solid fa-caret-down" style="font-size: 0.75rem; color: #555;"></i>
                     </button>
-                    <!-- Dropdown menu will be populated dynamically by JS -->
                     <ul class="category-dropdown-menu" id="categoryDropdownMenu"></ul>
                     <input type="hidden" id="searchCategory" value="all">
                 </div>
-                
                 <input type="text" id="searchInput" placeholder="Search products, brands, stores...">
                 <button id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i></button>
             </div>
-            
         </div>
     </header>
 
     <main class="container">
-        
-        <!-- ⭐ 1. Special Deal Section ⭐ -->
         <div id="specialDealSection" class="alibaba-special-deal" style="margin-top: 5px;">
             <div class="special-deal-left">
                 <h2 id="specialDealTitle">First order deal</h2>
@@ -183,7 +169,6 @@
             </div>
         </div>
 
-        <!-- ⭐ 2. Flash Sale Section ⭐ -->
         <div id="flashSaleSection" class="flash-sale-split" style="display: none;">
             <canvas id="fireworksCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;"></canvas>
             <div class="flash-sale-left">
@@ -207,20 +192,15 @@
             </div>
         </div>
 
-        <!-- ⭐ 3. Shop by Category (Dynamic) ⭐ -->
         <div style="margin-bottom: 20px;">
             <h2 style="margin-bottom: 15px; font-family: 'Poppins', sans-serif; font-weight: 800; color: var(--text-dark);">Shop by Category</h2>
-            <div class="horizontal-category-scroll" id="categoryScrollContainer">
-                <!-- Categories JS se load hongi -->
-            </div>
+            <div class="horizontal-category-scroll" id="categoryScrollContainer"></div>
         </div>
 
-        <!-- ⭐ 4. Products Section ⭐ -->
         <div id="normalProductsSection" style="margin-bottom: 20px;">
             <h2 id="productSectionTitle" style="display: none;"></h2>
             <div class="product-grid" id="productGrid"></div>
         </div>
-
     </main>
 
     <footer class="footer">
@@ -231,53 +211,36 @@
         <div class="footer-disclaimer">PrimePickHub is an affiliate website. We may earn a commission when you click our links and purchase items on official store sites at no additional cost to you.</div>
     </footer>
 
-    <!-- ⭐ App Download Popup Overlay ⭐ -->
     <div id="appPopupOverlay" class="app-popup-overlay" onclick="toggleAppPopup()" style="display: none;"></div>
-
-    <!-- ⭐ App Download Popup ⭐ -->
     <div id="appDownloadPopup" class="app-popup" style="display: none;">
         <div class="app-popup-content">
             <span class="close-popup" onclick="toggleAppPopup()">&times;</span>
-            <div class="app-icon">
-                <img src="assets/icon-192.png" alt="App Icon">
-            </div>
+            <div class="app-icon"><img src="assets/icon-192.png" alt="App Icon"></div>
             <h3>Get the PrimePickHub App</h3>
             <p>Better experience, exclusive deals & faster checkout!</p>
-            
             <div id="desktopAppContent" style="display: none; text-align: center;">
                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://primepickhub.vercel.app/app-download.html" alt="Scan QR Code" style="border-radius: 10px; border: 2px solid #E2E8F0; padding: 5px; margin-bottom: 10px;">
                 <p style="font-size: 0.85rem; color: #64748B;">Scan with your phone to download</p>
             </div>
-
             <div id="mobileAppContent" style="display: none;">
                 <button class="btn-app-download" onclick="redirectToStore()">Download Now</button>
             </div>
         </div>
     </div>
-
     <button id="floatingAppIcon" class="floating-app-btn" onclick="toggleAppPopup()" style="display: none;">
-        <img src="assets/icon-192.png" alt="Download App">
-        <span class="pulse-ring"></span>
+        <img src="assets/icon-192.png" alt="Download App"><span class="pulse-ring"></span>
     </button>
 
     <script src="js/config.js"></script>
     <script src="js/api.js"></script>
     <script src="js/app.js"></script>
     <script src="js/affiliate.js"></script>
-
     <script>
         function toggleCatDropdown(event) {
             if(event) { event.preventDefault(); event.stopPropagation(); }
             var menu = document.getElementById('categoryDropdownMenu');
-            if(menu) {
-                if (menu.style.display === 'block') {
-                    menu.style.display = 'none';
-                } else {
-                    menu.style.display = 'block';
-                }
-            }
+            if(menu) { menu.style.display = menu.style.display === 'block' ? 'none' : 'block'; }
         }
-
         function selectCatDropdown(val, text, element) {
             document.getElementById('categoryDropdownText').innerText = text;
             document.getElementById('searchCategory').value = val;
@@ -286,36 +249,24 @@
             if(element) element.classList.add('active');
             document.getElementById('categoryDropdownMenu').style.display = 'none';
         }
-
         document.addEventListener('click', function(e) {
             var wrap = document.getElementById('categoryDropdownWrap');
             var menu = document.getElementById('categoryDropdownMenu');
             if (wrap && !wrap.contains(e.target) && menu) { menu.style.display = 'none'; }
         });
 
-        // ⭐ Splash Screen Fade Out Logic ⭐
         function hideSplash() {
             var splash = document.getElementById('splash-screen');
             if (splash) {
                 splash.classList.add('hidden');
-                // Body se loading class hatayein taake normal background wapas aaye
                 document.body.classList.remove('app-loading');
-                // 800ms baad DOM se hata dein
                 setTimeout(() => { splash.style.display = 'none'; }, 800); 
             }
         }
-
-        // Jab page load ho jaye toh 1.5 second baad hide karein
-        window.addEventListener('load', function() {
-            setTimeout(hideSplash, 1500); 
-        });
-
-        // Fallback timer (Agar koi image load na ho toh 3.5 second baad khud hat jaye)
+        window.addEventListener('load', function() { setTimeout(hideSplash, 1500); });
         setTimeout(function() {
             var splash = document.getElementById('splash-screen');
-            if (splash && !splash.classList.contains('hidden')) {
-                hideSplash();
-            }
+            if (splash && !splash.classList.contains('hidden')) { hideSplash(); }
         }, 3500);
     </script>
 </body>
