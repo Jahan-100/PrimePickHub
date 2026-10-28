@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
     document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
     
+    // ⭐ Save App Download Setting ⭐
     document.getElementById('saveAppSettingsBtn')?.addEventListener('click', async function() {
         const isLive = document.getElementById('appDownloadStatusToggle').checked;
         const { error } = await window.supabaseClient.from('site_settings').update({ 
@@ -46,6 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         else alert(`App Download Popup is now ${isLive ? 'LIVE (Visible)' : 'STOPPED (Hidden)'} on website!`);
     });
 
+    // Save Special Deal Settings
     document.getElementById('saveTitleBtn')?.addEventListener('click', async function() {
         const newTitle = document.getElementById('specialDealTitleInput').value.trim();
         const fontFamily = document.getElementById('titleFontFamily').value;
@@ -67,6 +69,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         else alert("Special Deal Design updated successfully!");
     });
 
+    // Save Flash Sale Settings
     document.getElementById('saveFlashSettingsBtn')?.addEventListener('click', async function() {
         const newTitle = document.getElementById('flashTitleText').value.trim();
         const fontFamily = document.getElementById('flashTitleFontFamily').value;
@@ -88,6 +91,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         else alert("Flash Sale Design updated successfully!");
     });
 
+    // Check Availability Button
     document.getElementById('checkAvailabilityBtn')?.addEventListener('click', async function() {
         const btn = this;
         const originalText = btn.innerText;
@@ -104,6 +108,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         finally { btn.innerText = originalText; btn.disabled = false; }
     });
 
+    // ⭐ Cancel Offer Button Logic ⭐
     document.getElementById('cancelOfferBtn')?.addEventListener('click', () => {
         document.getElementById('pEventName').value = '';
         document.getElementById('pSaleEndDate').value = '';
@@ -375,7 +380,7 @@ window.editProduct = async function(id) {
         } else { document.getElementById('pSaleEndDate').value = ''; }
 
         document.getElementById('pStore').value = defaultOffer.store_name || ''; 
-        document.getElementById('pMainVarName').value = defaultOffer.variation_name || ''; // ⭐ Naya Box Load
+        document.getElementById('pMainVarName').value = defaultOffer.variation_name || ''; 
         document.getElementById('pPrice').value = defaultOffer.price || '';
         document.getElementById('pSalePrice').value = defaultOffer.sale_price || '';
         document.getElementById('pCommission').value = (defaultOffer.commission_rate && defaultOffer.commission_rate > 0) ? defaultOffer.commission_rate : '';
@@ -386,7 +391,7 @@ window.editProduct = async function(id) {
         document.getElementById('pSpecialDeal').checked = p.is_special_deal || false;
 
         const varContainer = document.getElementById('variationsContainer'); varContainer.innerHTML = '';
-        const variations = p.affiliate_offers?.slice(1) || []; // Main offer is first, rest are variations
+        const variations = p.affiliate_offers?.slice(1) || []; 
         variations.forEach(v => addVariationRow(v.variation_name, v.price, v.sale_price, (v.commission_rate > 0 ? v.commission_rate : ''), v.affiliate_url));
 
         document.getElementById('pImgFile').value = ''; document.getElementById('pGalleryFile').value = '';
@@ -400,6 +405,10 @@ window.editProduct = async function(id) {
             formContainer.style.display = 'block'; toggleBtn.textContent = 'Hide Add Product Form'; toggleBtn.style.background = '#EF4444';
         }
         document.getElementById('productForm').scrollIntoView({ behavior: 'smooth' });
+        
+        // Remove any existing error borders when opening for edit
+        document.querySelectorAll('.error-input').forEach(el => el.classList.remove('error-input'));
+
     } catch (err) { alert("Error loading product: " + err.message); }
 }
 
@@ -410,6 +419,24 @@ window.deleteProduct = async function(id) {
 
 function setupProductForm() {
     const form = document.getElementById('productForm'); const cancelBtn = document.getElementById('cancelEditBtn'); if (!form) return;
+    
+    // ⭐ Add input listeners to remove red border when user types ⭐
+    form.querySelectorAll('input, textarea, select').forEach(el => {
+        el.addEventListener('input', function() {
+            if (this.classList.contains('error-input')) {
+                // For Image URL, check if file is uploaded OR text is entered
+                if (this.id === 'pImg') {
+                    const fileInput = document.getElementById('pImgFile');
+                    if (this.value.trim() || fileInput.files.length > 0) {
+                        this.classList.remove('error-input');
+                    }
+                } else if (this.value.trim()) {
+                    this.classList.remove('error-input');
+                }
+            }
+        });
+    });
+
     cancelBtn.addEventListener('click', () => {
         form.reset(); document.getElementById('variationsContainer').innerHTML = '';
         document.getElementById('pId').value = ''; document.getElementById('pOfferId').value = '';
@@ -418,10 +445,40 @@ function setupProductForm() {
         document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen';
 
         document.getElementById('formTitle').innerText = "Add New Product"; document.getElementById('saveBtn').innerText = "Save Product"; cancelBtn.style.display = "none";
+        
+        // Clear all error borders on cancel
+        document.querySelectorAll('.error-input').forEach(el => el.classList.remove('error-input'));
     });
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        
+        // ⭐ VALIDATION LOGIC START ⭐
+        let hasError = false;
+        const requiredInputs = form.querySelectorAll('[required]');
+        
+        requiredInputs.forEach(input => {
+            input.classList.remove('error-input'); // reset first
+            if (!input.value.trim()) {
+                input.classList.add('error-input');
+                hasError = true;
+            }
+        });
+
+        // Special check for Primary Image (URL or Upload)
+        const imgUrl = document.getElementById('pImg');
+        const imgFile = document.getElementById('pImgFile');
+        if (!imgUrl.value.trim() && imgFile.files.length === 0) {
+            imgUrl.classList.add('error-input');
+            hasError = true;
+        }
+
+        if (hasError) {
+            alert('Please fill all the required fields marked with a red star (*).');
+            return; // Stop form submission
+        }
+        // ⭐ VALIDATION LOGIC END ⭐
+
         const saveBtn = document.getElementById('saveBtn');
         const originalBtnText = saveBtn.innerText;
         saveBtn.innerText = "Saving... Please wait"; saveBtn.disabled = true;
@@ -433,8 +490,8 @@ function setupProductForm() {
             const price = parseFloat(document.getElementById('pPrice').value) || 0;
             const salePrice = document.getElementById('pSalePrice').value ? parseFloat(document.getElementById('pSalePrice').value) : null;
 
-            let finalImageUrl = document.getElementById('pImg').value.trim();
-            const primaryFileInput = document.getElementById('pImgFile');
+            let finalImageUrl = imgUrl.value.trim();
+            const primaryFileInput = imgFile;
             if (primaryFileInput.files.length > 0) { saveBtn.innerText = "Uploading Main Image..."; finalImageUrl = await uploadFileToSupabase(primaryFileInput.files[0]); }
 
             let finalGalleryUrls = document.getElementById('pGallery').value.trim() ? document.getElementById('pGallery').value.split('\n').map(u=>u.trim()).filter(Boolean) : [];
@@ -443,8 +500,6 @@ function setupProductForm() {
                 saveBtn.innerText = "Uploading Gallery...";
                 for (let i = 0; i < galleryFileInput.files.length; i++) { const url = await uploadFileToSupabase(galleryFileInput.files[i]); finalGalleryUrls.push(url); }
             }
-
-            if (!finalImageUrl) throw new Error("Primary Image is required (URL or Upload)");
 
             const productData = {
                 title: document.getElementById('pTitle').value.trim(), slug: document.getElementById('pSlug').value.trim(),
@@ -460,9 +515,6 @@ function setupProductForm() {
                 is_available: true
             };
 
-            if (!productData.title || !productData.slug) throw new Error('Please fill required fields (Title, Slug).');
-
-            // ⭐ Main Offer mein variation_name save kiya gaya hai
             const mainOfferData = {
                 store_name: document.getElementById('pStore').value.trim().toLowerCase(), 
                 variation_name: document.getElementById('pMainVarName').value.trim() || null,
@@ -487,7 +539,6 @@ function setupProductForm() {
             } else {
                 const { data: newProduct, error: prodErr } = await window.supabaseClient.from('products').insert([productData]).select().single(); if (prodErr) throw prodErr; productId = newProduct.id;
             }
-            // Main offer insert (Yeh hamesha pehle insert hoga, isliye index 0 par rahega)
             if (price > 0 || variations.length === 0) { mainOfferData.product_id = productId; await window.supabaseClient.from('affiliate_offers').insert([mainOfferData]); }
             if (variations.length > 0) { variations.forEach(v => v.product_id = productId); const { error: varErr } = await window.supabaseClient.from('affiliate_offers').insert(variations); if (varErr) throw varErr; }
             
