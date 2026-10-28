@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="theme-color" content="#0f172a">
-    <!-- White Flash Rokne Ka Code -->
     <style> html, body { background-color: #0f172a !important; margin: 0; padding: 0; } </style>
     
     <meta name="mitgo-verification" content="e3f69518-ab0c-46db-a669-34aacd83fd21" />
@@ -39,8 +38,6 @@
     <style>
         .card-timer { background: #FEF2F2; color: #DC2626; font-size: 0.75rem; font-weight: 800; padding: 5px 8px; border-radius: 4px; margin-bottom: 8px; text-align: center; border: 1px solid #FECACA; display: flex; align-items: center; justify-content: center; gap: 5px; }
         body.app-loading { overflow: hidden; }
-
-        /* ⭐ SPLASH SCREEN STYLES ⭐ */
         #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0f172a 0%, #1E1B4B 50%, #4c1d95 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999999; transition: opacity 0.8s, visibility 0.8s; }
         #splash-screen.hidden { opacity: 0; visibility: hidden; }
         .splash-bg-circle { position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.5; animation: float 6s infinite; }
@@ -56,27 +53,11 @@
         .splash-loader { width: 50px; height: 50px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #FF5A3C; border-right-color: #FF5A3C; border-radius: 50%; animation: spin 1s infinite; }
         @keyframes pulseLogo { 50% { transform: scale(1.03); } }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* ⭐ NOTIFICATION BELL STYLES ⭐ */
-        .notif-wrapper { position: relative; margin-right: 15px; cursor: pointer; display: flex; align-items: center; }
-        .notif-bell { font-size: 1.5rem; color: var(--primary); transition: transform 0.2s; }
-        .notif-wrapper:hover .notif-bell { transform: scale(1.1); }
-        .notif-badge { position: absolute; top: -5px; right: -8px; background: #EF4444; color: white; font-size: 0.65rem; font-weight: bold; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid #fff; display: none; }
-        
-        .notif-panel { position: absolute; top: 45px; right: 0; width: 320px; background: #fff; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: none; z-index: 100000; max-height: 400px; overflow-y: auto; }
-        .notif-header { display: flex; justify-content: space-between; padding: 12px 15px; border-bottom: 1px solid var(--border); font-weight: 700; color: var(--primary); position: sticky; top: 0; background: #fff; z-index: 2; }
-        .notif-item { padding: 12px 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-        .notif-item:hover { background: #F8FAFC; }
-        .notif-item h4 { font-size: 0.85rem; margin-bottom: 3px; color: var(--primary); margin-top: 0; }
-        .notif-item p { font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; margin: 0; }
-        .notif-del { background: transparent; border: none; color: #EF4444; cursor: pointer; font-size: 0.9rem; transition: color 0.2s; }
-        .notif-del:hover { color: #DC2626; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="app-loading">
     
-    <!-- Splash Screen -->
     <div id="splash-screen">
         <div class="splash-bg-circle c1"></div>
         <div class="splash-bg-circle c2"></div>
@@ -91,23 +72,15 @@
     <header class="header">
         <div class="nav-main">
             <a href="index.html" class="logo">PrimePick<span>Hub</span></a>
-            
             <div style="display: flex; align-items: center; flex: 1; justify-content: flex-end;">
-                <!-- ⭐ Notification Bell ⭐ -->
                 <div class="notif-wrapper" onclick="toggleNotifPanel(event)">
                     <i class="fa-solid fa-bell notif-bell"></i>
                     <span id="notifBadge" class="notif-badge">0</span>
-                    
                     <div id="notifPanel" class="notif-panel" onclick="event.stopPropagation()">
-                        <div class="notif-header">
-                            <span>Notifications</span>
-                            <button onclick="clearAllNotifs(event)" style="background:none; border:none; color:#EF4444; font-size:0.75rem; cursor:pointer; font-weight:600;">Clear All</button>
-                        </div>
+                        <div class="notif-header"><span>Notifications</span><button onclick="clearAllNotifs(event)" style="background:none; border:none; color:#EF4444; font-size:0.75rem; cursor:pointer; font-weight:600;">Clear All</button></div>
                         <div id="notifList"></div>
                     </div>
                 </div>
-
-                <!-- Search Box -->
                 <div class="search-box">
                     <div class="custom-category-dropdown" id="categoryDropdownWrap">
                         <button type="button" class="category-btn" id="categoryDropdownBtn" onclick="toggleCatDropdown(event)">
@@ -125,7 +98,6 @@
     </header>
 
     <main class="container">
-        <!-- 1. Special Deal Section -->
         <div id="specialDealSection" class="alibaba-special-deal" style="margin-top: 5px;">
             <div class="special-deal-left">
                 <h2 id="specialDealTitle">First order deal</h2>
@@ -134,7 +106,8 @@
                     <li><i class="fa-solid fa-circle-check"></i> Limited Time Only</li>
                     <li><i class="fa-solid fa-truck-fast"></i> Top Rated Products</li>
                 </ul>
-                <a href="search.html?q=" class="explore-btn">Explore now</a>
+                <!-- ⭐ Explore Now Button Updated ⭐ -->
+                <a href="search.html?special=true" class="explore-btn">Explore now</a>
             </div>
             <div class="special-deal-right">
                 <button class="scroll-arrow left-arrow" onclick="scrollSpecial('left')"><i class="fa-solid fa-chevron-left"></i></button>
@@ -143,7 +116,6 @@
             </div>
         </div>
 
-        <!-- 2. Flash Sale Section -->
         <div id="flashSaleSection" class="flash-sale-split" style="display: none;">
             <canvas id="fireworksCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;"></canvas>
             <div class="flash-sale-left">
@@ -165,13 +137,11 @@
             </div>
         </div>
 
-        <!-- 3. Shop by Category -->
         <div style="margin-bottom: 20px;">
             <h2 style="margin-bottom: 15px; font-family: 'Poppins', sans-serif; font-weight: 800; color: var(--text-dark);">Shop by Category</h2>
             <div class="horizontal-category-scroll" id="categoryScrollContainer"></div>
         </div>
 
-        <!-- 4. Products Section -->
         <div id="normalProductsSection" style="margin-bottom: 20px;">
             <h2 id="productSectionTitle" style="display: none;"></h2>
             <div class="product-grid" id="productGrid"></div>
@@ -186,7 +156,6 @@
         <div class="footer-disclaimer">PrimePickHub is an affiliate website. We may earn a commission when you click our links and purchase items on official store sites at no additional cost to you.</div>
     </footer>
 
-    <!-- PWA App Download Popup -->
     <div id="appPopupOverlay" class="app-popup-overlay" onclick="toggleAppPopup()" style="display: none;"></div>
     <div id="appDownloadPopup" class="app-popup" style="display: none;">
         <div class="app-popup-content">
@@ -194,14 +163,10 @@
             <div class="app-icon"><img src="assets/icon-192.png" alt="App Icon"></div>
             <h3>Install PrimePickHub App</h3>
             <p>Better experience, exclusive deals & faster checkout!</p>
-            
-            <!-- Desktop View: QR Code -->
             <div id="desktopAppContent" style="display: none; text-align: center;">
                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://primepickhub.vercel.app/" alt="Scan QR Code" style="border-radius: 10px; border: 2px solid #E2E8F0; padding: 5px; margin-bottom: 10px;">
                 <p style="font-size: 0.85rem; color: #64748B;">Scan with your phone to Install</p>
             </div>
-
-            <!-- Mobile View: Install Button -->
             <div id="mobileAppContent" style="display: none;">
                 <button class="btn-app-download" id="pwaInstallBtn" onclick="triggerPWAInstall()" style="background: var(--accent);">Install App</button>
                 <p style="font-size: 0.75rem; color: #64748B; margin-top: 10px;">Note: For iOS, use "Share > Add to Home Screen" in Safari.</p>
@@ -209,7 +174,6 @@
         </div>
     </div>
 
-    <!-- Floating App Icon -->
     <button id="floatingAppIcon" class="floating-app-btn" onclick="toggleAppPopup()" style="display: none;">
         <img src="assets/icon-192.png" alt="Download App"><span class="pulse-ring"></span>
     </button>
