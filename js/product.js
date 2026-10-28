@@ -159,7 +159,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     function updateUI(currency) {
         const rate = exchangeRates[currency] || 1;
         
-        // ⭐ FIX: Only base price and sale price
         const basePrice = parseFloat(activeOffer.price) || 0;
         const salePrice = parseFloat(activeOffer.sale_price) || 0;
         
