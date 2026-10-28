@@ -63,21 +63,23 @@
                     <div class="stat-card"><p style="color:#64748B;">Affiliate Clicks</p><h3 id="statClicks">0</h3></div>
                 </div>
 
-                <!-- ⭐ App Download Live/Stop Setting (Ultra Compact - 2 Line Layout) ⭐ -->
-                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 20px; padding: 12px 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; gap: 15px;">
-                    <div style="flex: 1;">
-                        <h3 style="margin: 0 0 6px 0; color: #166534; font-size: 1rem; font-weight: 700;">App Download Popup Settings</h3>
-                        
-                        <!-- Yahan Checkbox aur text ko ek line mein rakha gaya hai -->
-                        <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem; margin: 0; color: #1E1B4B;">
-                                <input type="checkbox" id="appDownloadStatusToggle" style="width: 16px; height: 16px; margin: 0; cursor: pointer;">
-                                Show App Popup & Floating Button (Live)
-                            </label>
-                            <span style="color: #15803d; font-size: 0.8rem; font-weight: 500;">(Uncheck to hide QR popup and corner button)</span>
-                        </div>
-                    </div>
-                    <button type="button" id="saveAppSettingsBtn" style="width:auto; padding: 8px 18px; background: #16a34a; color:white; border:none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; margin: 0; white-space: nowrap; box-shadow: 0 2px 4px rgba(22,163,74,0.2);">Update Settings</button>
+                <!-- ⭐ App Download Live/Stop Setting (Chota Box, Vertical Layout) ⭐ -->
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 20px; padding: 15px; border-radius: 8px; display: flex; flex-direction: column; gap: 8px; max-width: 500px; width: 100%;">
+                    
+                    <!-- 1. Title -->
+                    <h3 style="margin: 0; color: #166534; font-size: 1rem; font-weight: 700;">App Download Popup Settings</h3>
+                    
+                    <!-- 2. Helper Text -->
+                    <p style="margin: 0; font-size: 0.8rem; color: #15803d;">(Uncheck to hide QR popup and corner button)</p>
+                    
+                    <!-- 3. Checkbox -->
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: #1E1B4B; margin-top: 4px;">
+                        <input type="checkbox" id="appDownloadStatusToggle" style="width: 16px; height: 16px; margin: 0; cursor: pointer;">
+                        Show App Popup & Floating Button (Live)
+                    </label>
+                    
+                    <!-- 4. Update Button -->
+                    <button type="button" id="saveAppSettingsBtn" style="width: 100%; padding: 8px 15px; background: #16a34a; color: white; border: none; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 8px; box-shadow: 0 2px 4px rgba(22,163,74,0.2);">Update Settings</button>
                 </div>
 
                 <!-- Special Deal Title Setup -->
