@@ -1147,3 +1147,44 @@ body {
         max-width: 320px;
     }
 }
+/* ⭐ Mobile Search Bar Overflow Fix (Paste at the very end of main.css) ⭐ */
+@media (max-width: 768px) {
+    .nav-main {
+        display: flex;
+        flex-wrap: wrap !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 10px 4% !important;
+        gap: 10px !important;
+    }
+
+    /* Yeh line inner div ko khatam kar ke elements ko direct set karti hai */
+    .nav-main > div {
+        display: contents !important;
+    }
+
+    .logo {
+        order: 1;
+    }
+
+    .notif-wrapper {
+        order: 2;
+        margin-left: auto !important;
+        margin-right: 0 !important;
+    }
+
+    /* Search bar ko poori width de kar next line par bheja hai */
+    .search-box {
+        order: 3;
+        width: 100% !important;
+        max-width: 100% !important;
+        flex-basis: 100% !important;
+        margin-top: 5px !important;
+        margin-right: 0 !important;
+    }
+
+    /* Input ki minimum width ko 0 kiya taake bahar na nikle */
+    .search-box input {
+        min-width: 0 !important;
+    }
+}
