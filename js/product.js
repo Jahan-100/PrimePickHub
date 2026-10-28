@@ -49,12 +49,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelector('meta[property="og:description"]')?.setAttribute('content', product.description || '');
 
     const allOffers = product.affiliate_offers || [];
-    const defaultOffer = allOffers.find(o => !o.variation_name) || allOffers[0] || { price: '0', store_name: 'Store', currency: 'USD', commission_rate: 0, sale_price: null };
-    const variations = allOffers.filter(o => o.variation_name);
+    const defaultOffer = allOffers[0] || { price: '0', store_name: 'Store', currency: 'USD', commission_rate: 0, sale_price: null };
+    const variations = allOffers.slice(1); // First offer is main offer, rest are variations
 
     const baseCurrency = (defaultOffer.currency || 'USD').toUpperCase();
-    
-    // ⭐ Yahan defaultOffer set kiya hai taake pehle Base Price show ho
     let activeOffer = defaultOffer;
 
     const renderBuyButton = (offer) => {
@@ -119,124 +117,4 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 <p style="color:#64748B;margin-bottom:20px;">${escapeHTML(product.description || '')}</p>
                 
-                <div style="background-color:#FEF3C7; border-left:4px solid #F59E0B; padding:12px 15px; margin-bottom:15px; border-radius:6px; display:flex; align-items:flex-start; gap:10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                    <i class="fa-solid fa-circle-info" style="color:#D97706; font-size:1.2rem; margin-top:2px;"></i>
-                    <p style="font-size:0.95rem; color:#92400E; margin:0; font-weight:600; line-height:1.5;">
-                        Important: You will be redirected to the official store to confirm live price, stock, and delivery.
-                    </p>
-                </div>
-
-                ${variationHtml}
-
-                <div style="margin-bottom:25px;padding:15px;background:#F8FAFC;border-radius:8px;" id="buyButtonContainer"></div>
-                
-                <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                    <a href="https://wa.me/?text=${shareText}%20${shareUrl}" target="_blank" rel="noopener" style="padding:8px 16px;background:#25D366;color:#fff;border-radius:6px;text-decoration:none;font-size:0.9rem;">Share on WhatsApp</a>
-                    <a href="https://www.facebook.com/sharer/sharer.php?u=${shareUrl}" target="_blank" rel="noopener" style="padding:8px 16px;background:#1877F2;color:#fff;border-radius:6px;text-decoration:none;font-size:0.9rem;">Share on Facebook</a>
-                </div>
-            </div>
-        </div>
-        ${videoHtml}
-        <div style="background:#fff;padding:30px;border-radius:12px;border:1px solid #E2E8F0;">
-            <h2 style="margin-bottom:20px;border-bottom:2px solid #FF5A3C;padding-bottom:10px;display:inline-block;">Our Detailed Review</h2>
-            <div style="color:#334155;line-height:1.8;font-size:1.05rem;">${product.review_html || '<p>Detailed review coming soon...</p>'}</div>
-        </div>
-    `;
-
-    const currencySelector = document.getElementById('currencySelector');
-    const displayPriceContainer = document.getElementById('displayPriceContainer');
-    const buyButtonContainer = document.getElementById('buyButtonContainer');
-    let exchangeRates = {};
-
-    async function fetchRates() {
-        try {
-            const res = await fetch(`https://open.er-api.com/v6/latest/${baseCurrency}`);
-            const data = await res.json();
-            if (data.result === "success") exchangeRates = data.rates; else throw new Error("API failed");
-        } catch (err) {
-            exchangeRates = { USD: 1, PKR: 278.5, EUR: 0.92, GBP: 0.79, INR: 83.2, AED: 3.67, CAD: 1.36, AUD: 1.52, SAR: 3.75, CNY: 7.23, JPY: 149.5 };
-        }
-    }
-
-    function updateUI(currency) {
-        const rate = exchangeRates[currency] || 1;
-        
-        const basePrice = parseFloat(activeOffer.price) || 0;
-        const salePrice = parseFloat(activeOffer.sale_price) || 0;
-        const commissionRate = parseFloat(activeOffer.commission_rate) || 0;
-        
-        let finalBasePrice = basePrice;
-        let finalSalePrice = salePrice;
-
-        if (commissionRate > 0) {
-            finalBasePrice = basePrice + (basePrice * (commissionRate / 100));
-            if (salePrice > 0) {
-                finalSalePrice = salePrice + (salePrice * (commissionRate / 100));
-            }
-        }
-        
-        let priceHtml = '';
-
-        if (salePrice > 0) {
-            const convertedSale = finalSalePrice * rate;
-            const convertedOrig = finalBasePrice * rate;
-            const symbol = currencySymbols[currency] || currency + ' ';
-
-            priceHtml = `
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <span style="text-decoration:line-through; color:#94A3B8; font-size:1.2rem;">${symbol}${convertedOrig.toFixed(2)}</span>
-                    <span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${convertedSale.toFixed(2)}</span>
-                </div>`;
-        } else {
-            const converted = finalBasePrice * rate;
-            const symbol = currencySymbols[currency] || currency + ' ';
-            priceHtml = `<span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${converted.toFixed(2)}</span>`;
-        }
-
-        displayPriceContainer.innerHTML = priceHtml;
-        buyButtonContainer.innerHTML = renderBuyButton(activeOffer);
-    }
-
-    await fetchRates(); updateUI(baseCurrency);
-    currencySelector.addEventListener('change', (e) => updateUI(e.target.value));
-
-    if (variations.length > 0) {
-        document.querySelectorAll('.var-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const idx = parseInt(this.dataset.index);
-                activeOffer = variations[idx];
-                document.querySelectorAll('.var-btn').forEach(b => { b.style.borderColor = '#E2E8F0'; b.style.color = '#1E1B4B'; });
-                this.style.borderColor = '#FF5A3C'; this.style.color = '#FF5A3C';
-                updateUI(currencySelector.value);
-            });
-        });
-    }
-
-    container.querySelectorAll('.gallery-thumb').forEach(thumb => {
-        thumb.addEventListener('click', function () {
-            document.getElementById('mainImage').src = this.dataset.src;
-            container.querySelectorAll('.gallery-thumb').forEach(t => t.style.borderColor = '#E2E8F0');
-            this.style.borderColor = '#FF5A3C';
-        });
-    });
-
-    const jsonLd = {
-        "@context": "https://schema.org/", "@type": "Product", "name": product.title,
-        "image": [product.image_url].concat(product.gallery_images || []).filter(Boolean),
-        "description": product.description || product.title,
-        "offers": allOffers.map(o => {
-            const p = parseFloat(o.price) || 0; 
-            const sp = parseFloat(o.sale_price) || 0;
-            const c = parseFloat(o.commission_rate) || 0;
-
-            let finalP = sp > 0 ? sp : p;
-            if (c > 0) {
-                finalP = finalP + (finalP * (c / 100));
-            }
-            
-            return { "@type": "Offer", "url": o.affiliate_url, "priceCurrency": o.currency || "USD", "price": finalP.toFixed(2), "availability": "https://schema.org/InStock", "seller": { "@type": "Organization", "name": o.store_name } };
-        })
-    };
-    if (product.rating && product.reviews_count > 0) jsonLd.aggregateRating = { "@type": "AggregateRating", "ratingValue": product.rating, "reviewCount": product.reviews_count };
-    const script = document.createElement('script'); script.type = 'application/ld+json'; script.text = JSON.stringify(jsonLd); document.head.appendChild(script);
-});
+                <div style="background-color:#FEF3C7; border-left:4px solid #F59E0B; padding:12px 15px; margin-bottom:15px; border-radius:6px; display:flex; align-items:flex-start; gap:10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05
