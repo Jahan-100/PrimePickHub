@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadProductsList(); 
     setupProductForm(); 
     setupToggleList();
+    setupToggleAddProduct(); // ⭐ Naya Toggle Setup ⭐
     
     document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
     document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
@@ -106,6 +107,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         finally { btn.innerText = originalText; btn.disabled = false; }
     });
 });
+
+// ⭐ Naya Function: Add Product Form ko Show/Hide karne ke liye ⭐
+function setupToggleAddProduct() {
+    const toggleBtn = document.getElementById('toggleAddProductBtn');
+    const formContainer = document.getElementById('addProductContainer');
+    if (toggleBtn && formContainer) {
+        toggleBtn.addEventListener('click', () => {
+            if (formContainer.style.display === 'none') {
+                formContainer.style.display = 'block'; 
+                toggleBtn.textContent = 'Hide Add Product Form'; 
+                toggleBtn.style.background = '#EF4444';
+            } else {
+                formContainer.style.display = 'none'; 
+                toggleBtn.textContent = 'Show Add Product Form'; 
+                toggleBtn.style.background = '#3B82F6';
+            }
+        });
+    }
+}
 
 async function loadSiteSettings() {
     const { data } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).maybeSingle();
@@ -294,8 +314,19 @@ window.editProduct = async function(id) {
         document.getElementById('pImgFileName').innerText = 'No file chosen';
         document.getElementById('pGalleryFileName').innerText = 'No files chosen';
 
-        document.getElementById('formTitle').innerText = "Edit Product"; document.getElementById('saveBtn').innerText = "Update Product"; document.getElementById('cancelEditBtn').style.display = "block";
-        const listContainer = document.getElementById('productListContainer'); if(listContainer && listContainer.style.display === 'none') document.getElementById('toggleProductListBtn').click();
+        document.getElementById('formTitle').innerText = "Edit Product"; 
+        document.getElementById('saveBtn').innerText = "Update Product"; 
+        document.getElementById('cancelEditBtn').style.display = "block";
+        
+        // ⭐ Jab Edit par click ho, toh form khud khul jaye ⭐
+        const formContainer = document.getElementById('addProductContainer');
+        const toggleBtn = document.getElementById('toggleAddProductBtn');
+        if (formContainer && formContainer.style.display === 'none') {
+            formContainer.style.display = 'block';
+            toggleBtn.textContent = 'Hide Add Product Form';
+            toggleBtn.style.background = '#EF4444';
+        }
+
         document.getElementById('productForm').scrollIntoView({ behavior: 'smooth' });
     } catch (err) { alert("Error loading product: " + err.message); }
 }
@@ -316,7 +347,9 @@ function setupProductForm() {
         document.getElementById('pImgFileName').innerText = 'No file chosen';
         document.getElementById('pGalleryFileName').innerText = 'No files chosen';
 
-        document.getElementById('formTitle').innerText = "Add New Product"; document.getElementById('saveBtn').innerText = "Save Product"; cancelBtn.style.display = "none";
+        document.getElementById('formTitle').innerText = "Add New Product"; 
+        document.getElementById('saveBtn').innerText = "Save Product"; 
+        cancelBtn.style.display = "none";
     });
 
     form.addEventListener('submit', async (e) => {
