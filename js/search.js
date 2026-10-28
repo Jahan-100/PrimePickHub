@@ -8,21 +8,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(window.location.search);
     const query = params.get('q') || '';
     const category = params.get('cat') || '';
+    const isSpecial = params.get('special') === 'true'; // ⭐ Special Deal check
     const grid = document.getElementById('searchGrid');
     const title = document.getElementById('searchTitle');
 
     if (title) {
-        let titleText = query ? `Results for "${query}"` : 'All Products';
-        if (category) titleText += ` in ${category}`;
-        title.innerText = titleText;
+        if (isSpecial) {
+            title.innerText = 'Special Deals';
+        } else {
+            let titleText = query ? `Results for "${query}"` : 'All Products';
+            if (category) titleText += ` in ${category}`;
+            title.innerText = titleText;
+        }
     }
 
     grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;padding:40px;">Searching...</p>';
 
-    const results = await API.searchProducts({ query, category });
+    let results = [];
+    try {
+        if (isSpecial) {
+            // ⭐ صرف اسپیشل ڈیلز والی پروڈکٹس لائیں
+            const { data, error } = await window.supabaseClient
+                .from('products')
+                .select('*, affiliate_offers(*)')
+                .eq('is_special_deal', true)
+                .eq('is_available', true);
+            
+            if (!error) results = data || [];
+        } else {
+            // باقی نارمل سرچ
+            results = await API.searchProducts({ query, category });
+        }
+    } catch (err) {
+        console.error(err);
+    }
 
     if (!results || results.length === 0) {
-        grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;padding:40px;">No products found.</p>';
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;">
+            <p>No products found.</p>
+        </div>`;
         return;
     }
 
