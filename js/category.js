@@ -31,11 +31,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     grid.innerHTML = products.map(p => {
-        // ⭐ UPDATE: Get First Variation or Default Offer
         const offers = p.affiliate_offers || [];
-        const variations = offers.filter(o => o.variation_name);
         const defaultOffer = offers.find(o => !o.variation_name);
-        const primaryOffer = (variations.length > 0 ? variations[0] : defaultOffer) || offers[0] || {};
+        const primaryOffer = defaultOffer || offers[0] || {};
 
         const storeName = primaryOffer.store_name || 'Amazon';
         
