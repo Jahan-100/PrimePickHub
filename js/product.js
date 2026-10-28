@@ -1,5 +1,5 @@
 /**
- * Product Detail Page with Real-Time Currency Conversion & Sale Price
+ * Product Detail Page with Real-Time Currency Conversion
  */
 function escapeHTML(s) {
     if (s === null || s === undefined) return '';
@@ -161,7 +161,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const basePrice = parseFloat(activeOffer.price) || 0;
         const salePrice = parseFloat(activeOffer.sale_price) || 0;
-        const commissionRate = parseFloat(activeOffer.commission_rate) || 0;
         
         const now = new Date();
         const isSaleActive = product.sale_end_date && new Date(product.sale_end_date) > now;
@@ -169,11 +168,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         let priceHtml = '';
 
         if (isSaleActive && salePrice > 0) {
-            const finalSale = commissionRate > 0 ? salePrice + (salePrice * (commissionRate / 100)) : salePrice;
-            const finalOrig = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice;
-            
-            const convertedSale = finalSale * rate;
-            const convertedOrig = finalOrig * rate;
+            // ⭐ FIX: Base price strikethrough, Sale price bold (No commission)
+            const convertedSale = salePrice * rate;
+            const convertedOrig = basePrice * rate;
             const symbol = currencySymbols[currency] || currency + ' ';
 
             priceHtml = `
@@ -182,8 +179,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${convertedSale.toFixed(2)}</span>
                 </div>`;
         } else {
-            const finalBasePrice = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice;
-            const converted = finalBasePrice * rate;
+            // ⭐ FIX: Only base price (No commission)
+            const converted = basePrice * rate;
             const symbol = currencySymbols[currency] || currency + ' ';
             priceHtml = `<span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${converted.toFixed(2)}</span>`;
         }
@@ -222,11 +219,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         "offers": allOffers.map(o => {
             const p = parseFloat(o.price) || 0; 
             const sp = parseFloat(o.sale_price) || 0;
-            const c = parseFloat(o.commission_rate) || 0;
             const isSale = product.sale_end_date && new Date(product.sale_end_date) > new Date();
-            
-            const actualP = (isSale && sp > 0) ? sp : p;
-            const finalP = c > 0 ? actualP + (actualP * (c / 100)) : actualP;
+            const finalP = (isSale && sp > 0) ? sp : p;
             
             return { "@type": "Offer", "url": o.affiliate_url, "priceCurrency": o.currency || "USD", "price": finalP.toFixed(2), "availability": "https://schema.org/InStock", "seller": { "@type": "Organization", "name": o.store_name } };
         })
