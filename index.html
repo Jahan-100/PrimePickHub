@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="theme-color" content="#0f172a">
-    <style> html, body { background-color: #0f172a !important; margin: 0; padding: 0; } </style>
+    <meta name="theme-color" content="#f8fafc">
+    <!-- ⭐ White Flash Rokne Ka Code (Light Background) ⭐ -->
+    <style> html, body { background-color: #f8fafc !important; margin: 0; padding: 0; } </style>
     
     <meta name="mitgo-verification" content="e3f69518-ab0c-46db-a669-34aacd83fd21" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -38,19 +39,30 @@
     <style>
         .card-timer { background: #FEF2F2; color: #DC2626; font-size: 0.75rem; font-weight: 800; padding: 5px 8px; border-radius: 4px; margin-bottom: 8px; text-align: center; border: 1px solid #FECACA; display: flex; align-items: center; justify-content: center; gap: 5px; }
         body.app-loading { overflow: hidden; }
-        #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0f172a 0%, #1E1B4B 50%, #4c1d95 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999999; transition: opacity 0.8s, visibility 0.8s; }
+
+        /* ⭐ NEW LIGHT & TRENDY SPLASH SCREEN ⭐ */
+        #splash-screen { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            z-index: 9999999; transition: opacity 0.8s, visibility 0.8s; 
+        }
         #splash-screen.hidden { opacity: 0; visibility: hidden; }
-        .splash-bg-circle { position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.5; animation: float 6s infinite; }
-        .splash-bg-circle.c1 { width: 300px; height: 300px; background: #FF5A3C; top: -100px; left: -100px; }
-        .splash-bg-circle.c2 { width: 250px; height: 250px; background: #3b82f6; bottom: -50px; right: -50px; animation-delay: -3s; }
+        .splash-bg-circle { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.6; animation: float 6s infinite; }
+        .splash-bg-circle.c1 { width: 300px; height: 300px; background: #ffb8b8; top: -100px; left: -100px; }
+        .splash-bg-circle.c2 { width: 250px; height: 250px; background: #b8e0ff; bottom: -50px; right: -50px; animation-delay: -3s; }
         @keyframes float { 50% { transform: translateY(20px) scale(1.1); } }
+        
         .splash-content { text-align: center; z-index: 2; animation: pulseLogo 2s infinite; display: flex; flex-direction: column; align-items: center; }
-        .splash-logo-img { width: 110px; height: 110px; border-radius: 24px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); background: #fff; padding: 5px; }
-        .splash-title { font-family: 'Poppins', sans-serif; font-weight: 900; font-size: 2.2rem; color: #fff; margin: 0; }
+        .splash-logo-img { width: 110px; height: 110px; border-radius: 24px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); background: #fff; padding: 5px; }
+        
+        .splash-title { font-family: 'Poppins', sans-serif; font-weight: 900; font-size: 2.2rem; color: #1E1B4B; margin: 0; }
         .splash-title span { color: #FF5A3C; }
-        .splash-subtitle { color: #94A3B8; font-size: 0.9rem; font-weight: 500; margin-top: 5px; letter-spacing: 1px; text-transform: uppercase; }
+        .splash-subtitle { color: #475569; font-size: 0.9rem; font-weight: 600; margin-top: 5px; letter-spacing: 1px; text-transform: uppercase; }
+        
         .splash-loader-wrap { margin-top: 40px; z-index: 2; }
-        .splash-loader { width: 50px; height: 50px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #FF5A3C; border-right-color: #FF5A3C; border-radius: 50%; animation: spin 1s infinite; }
+        .splash-loader { width: 50px; height: 50px; border: 3px solid rgba(255,255,255,0.5); border-top-color: #FF5A3C; border-right-color: #FF5A3C; border-radius: 50%; animation: spin 1s infinite; box-shadow: 0 0 15px rgba(255, 90, 60, 0.2); }
+        
         @keyframes pulseLogo { 50% { transform: scale(1.03); } }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
@@ -106,7 +118,6 @@
                     <li><i class="fa-solid fa-circle-check"></i> Limited Time Only</li>
                     <li><i class="fa-solid fa-truck-fast"></i> Top Rated Products</li>
                 </ul>
-                <!-- ⭐ Explore Now Button Updated ⭐ -->
                 <a href="search.html?special=true" class="explore-btn">Explore now</a>
             </div>
             <div class="special-deal-right">
