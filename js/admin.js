@@ -297,14 +297,23 @@ function renderTable() {
 
     tbody.innerHTML = filteredProducts.map(p => {
         const defaultOffer = p.affiliate_offers?.find(o => !o.variation_name) || p.affiliate_offers?.[0] || {};
+        
+        // ⭐ FIX: Yahan price ka logic frontend ki tarah update kar diya gaya hai ⭐
         const basePrice = parseFloat(defaultOffer.price) || 0;
-        const commissionRate = parseFloat(defaultOffer.commission_rate) || 0;
-        const now = new Date(); const isSaleActive = p.sale_end_date && new Date(p.sale_end_date) > now;
         const salePrice = parseFloat(defaultOffer.sale_price) || 0;
-        let finalPrice = basePrice;
-        if (isSaleActive && salePrice > 0) { finalPrice = commissionRate > 0 ? salePrice + (salePrice * (commissionRate / 100)) : salePrice; } 
-        else { finalPrice = commissionRate > 0 ? basePrice + (basePrice * (commissionRate / 100)) : basePrice; }
-        const priceStr = defaultOffer.price ? `${finalPrice.toFixed(2)} ${defaultOffer.currency || 'USD'}` : 'N/A';
+        const currency = defaultOffer.currency || 'USD';
+        
+        let priceStr = '';
+        if (defaultOffer.price) {
+            if (salePrice > 0) {
+                priceStr = `<div style="text-decoration:line-through; color:#94A3B8; font-size:0.8rem;">${basePrice.toFixed(2)} ${currency}</div>
+                            <div style="font-weight:bold; color:#FF5A3C; font-size:1rem;">${salePrice.toFixed(2)} ${currency}</div>`;
+            } else {
+                priceStr = `<strong style="color:#1E1B4B;">${basePrice.toFixed(2)} ${currency}</strong>`;
+            }
+        } else {
+            priceStr = 'N/A';
+        }
         
         const isAvailable = p.is_available !== false;
         const rowClass = isAvailable ? '' : 'unavailable-row';
@@ -315,7 +324,7 @@ function renderTable() {
             <tr class="${rowClass}">
                 <td style="text-align: center;"><img src="${p.image_url}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;"></td>
                 <td>${p.title} ${statusBadge}</td>
-                <td style="text-align: center;"><strong style="color:#FF5A3C;">${priceStr}</strong></td>
+                <td style="text-align: center;">${priceStr}</td>
                 <td>
                     <div class="action-btns">
                         <button class="btn-edit" onclick="editProduct('${p.id}')">Edit</button>
