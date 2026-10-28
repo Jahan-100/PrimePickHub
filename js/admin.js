@@ -1,6 +1,5 @@
 let allProducts = [];
 
-// ⭐ Helper Function: Upload Image to Supabase Storage
 async function uploadFileToSupabase(file) {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
@@ -37,7 +36,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
     document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
     
-    // ⭐ Save App Download Setting ⭐
     document.getElementById('saveAppSettingsBtn')?.addEventListener('click', async function() {
         const isLive = document.getElementById('appDownloadStatusToggle').checked;
         const { error } = await window.supabaseClient.from('site_settings').update({ 
@@ -48,7 +46,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         else alert(`App Download Popup is now ${isLive ? 'LIVE (Visible)' : 'STOPPED (Hidden)'} on website!`);
     });
 
-    // Save Special Deal Settings
     document.getElementById('saveTitleBtn')?.addEventListener('click', async function() {
         const newTitle = document.getElementById('specialDealTitleInput').value.trim();
         const fontFamily = document.getElementById('titleFontFamily').value;
@@ -70,7 +67,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         else alert("Special Deal Design updated successfully!");
     });
 
-    // Save Flash Sale Settings
     document.getElementById('saveFlashSettingsBtn')?.addEventListener('click', async function() {
         const newTitle = document.getElementById('flashTitleText').value.trim();
         const fontFamily = document.getElementById('flashTitleFontFamily').value;
@@ -92,7 +88,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         else alert("Flash Sale Design updated successfully!");
     });
 
-    // Check Availability Button
     document.getElementById('checkAvailabilityBtn')?.addEventListener('click', async function() {
         const btn = this;
         const originalText = btn.innerText;
@@ -109,7 +104,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         finally { btn.innerText = originalText; btn.disabled = false; }
     });
 
-    // ⭐ Cancel Offer Button Logic ⭐
     document.getElementById('cancelOfferBtn')?.addEventListener('click', () => {
         document.getElementById('pEventName').value = '';
         document.getElementById('pSaleEndDate').value = '';
@@ -296,7 +290,7 @@ function renderTable() {
     if (filteredProducts.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No products found.</td></tr>'; return; }
 
     tbody.innerHTML = filteredProducts.map(p => {
-        const defaultOffer = p.affiliate_offers?.find(o => !o.variation_name) || p.affiliate_offers?.[0] || {};
+        const defaultOffer = p.affiliate_offers?.[0] || {};
         
         const basePrice = parseFloat(defaultOffer.price) || 0;
         const salePrice = parseFloat(defaultOffer.sale_price) || 0;
@@ -366,7 +360,7 @@ window.editProduct = async function(id) {
         if (error) throw error;
         if (!p) { alert("Product not found."); return; }
 
-        const defaultOffer = p.affiliate_offers?.find(o => !o.variation_name) || p.affiliate_offers?.[0] || {};
+        const defaultOffer = p.affiliate_offers?.[0] || {};
         
         document.getElementById('pId').value = p.id; document.getElementById('pOfferId').value = defaultOffer.id || '';
         document.getElementById('pTitle').value = p.title || ''; document.getElementById('pSlug').value = p.slug || '';
@@ -381,6 +375,7 @@ window.editProduct = async function(id) {
         } else { document.getElementById('pSaleEndDate').value = ''; }
 
         document.getElementById('pStore').value = defaultOffer.store_name || ''; 
+        document.getElementById('pMainVarName').value = defaultOffer.variation_name || ''; // ⭐ Naya Box Load
         document.getElementById('pPrice').value = defaultOffer.price || '';
         document.getElementById('pSalePrice').value = defaultOffer.sale_price || '';
         document.getElementById('pCommission').value = (defaultOffer.commission_rate && defaultOffer.commission_rate > 0) ? defaultOffer.commission_rate : '';
@@ -391,7 +386,7 @@ window.editProduct = async function(id) {
         document.getElementById('pSpecialDeal').checked = p.is_special_deal || false;
 
         const varContainer = document.getElementById('variationsContainer'); varContainer.innerHTML = '';
-        const variations = p.affiliate_offers?.filter(o => o.variation_name) || [];
+        const variations = p.affiliate_offers?.slice(1) || []; // Main offer is first, rest are variations
         variations.forEach(v => addVariationRow(v.variation_name, v.price, v.sale_price, (v.commission_rate > 0 ? v.commission_rate : ''), v.affiliate_url));
 
         document.getElementById('pImgFile').value = ''; document.getElementById('pGalleryFile').value = '';
@@ -467,10 +462,13 @@ function setupProductForm() {
 
             if (!productData.title || !productData.slug) throw new Error('Please fill required fields (Title, Slug).');
 
+            // ⭐ Main Offer mein variation_name save kiya gaya hai
             const mainOfferData = {
-                store_name: document.getElementById('pStore').value.trim().toLowerCase(), price: price, sale_price: salePrice,
+                store_name: document.getElementById('pStore').value.trim().toLowerCase(), 
+                variation_name: document.getElementById('pMainVarName').value.trim() || null,
+                price: price, sale_price: salePrice,
                 commission_rate: commission, currency: document.getElementById('pCurrency').value,
-                affiliate_url: document.getElementById('pAffUrl').value.trim(), variation_name: null
+                affiliate_url: document.getElementById('pAffUrl').value.trim()
             };
 
             const variations = [];
@@ -489,6 +487,7 @@ function setupProductForm() {
             } else {
                 const { data: newProduct, error: prodErr } = await window.supabaseClient.from('products').insert([productData]).select().single(); if (prodErr) throw prodErr; productId = newProduct.id;
             }
+            // Main offer insert (Yeh hamesha pehle insert hoga, isliye index 0 par rahega)
             if (price > 0 || variations.length === 0) { mainOfferData.product_id = productId; await window.supabaseClient.from('affiliate_offers').insert([mainOfferData]); }
             if (variations.length > 0) { variations.forEach(v => v.product_id = productId); const { error: varErr } = await window.supabaseClient.from('affiliate_offers').insert(variations); if (varErr) throw varErr; }
             
