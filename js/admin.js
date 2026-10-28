@@ -1,11 +1,20 @@
 let allProducts = [];
 
+// ⭐ Helper Function: Upload Image to Supabase Storage
 async function uploadFileToSupabase(file) {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const { data, error } = await window.supabaseClient.storage.from('product-images').upload(fileName, file);
+    
+    const { data, error } = await window.supabaseClient.storage
+        .from('product-images')
+        .upload(fileName, file);
+
     if (error) throw error;
-    const { data: publicUrlData } = window.supabaseClient.storage.from('product-images').getPublicUrl(fileName);
+
+    const { data: publicUrlData } = window.supabaseClient.storage
+        .from('product-images')
+        .getPublicUrl(fileName);
+        
     return publicUrlData.publicUrl;
 }
 
@@ -28,13 +37,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
     document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
     
+    // ⭐ Save App Download Setting ⭐
     document.getElementById('saveAppSettingsBtn')?.addEventListener('click', async function() {
         const isLive = document.getElementById('appDownloadStatusToggle').checked;
-        const { error } = await window.supabaseClient.from('site_settings').update({ show_app_download: isLive }).eq('id', 1);
+        const { error } = await window.supabaseClient.from('site_settings').update({ 
+            show_app_download: isLive 
+        }).eq('id', 1);
+
         if (error) alert("Error: " + error.message);
         else alert(`App Download Popup is now ${isLive ? 'LIVE (Visible)' : 'STOPPED (Hidden)'} on website!`);
     });
 
+    // Save Special Deal Settings
     document.getElementById('saveTitleBtn')?.addEventListener('click', async function() {
         const newTitle = document.getElementById('specialDealTitleInput').value.trim();
         const fontFamily = document.getElementById('titleFontFamily').value;
@@ -43,13 +57,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         const fontStyle = document.getElementById('titleFontStyle').value;
 
         if(!newTitle) return alert("Title cannot be empty");
+        
         const { error } = await window.supabaseClient.from('site_settings').update({ 
-            special_deal_title: newTitle, title_font_family: fontFamily, title_font_size: fontSize, title_font_weight: fontWeight, title_font_style: fontStyle
+            special_deal_title: newTitle,
+            title_font_family: fontFamily,
+            title_font_size: fontSize,
+            title_font_weight: fontWeight,
+            title_font_style: fontStyle
         }).eq('id', 1);
+
         if (error) alert("Error: " + error.message);
         else alert("Special Deal Design updated successfully!");
     });
 
+    // Save Flash Sale Settings
     document.getElementById('saveFlashSettingsBtn')?.addEventListener('click', async function() {
         const newTitle = document.getElementById('flashTitleText').value.trim();
         const fontFamily = document.getElementById('flashTitleFontFamily').value;
@@ -58,13 +79,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         const fontStyle = document.getElementById('flashTitleFontStyle').value;
 
         if(!newTitle) return alert("Flash Sale Title cannot be empty");
+        
         const { error } = await window.supabaseClient.from('site_settings').update({ 
-            flash_title_text: newTitle, flash_title_font_family: fontFamily, flash_title_font_size: fontSize, flash_title_font_weight: fontWeight, flash_title_font_style: fontStyle
+            flash_title_text: newTitle,
+            flash_title_font_family: fontFamily,
+            flash_title_font_size: fontSize,
+            flash_title_font_weight: fontWeight,
+            flash_title_font_style: fontStyle
         }).eq('id', 1);
+
         if (error) alert("Error: " + error.message);
         else alert("Flash Sale Design updated successfully!");
     });
 
+    // Check Availability Button
     document.getElementById('checkAvailabilityBtn')?.addEventListener('click', async function() {
         const btn = this;
         const originalText = btn.innerText;
@@ -73,8 +101,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const res = await fetch('/api/check-status');
             const data = await res.json();
-            if (data.success) { alert(`Check Complete!\n${data.message}`); await loadProductsList(); } 
-            else { alert('Error checking status: ' + (data.error || 'Unknown error')); }
+            if (data.success) {
+                alert(`Check Complete!\n${data.message}`);
+                await loadProductsList(); 
+            } else { alert('Error checking status: ' + (data.error || 'Unknown error')); }
         } catch (err) { alert('Failed to check. Make sure Vercel API is deployed.'); }
         finally { btn.innerText = originalText; btn.disabled = false; }
     });
@@ -86,9 +116,13 @@ function setupToggleAddProduct() {
     if (toggleBtn && formContainer) {
         toggleBtn.addEventListener('click', () => {
             if (formContainer.style.display === 'none') {
-                formContainer.style.display = 'block'; toggleBtn.textContent = 'Hide Add Product Form'; toggleBtn.style.background = '#EF4444';
+                formContainer.style.display = 'block'; 
+                toggleBtn.textContent = 'Hide Add Product Form'; 
+                toggleBtn.style.background = '#EF4444';
             } else {
-                formContainer.style.display = 'none'; toggleBtn.textContent = 'Show Add Product Form'; toggleBtn.style.background = '#3B82F6';
+                formContainer.style.display = 'none'; 
+                toggleBtn.textContent = 'Show Add Product Form'; 
+                toggleBtn.style.background = '#3B82F6';
             }
         });
     }
@@ -100,9 +134,13 @@ function setupToggleSpecialDeal() {
     if (toggleBtn && container) {
         toggleBtn.addEventListener('click', () => {
             if (container.style.display === 'none') {
-                container.style.display = 'block'; toggleBtn.textContent = 'Hide Settings'; toggleBtn.style.background = '#EF4444';
+                container.style.display = 'block'; 
+                toggleBtn.textContent = 'Hide Settings'; 
+                toggleBtn.style.background = '#EF4444';
             } else {
-                container.style.display = 'none'; toggleBtn.textContent = 'Show Settings'; toggleBtn.style.background = '#3B82F6';
+                container.style.display = 'none'; 
+                toggleBtn.textContent = 'Show Settings'; 
+                toggleBtn.style.background = '#3B82F6';
             }
         });
     }
@@ -114,9 +152,13 @@ function setupToggleFlashSale() {
     if (toggleBtn && container) {
         toggleBtn.addEventListener('click', () => {
             if (container.style.display === 'none') {
-                container.style.display = 'block'; toggleBtn.textContent = 'Hide Settings'; toggleBtn.style.background = '#EF4444';
+                container.style.display = 'block'; 
+                toggleBtn.textContent = 'Hide Settings'; 
+                toggleBtn.style.background = '#EF4444';
             } else {
-                container.style.display = 'none'; toggleBtn.textContent = 'Show Settings'; toggleBtn.style.background = '#3B82F6';
+                container.style.display = 'none'; 
+                toggleBtn.textContent = 'Show Settings'; 
+                toggleBtn.style.background = '#3B82F6';
             }
         });
     }
@@ -125,7 +167,9 @@ function setupToggleFlashSale() {
 async function loadSiteSettings() {
     const { data } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).maybeSingle();
     if (data) {
-        if(document.getElementById('appDownloadStatusToggle')) document.getElementById('appDownloadStatusToggle').checked = data.show_app_download !== false;
+        if(document.getElementById('appDownloadStatusToggle')) {
+            document.getElementById('appDownloadStatusToggle').checked = data.show_app_download !== false;
+        }
         if(document.getElementById('specialDealTitleInput')) {
             document.getElementById('specialDealTitleInput').value = data.special_deal_title || 'First order deal';
             document.getElementById('titleFontFamily').value = data.title_font_family || 'Poppins';
@@ -172,11 +216,29 @@ function showDashboard() {
     if (loginContainer) loginContainer.style.display = 'none'; if (dashEl) dashEl.style.display = 'block';
 }
 
+// ⭐ UPDATED: loadStats with Visitors and App Installs ⭐
 async function loadStats() {
     try {
-        const stats = await API.getAdminStats(); const p = document.getElementById('statProducts'); const c = document.getElementById('statClicks');
-        if (p) p.innerText = stats.totalProducts; if (c) c.innerText = stats.totalClicks;
-    } catch (err) { console.warn('Stats error:', err); }
+        const stats = await API.getAdminStats(); 
+        const p = document.getElementById('statProducts'); 
+        const c = document.getElementById('statClicks');
+        
+        if (p) p.innerText = stats.totalProducts; 
+        if (c) c.innerText = stats.totalClicks;
+
+        // Fetch Visitors and Installs
+        const { data: visitors } = await window.supabaseClient.rpc('get_total_visitors');
+        const { data: installs } = await window.supabaseClient.rpc('get_active_app_installs');
+        
+        const vEl = document.getElementById('statVisitors');
+        const iEl = document.getElementById('statAppInstalls');
+        
+        if (vEl) vEl.innerText = visitors || 0;
+        if (iEl) iEl.innerText = installs || 0;
+
+    } catch (err) { 
+        console.warn('Stats error:', err); 
+    }
 }
 
 async function loadProductsList() {
@@ -186,12 +248,10 @@ async function loadProductsList() {
         if (error) throw error;
         allProducts = products || [];
         
-        // ⭐ Master Categories Load Karein ⭐
         const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
         const defaultCats = masterCats.filter(c => c.slug !== 'all');
         const dbCats = [...new Set(allProducts.map(p => p.category_slug).filter(Boolean))];
         
-        // Agar admin koi nayi custom category DB mein dale toh wo bhi show ho
         const combinedCats = [...defaultCats];
         dbCats.forEach(slug => {
             if (!combinedCats.find(c => c.slug === slug)) {
