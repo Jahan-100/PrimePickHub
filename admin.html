@@ -5,23 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex,nofollow">
     <title>Admin - PrimePickHub</title>
+    <link rel="icon" type="image/png" href="/assets/favicon.png">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/admin.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ⭐ Dashboard & Table Styles ⭐ */
         .admin-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         .admin-table th, .admin-table td { border: 1px solid #E2E8F0; padding: 10px; vertical-align: middle; }
-        
-        /* Table Headings Center */
         .admin-table th { background: #F8FAFC; font-weight: 600; text-align: center !important; }
-        
-        /* Action Buttons in One Line */
         .action-btns { display: flex; justify-content: center; gap: 8px; }
-        
         .btn-edit { background: #3B82F6; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
         .btn-delete { background: #EF4444; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
-        
         .variation-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; background: #F8FAFC; padding: 10px; border-radius: 6px; border: 1px solid #E2E8F0; flex-wrap: wrap; }
         .variation-row input { flex: 1; min-width: 90px; padding: 8px; border: 1px solid #CBD5E1; border-radius: 4px; font-size: 0.9rem; }
         .variation-row input.var-name { flex: 2; min-width: 120px; }
@@ -29,36 +23,26 @@
         .btn-add-var { background: #10B981; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; margin-bottom: 15px; font-weight: bold; width: auto; }
         .helper-text { color:#64748B; font-weight:400; font-size:0.8rem; }
         .form-section-title { margin-top: 25px; margin-bottom: 15px; border-bottom: 2px solid #E2E8F0; padding-bottom: 5px; color: #1E1B4B; font-size: 1.1rem; font-weight: bold; }
-        
         tr.unavailable-row { background-color: #FEE2E2; opacity: 0.8; }
         .badge-unavailable { background:#EF4444; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; margin-left:5px; }
-
-        /* Upload Button Styling */
         .upload-btn-wrap { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
         .btn-upload { background: #E2E8F0; color: #1E1B4B; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; border: 1px solid #CBD5E1; transition: 0.2s; display: inline-block; }
         .btn-upload:hover { background: #CBD5E1; }
         .file-name { font-size: 0.8rem; color: #64748B; }
-
-        /* ⭐️ NEW TRENDY COLORS FOR DASHBOARD BOXES ⭐️ */
         .card-products { background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); border: 1px solid #7dd3fc !important; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.15); border-radius: 12px; }
         .card-products h3 { color: #0369a1 !important; font-weight: 800 !important; }
         .card-products p { color: #0284c7 !important; font-weight: 600; }
-
         .card-clicks { background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); border: 1px solid #d8b4fe !important; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.15); border-radius: 12px; }
         .card-clicks h3 { color: #7e22ce !important; font-weight: 800 !important; }
         .card-clicks p { color: #9333ea !important; font-weight: 600; }
-
         .card-visitors { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border: 1px solid #86efac !important; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.15); border-radius: 12px; }
         .card-visitors h3 { color: #15803d !important; font-weight: 800 !important; }
         .card-visitors p { color: #16a34a !important; font-weight: 600; }
-
         .card-installs { background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%); border: 1px solid #fdba74 !important; box-shadow: 0 4px 15px rgba(249, 115, 22, 0.15); border-radius: 12px; }
         .card-installs h3 { color: #c2410c !important; font-weight: 800 !important; }
         .card-installs p { color: #ea580c !important; font-weight: 600; }
-
         .card-add-product { background: linear-gradient(135deg, #ffe4e6 0%, #fecdd3 100%); border: 1px solid #fda4af !important; box-shadow: 0 4px 15px rgba(244, 63, 94, 0.1); border-radius: 12px; }
         .card-add-product h2 { color: #be123c !important; }
-
         .card-manage-products { background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); border: 1px solid #a5b4fc !important; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.1); border-radius: 12px; }
         .card-manage-products h2 { color: #4338ca !important; }
     </style>
@@ -96,7 +80,6 @@
                     <div class="stat-card card-installs"><p>Active App Installs</p><h3 id="statAppInstalls">0</h3></div>
                 </div>
 
-                <!-- ⭐ 1. Add / Edit Product Form (Pink Box) ⭐ -->
                 <div class="admin-card card-add-product" style="margin-bottom: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2 id="formTitle" style="margin: 0;">Add New Product</h2>
@@ -164,7 +147,6 @@
                                     <label>Sale End Date & Time</label>
                                     <input type="datetime-local" id="pSaleEndDate" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; background:#fff;">
                                 </div>
-                                <!-- ⭐ Cancel Offer Button ⭐ -->
                                 <div class="form-group" style="flex: 0.5; min-width: 120px; margin-bottom: 0;">
                                     <button type="button" id="cancelOfferBtn" class="btn-check-price" style="background:#64748B; padding: 10px; font-size: 0.9rem; width: 100%; border-radius:6px;">Cancel Offer</button>
                                 </div>
@@ -214,7 +196,6 @@
                     </div>
                 </div>
 
-                <!-- ⭐ 2. App Download Live/Stop Setting ⭐ -->
                 <div style="background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 20px; padding: 8px 12px; border-radius: 8px; display: inline-flex; flex-direction: column; gap: 2px;">
                     <h3 style="margin: 0; color: #166534; font-size: 1rem; font-weight: 700; line-height: 1.2;">App Download Popup Settings</h3>
                     <p style="margin: 0; font-size: 0.8rem; color: #15803d; line-height: 1.2;">(Uncheck to hide QR popup and corner button)</p>
@@ -225,7 +206,6 @@
                     <button type="button" id="saveAppSettingsBtn" style="width: auto; padding: 5px 12px; background: #16a34a; color: white; border: none; border-radius: 4px; font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 5px; box-shadow: 0 2px 4px rgba(22,163,74,0.2); align-self: flex-start;">Update Settings</button>
                 </div>
 
-                <!-- ⭐ 3. Special Deal Title Setup ⭐ -->
                 <div class="admin-card" style="background: #fdf4ff; border: 1px solid #fbcfe8; margin-bottom: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
                         <h3 style="margin: 0; color: #9d174d;">Special Deal Section Customization</h3>
@@ -274,7 +254,6 @@
                     </div>
                 </div>
 
-                <!-- ⭐ 4. Flash Sale Title Setup ⭐ -->
                 <div class="admin-card" style="background: #fff7ed; border: 1px solid #fdba74; margin-bottom: 30px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
                         <h3 style="margin: 0; color: #9a3412;">Flash Sale Section Customization</h3>
@@ -323,7 +302,6 @@
                     </div>
                 </div>
 
-                <!-- ⭐ 5. Manage Products List (Indigo Box) ⭐ -->
                 <div class="admin-card card-manage-products" style="margin-bottom: 30px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2 style="margin: 0;">Manage Products</h2>
