@@ -108,14 +108,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function loadSiteSettings() {
-    const { data } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).single();
+    const { data } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).maybeSingle();
     if (data) {
-        // App Download Status
         if(document.getElementById('appDownloadStatusToggle')) {
             document.getElementById('appDownloadStatusToggle').checked = data.show_app_download !== false;
         }
-
-        // Special Deal
         if(document.getElementById('specialDealTitleInput')) {
             document.getElementById('specialDealTitleInput').value = data.special_deal_title || 'First order deal';
             document.getElementById('titleFontFamily').value = data.title_font_family || 'Poppins';
@@ -123,7 +120,6 @@ async function loadSiteSettings() {
             document.getElementById('titleFontWeight').value = data.title_font_weight || '800';
             document.getElementById('titleFontStyle').value = data.title_font_style || 'normal';
         }
-        // Flash Sale
         if(document.getElementById('flashTitleText')) {
             document.getElementById('flashTitleText').value = data.flash_title_text || 'Mega Sale 11.11';
             document.getElementById('flashTitleFontFamily').value = data.flash_title_font_family || 'Poppins';
@@ -260,8 +256,11 @@ document.getElementById('addVariationBtn')?.addEventListener('click', () => addV
 
 window.editProduct = async function(id) {
     try {
-        const { data: p, error } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').eq('id', id).single();
+        const { data: p, error } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').eq('id', id).maybeSingle();
+        
         if (error) throw error;
+        if (!p) { alert("Product not found."); return; }
+
         const defaultOffer = p.affiliate_offers?.find(o => !o.variation_name) || p.affiliate_offers?.[0] || {};
         
         document.getElementById('pId').value = p.id; document.getElementById('pOfferId').value = defaultOffer.id || '';
