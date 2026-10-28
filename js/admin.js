@@ -1,20 +1,11 @@
 let allProducts = [];
 
-// ⭐ Helper Function: Upload Image to Supabase Storage
 async function uploadFileToSupabase(file) {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-    
-    const { data, error } = await window.supabaseClient.storage
-        .from('product-images')
-        .upload(fileName, file);
-
+    const { data, error } = await window.supabaseClient.storage.from('product-images').upload(fileName, file);
     if (error) throw error;
-
-    const { data: publicUrlData } = window.supabaseClient.storage
-        .from('product-images')
-        .getPublicUrl(fileName);
-        
+    const { data: publicUrlData } = window.supabaseClient.storage.from('product-images').getPublicUrl(fileName);
     return publicUrlData.publicUrl;
 }
 
@@ -32,23 +23,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupToggleList();
     setupToggleAddProduct(); 
     setupToggleSpecialDeal(); 
-    setupToggleFlashSale(); // ⭐ Naye Toggles Setup ⭐
+    setupToggleFlashSale();
     
     document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
     document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
     
-    // ⭐ Save App Download Setting ⭐
     document.getElementById('saveAppSettingsBtn')?.addEventListener('click', async function() {
         const isLive = document.getElementById('appDownloadStatusToggle').checked;
-        const { error } = await window.supabaseClient.from('site_settings').update({ 
-            show_app_download: isLive 
-        }).eq('id', 1);
-
+        const { error } = await window.supabaseClient.from('site_settings').update({ show_app_download: isLive }).eq('id', 1);
         if (error) alert("Error: " + error.message);
         else alert(`App Download Popup is now ${isLive ? 'LIVE (Visible)' : 'STOPPED (Hidden)'} on website!`);
     });
 
-    // Save Special Deal Settings
     document.getElementById('saveTitleBtn')?.addEventListener('click', async function() {
         const newTitle = document.getElementById('specialDealTitleInput').value.trim();
         const fontFamily = document.getElementById('titleFontFamily').value;
@@ -57,20 +43,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const fontStyle = document.getElementById('titleFontStyle').value;
 
         if(!newTitle) return alert("Title cannot be empty");
-        
         const { error } = await window.supabaseClient.from('site_settings').update({ 
-            special_deal_title: newTitle,
-            title_font_family: fontFamily,
-            title_font_size: fontSize,
-            title_font_weight: fontWeight,
-            title_font_style: fontStyle
+            special_deal_title: newTitle, title_font_family: fontFamily, title_font_size: fontSize, title_font_weight: fontWeight, title_font_style: fontStyle
         }).eq('id', 1);
-
         if (error) alert("Error: " + error.message);
         else alert("Special Deal Design updated successfully!");
     });
 
-    // Save Flash Sale Settings
     document.getElementById('saveFlashSettingsBtn')?.addEventListener('click', async function() {
         const newTitle = document.getElementById('flashTitleText').value.trim();
         const fontFamily = document.getElementById('flashTitleFontFamily').value;
@@ -79,20 +58,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const fontStyle = document.getElementById('flashTitleFontStyle').value;
 
         if(!newTitle) return alert("Flash Sale Title cannot be empty");
-        
         const { error } = await window.supabaseClient.from('site_settings').update({ 
-            flash_title_text: newTitle,
-            flash_title_font_family: fontFamily,
-            flash_title_font_size: fontSize,
-            flash_title_font_weight: fontWeight,
-            flash_title_font_style: fontStyle
+            flash_title_text: newTitle, flash_title_font_family: fontFamily, flash_title_font_size: fontSize, flash_title_font_weight: fontWeight, flash_title_font_style: fontStyle
         }).eq('id', 1);
-
         if (error) alert("Error: " + error.message);
         else alert("Flash Sale Design updated successfully!");
     });
 
-    // Check Availability Button
     document.getElementById('checkAvailabilityBtn')?.addEventListener('click', async function() {
         const btn = this;
         const originalText = btn.innerText;
@@ -101,29 +73,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const res = await fetch('/api/check-status');
             const data = await res.json();
-            if (data.success) {
-                alert(`Check Complete!\n${data.message}`);
-                await loadProductsList(); 
-            } else { alert('Error checking status: ' + (data.error || 'Unknown error')); }
+            if (data.success) { alert(`Check Complete!\n${data.message}`); await loadProductsList(); } 
+            else { alert('Error checking status: ' + (data.error || 'Unknown error')); }
         } catch (err) { alert('Failed to check. Make sure Vercel API is deployed.'); }
         finally { btn.innerText = originalText; btn.disabled = false; }
     });
 });
 
-// ⭐ Naye Toggle Functions ⭐
 function setupToggleAddProduct() {
     const toggleBtn = document.getElementById('toggleAddProductBtn');
     const formContainer = document.getElementById('addProductContainer');
     if (toggleBtn && formContainer) {
         toggleBtn.addEventListener('click', () => {
             if (formContainer.style.display === 'none') {
-                formContainer.style.display = 'block'; 
-                toggleBtn.textContent = 'Hide Add Product Form'; 
-                toggleBtn.style.background = '#EF4444';
+                formContainer.style.display = 'block'; toggleBtn.textContent = 'Hide Add Product Form'; toggleBtn.style.background = '#EF4444';
             } else {
-                formContainer.style.display = 'none'; 
-                toggleBtn.textContent = 'Show Add Product Form'; 
-                toggleBtn.style.background = '#3B82F6';
+                formContainer.style.display = 'none'; toggleBtn.textContent = 'Show Add Product Form'; toggleBtn.style.background = '#3B82F6';
             }
         });
     }
@@ -135,13 +100,9 @@ function setupToggleSpecialDeal() {
     if (toggleBtn && container) {
         toggleBtn.addEventListener('click', () => {
             if (container.style.display === 'none') {
-                container.style.display = 'block'; 
-                toggleBtn.textContent = 'Hide Settings'; 
-                toggleBtn.style.background = '#EF4444';
+                container.style.display = 'block'; toggleBtn.textContent = 'Hide Settings'; toggleBtn.style.background = '#EF4444';
             } else {
-                container.style.display = 'none'; 
-                toggleBtn.textContent = 'Show Settings'; 
-                toggleBtn.style.background = '#3B82F6';
+                container.style.display = 'none'; toggleBtn.textContent = 'Show Settings'; toggleBtn.style.background = '#3B82F6';
             }
         });
     }
@@ -153,13 +114,9 @@ function setupToggleFlashSale() {
     if (toggleBtn && container) {
         toggleBtn.addEventListener('click', () => {
             if (container.style.display === 'none') {
-                container.style.display = 'block'; 
-                toggleBtn.textContent = 'Hide Settings'; 
-                toggleBtn.style.background = '#EF4444';
+                container.style.display = 'block'; toggleBtn.textContent = 'Hide Settings'; toggleBtn.style.background = '#EF4444';
             } else {
-                container.style.display = 'none'; 
-                toggleBtn.textContent = 'Show Settings'; 
-                toggleBtn.style.background = '#3B82F6';
+                container.style.display = 'none'; toggleBtn.textContent = 'Show Settings'; toggleBtn.style.background = '#3B82F6';
             }
         });
     }
@@ -168,9 +125,7 @@ function setupToggleFlashSale() {
 async function loadSiteSettings() {
     const { data } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).maybeSingle();
     if (data) {
-        if(document.getElementById('appDownloadStatusToggle')) {
-            document.getElementById('appDownloadStatusToggle').checked = data.show_app_download !== false;
-        }
+        if(document.getElementById('appDownloadStatusToggle')) document.getElementById('appDownloadStatusToggle').checked = data.show_app_download !== false;
         if(document.getElementById('specialDealTitleInput')) {
             document.getElementById('specialDealTitleInput').value = data.special_deal_title || 'First order deal';
             document.getElementById('titleFontFamily').value = data.title_font_family || 'Poppins';
@@ -231,20 +186,27 @@ async function loadProductsList() {
         if (error) throw error;
         allProducts = products || [];
         
+        // ⭐ Master Categories Load Karein ⭐
+        const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
+        const defaultCats = masterCats.filter(c => c.slug !== 'all');
+        const dbCats = [...new Set(allProducts.map(p => p.category_slug).filter(Boolean))];
+        
+        // Agar admin koi nayi custom category DB mein dale toh wo bhi show ho
+        const combinedCats = [...defaultCats];
+        dbCats.forEach(slug => {
+            if (!combinedCats.find(c => c.slug === slug)) {
+                combinedCats.push({ slug: slug, name: slug.charAt(0).toUpperCase() + slug.slice(1).replace('-', ' ') });
+            }
+        });
+
         const categoryFilter = document.getElementById('adminCategoryFilter');
         if (categoryFilter) {
-            const defaultCats = ['electronics', 'fashion', 'home-kitchen', 'beauty', 'sports'];
-            const dbCats = [...new Set(allProducts.map(p => p.category_slug).filter(Boolean))];
-            const allCats = [...new Set([...defaultCats, ...dbCats])];
-            categoryFilter.innerHTML = `<option value="all">All Categories</option>` + allCats.map(c => `<option value="${c}">${c.charAt(0).toUpperCase() + c.slice(1).replace('-', ' ')}</option>`).join('');
+            categoryFilter.innerHTML = `<option value="all">All Categories</option>` + combinedCats.map(c => `<option value="${c.slug}">${c.name}</option>`).join('');
         }
 
         const addCategorySelect = document.getElementById('pCategory');
         if (addCategorySelect) {
-            const defaultCats = ['electronics', 'fashion', 'home-kitchen', 'beauty', 'sports'];
-            const dbCats = [...new Set(allProducts.map(p => p.category_slug).filter(Boolean))];
-            const allCats = [...new Set([...defaultCats, ...dbCats])];
-            addCategorySelect.innerHTML = allCats.map(c => `<option value="${c}">${c.charAt(0).toUpperCase() + c.slice(1).replace('-', ' ')}</option>`).join('');
+            addCategorySelect.innerHTML = combinedCats.map(c => `<option value="${c.slug}">${c.name}</option>`).join('');
         }
         renderTable();
     } catch (err) { console.error('List Load Error:', err); tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Failed to load products.</td></tr>'; }
@@ -315,7 +277,6 @@ document.getElementById('addVariationBtn')?.addEventListener('click', () => addV
 window.editProduct = async function(id) {
     try {
         const { data: p, error } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').eq('id', id).maybeSingle();
-        
         if (error) throw error;
         if (!p) { alert("Product not found."); return; }
 
@@ -347,24 +308,16 @@ window.editProduct = async function(id) {
         const variations = p.affiliate_offers?.filter(o => o.variation_name) || [];
         variations.forEach(v => addVariationRow(v.variation_name, v.price, v.sale_price, (v.commission_rate > 0 ? v.commission_rate : ''), v.affiliate_url));
 
-        document.getElementById('pImgFile').value = '';
-        document.getElementById('pGalleryFile').value = '';
-        document.getElementById('pImgFileName').innerText = 'No file chosen';
-        document.getElementById('pGalleryFileName').innerText = 'No files chosen';
+        document.getElementById('pImgFile').value = ''; document.getElementById('pGalleryFile').value = '';
+        document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen';
 
-        document.getElementById('formTitle').innerText = "Edit Product"; 
-        document.getElementById('saveBtn').innerText = "Update Product"; 
-        document.getElementById('cancelEditBtn').style.display = "block";
+        document.getElementById('formTitle').innerText = "Edit Product"; document.getElementById('saveBtn').innerText = "Update Product"; document.getElementById('cancelEditBtn').style.display = "block";
         
-        // ⭐ Jab Edit par click ho, toh form khud khul jaye ⭐
         const formContainer = document.getElementById('addProductContainer');
         const toggleBtn = document.getElementById('toggleAddProductBtn');
         if (formContainer && formContainer.style.display === 'none') {
-            formContainer.style.display = 'block';
-            toggleBtn.textContent = 'Hide Add Product Form';
-            toggleBtn.style.background = '#EF4444';
+            formContainer.style.display = 'block'; toggleBtn.textContent = 'Hide Add Product Form'; toggleBtn.style.background = '#EF4444';
         }
-
         document.getElementById('productForm').scrollIntoView({ behavior: 'smooth' });
     } catch (err) { alert("Error loading product: " + err.message); }
 }
@@ -380,23 +333,17 @@ function setupProductForm() {
         form.reset(); document.getElementById('variationsContainer').innerHTML = '';
         document.getElementById('pId').value = ''; document.getElementById('pOfferId').value = '';
         
-        document.getElementById('pImgFile').value = '';
-        document.getElementById('pGalleryFile').value = '';
-        document.getElementById('pImgFileName').innerText = 'No file chosen';
-        document.getElementById('pGalleryFileName').innerText = 'No files chosen';
+        document.getElementById('pImgFile').value = ''; document.getElementById('pGalleryFile').value = '';
+        document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen';
 
-        document.getElementById('formTitle').innerText = "Add New Product"; 
-        document.getElementById('saveBtn').innerText = "Save Product"; 
-        cancelBtn.style.display = "none";
+        document.getElementById('formTitle').innerText = "Add New Product"; document.getElementById('saveBtn').innerText = "Save Product"; cancelBtn.style.display = "none";
     });
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
         const saveBtn = document.getElementById('saveBtn');
         const originalBtnText = saveBtn.innerText;
-        saveBtn.innerText = "Saving... Please wait";
-        saveBtn.disabled = true;
+        saveBtn.innerText = "Saving... Please wait"; saveBtn.disabled = true;
 
         try {
             const id = document.getElementById('pId').value; const isEditing = id !== '';
@@ -407,19 +354,13 @@ function setupProductForm() {
 
             let finalImageUrl = document.getElementById('pImg').value.trim();
             const primaryFileInput = document.getElementById('pImgFile');
-            if (primaryFileInput.files.length > 0) {
-                saveBtn.innerText = "Uploading Main Image...";
-                finalImageUrl = await uploadFileToSupabase(primaryFileInput.files[0]);
-            }
+            if (primaryFileInput.files.length > 0) { saveBtn.innerText = "Uploading Main Image..."; finalImageUrl = await uploadFileToSupabase(primaryFileInput.files[0]); }
 
             let finalGalleryUrls = document.getElementById('pGallery').value.trim() ? document.getElementById('pGallery').value.split('\n').map(u=>u.trim()).filter(Boolean) : [];
             const galleryFileInput = document.getElementById('pGalleryFile');
             if (galleryFileInput.files.length > 0) {
                 saveBtn.innerText = "Uploading Gallery...";
-                for (let i = 0; i < galleryFileInput.files.length; i++) {
-                    const url = await uploadFileToSupabase(galleryFileInput.files[i]);
-                    finalGalleryUrls.push(url);
-                }
+                for (let i = 0; i < galleryFileInput.files.length; i++) { const url = await uploadFileToSupabase(galleryFileInput.files[i]); finalGalleryUrls.push(url); }
             }
 
             if (!finalImageUrl) throw new Error("Primary Image is required (URL or Upload)");
@@ -433,8 +374,7 @@ function setupProductForm() {
                 is_special_deal: document.getElementById('pSpecialDeal').checked,
                 badge: document.getElementById('pBadge').value.trim() || null, rating: document.getElementById('pRating').value ? parseFloat(document.getElementById('pRating').value) : null,
                 reviews_count: document.getElementById('pReviewsCount').value ? parseInt(document.getElementById('pReviewsCount').value) : 0,
-                gallery_images: finalGalleryUrls,
-                video_url: document.getElementById('pVideo').value.trim() || null,
+                gallery_images: finalGalleryUrls, video_url: document.getElementById('pVideo').value.trim() || null,
                 event_name: eventName || null, sale_end_date: saleEndDate ? new Date(saleEndDate).toISOString() : null,
                 is_available: true
             };
@@ -449,13 +389,10 @@ function setupProductForm() {
 
             const variations = [];
             document.querySelectorAll('.variation-row').forEach(row => {
-                const vName = row.querySelector('.var-name').value.trim(); 
-                const vPrice = parseFloat(row.querySelector('.var-price').value);
+                const vName = row.querySelector('.var-name').value.trim(); const vPrice = parseFloat(row.querySelector('.var-price').value);
                 const vSalePrice = row.querySelector('.var-sale-price').value ? parseFloat(row.querySelector('.var-sale-price').value) : null;
-                const vCommInput = row.querySelector('.var-comm').value.trim(); 
-                const vComm = vCommInput === '' ? commission : (parseFloat(vCommInput) || 0);
+                const vCommInput = row.querySelector('.var-comm').value.trim(); const vComm = vCommInput === '' ? commission : (parseFloat(vCommInput) || 0);
                 const vUrl = row.querySelector('.var-url').value.trim() || mainOfferData.affiliate_url;
-                
                 if (vName && !isNaN(vPrice)) { variations.push({ ...mainOfferData, price: vPrice, sale_price: vSalePrice, commission_rate: vComm, affiliate_url: vUrl, variation_name: vName }); }
             });
 
@@ -470,25 +407,16 @@ function setupProductForm() {
             if (variations.length > 0) { variations.forEach(v => v.product_id = productId); const { error: varErr } = await window.supabaseClient.from('affiliate_offers').insert(variations); if (varErr) throw varErr; }
             
             alert(`"${productData.title}" saved successfully!`); 
-            form.reset(); 
-            document.getElementById('variationsContainer').innerHTML = '';
-            document.getElementById('pId').value = ''; 
-            document.getElementById('formTitle').innerText = "Add New Product"; 
-            cancelBtn.style.display = "none";
-            
-            primaryFileInput.value = '';
-            galleryFileInput.value = '';
-            document.getElementById('pImgFileName').innerText = 'No file chosen';
-            document.getElementById('pGalleryFileName').innerText = 'No files chosen';
+            form.reset(); document.getElementById('variationsContainer').innerHTML = '';
+            document.getElementById('pId').value = ''; document.getElementById('formTitle').innerText = "Add New Product"; cancelBtn.style.display = "none";
+            primaryFileInput.value = ''; galleryFileInput.value = '';
+            document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen';
 
-            await loadStats(); 
-            await loadProductsList();
-
+            await loadStats(); await loadProductsList();
         } catch (err) { 
             alert('Error: ' + (err.message || 'Check RLS policies and Storage Bucket.')); 
         } finally {
-            saveBtn.innerText = originalBtnText;
-            saveBtn.disabled = false;
+            saveBtn.innerText = originalBtnText; saveBtn.disabled = false;
         }
     });
 
