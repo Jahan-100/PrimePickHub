@@ -80,15 +80,13 @@ function renderProductCard(product) {
         const offerCurrency = (primaryOffer.currency || 'USD').toUpperCase();
         const offerSymbol = currencySymbols[offerCurrency] || offerCurrency + ' ';
         
+        // ⭐ FIX: Remove the sale_end_date check for showing the discount price. Just check if salePrice > 0.
         const basePrice = parseFloat(primaryOffer.price) || 0;
         const salePrice = parseFloat(primaryOffer.sale_price) || 0;
         
-        const now = new Date();
-        const isSaleActive = product.sale_end_date && new Date(product.sale_end_date) > now;
-
         let priceDisplay = '';
 
-        if (isSaleActive && salePrice > 0) {
+        if (salePrice > 0) {
             priceDisplay = `
                 <div style="margin-bottom:5px; display:flex; align-items:center; gap:8px;">
                     <span style="text-decoration:line-through; color:#94A3B8; font-size:0.9rem;">${offerSymbol}${basePrice.toFixed(2)}</span>
@@ -137,8 +135,18 @@ function renderFlashCard(product) {
     const basePrice = parseFloat(primaryOffer.price) || 0;
     const salePrice = parseFloat(primaryOffer.sale_price) || 0;
     
-    const isSaleActive = product.sale_end_date && new Date(product.sale_end_date) > new Date();
-    const displayPrice = (isSaleActive && salePrice > 0) ? salePrice : basePrice;
+    let priceDisplay = '';
+    if (salePrice > 0) {
+        priceDisplay = `
+            <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; width: 100%;">
+                <div style="display:flex; align-items:center; gap:4px;">
+                    <span style="text-decoration:line-through; color:#94A3B8; font-size:0.75rem;">${sym}${basePrice.toFixed(2)}</span>
+                    <span style="font-weight:bold; color:#FF5A3C; font-size:0.95rem;">${sym}${salePrice.toFixed(2)}</span>
+                </div>
+            </div>`;
+    } else {
+        priceDisplay = `<div class="price" style="font-size:0.95rem;">${sym}${basePrice.toFixed(2)}</div>`;
+    }
 
     return `
         <a href="${productUrl}" class="special-deal-card flash-card">
@@ -146,7 +154,7 @@ function renderFlashCard(product) {
                 <img src="${imageSrc}" alt="${title}">
             </div>
             <div class="info-box">
-                <div class="price">${sym}${displayPrice.toFixed(2)}</div>
+                ${priceDisplay}
                 <div class="title">${title}</div>
                 <div class="card-timer" data-endtime="${product.sale_end_date}">⏳ Calculating...</div>
             </div>
@@ -343,13 +351,24 @@ async function loadHomepageProducts() {
                     const sym = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' }[(offer.currency || 'USD').toUpperCase()] || '$';
                     const basePrice = parseFloat(offer.price) || 0;
                     const salePrice = parseFloat(offer.sale_price) || 0;
-                    const isSaleActive = p.sale_end_date && new Date(p.sale_end_date) > new Date();
-                    const displayPrice = (isSaleActive && salePrice > 0) ? salePrice : basePrice;
+                    
+                    let priceDisplay = '';
+                    if (salePrice > 0) {
+                        priceDisplay = `<div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
+                                            <span style="text-decoration:line-through; color:#94A3B8; font-size:0.75rem;">${sym}${basePrice.toFixed(2)}</span>
+                                            <span class="price" style="margin-bottom:0;">${sym}${salePrice.toFixed(2)}</span>
+                                        </div>`;
+                    } else {
+                        priceDisplay = `<div class="price">${sym}${basePrice.toFixed(2)}</div>`;
+                    }
                     
                     return `
                         <a href="/product/${encodeURIComponent(p.slug)}" class="special-deal-card">
                             <div class="img-box"><img src="${p.image_url || '/assets/icon-192.png'}" alt="${p.title}"></div>
-                            <div class="info-box"><div class="price">${sym}${displayPrice.toFixed(2)}</div><div class="title">${p.title}</div></div>
+                            <div class="info-box">
+                                ${priceDisplay}
+                                <div class="title">${p.title}</div>
+                            </div>
                         </a>`;
                 }).join('');
             } else { section.style.display = 'none'; }
