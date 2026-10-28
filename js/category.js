@@ -32,8 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     grid.innerHTML = products.map(p => {
         const offers = p.affiliate_offers || [];
-        const defaultOffer = offers.find(o => !o.variation_name);
-        const primaryOffer = defaultOffer || offers[0] || {};
+        const primaryOffer = offers[0] || {};
 
         const storeName = primaryOffer.store_name || 'Amazon';
         
