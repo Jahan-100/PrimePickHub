@@ -108,6 +108,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (err) { alert('Failed to check. Make sure Vercel API is deployed.'); }
         finally { btn.innerText = originalText; btn.disabled = false; }
     });
+
+    // ⭐ Cancel Offer Button Logic ⭐
+    document.getElementById('cancelOfferBtn')?.addEventListener('click', () => {
+        document.getElementById('pEventName').value = '';
+        document.getElementById('pSaleEndDate').value = '';
+        alert('Offer details cleared. Save product to confirm cancellation.');
+    });
 });
 
 function setupToggleAddProduct() {
@@ -122,7 +129,7 @@ function setupToggleAddProduct() {
             } else {
                 formContainer.style.display = 'none'; 
                 toggleBtn.textContent = 'Show Add Product Form'; 
-                toggleBtn.style.background = '#3B82F6';
+                toggleBtn.style.background = '#e11d48';
             }
         });
     }
@@ -140,7 +147,7 @@ function setupToggleSpecialDeal() {
             } else {
                 container.style.display = 'none'; 
                 toggleBtn.textContent = 'Show Settings'; 
-                toggleBtn.style.background = '#3B82F6';
+                toggleBtn.style.background = '#d946ef';
             }
         });
     }
@@ -158,7 +165,7 @@ function setupToggleFlashSale() {
             } else {
                 container.style.display = 'none'; 
                 toggleBtn.textContent = 'Show Settings'; 
-                toggleBtn.style.background = '#3B82F6';
+                toggleBtn.style.background = '#ea580c';
             }
         });
     }
@@ -195,7 +202,7 @@ function setupToggleList() {
             if (listContainer.style.display === 'none') {
                 listContainer.style.display = 'block'; toggleBtn.textContent = 'Hide Product List'; toggleBtn.style.background = '#EF4444';
             } else {
-                listContainer.style.display = 'none'; toggleBtn.textContent = 'Show Product List'; toggleBtn.style.background = '#3B82F6';
+                listContainer.style.display = 'none'; toggleBtn.textContent = 'Show Product List'; toggleBtn.style.background = '#4f46e5';
             }
         });
     }
@@ -216,7 +223,6 @@ function showDashboard() {
     if (loginContainer) loginContainer.style.display = 'none'; if (dashEl) dashEl.style.display = 'block';
 }
 
-// ⭐ UPDATED: loadStats with Visitors and App Installs ⭐
 async function loadStats() {
     try {
         const stats = await API.getAdminStats(); 
@@ -226,7 +232,6 @@ async function loadStats() {
         if (p) p.innerText = stats.totalProducts; 
         if (c) c.innerText = stats.totalClicks;
 
-        // Fetch Visitors and Installs
         const { data: visitors } = await window.supabaseClient.rpc('get_total_visitors');
         const { data: installs } = await window.supabaseClient.rpc('get_active_app_installs');
         
@@ -305,14 +310,17 @@ function renderTable() {
         const rowClass = isAvailable ? '' : 'unavailable-row';
         const statusBadge = isAvailable ? '' : `<span class="badge-unavailable">UNAVAILABLE</span>`;
 
+        // ⭐ Actions Buttons in One Line ⭐
         return `
             <tr class="${rowClass}">
-                <td><img src="${p.image_url}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;"></td>
+                <td style="text-align: center;"><img src="${p.image_url}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;"></td>
                 <td>${p.title} ${statusBadge}</td>
-                <td><strong style="color:#FF5A3C;">${priceStr}</strong></td>
+                <td style="text-align: center;"><strong style="color:#FF5A3C;">${priceStr}</strong></td>
                 <td>
-                    <button class="btn-edit" onclick="editProduct('${p.id}')">Edit</button>
-                    <button class="btn-delete" onclick="deleteProduct('${p.id}')">Delete</button>
+                    <div class="action-btns">
+                        <button class="btn-edit" onclick="editProduct('${p.id}')">Edit</button>
+                        <button class="btn-delete" onclick="deleteProduct('${p.id}')">Delete</button>
+                    </div>
                 </td>
             </tr>`;
     }).join('');
@@ -471,6 +479,12 @@ function setupProductForm() {
             document.getElementById('pId').value = ''; document.getElementById('formTitle').innerText = "Add New Product"; cancelBtn.style.display = "none";
             primaryFileInput.value = ''; galleryFileInput.value = '';
             document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen';
+
+            // ⭐ Auto Close Form Logic ⭐
+            document.getElementById('addProductContainer').style.display = 'none';
+            const toggleBtn = document.getElementById('toggleAddProductBtn');
+            toggleBtn.textContent = 'Show Add Product Form';
+            toggleBtn.style.background = '#e11d48';
 
             await loadStats(); await loadProductsList();
         } catch (err) { 
