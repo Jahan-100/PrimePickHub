@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer + Realtime Sync
+ * PrimePickHub Homepage Renderer + Realtime + Notifications + PWA
  */
 
 function escapeHTML(str) {
@@ -10,6 +10,7 @@ function isValidExternalURL(url) { if (typeof url !== 'string') return false; tr
 function isValidURL(url) { if (!url || typeof url !== 'string') return false; try { const p = new URL(url, window.location.origin); return p.protocol === 'http:' || p.protocol === 'https:'; } catch { return false; } }
 function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb; }
 function getPrimaryOffer(product) { if (!product || !Array.isArray(product.affiliate_offers)) return null; return product.affiliate_offers.find(o => o && typeof o.store_name === 'string' && isValidExternalURL(o.affiliate_url)) || null; }
+
 function deduplicateProducts(list) {
     if (!Array.isArray(list)) return [];
     const map = new Map();
@@ -18,15 +19,13 @@ function deduplicateProducts(list) {
 }
 function showGridMessage(grid, msg) { if (!grid) return; grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;"><p>${escapeHTML(msg)}</p></div>`; }
 
-// ⭐ Function: Dynamic Categories Render Karna ⭐
+// ⭐ Dynamic Categories Render Karna ⭐
 function renderDynamicCategories(allProducts) {
     const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
     const dbCats = [...new Set(allProducts.map(p => p.category_slug).filter(Boolean))];
     
-    // Sirf wohi categories filter karein jisme product mojood hai + 'all'
     const activeCats = masterCats.filter(c => c.slug === 'all' || dbCats.includes(c.slug));
     
-    // 1. Render Category Icons (Shop by Category)
     const catContainer = document.getElementById('categoryScrollContainer');
     if (catContainer) {
         catContainer.innerHTML = activeCats.map(c => `
@@ -37,7 +36,6 @@ function renderDynamicCategories(allProducts) {
         `).join('');
     }
 
-    // 2. Render Search Dropdown
     const dropdownMenu = document.getElementById('categoryDropdownMenu');
     if (dropdownMenu) {
         dropdownMenu.innerHTML = activeCats.map(c => `
@@ -46,6 +44,7 @@ function renderDynamicCategories(allProducts) {
     }
 }
 
+// ⭐ Product Cards Render Karna ⭐
 function renderProductCard(product) {
     if (!product || typeof product !== 'object') return '';
     const title = escapeHTML(product.title || 'Untitled');
@@ -184,6 +183,7 @@ function renderProductsGrid(products, grid) {
     });
 }
 
+// ⭐ Timers ⭐
 setInterval(() => {
     let flashSaleChanged = false;
     document.querySelectorAll('.card-timer').forEach(el => {
@@ -204,17 +204,11 @@ setInterval(() => {
             const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-            if (days > 0) {
-                el.innerHTML = `⏳ ${days}d ${hours}h ${minutes}m`;
-            } else {
-                el.innerHTML = `🔥 ${hours}h ${minutes}m ${seconds}s`;
-            }
+            if (days > 0) { el.innerHTML = `⏳ ${days}d ${hours}h ${minutes}m`; } 
+            else { el.innerHTML = `🔥 ${hours}h ${minutes}m ${seconds}s`; }
         }
     });
-
-    if (flashSaleChanged) {
-        setTimeout(() => loadHomepageProducts(), 2000);
-    }
+    if (flashSaleChanged) setTimeout(() => loadHomepageProducts(), 2000);
 }, 1000);
 
 // ⭐ Fireworks Logic ⭐
@@ -222,22 +216,14 @@ let fireworksInterval;
 function startFireworks() {
     const canvas = document.getElementById('fireworksCanvas');
     if (!canvas || typeof confetti === 'undefined') return;
-    
     const myConfetti = confetti.create(canvas, { resize: true, useWorker: true });
-    
     clearInterval(fireworksInterval);
     fireworksInterval = setInterval(() => {
         const type = Math.random() > 0.5 ? 'rocket' : 'sparkler';
         if (type === 'rocket') {
-            myConfetti({
-                particleCount: 40, spread: 70, origin: { x: Math.random() * 0.8 + 0.1, y: Math.random() * 0.5 + 0.1 },
-                colors: ['#fbbf24', '#ef4444', '#3b82f6', '#ffffff', '#ff8c00'], scalar: 1.2
-            });
+            myConfetti({ particleCount: 40, spread: 70, origin: { x: Math.random() * 0.8 + 0.1, y: Math.random() * 0.5 + 0.1 }, colors: ['#fbbf24', '#ef4444', '#3b82f6', '#ffffff', '#ff8c00'], scalar: 1.2 });
         } else {
-            myConfetti({
-                particleCount: 15, angle: 90, spread: 60, origin: { x: Math.random() * 0.8 + 0.1, y: 1 },
-                colors: ['#fbbf24', '#ffffff'], startVelocity: 45, gravity: 1.2, scalar: 0.8
-            });
+            myConfetti({ particleCount: 15, angle: 90, spread: 60, origin: { x: Math.random() * 0.8 + 0.1, y: 1 }, colors: ['#fbbf24', '#ffffff'], startVelocity: 45, gravity: 1.2, scalar: 0.8 });
         }
     }, 800);
 }
@@ -337,7 +323,6 @@ async function loadHomepageProducts() {
         const raw = [...(data.featured ?? []), ...(data.trending ?? []), ...(data.latest ?? [])];
         const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false);
 
-        // ⭐ Categories ko dynamically render karein ⭐
         renderDynamicCategories(allProducts);
 
         const now = new Date();
@@ -346,11 +331,8 @@ async function loadHomepageProducts() {
 
         allProducts.forEach(p => {
             const endDate = p.sale_end_date ? new Date(p.sale_end_date) : null;
-            if (endDate && endDate > now) {
-                flashSaleProducts.push(p);
-            } else {
-                normalProducts.push(p);
-            }
+            if (endDate && endDate > now) flashSaleProducts.push(p);
+            else normalProducts.push(p);
         });
 
         if (flashSaleProducts.length > 0) {
@@ -385,7 +367,6 @@ async function loadHomepageProducts() {
                 }).join('');
             } else { section.style.display = 'none'; }
         }
-
     } catch (err) {
         console.error('Load failed:', err);
     }
@@ -400,25 +381,108 @@ function handleSearch() {
     
     if (q) {
         let url = `search.html?q=${encodeURIComponent(q)}`;
-        if (cat !== 'all') {
-            url += `&cat=${encodeURIComponent(cat)}`;
-        }
+        if (cat !== 'all') url += `&cat=${encodeURIComponent(cat)}`;
         window.location.href = url;
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    loadHomepageProducts();
-    setupRealtime();
+// ⭐ NOTIFICATION LOGIC ⭐
+let userDeletedNotifs = JSON.parse(localStorage.getItem('deleted_notifs') || '[]');
+let currentNotifs = [];
 
-    const btn = document.getElementById('searchBtn');
-    const input = document.getElementById('searchInput');
-    if (btn) btn.addEventListener('click', handleSearch);
-    if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') handleSearch(); });
+window.toggleNotifPanel = function(e) {
+    if (e) e.stopPropagation();
+    const panel = document.getElementById('notifPanel');
+    if(panel) panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+}
+
+async function loadNotifications() {
+    if (!window.supabaseClient) return;
+    const { data, error } = await window.supabaseClient.from('app_notifications').select('*').order('created_at', { ascending: false }).limit(20);
+    
+    if (!error && data) {
+        currentNotifs = data.filter(n => !userDeletedNotifs.includes(n.id));
+        renderNotifications();
+    }
+}
+
+function renderNotifications() {
+    const list = document.getElementById('notifList');
+    const badge = document.getElementById('notifBadge');
+    if (!list) return;
+
+    if (currentNotifs.length === 0) {
+        list.innerHTML = '<div style="padding: 20px; text-align: center; color: #94A3B8; font-size: 0.85rem;">No new notifications</div>';
+        if(badge) badge.style.display = 'none';
+        return;
+    }
+
+    if(badge) {
+        badge.style.display = 'flex';
+        badge.innerText = currentNotifs.length;
+    }
+
+    list.innerHTML = currentNotifs.map(n => `
+        <div class="notif-item" id="notif-${n.id}">
+            <div>
+                <h4>${escapeHTML(n.title)}</h4>
+                <p>${escapeHTML(n.message)}</p>
+                <span style="font-size: 0.65rem; color: #94A3B8;">${new Date(n.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+            </div>
+            <button class="notif-del" onclick="deleteNotif('${n.id}')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+    `).join('');
+}
+
+window.deleteNotif = function(id) {
+    userDeletedNotifs.push(id);
+    localStorage.setItem('deleted_notifs', JSON.stringify(userDeletedNotifs));
+    currentNotifs = currentNotifs.filter(n => n.id !== id);
+    renderNotifications();
+}
+
+window.clearAllNotifs = function(e) {
+    if(e) e.stopPropagation();
+    currentNotifs.forEach(n => { if(!userDeletedNotifs.includes(n.id)) userDeletedNotifs.push(n.id); });
+    localStorage.setItem('deleted_notifs', JSON.stringify(userDeletedNotifs));
+    currentNotifs = [];
+    renderNotifications();
+}
+
+function showBrowserNotification(title, body) {
+    if (!("Notification" in window)) return;
+    if (Notification.permission === "granted") {
+        new Notification(title, { body: body, icon: '/assets/icon-192.png' });
+    } else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") new Notification(title, { body: body, icon: '/assets/icon-192.png' });
+        });
+    }
+}
+
+// ⭐ PWA INSTALL LOGIC ⭐
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
 });
 
-// ⭐ App Download Popup Toggle Logic ⭐
-function toggleAppPopup() {
+window.triggerPWAInstall = function() {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+                toggleAppPopup();
+            }
+            deferredPrompt = null;
+        });
+    } else {
+        alert("To install: Tap the browser menu (3 dots) and select 'Add to Home screen'.");
+    }
+}
+
+// App Popup Toggle
+window.toggleAppPopup = function() {
     const popup = document.getElementById('appDownloadPopup');
     const overlay = document.getElementById('appPopupOverlay');
     const desktopContent = document.getElementById('desktopAppContent');
@@ -446,33 +510,22 @@ function toggleAppPopup() {
     }
 }
 
-// App Store Redirect Logic
 function redirectToStore() {
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     const playStoreLink = 'https://play.google.com/store/apps/details?id=your.package.name';
     const appStoreLink = 'https://apps.apple.com/app/idYOUR_APP_ID';
     const appGalleryLink = 'https://appgallery.huawei.com/app/CYOUR_APP_ID';
 
-    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-        window.location.href = appStoreLink;
-    } else if (/Huawei|HONOR/i.test(userAgent)) {
-        window.location.href = appGalleryLink;
-    } else if (/android/i.test(userAgent)) {
-        window.location.href = playStoreLink;
-    } else {
-        window.location.href = playStoreLink;
-    }
+    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) window.location.href = appStoreLink;
+    else if (/Huawei|HONOR/i.test(userAgent)) window.location.href = appGalleryLink;
+    else window.location.href = playStoreLink;
 }
 
 // ⭐ REALTIME DATABASE LISTENER ⭐
 let realtimeTimeout;
 function triggerRealtimeUpdate(payload) {
-    console.log('🔥 Change Detected in Database:', payload); 
     clearTimeout(realtimeTimeout);
-    realtimeTimeout = setTimeout(() => {
-        console.log('🔄 Updating Website automatically...');
-        loadHomepageProducts();
-    }, 500); 
+    realtimeTimeout = setTimeout(() => { loadHomepageProducts(); }, 500); 
 }
 
 function setupRealtime() {
@@ -480,14 +533,65 @@ function setupRealtime() {
 
     window.supabaseClient
         .channel('schema-db-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, triggerRealtimeUpdate)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
+            triggerRealtimeUpdate(payload);
+            if (payload.eventType === 'INSERT') showBrowserNotification("New Product Added! 🛍️", payload.new.title);
+        })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'affiliate_offers' }, triggerRealtimeUpdate)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'site_settings' }, triggerRealtimeUpdate)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'app_notifications' }, (payload) => {
+            loadNotifications(); 
+            showBrowserNotification(payload.new.title, payload.new.message);
+        })
         .subscribe((status) => {
-            if (status === 'SUBSCRIBED') {
-                console.log('✅ Realtime connected! Live updates are ON.');
-            } else {
-                console.log('⚠️ Realtime Status:', status);
-            }
+            if (status === 'SUBSCRIBED') console.log('✅ Realtime connected! Live updates are ON.');
         });
 }
+
+// ⭐ DOMContentLoaded Initialization ⭐
+document.addEventListener('DOMContentLoaded', () => {
+    loadHomepageProducts();
+    setupRealtime(); 
+    loadNotifications();
+
+    const btn = document.getElementById('searchBtn');
+    const input = document.getElementById('searchInput');
+    if (btn) btn.addEventListener('click', handleSearch);
+    if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') handleSearch(); });
+
+    const catBtn = document.getElementById('categoryDropdownBtn');
+    const catMenu = document.getElementById('categoryDropdownMenu');
+    if (catBtn && catMenu && typeof toggleCatDropdown === 'undefined') {
+        catBtn.addEventListener('click', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            catMenu.style.display = catMenu.style.display === 'block' ? 'none' : 'block';
+        });
+    }
+
+    setTimeout(() => {
+        if ("Notification" in window && Notification.permission === "default") {
+            Notification.requestPermission();
+        }
+    }, 5000);
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.notif-wrapper')) {
+            const panel = document.getElementById('notifPanel');
+            if(panel) panel.style.display = 'none';
+        }
+    });
+
+    function hideSplash() {
+        var splash = document.getElementById('splash-screen');
+        if (splash) {
+            splash.classList.add('hidden');
+            document.body.classList.remove('app-loading');
+            setTimeout(() => { splash.style.display = 'none'; }, 800); 
+        }
+    }
+    setTimeout(hideSplash, 1500);
+    setTimeout(() => { 
+        var splash = document.getElementById('splash-screen');
+        if (splash && !splash.classList.contains('hidden')) hideSplash(); 
+    }, 3500);
+});
