@@ -159,6 +159,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function updateUI(currency) {
         const rate = exchangeRates[currency] || 1;
         
+        // ⭐ FIX: Only base price and sale price
         const basePrice = parseFloat(activeOffer.price) || 0;
         const salePrice = parseFloat(activeOffer.sale_price) || 0;
         
@@ -168,7 +169,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         let priceHtml = '';
 
         if (isSaleActive && salePrice > 0) {
-            // ⭐ FIX: Base price strikethrough, Sale price bold (No commission)
             const convertedSale = salePrice * rate;
             const convertedOrig = basePrice * rate;
             const symbol = currencySymbols[currency] || currency + ' ';
@@ -179,7 +179,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${convertedSale.toFixed(2)}</span>
                 </div>`;
         } else {
-            // ⭐ FIX: Only base price (No commission)
             const converted = basePrice * rate;
             const symbol = currencySymbols[currency] || currency + ' ';
             priceHtml = `<span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${converted.toFixed(2)}</span>`;
