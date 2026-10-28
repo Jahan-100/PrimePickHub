@@ -3,7 +3,6 @@ let allProducts = [];
 // ⭐ Helper Function: Upload Image to Supabase Storage
 async function uploadFileToSupabase(file) {
     const fileExt = file.name.split('.').pop();
-    // Unique name banane ke liye timestamp aur random string
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
     
     const { data, error } = await window.supabaseClient.storage
@@ -12,7 +11,6 @@ async function uploadFileToSupabase(file) {
 
     if (error) throw error;
 
-    // Public URL get karein
     const { data: publicUrlData } = window.supabaseClient.storage
         .from('product-images')
         .getPublicUrl(fileName);
@@ -36,6 +34,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
     document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
     
+    // ⭐ Save App Download Setting ⭐
+    document.getElementById('saveAppSettingsBtn')?.addEventListener('click', async function() {
+        const isLive = document.getElementById('appDownloadStatusToggle').checked;
+        const { error } = await window.supabaseClient.from('site_settings').update({ 
+            show_app_download: isLive 
+        }).eq('id', 1);
+
+        if (error) alert("Error: " + error.message);
+        else alert(`App Download Popup is now ${isLive ? 'LIVE (Visible)' : 'STOPPED (Hidden)'} on website!`);
+    });
+
     // Save Special Deal Settings
     document.getElementById('saveTitleBtn')?.addEventListener('click', async function() {
         const newTitle = document.getElementById('specialDealTitleInput').value.trim();
@@ -101,6 +110,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadSiteSettings() {
     const { data } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).single();
     if (data) {
+        // App Download Status
+        if(document.getElementById('appDownloadStatusToggle')) {
+            document.getElementById('appDownloadStatusToggle').checked = data.show_app_download !== false;
+        }
+
         // Special Deal
         if(document.getElementById('specialDealTitleInput')) {
             document.getElementById('specialDealTitleInput').value = data.special_deal_title || 'First order deal';
@@ -276,7 +290,6 @@ window.editProduct = async function(id) {
         const variations = p.affiliate_offers?.filter(o => o.variation_name) || [];
         variations.forEach(v => addVariationRow(v.variation_name, v.price, v.sale_price, (v.commission_rate > 0 ? v.commission_rate : ''), v.affiliate_url));
 
-        // Reset File Inputs on Edit
         document.getElementById('pImgFile').value = '';
         document.getElementById('pGalleryFile').value = '';
         document.getElementById('pImgFileName').innerText = 'No file chosen';
@@ -299,7 +312,6 @@ function setupProductForm() {
         form.reset(); document.getElementById('variationsContainer').innerHTML = '';
         document.getElementById('pId').value = ''; document.getElementById('pOfferId').value = '';
         
-        // Reset File Inputs
         document.getElementById('pImgFile').value = '';
         document.getElementById('pGalleryFile').value = '';
         document.getElementById('pImgFileName').innerText = 'No file chosen';
@@ -323,7 +335,6 @@ function setupProductForm() {
             const price = parseFloat(document.getElementById('pPrice').value) || 0;
             const salePrice = document.getElementById('pSalePrice').value ? parseFloat(document.getElementById('pSalePrice').value) : null;
 
-            // ⭐ 1. Handle Primary Image Upload
             let finalImageUrl = document.getElementById('pImg').value.trim();
             const primaryFileInput = document.getElementById('pImgFile');
             if (primaryFileInput.files.length > 0) {
@@ -331,7 +342,6 @@ function setupProductForm() {
                 finalImageUrl = await uploadFileToSupabase(primaryFileInput.files[0]);
             }
 
-            // ⭐ 2. Handle Gallery Images Upload
             let finalGalleryUrls = document.getElementById('pGallery').value.trim() ? document.getElementById('pGallery').value.split('\n').map(u=>u.trim()).filter(Boolean) : [];
             const galleryFileInput = document.getElementById('pGalleryFile');
             if (galleryFileInput.files.length > 0) {
@@ -396,7 +406,6 @@ function setupProductForm() {
             document.getElementById('formTitle').innerText = "Add New Product"; 
             cancelBtn.style.display = "none";
             
-            // Reset File Inputs
             primaryFileInput.value = '';
             galleryFileInput.value = '';
             document.getElementById('pImgFileName').innerText = 'No file chosen';
