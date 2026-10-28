@@ -50,7 +50,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const allOffers = product.affiliate_offers || [];
     const defaultOffer = allOffers[0] || { price: '0', store_name: 'Store', currency: 'USD', commission_rate: 0, sale_price: null };
-    const variations = allOffers.slice(1); // First offer is main offer, rest are variations
+    
+    // ⭐ UPDATE: Ab saare offers (Main + Variations) is list mein aayenge
+    const variations = allOffers; 
 
     const baseCurrency = (defaultOffer.currency || 'USD').toUpperCase();
     let activeOffer = defaultOffer;
@@ -68,16 +70,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     let variationHtml = '';
-    if (variations.length > 0) {
+    // Show selection boxes if there are multiple offers OR if the single offer has a variation name
+    const showVariationBoxes = variations.length > 1 || (variations.length === 1 && variations[0].variation_name);
+
+    if (showVariationBoxes) {
         variationHtml = `
             <div style="margin-bottom: 15px;">
                 <p style="font-weight:bold; margin-bottom:8px;">Select Option:</p>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    ${variations.map((v, i) => `
-                        <button class="var-btn" data-index="${i}" style="padding:8px 16px; border:2px solid #E2E8F0; background:#fff; border-radius:6px; cursor:pointer; font-weight:bold; color:#1E1B4B; transition:all 0.2s;">
-                            ${escapeHTML(v.variation_name)}
+                    ${variations.map((v, i) => {
+                        const isSelected = i === 0; // Main offer is selected by default
+                        const label = v.variation_name ? v.variation_name : 'Default';
+                        return `
+                        <button class="var-btn" data-index="${i}" style="padding:8px 16px; border:2px solid ${isSelected ? '#FF5A3C' : '#E2E8F0'}; background:#fff; border-radius:6px; cursor:pointer; font-weight:bold; color:${isSelected ? '#FF5A3C' : '#1E1B4B'}; transition:all 0.2s;">
+                            ${escapeHTML(label)}
                         </button>
-                    `).join('')}
+                    `}).join('')}
                 </div>
             </div>`;
     }
@@ -205,13 +213,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     await fetchRates(); updateUI(baseCurrency);
     currencySelector.addEventListener('change', (e) => updateUI(e.target.value));
 
-    if (variations.length > 0) {
+    if (showVariationBoxes) {
         document.querySelectorAll('.var-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const idx = parseInt(this.dataset.index);
-                activeOffer = variations[idx];
-                document.querySelectorAll('.var-btn').forEach(b => { b.style.borderColor = '#E2E8F0'; b.style.color = '#1E1B4B'; });
-                this.style.borderColor = '#FF5A3C'; this.style.color = '#FF5A3C';
+                activeOffer = variations[idx]; // This will include the main offer at index 0
+                
+                document.querySelectorAll('.var-btn').forEach(b => { 
+                    b.style.borderColor = '#E2E8F0'; 
+                    b.style.color = '#1E1B4B'; 
+                });
+                this.style.borderColor = '#FF5A3C'; 
+                this.style.color = '#FF5A3C';
+                
                 updateUI(currencySelector.value);
             });
         });
