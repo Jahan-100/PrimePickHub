@@ -10,17 +10,14 @@ function isValidExternalURL(url) { if (typeof url !== 'string') return false; tr
 function isValidURL(url) { if (!url || typeof url !== 'string') return false; try { const p = new URL(url, window.location.origin); return p.protocol === 'http:' || p.protocol === 'https:'; } catch { return false; } }
 function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb; }
 
-// ⭐ UPDATE: Card aur Product Page ki price match karne ke liye logic update kiya gaya hai
+// ⭐ UPDATE: Hamesha Main Offer (Base Price) ko priority dein
 function getPrimaryOffer(product) { 
     if (!product || !Array.isArray(product.affiliate_offers)) return null; 
     const offers = product.affiliate_offers.filter(o => o && isValidExternalURL(o.affiliate_url));
-    const variations = offers.filter(o => o.variation_name);
     const defaultOffer = offers.find(o => !o.variation_name);
     
-    // Detail page pehli variation select karta hai, isliye card par bhi pehli variation dikhayenge
-    if (variations.length > 0) return variations[0];
-    if (defaultOffer) return defaultOffer;
-    return offers[0] || null;
+    // Return main offer if it exists, otherwise fallback to first available
+    return defaultOffer || offers[0] || null;
 }
 
 function deduplicateProducts(list) {
