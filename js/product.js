@@ -161,13 +161,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const basePrice = parseFloat(activeOffer.price) || 0;
         const salePrice = parseFloat(activeOffer.sale_price) || 0;
+        const commissionRate = parseFloat(activeOffer.commission_rate) || 0;
+        
+        let finalBasePrice = basePrice;
+        let finalSalePrice = salePrice;
+
+        if (commissionRate > 0) {
+            finalBasePrice = basePrice + (basePrice * (commissionRate / 100));
+            if (salePrice > 0) {
+                finalSalePrice = salePrice + (salePrice * (commissionRate / 100));
+            }
+        }
         
         let priceHtml = '';
 
-        // ⭐ FIX: Check salePrice > 0 instead of date
         if (salePrice > 0) {
-            const convertedSale = salePrice * rate;
-            const convertedOrig = basePrice * rate;
+            const convertedSale = finalSalePrice * rate;
+            const convertedOrig = finalBasePrice * rate;
             const symbol = currencySymbols[currency] || currency + ' ';
 
             priceHtml = `
@@ -176,7 +186,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${convertedSale.toFixed(2)}</span>
                 </div>`;
         } else {
-            const converted = basePrice * rate;
+            const converted = finalBasePrice * rate;
             const symbol = currencySymbols[currency] || currency + ' ';
             priceHtml = `<span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${converted.toFixed(2)}</span>`;
         }
@@ -215,7 +225,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         "offers": allOffers.map(o => {
             const p = parseFloat(o.price) || 0; 
             const sp = parseFloat(o.sale_price) || 0;
-            const finalP = (sp > 0) ? sp : p;
+            const c = parseFloat(o.commission_rate) || 0;
+
+            let finalP = sp > 0 ? sp : p;
+            if (c > 0) {
+                finalP = finalP + (finalP * (c / 100));
+            }
             
             return { "@type": "Offer", "url": o.affiliate_url, "priceCurrency": o.currency || "USD", "price": finalP.toFixed(2), "availability": "https://schema.org/InStock", "seller": { "@type": "Organization", "name": o.store_name } };
         })
