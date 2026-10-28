@@ -18,6 +18,34 @@ function deduplicateProducts(list) {
 }
 function showGridMessage(grid, msg) { if (!grid) return; grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;"><p>${escapeHTML(msg)}</p></div>`; }
 
+// ⭐ Function: Dynamic Categories Render Karna ⭐
+function renderDynamicCategories(allProducts) {
+    const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
+    const dbCats = [...new Set(allProducts.map(p => p.category_slug).filter(Boolean))];
+    
+    // Sirf wohi categories filter karein jisme product mojood hai + 'all'
+    const activeCats = masterCats.filter(c => c.slug === 'all' || dbCats.includes(c.slug));
+    
+    // 1. Render Category Icons (Shop by Category)
+    const catContainer = document.getElementById('categoryScrollContainer');
+    if (catContainer) {
+        catContainer.innerHTML = activeCats.map(c => `
+            <a href="javascript:void(0)" onclick="selectCategory('${c.slug}', this)" class="category-item ${c.slug === 'all' ? 'active' : ''}" data-cat="${c.slug}">
+                <div class="cat-icon" ${c.slug === 'all' ? 'style="color: #EF4444;"' : ''}>${c.icon}</div>
+                <span>${c.name}</span>
+            </a>
+        `).join('');
+    }
+
+    // 2. Render Search Dropdown
+    const dropdownMenu = document.getElementById('categoryDropdownMenu');
+    if (dropdownMenu) {
+        dropdownMenu.innerHTML = activeCats.map(c => `
+            <li data-value="${c.slug}" class="${c.slug === 'all' ? 'active' : ''}" onclick="selectCatDropdown('${c.slug}', '${c.name}', this)">${c.name}</li>
+        `).join('');
+    }
+}
+
 function renderProductCard(product) {
     if (!product || typeof product !== 'object') return '';
     const title = escapeHTML(product.title || 'Untitled');
@@ -230,7 +258,8 @@ window.selectCategory = async function(catSlug, element) {
     const grid = document.getElementById('productGrid');
     
     if (titleEl) {
-        titleEl.innerHTML = (catSlug === 'all') ? 'For You' : catSlug.charAt(0).toUpperCase() + catSlug.slice(1).replace('-', ' ');
+        const catName = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? (CONFIG.categories.find(c => c.slug === catSlug)?.name || catSlug) : catSlug;
+        titleEl.innerHTML = (catSlug === 'all') ? 'For You' : catName;
     }
     
     showGridMessage(grid, 'Loading products...');
@@ -307,6 +336,9 @@ async function loadHomepageProducts() {
         const data = await API.getHomepageProducts();
         const raw = [...(data.featured ?? []), ...(data.trending ?? []), ...(data.latest ?? [])];
         const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false);
+
+        // ⭐ Categories ko dynamically render karein ⭐
+        renderDynamicCategories(allProducts);
 
         const now = new Date();
         const flashSaleProducts = [];
