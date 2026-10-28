@@ -1,4 +1,4 @@
-const CACHE = 'primepickhub-v3'; // ⭐ Version update kiya gaya hai
+const CACHE = 'primepickhub-v5'; 
 const ASSETS = ['/', '/index.html', '/css/main.css', '/js/config.js', '/js/api.js', '/js/app.js'];
 
 self.addEventListener('install', e => {
@@ -16,8 +16,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
     if (e.request.method !== 'GET') return;
     
-    // ⭐ NETWORK-FIRST STRATEGY (HTML, JS, CSS ke liye)
-    // Yeh pehle internet se nayi file layega, agar internet na ho toh cache se dega.
+    // ⭐ NETWORK-FIRST STRATEGY (Hamesha nayi file layega, agar internet na ho toh cache se dega)
     if (e.request.url.includes('.html') || e.request.url.includes('.js') || e.request.url.includes('.css')) {
         e.respondWith(
             fetch(e.request)
@@ -29,7 +28,7 @@ self.addEventListener('fetch', e => {
                 .catch(() => caches.match(e.request)) // Agar internet na ho toh cache se do
         );
     } else {
-        // Cache-First for images, fonts (jo bar bar nahi badalti)
+        // Cache-First for images, fonts
         e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
     }
 });
