@@ -345,15 +345,10 @@ async function loadHomepageProducts() {
             flTitle.style.fontStyle = titleFontStyle;
 
             if (endingSoonBtn) {
-                // Requirement 3: Match Title Font
                 endingSoonBtn.style.fontFamily = titleFontFamily;
                 endingSoonBtn.style.fontWeight = titleFontWeight;
                 endingSoonBtn.style.fontStyle = titleFontStyle;
-                
-                // Requirement 2: Font size increased by 20% (pichle 1.6rem se 1.92rem)
                 endingSoonBtn.style.fontSize = '1.92rem';
-                
-                // Requirement 1: Button size increased by 20% (pichle 6px 20px se 7px 24px)
                 endingSoonBtn.style.padding = '7px 24px';
             }
         }
@@ -494,16 +489,22 @@ function renderNotifications() {
         badge.innerText = currentNotifs.length;
     }
 
-    list.innerHTML = currentNotifs.map(n => `
-        <div class="notif-item" id="notif-${n.id}">
+    // ⭐ UPDATE: Notification par click karne se product page khulega
+    list.innerHTML = currentNotifs.map(n => {
+        const productUrl = n.product_slug ? `/product/${n.product_slug}` : '#';
+        const clickAttr = n.product_slug ? `onclick="window.location.href='${productUrl}'"` : '';
+        const cursorStyle = n.product_slug ? 'cursor: pointer;' : '';
+        
+        return `
+        <div class="notif-item" id="notif-${n.id}" ${clickAttr} style="${cursorStyle}">
             <div>
                 <h4>${escapeHTML(n.title)}</h4>
                 <p>${escapeHTML(n.message)}</p>
                 <span style="font-size: 0.65rem; color: #94A3B8;">${new Date(n.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
             </div>
-            <button class="notif-del" onclick="deleteNotif('${n.id}')"><i class="fa-solid fa-xmark"></i></button>
+            <button class="notif-del" onclick="event.stopPropagation(); deleteNotif('${n.id}')"><i class="fa-solid fa-xmark"></i></button>
         </div>
-    `).join('');
+    `}).join('');
 }
 
 window.deleteNotif = function(id) {
