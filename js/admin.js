@@ -720,10 +720,9 @@ function setupProductForm() {
     document.getElementById('logoutBtn')?.addEventListener('click', async () => { await API.signOut(); window.location.reload(); });
 }
 
-// ⭐ BLOG MANAGEMENT LOGIC (Appended at the end) ⭐
+// ⭐ BLOG MANAGEMENT LOGIC ⭐
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Only run if admin dashboard exists
     if (!document.getElementById('blogForm')) return;
 
     const toggleFormBtn = document.getElementById('toggleBlogFormBtn');
@@ -733,34 +732,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const blogForm = document.getElementById('blogForm');
     const cancelBtn = document.getElementById('cancelBlogBtn');
 
-    // Toggle Form
+    // Toggle Form (Teal / Red)
     if (toggleFormBtn && formContainer) {
         toggleFormBtn.addEventListener('click', () => {
             if (formContainer.style.display === 'none') {
                 formContainer.style.display = 'block';
                 toggleFormBtn.textContent = 'Hide Blog Form';
-                toggleFormBtn.style.background = '#EF4444';
+                toggleFormBtn.style.background = '#EF4444'; // Red
             } else {
                 formContainer.style.display = 'none';
                 toggleFormBtn.textContent = 'Show Blog Form';
-                toggleFormBtn.style.background = '#16a34a';
+                toggleFormBtn.style.background = '#0d9488'; // Teal
             }
         });
     }
 
-    // Toggle List
+    // Toggle List (Purple / Red)
     if (toggleListBtn && listContainer) {
         toggleListBtn.addEventListener('click', () => {
             if (listContainer.style.display === 'none') {
                 listContainer.style.display = 'block';
+                toggleListBtn.style.background = '#EF4444'; // Red
                 loadBlogList();
             } else {
                 listContainer.style.display = 'none';
+                toggleListBtn.style.background = '#9333ea'; // Purple
             }
         });
     }
 
-    // Load Blog List
     async function loadBlogList() {
         const tbody = document.getElementById('blogListBody');
         if (!tbody) return;
@@ -788,7 +788,6 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     }
 
-    // Edit Blog
     window.editBlog = async function(id, title, slug, imageUrl) {
         document.getElementById('bId').value = id;
         document.getElementById('bTitle').value = title;
@@ -808,7 +807,6 @@ document.addEventListener('DOMContentLoaded', () => {
         formContainer.scrollIntoView({ behavior: 'smooth' });
     }
 
-    // Delete Blog
     window.deleteBlog = async function(id) {
         if (!confirm("Are you sure you want to delete this post?")) return;
         const { error } = await window.supabaseClient.from('blogs').delete().eq('id', id);
@@ -816,7 +814,6 @@ document.addEventListener('DOMContentLoaded', () => {
         else loadBlogList();
     }
 
-    // Cancel Edit
     cancelBtn.addEventListener('click', () => {
         blogForm.reset();
         document.getElementById('bId').value = '';
@@ -825,10 +822,9 @@ document.addEventListener('DOMContentLoaded', () => {
         cancelBtn.style.display = 'none';
         formContainer.style.display = 'none';
         toggleFormBtn.textContent = 'Show Blog Form';
-        toggleFormBtn.style.background = '#16a34a';
+        toggleFormBtn.style.background = '#0d9488';
     });
 
-    // Save Blog
     blogForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const saveBtn = document.getElementById('saveBlogBtn');
@@ -860,7 +856,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cancelBtn.style.display = 'none';
             formContainer.style.display = 'none';
             toggleFormBtn.textContent = 'Show Blog Form';
-            toggleFormBtn.style.background = '#16a34a';
+            toggleFormBtn.style.background = '#0d9488';
             
             if(listContainer.style.display === 'block') loadBlogList();
 
