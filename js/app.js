@@ -2,7 +2,6 @@
  * PrimePickHub Homepage Renderer + Realtime + Notifications + PWA + Tracking
  */
 
-// ⭐ COOKIE HELPER FUNCTIONS (For persistent visitor ID and notification status) ⭐
 function setCookie(name, value, days) {
     let expires = "";
     if (days) {
@@ -326,6 +325,43 @@ window.selectCategory = async function(catSlug, element) {
     }
 };
 
+// ⭐ NEW: Function to render products inside Ad Slots (Fallback) ⭐
+function renderAdFallback(products) {
+    const topSlot = document.getElementById('ad-fallback-top');
+    const midSlot = document.getElementById('ad-fallback-middle');
+
+    if (products && products.length > 0) {
+        // Shuffle and pick 4 random products for ads fallback
+        const shuffled = [...products].sort(() => 0.5 - Math.random());
+        const selected = shuffled.slice(0, 4);
+
+        const html = selected.map(p => {
+            const title = escapeHTML(p.title || 'Product');
+            const productUrl = `/product/${encodeURIComponent(p.slug)}`;
+            const imageSrc = isValidURL(p.image_url) ? escapeHTML(p.image_url) : 'assets/icon-192.png?v=4';
+            const primaryOffer = getPrimaryOffer(p) || {};
+            const sym = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' }[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
+            const price = parseFloat(primaryOffer.sale_price) || parseFloat(primaryOffer.price) || 0;
+
+            return `
+                <div class="product-card" style="cursor:pointer;" onclick="window.location.href='${productUrl}'">
+                    <div class="card-img-wrap">
+                        <img src="${imageSrc}" alt="${title}">
+                    </div>
+                    <div class="card-body">
+                        <a href="${productUrl}" class="card-title">${title}</a>
+                        <div style="font-weight:bold; color:#FF5A3C; font-size:1rem; margin-bottom:5px;">${sym}${price.toFixed(2)}</div>
+                        <button class="btn-check-price" style="background:#2563eb; pointer-events:none;">View Deal</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        if (topSlot) topSlot.innerHTML = html;
+        if (midSlot) midSlot.innerHTML = html;
+    }
+}
+
 async function loadHomepageProducts() {
     const grid = document.getElementById('productGrid');
     const flashScroll = document.getElementById('flashSaleScroll');
@@ -430,6 +466,9 @@ async function loadHomepageProducts() {
         const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false);
 
         renderDynamicCategories(allProducts);
+
+        // ⭐ Render Fallback Ads ⭐
+        renderAdFallback(allProducts);
 
         const now = new Date();
         const flashSaleProducts1 = [];
@@ -545,7 +584,7 @@ function handleSearch() {
     }
 }
 
-// ⭐ NOTIFICATION LOGIC (Using Cookies) ⭐
+// NOTIFICATION LOGIC
 let userDeletedNotifs = JSON.parse(getCookie('deleted_notifs') || '[]');
 let userReadNotifs = JSON.parse(getCookie('read_notifs') || '[]'); 
 let currentNotifs = [];
@@ -645,7 +684,6 @@ window.handleNotifClick = async function(id, slug, type) {
         }
     }
 
-    // ⭐ NEW CHECK FOR SALE SECTION 2 ⭐
     if (type === 'flash_sale_2' && product.sale_end_date_2) {
         if (new Date(product.sale_end_date_2) < new Date()) {
             alert("Yeh Sale Section 2 khatam ho chuki hai.");
@@ -669,7 +707,7 @@ window.clearAllNotifs = function(e) {
     renderNotifications();
 }
 
-// ⭐ NOTIFICATION LOGIC ENDS HERE ⭐
+// NOTIFICATION LOGIC ENDS HERE
 
 function showBrowserNotification(title, body) {
     if (!("Notification" in window)) return;
@@ -798,6 +836,13 @@ async function trackActiveApp() {
     }, { onConflict: 'device_id' });
 }
 
+// ⭐ NEW: Cookie Consent Logic ⭐
+window.acceptCookies = function() {
+    setCookie('cookie_consent', 'accepted', 365);
+    const banner = document.getElementById('cookie-consent-banner');
+    if (banner) banner.style.display = 'none';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     trackVisitor();
     trackActiveApp();
@@ -805,6 +850,14 @@ document.addEventListener('DOMContentLoaded', () => {
     loadHomepageProducts();
     setupRealtime(); 
     loadNotifications();
+
+    // ⭐ NEW: Check Cookie Consent ⭐
+    if (!getCookie('cookie_consent')) {
+        setTimeout(() => {
+            const banner = document.getElementById('cookie-consent-banner');
+            if (banner) banner.style.display = 'flex';
+        }, 2000);
+    }
 
     setInterval(() => {
         const popup = document.getElementById('appDownloadPopup');
