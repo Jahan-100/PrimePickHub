@@ -730,3 +730,156 @@ function setupProductForm() {
 
     document.getElementById('logoutBtn')?.addEventListener('click', async () => { await API.signOut(); window.location.reload(); });
 }
+
+// ⭐ BLOG MANAGEMENT LOGIC (Appended at the end) ⭐
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Only run if admin dashboard exists
+    if (!document.getElementById('blogForm')) return;
+
+    const toggleFormBtn = document.getElementById('toggleBlogFormBtn');
+    const formContainer = document.getElementById('blogFormContainer');
+    const toggleListBtn = document.getElementById('toggleBlogListBtn');
+    const listContainer = document.getElementById('blogListContainer');
+    const blogForm = document.getElementById('blogForm');
+    const cancelBtn = document.getElementById('cancelBlogBtn');
+
+    // Toggle Form
+    if (toggleFormBtn && formContainer) {
+        toggleFormBtn.addEventListener('click', () => {
+            if (formContainer.style.display === 'none') {
+                formContainer.style.display = 'block';
+                toggleFormBtn.textContent = 'Hide Blog Form';
+                toggleFormBtn.style.background = '#EF4444';
+            } else {
+                formContainer.style.display = 'none';
+                toggleFormBtn.textContent = 'Show Blog Form';
+                toggleFormBtn.style.background = '#16a34a';
+            }
+        });
+    }
+
+    // Toggle List
+    if (toggleListBtn && listContainer) {
+        toggleListBtn.addEventListener('click', () => {
+            if (listContainer.style.display === 'none') {
+                listContainer.style.display = 'block';
+                loadBlogList();
+            } else {
+                listContainer.style.display = 'none';
+            }
+        });
+    }
+
+    // Load Blog List
+    async function loadBlogList() {
+        const tbody = document.getElementById('blogListBody');
+        if (!tbody) return;
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading...</td></tr>';
+
+        const { data: blogs, error } = await window.supabaseClient.from('blogs').select('*').order('created_at', { ascending: false });
+        
+        if (error || !blogs || blogs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No blog posts found.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = blogs.map(b => `
+            <tr>
+                <td style="text-align: center;"><img src="${b.image_url || '/assets/icon-192.png?v=4'}" style="width:50px;height:40px;object-fit:cover;border-radius:4px;"></td>
+                <td>${b.title}</td>
+                <td style="text-align:center;">${new Date(b.created_at).toLocaleDateString()}</td>
+                <td>
+                    <div class="action-btns">
+                        <button class="btn-edit" onclick="editBlog('${b.id}', '${b.title}', '${b.slug}', '${b.image_url || ''}')">Edit</button>
+                        <button class="btn-delete" onclick="deleteBlog('${b.id}')">Delete</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // Edit Blog (Needs global functions to be accessed from onclick)
+    window.editBlog = async function(id, title, slug, imageUrl) {
+        document.getElementById('bId').value = id;
+        document.getElementById('bTitle').value = title;
+        document.getElementById('bSlug').value = slug;
+        document.getElementById('bImg').value = imageUrl;
+        
+        // Fetch content
+        const { data } = await window.supabaseClient.from('blogs').select('content_html').eq('id', id).single();
+        if(data) document.getElementById('bContent').value = data.content_html;
+
+        document.getElementById('blogFormTitle').innerText = "Edit Blog Post";
+        document.getElementById('saveBlogBtn').innerText = "Update Post";
+        cancelBtn.style.display = 'block';
+        
+        formContainer.style.display = 'block';
+        toggleFormBtn.textContent = 'Hide Blog Form';
+        toggleFormBtn.style.background = '#EF4444';
+        formContainer.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Delete Blog
+    window.deleteBlog = async function(id) {
+        if (!confirm("Are you sure you want to delete this post?")) return;
+        const { error } = await window.supabaseClient.from('blogs').delete().eq('id', id);
+        if (error) alert("Error deleting: " + error.message);
+        else loadBlogList();
+    }
+
+    // Cancel Edit
+    cancelBtn.addEventListener('click', () => {
+        blogForm.reset();
+        document.getElementById('bId').value = '';
+        document.getElementById('blogFormTitle').innerText = "Add New Blog Post";
+        document.getElementById('saveBlogBtn').innerText = "Publish Post";
+        cancelBtn.style.display = 'none';
+        formContainer.style.display = 'none';
+        toggleFormBtn.textContent = 'Show Blog Form';
+        toggleFormBtn.style.background = '#16a34a';
+    });
+
+    // Save Blog
+    blogForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const saveBtn = document.getElementById('saveBlogBtn');
+        const originalText = saveBtn.innerText;
+        saveBtn.innerText = "Saving..."; saveBtn.disabled = true;
+
+        try {
+            const id = document.getElementById('bId').value;
+            const blogData = {
+                title: document.getElementById('bTitle').value.trim(),
+                slug: document.getElementById('bSlug').value.trim(),
+                image_url: document.getElementById('bImg').value.trim() || null,
+                content_html: document.getElementById('bContent').value.trim()
+            };
+
+            if (id) {
+                const { error } = await window.supabaseClient.from('blogs').update(blogData).eq('id', id);
+                if (error) throw error;
+            } else {
+                const { error } = await window.supabaseClient.from('blogs').insert([blogData]);
+                if (error) throw error;
+            }
+
+            alert("Blog Post Saved Successfully!");
+            blogForm.reset();
+            document.getElementById('bId').value = '';
+            document.getElementById('blogFormTitle').innerText = "Add New Blog Post";
+            document.getElementById('saveBlogBtn').innerText = "Publish Post";
+            cancelBtn.style.display = 'none';
+            formContainer.style.display = 'none';
+            toggleFormBtn.textContent = 'Show Blog Form';
+            toggleFormBtn.style.background = '#16a34a';
+            
+            if(listContainer.style.display === 'block') loadBlogList();
+
+        } catch (err) {
+            alert("Error: " + err.message);
+        } finally {
+            saveBtn.innerText = originalText; saveBtn.disabled = false;
+        }
+    });
+});
