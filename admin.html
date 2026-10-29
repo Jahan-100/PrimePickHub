@@ -46,12 +46,7 @@
         .card-manage-products { background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); border: 1px solid #a5b4fc !important; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.1); border-radius: 12px; }
         .card-manage-products h2 { color: #4338ca !important; }
         
-        /* ⭐ RED BORDER FOR EMPTY FIELDS (Stronger Version) ⭐ */
-        .error-input {
-            border: 2px solid #EF4444 !important;
-            background-color: #FEF2F2 !important;
-            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
-        }
+        .error-input { border: 2px solid #EF4444 !important; background-color: #FEF2F2 !important; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important; }
     </style>
 </head>
 <body>
@@ -94,7 +89,6 @@
                     </div>
 
                     <div id="addProductContainer" style="display: none; margin-top: 20px;">
-                        <!-- ⭐ Added novalidate taake custom red border kaam kare ⭐ -->
                         <form id="productForm" novalidate>
                             <input type="hidden" id="pId" value="">
                             <input type="hidden" id="pOfferId" value="">
@@ -144,7 +138,8 @@
                                 </div>
                             </div>
 
-                            <div class="form-section-title" style="color: #be123c;">Flash Sale / Special Event (Optional)</div>
+                            <!-- Sale Section 1 -->
+                            <div class="form-section-title" style="color: #be123c;">Sale Section 1 (Optional)</div>
                             <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
                                 <div class="form-group" style="flex: 1; min-width: 150px; margin-bottom: 0;">
                                     <label>Event Name (e.g. 11.11 Sale)</label>
@@ -156,6 +151,22 @@
                                 </div>
                                 <div class="form-group" style="flex: 0.5; min-width: 120px; margin-bottom: 0;">
                                     <button type="button" id="cancelOfferBtn" class="btn-check-price" style="background:#64748B; padding: 10px; font-size: 0.9rem; width: 100%; border-radius:6px;">Cancel Offer</button>
+                                </div>
+                            </div>
+
+                            <!-- Sale Section 2 -->
+                            <div class="form-section-title" style="color: #0d9488;">Sale Section 2 (Optional)</div>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
+                                <div class="form-group" style="flex: 1; min-width: 150px; margin-bottom: 0;">
+                                    <label>Event Name (e.g. Winter Sale)</label>
+                                    <input type="text" id="pEventName2" placeholder="Winter Sale 2.2" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; background:#fff;">
+                                </div>
+                                <div class="form-group" style="flex: 1; min-width: 150px; margin-bottom: 0;">
+                                    <label>Sale End Date & Time</label>
+                                    <input type="datetime-local" id="pSaleEndDate2" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; background:#fff;">
+                                </div>
+                                <div class="form-group" style="flex: 0.5; min-width: 120px; margin-bottom: 0;">
+                                    <button type="button" id="cancelOffer2Btn" class="btn-check-price" style="background:#64748B; padding: 10px; font-size: 0.9rem; width: 100%; border-radius:6px;">Cancel Offer 2</button>
                                 </div>
                             </div>
 
@@ -195,7 +206,6 @@
                                     <input type="checkbox" id="pSpecialDeal" style="width: auto; margin: 0;"> Add to Special Deal Section
                                 </label>
                                 
-                                <!-- ⭐ NAYA CHECKBOX: NOTIFICATION SEND KARNE KE LIYE ⭐ -->
                                 <label style="display: flex; align-items: center; gap: 10px; background: #eff6ff; padding: 10px; border-radius: 6px; border: 1px solid #bfdbfe; cursor: pointer; font-weight: 600; color: #1e3a8a;">
                                     <input type="checkbox" id="pSendNotification" style="width: auto; margin: 0;" checked> 
                                     🔔 Send Notification to Users (App/Website)
@@ -268,9 +278,10 @@
                     </div>
                 </div>
 
-                <div class="admin-card" style="background: #fff7ed; border: 1px solid #fdba74; margin-bottom: 30px;">
+                <!-- Sale Section 1 Customization -->
+                <div class="admin-card" style="background: #fff7ed; border: 1px solid #fdba74; margin-bottom: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
-                        <h3 style="margin: 0; color: #9a3412;">Flash Sale Section Customization</h3>
+                        <h3 style="margin: 0; color: #9a3412;">Sale Section 1 Customization</h3>
                         <button type="button" id="toggleFlashSaleBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#ea580c; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Show Settings</button>
                     </div>
 
@@ -312,7 +323,56 @@
                                 </select>
                             </div>
                         </div>
-                        <button type="button" id="saveFlashSettingsBtn" class="btn-check-price" style="width:auto; padding:10px 20px; background: #ea580c;">Update Flash Sale Design</button>
+                        <button type="button" id="saveFlashSettingsBtn" class="btn-check-price" style="width:auto; padding:10px 20px; background: #ea580c;">Update Sale Section 1 Design</button>
+                    </div>
+                </div>
+
+                <!-- Sale Section 2 Customization -->
+                <div class="admin-card" style="background: #ecfdf5; border: 1px solid #6ee7b7; margin-bottom: 30px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+                        <h3 style="margin: 0; color: #065f46;">Sale Section 2 Customization</h3>
+                        <button type="button" id="toggleSale2Btn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#10b981; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Show Settings</button>
+                    </div>
+
+                    <div id="sale2Container" style="display: none;">
+                        <div class="form-group">
+                            <label>Section Title</label>
+                            <input type="text" id="sale2TitleText" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;" placeholder="e.g. Winter Sale 2.2">
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                            <div class="form-group" style="flex: 1; min-width: 150px; margin-bottom:0;">
+                                <label>Font Style</label>
+                                <select id="sale2TitleFontFamily" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
+                                    <option value="Poppins">Poppins (Modern)</option>
+                                    <option value="Roboto">Roboto (Clean)</option>
+                                    <option value="Oswald">Oswald (Bold)</option>
+                                    <option value="Playfair Display">Playfair (Elegant)</option>
+                                    <option value="Lobster">Lobster (Stylish)</option>
+                                    <option value="Montserrat">Montserrat (Classic)</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 1; min-width: 100px; margin-bottom:0;">
+                                <label>Size (e.g. 2rem)</label>
+                                <input type="text" id="sale2TitleFontSize" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;" placeholder="2rem">
+                            </div>
+                            <div class="form-group" style="flex: 1; min-width: 100px; margin-bottom:0;">
+                                <label>Weight</label>
+                                <select id="sale2TitleFontWeight" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
+                                    <option value="400">Normal</option>
+                                    <option value="600">Semi Bold</option>
+                                    <option value="800">Extra Bold</option>
+                                    <option value="900">Black</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 1; min-width: 100px; margin-bottom:0;">
+                                <label>Style</label>
+                                <select id="sale2TitleFontStyle" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
+                                    <option value="normal">Normal</option>
+                                    <option value="italic">Italic</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="button" id="saveSale2SettingsBtn" class="btn-check-price" style="width:auto; padding:10px 20px; background: #10b981;">Update Sale Section 2 Design</button>
                     </div>
                 </div>
 
