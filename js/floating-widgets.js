@@ -1,10 +1,10 @@
 // js/floating-widgets.js
 document.addEventListener('DOMContentLoaded', () => {
     
-    // Agar page par pehle se contact form mojood hai, toh naya mat banao
+    // Agar page par pehle se contact form mojood hai (jaise index.html mein), toh naya mat banao
     if (document.getElementById('floatingContactBtn')) return;
 
-    // 1. Inject HTML for Floating Elements
+    // 1. Inject HTML for Floating Contact Form
     const floatingHTML = `
         <!-- FLOATING CONTACT FORM -->
         <div id="floatingContactBtn" class="floating-contact-btn" onclick="toggleContactForm()">
@@ -40,30 +40,11 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         </div>
 
-        <!-- FLOATING APP SIDE BUTTON -->
-        <button id="floatingAppIcon" class="floating-app-side-btn" onclick="toggleAppPopup()" style="display: none;">
+        <!-- FLOATING APP BUTTON (Styled in index.html/head) -->
+        <button id="floatingAppIcon" onclick="toggleAppPopup()" style="display: none;">
             <img src="/assets/icon-192.png?v=4" alt="App">
             <span>App</span>
         </button>
-
-        <!-- APP POPUP MODAL -->
-        <div id="appPopupOverlay" class="app-popup-overlay" onclick="toggleAppPopup()" style="display: none;"></div>
-        <div id="appDownloadPopup" class="app-popup" style="display: none;">
-            <div class="app-popup-content">
-                <span class="close-popup" onclick="toggleAppPopup()">&times;</span>
-                <div class="app-icon"><img src="/assets/icon-192.png?v=4" alt="App Icon"></div>
-                <h3>Install PrimePickHub App</h3>
-                <p>Better experience, exclusive deals & faster checkout!</p>
-                <div id="desktopAppContent" style="display: none; text-align: center;">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://primepickhub.vercel.app/" alt="Scan QR Code" style="border-radius: 10px; border: 2px solid #E2E8F0; padding: 5px; margin-bottom: 10px;">
-                    <p style="font-size: 0.85rem; color: #64748B;">Scan with your phone to Install</p>
-                </div>
-                <div id="mobileAppContent" style="display: none;">
-                    <button class="btn-app-download" id="pwaInstallBtn" onclick="triggerPWAInstall()" style="background: var(--accent);">Install App</button>
-                    <p style="font-size: 0.75rem; color: #64748B; margin-top: 10px;">Note: For iOS, use "Share > Add to Home Screen" in Safari.</p>
-                </div>
-            </div>
-        </div>
     `;
 
     // Append to body
@@ -123,36 +104,5 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.disabled = false;
             }
         });
-    }
-
-    // 3. Logic for App Popup (if not already defined in app.js)
-    if(typeof window.toggleAppPopup === 'undefined') {
-        window.toggleAppPopup = function() {
-            const popup = document.getElementById('appDownloadPopup');
-            const overlay = document.getElementById('appPopupOverlay');
-            const desktopContent = document.getElementById('desktopAppContent');
-            const mobileContent = document.getElementById('mobileAppContent');
-            
-            if (!popup || !overlay) return;
-
-            if (popup.style.display === 'none' || popup.style.display === '') {
-                const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-
-                if (isMobile) {
-                    if(mobileContent) mobileContent.style.display = 'block';
-                    if(desktopContent) desktopContent.style.display = 'none';
-                } else {
-                    if(desktopContent) desktopContent.style.display = 'block';
-                    if(mobileContent) mobileContent.style.display = 'none';
-                }
-
-                popup.style.display = 'block';
-                overlay.style.display = 'block';
-            } else {
-                popup.style.display = 'none';
-                overlay.style.display = 'none';
-            }
-        }
     }
 });
