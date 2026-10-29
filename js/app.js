@@ -325,15 +325,15 @@ window.selectCategory = async function(catSlug, element) {
     }
 };
 
-// ⭐ NEW: Function to render products inside Ad Slots (Fallback) ⭐
+// ⭐ Render 12 Small Products inside Ad Slots (Scales to 100+ products) ⭐
 function renderAdFallback(products) {
     const topSlot = document.getElementById('ad-fallback-top');
     const midSlot = document.getElementById('ad-fallback-middle');
 
     if (products && products.length > 0) {
-        // Shuffle and pick 4 random products for ads fallback
+        // Shuffle and pick 12 random products for ads fallback
         const shuffled = [...products].sort(() => 0.5 - Math.random());
-        const selected = shuffled.slice(0, 4);
+        const selected = shuffled.slice(0, 12);
 
         const html = selected.map(p => {
             const title = escapeHTML(p.title || 'Product');
@@ -350,8 +350,8 @@ function renderAdFallback(products) {
                     </div>
                     <div class="card-body">
                         <a href="${productUrl}" class="card-title">${title}</a>
-                        <div style="font-weight:bold; color:#FF5A3C; font-size:1rem; margin-bottom:5px;">${sym}${price.toFixed(2)}</div>
-                        <button class="btn-check-price" style="background:#2563eb; pointer-events:none;">View Deal</button>
+                        <div style="font-weight:bold; color:#FF5A3C; font-size:0.85rem; margin-bottom:4px;">${sym}${price.toFixed(2)}</div>
+                        <button class="btn-check-price" style="background:#2563eb; pointer-events:none;">View</button>
                     </div>
                 </div>
             `;
@@ -467,7 +467,7 @@ async function loadHomepageProducts() {
 
         renderDynamicCategories(allProducts);
 
-        // ⭐ Render Fallback Ads ⭐
+        // ⭐ Render Fallback Ads (100+ scaling) ⭐
         renderAdFallback(allProducts);
 
         const now = new Date();
@@ -836,7 +836,6 @@ async function trackActiveApp() {
     }, { onConflict: 'device_id' });
 }
 
-// ⭐ NEW: Cookie Consent Logic ⭐
 window.acceptCookies = function() {
     setCookie('cookie_consent', 'accepted', 365);
     const banner = document.getElementById('cookie-consent-banner');
@@ -851,7 +850,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setupRealtime(); 
     loadNotifications();
 
-    // ⭐ NEW: Check Cookie Consent ⭐
     if (!getCookie('cookie_consent')) {
         setTimeout(() => {
             const banner = document.getElementById('cookie-consent-banner');
