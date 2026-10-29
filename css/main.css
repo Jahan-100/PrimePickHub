@@ -280,7 +280,7 @@ body {
 .flash-card .price { font-size: 1.05rem; color: #DC2626; }
 .flash-card .card-timer { background: #FEF2F2; color: #DC2626; font-size: 0.8rem; font-weight: 900; padding: 4px 6px; border-radius: 4px; margin-top: 5px; text-align: center; border: 1px solid #FECACA; }
 
-/* ⭐ SALE SECTION 2 - MODERN & STYLISH DESIGN ⭐ */
+/* SALE SECTION 2 */
 .flash-sale-split-2 { display: flex; flex-direction: column; position: relative; background: #f0fdf4; border-radius: 12px; overflow: hidden; margin-bottom: 20px; min-height: 245px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid #6ee7b7; }
 .flash-sale-split-2::before { content: ""; position: absolute; inset: 0; background-image: url('https://images.unsplash.com/photo-1607082349566-187342175e2f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'); background-size: cover; background-position: center; opacity: 0.15; z-index: 0; }
 .flash-sale-2-left { position: relative; z-index: 2; width: 100%; padding: 15px 25px 10px 25px; display: flex; flex-direction: column; align-items: flex-start; background: linear-gradient(135deg, #047857, #064e3b); color: #fff; }
@@ -290,33 +290,35 @@ body {
 .flash-sale-2-left .marquee-content span { color: #d1fae5; }
 .flash-sale-2-left .blinking-ending-soon { background: #f59e0b; color: #451a03; animation: blink2Colors 1.5s infinite; }
 @keyframes blink2Colors { 0% { background-color: #f59e0b; color: #451a03; transform: scale(1); } 50% { background-color: #10b981; color: #fff; transform: scale(1.05); } 100% { background-color: #f59e0b; color: #451a03; transform: scale(1); } }
-
 .flash-sale-2-right { flex: 1; padding: 15px 25px; position: relative; z-index: 1; display: flex; align-items: center; background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(5px); overflow: hidden; }
 .flash-sale-2-right .special-deal-card { border: 1px solid #a7f3d0; box-shadow: 0 4px 15px rgba(4, 120, 87, 0.1); }
 .flash-sale-2-right .special-deal-card .price { color: #047857; }
 .flash-sale-2-right .scroll-arrow:hover { background: #10b981; color: #fff; border-color: #10b981; }
 .flash-sale-2-right .card-timer { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
-/* ⭐ SALE SECTION 2 DESIGN ENDS ⭐ */
 
 /* Footer */
 .footer { background: var(--primary); color: #CBD5E1; padding: 40px 5% 20px; margin-top: 30px; font-size: 0.9rem; text-align: center; }
 .footer a { text-decoration: none; }
 .footer-disclaimer { border-top: 1px solid #334155; padding-top: 20px; margin-top: 20px; font-size: 0.8rem; opacity: 0.8; }
 
-/* App Download Popup & Floating Icon */
+/* App Download Popup & Floating Icon (Hardware Acceleration Fixes Add Kiye Gaye Hain) */
 .app-popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999998; backdrop-filter: blur(2px); }
 .app-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 999999; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 @keyframes popIn { from { transform: translate(-50%, -40%); opacity: 0; scale: 0.9; } to { transform: translate(-50%, -50%); opacity: 1; scale: 1; } }
 .app-popup-content { background: #fff; border-radius: 16px; padding: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid var(--border); position: relative; width: 320px; text-align: center; }
 .close-popup { position: absolute; top: 10px; right: 15px; font-size: 1.8rem; color: #94A3B8; cursor: pointer; transition: color 0.2s; line-height: 1; }
 .close-popup:hover { color: #EF4444; }
-.app-icon img { width: 70px; height: 70px; border-radius: 18px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+
+/* IMAGE GLITCH FIXES */
+.app-icon img { width: 70px; height: 70px; border-radius: 18px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); backface-visibility: hidden; transform: translateZ(0); }
+.splash-logo-img { backface-visibility: hidden; transform: translateZ(0); }
+
 .app-popup-content h3 { font-size: 1.2rem; color: var(--text-dark); margin-bottom: 5px; font-family: 'Poppins', sans-serif; }
 .app-popup-content p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; }
 .btn-app-download { background: var(--accent); color: #fff; border: none; padding: 12px 20px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; width: 100%; transition: background 0.2s; }
 .btn-app-download:hover { background: #e0482d; }
 .floating-app-btn { position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; border-radius: 50%; background: #fff; border: 2px solid var(--accent); box-shadow: 0 4px 15px rgba(255, 90, 60, 0.4); cursor: pointer; z-index: 999997; display: flex; align-items: center; justify-content: center; padding: 0; transition: transform 0.2s; }
-.floating-app-btn img { width: 38px; height: 38px; border-radius: 8px; }
+.floating-app-btn img { width: 38px; height: 38px; border-radius: 8px; backface-visibility: hidden; transform: translateZ(0); }
 .floating-app-btn:hover { transform: scale(1.1); }
 .pulse-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--accent); animation: pulseRing 1.5s infinite cubic-bezier(0.215, 0.61, 0.355, 1); }
 @keyframes pulseRing { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
