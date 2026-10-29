@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupToggleAddProduct(); 
     setupToggleSpecialDeal(); 
     setupToggleFlashSale();
+    setupToggleSale2();
     
     document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
     document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
@@ -69,7 +70,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         else alert("Special Deal Design updated successfully!");
     });
 
-    // Save Flash Sale Settings
+    // Save Sale Section 1 Settings
     document.getElementById('saveFlashSettingsBtn')?.addEventListener('click', async function() {
         const newTitle = document.getElementById('flashTitleText').value.trim();
         const fontFamily = document.getElementById('flashTitleFontFamily').value;
@@ -77,7 +78,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const fontWeight = document.getElementById('flashTitleFontWeight').value;
         const fontStyle = document.getElementById('flashTitleFontStyle').value;
 
-        if(!newTitle) return alert("Flash Sale Title cannot be empty");
+        if(!newTitle) return alert("Sale Section 1 Title cannot be empty");
         
         const { error } = await window.supabaseClient.from('site_settings').update({ 
             flash_title_text: newTitle,
@@ -88,7 +89,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         }).eq('id', 1);
 
         if (error) alert("Error: " + error.message);
-        else alert("Flash Sale Design updated successfully!");
+        else alert("Sale Section 1 Design updated successfully!");
+    });
+
+    // Save Sale Section 2 Settings
+    document.getElementById('saveSale2SettingsBtn')?.addEventListener('click', async function() {
+        const newTitle = document.getElementById('sale2TitleText').value.trim();
+        const fontFamily = document.getElementById('sale2TitleFontFamily').value;
+        const fontSize = document.getElementById('sale2TitleFontSize').value.trim() || '2rem';
+        const fontWeight = document.getElementById('sale2TitleFontWeight').value;
+        const fontStyle = document.getElementById('sale2TitleFontStyle').value;
+
+        if(!newTitle) return alert("Sale Section 2 Title cannot be empty");
+        
+        const { error } = await window.supabaseClient.from('site_settings').update({ 
+            sale_section_2_title: newTitle,
+            sale_section_2_font_family: fontFamily,
+            sale_section_2_font_size: fontSize,
+            sale_section_2_font_weight: fontWeight,
+            sale_section_2_font_style: fontStyle
+        }).eq('id', 1);
+
+        if (error) alert("Error: " + error.message);
+        else alert("Sale Section 2 Design updated successfully!");
     });
 
     // Check Availability Button
@@ -108,11 +131,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         finally { btn.innerText = originalText; btn.disabled = false; }
     });
 
-    // Cancel Offer Button Logic
+    // Cancel Offer Buttons
     document.getElementById('cancelOfferBtn')?.addEventListener('click', () => {
         document.getElementById('pEventName').value = '';
         document.getElementById('pSaleEndDate').value = '';
-        alert('Offer details cleared. Save product to confirm cancellation.');
+        alert('Offer 1 details cleared. Save product to confirm cancellation.');
+    });
+
+    document.getElementById('cancelOffer2Btn')?.addEventListener('click', () => {
+        document.getElementById('pEventName2').value = '';
+        document.getElementById('pSaleEndDate2').value = '';
+        alert('Offer 2 details cleared. Save product to confirm cancellation.');
     });
 });
 
@@ -170,6 +199,24 @@ function setupToggleFlashSale() {
     }
 }
 
+function setupToggleSale2() {
+    const toggleBtn = document.getElementById('toggleSale2Btn');
+    const container = document.getElementById('sale2Container');
+    if (toggleBtn && container) {
+        toggleBtn.addEventListener('click', () => {
+            if (container.style.display === 'none') {
+                container.style.display = 'block'; 
+                toggleBtn.textContent = 'Hide Settings'; 
+                toggleBtn.style.background = '#EF4444';
+            } else {
+                container.style.display = 'none'; 
+                toggleBtn.textContent = 'Show Settings'; 
+                toggleBtn.style.background = '#10b981';
+            }
+        });
+    }
+}
+
 async function loadSiteSettings() {
     const { data } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).maybeSingle();
     if (data) {
@@ -184,11 +231,18 @@ async function loadSiteSettings() {
             document.getElementById('titleFontStyle').value = data.title_font_style || 'normal';
         }
         if(document.getElementById('flashTitleText')) {
-            document.getElementById('flashTitleText').value = data.flash_title_text || 'Mega Sale 11.11';
+            document.getElementById('flashTitleText').value = data.flash_title_text || 'Sale Section 1';
             document.getElementById('flashTitleFontFamily').value = data.flash_title_font_family || 'Poppins';
             document.getElementById('flashTitleFontSize').value = data.flash_title_font_size || '2rem';
             document.getElementById('flashTitleFontWeight').value = data.flash_title_font_weight || '900';
             document.getElementById('flashTitleFontStyle').value = data.flash_title_font_style || 'normal';
+        }
+        if(document.getElementById('sale2TitleText')) {
+            document.getElementById('sale2TitleText').value = data.sale_section_2_title || 'Sale Section 2';
+            document.getElementById('sale2TitleFontFamily').value = data.sale_section_2_font_family || 'Poppins';
+            document.getElementById('sale2TitleFontSize').value = data.sale_section_2_font_size || '2rem';
+            document.getElementById('sale2TitleFontWeight').value = data.sale_section_2_font_weight || '900';
+            document.getElementById('sale2TitleFontStyle').value = data.sale_section_2_font_style || 'normal';
         }
     }
 }
@@ -379,6 +433,12 @@ window.editProduct = async function(id) {
             document.getElementById('pSaleEndDate').value = d.toISOString().slice(0,16);
         } else { document.getElementById('pSaleEndDate').value = ''; }
 
+        document.getElementById('pEventName2').value = p.event_name_2 || '';
+        if(p.sale_end_date_2) {
+            const d = new Date(p.sale_end_date_2); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+            document.getElementById('pSaleEndDate2').value = d.toISOString().slice(0,16);
+        } else { document.getElementById('pSaleEndDate2').value = ''; }
+
         document.getElementById('pStore').value = defaultOffer.store_name || ''; 
         document.getElementById('pMainVarName').value = defaultOffer.variation_name || ''; 
         document.getElementById('pPrice').value = defaultOffer.price || '';
@@ -390,7 +450,6 @@ window.editProduct = async function(id) {
         document.getElementById('pFeatured').checked = p.is_featured || false; document.getElementById('pTrending').checked = p.is_trending || false;
         document.getElementById('pSpecialDeal').checked = p.is_special_deal || false;
         
-        // Edit karte waqt notification checkbox default off rakhein taake baar baar notification na jaye
         document.getElementById('pSendNotification').checked = false;
 
         const varContainer = document.getElementById('variationsContainer'); varContainer.innerHTML = '';
@@ -452,7 +511,6 @@ function setupProductForm() {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // ⭐ FIX 1: Prevent Double Submission (Dobara click hone se rokne ke liye) ⭐
         if (window.isSavingProduct) return;
         window.isSavingProduct = true;
 
@@ -483,7 +541,7 @@ function setupProductForm() {
                 firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 setTimeout(() => { firstErrorElement.focus(); }, 500);
             }
-            window.isSavingProduct = false; // Lock open if validation fails
+            window.isSavingProduct = false; 
             return;
         }
 
@@ -494,6 +552,8 @@ function setupProductForm() {
         try {
             const id = document.getElementById('pId').value; const isEditing = id !== '';
             const eventName = document.getElementById('pEventName').value.trim(); const saleEndDate = document.getElementById('pSaleEndDate').value;
+            const eventName2 = document.getElementById('pEventName2').value.trim(); const saleEndDate2 = document.getElementById('pSaleEndDate2').value;
+            
             const commInput = document.getElementById('pCommission').value.trim(); const commission = commInput === '' ? 0 : (parseFloat(commInput) || 0);
             const price = parseFloat(document.getElementById('pPrice').value) || 0;
             const salePrice = document.getElementById('pSalePrice').value ? parseFloat(document.getElementById('pSalePrice').value) : null;
@@ -520,6 +580,7 @@ function setupProductForm() {
                 reviews_count: document.getElementById('pReviewsCount').value ? parseInt(document.getElementById('pReviewsCount').value) : 0,
                 gallery_images: finalGalleryUrls, video_url: document.getElementById('pVideo').value.trim() || null,
                 event_name: eventName || null, sale_end_date: saleEndDate ? new Date(saleEndDate).toISOString() : null,
+                event_name_2: eventName2 || null, sale_end_date_2: saleEndDate2 ? new Date(saleEndDate2).toISOString() : null,
                 is_available: true
             };
 
@@ -550,32 +611,35 @@ function setupProductForm() {
             if (price > 0 || variations.length === 0) { mainOfferData.product_id = productId; await window.supabaseClient.from('affiliate_offers').insert([mainOfferData]); }
             if (variations.length > 0) { variations.forEach(v => v.product_id = productId); const { error: varErr } = await window.supabaseClient.from('affiliate_offers').insert(variations); if (varErr) throw varErr; }
             
-            // Notification Send karne ka logic
             const sendNotif = document.getElementById('pSendNotification').checked;
             if (sendNotif) {
-                const isFlash = eventName && saleEndDate;
-                const isSpecial = document.getElementById('pSpecialDeal').checked;
-                
-                let notifType = 'product';
-                let notifTitle = isEditing ? "Product Updated! 🛍️" : "New Product Added! 🛍️";
-                let notifMsg = `Check out ${productData.title}`;
-                
-                if (isFlash) {
-                    notifType = 'flash_sale';
-                    notifTitle = "🔥 Flash Sale Started!";
-                    notifMsg = `${productData.title} is now on Flash Sale!`;
-                } else if (isSpecial) {
-                    notifType = 'special_deal';
-                    notifTitle = "🎁 New Special Deal!";
-                    notifMsg = `${productData.title} is now in Special Deals!`;
-                }
+                try {
+                    const isFlash = eventName && saleEndDate;
+                    const isSpecial = document.getElementById('pSpecialDeal').checked;
+                    
+                    let notifType = 'product';
+                    let notifTitle = isEditing ? "Product Updated! 🛍️" : "New Product Added! 🛍️";
+                    let notifMsg = `Check out ${productData.title}`;
+                    
+                    if (isFlash) {
+                        notifType = 'flash_sale';
+                        notifTitle = "🔥 Flash Sale Started!";
+                        notifMsg = `${productData.title} is now on Flash Sale!`;
+                    } else if (isSpecial) {
+                        notifType = 'special_deal';
+                        notifTitle = "🎁 New Special Deal!";
+                        notifMsg = `${productData.title} is now in Special Deals!`;
+                    }
 
-                await window.supabaseClient.from('app_notifications').insert([{
-                    title: notifTitle,
-                    message: notifMsg,
-                    product_slug: productData.slug,
-                    type: notifType
-                }]);
+                    await window.supabaseClient.from('app_notifications').insert([{
+                        title: notifTitle,
+                        message: notifMsg,
+                        product_slug: productData.slug,
+                        type: notifType
+                    }]);
+                } catch (notifError) {
+                    console.warn("Notification send nahi ho saki, lekin product save ho gaya hai:", notifError);
+                }
             }
 
             alert(`"${productData.title}" saved successfully!`); 
@@ -595,7 +659,7 @@ function setupProductForm() {
         } finally {
             saveBtn.innerText = originalBtnText; 
             saveBtn.disabled = false;
-            window.isSavingProduct = false; // ⭐ Lock open ⭐
+            window.isSavingProduct = false; 
         }
     });
 
