@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog - PrimePickHub</title>
+    <link rel="icon" type="image/png" href="/assets/favicon.png?v=4">
+    <link rel="stylesheet" href="css/main.css?v=15">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="nav-main">
+            <a href="/index.html" class="logo">PrimePick<span>Hub</span></a>
+            <div style="display:flex; gap:15px;">
+                <a href="/index.html" style="text-decoration:none; font-weight:600; color:var(--primary);">Home</a>
+                <a href="/blog.html" style="text-decoration:none; font-weight:600; color:var(--accent);">Blog</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="min-height: 80vh;">
+        <h1 style="margin-bottom: 30px; font-family: 'Poppins', sans-serif;">Latest Articles & Buying Guides</h1>
+        <div class="product-grid" id="blogGrid"></div>
+    </main>
+
+    <script src="js/config.js?v=6"></script>
+    <script src="js/blog.js?v=1"></script>
+</body>
+</html>
