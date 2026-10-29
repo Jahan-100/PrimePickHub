@@ -453,7 +453,10 @@ function handleSearch() {
     }
 }
 
+// ⭐ UPDATED NOTIFICATION LOGIC STARTS HERE ⭐
+
 let userDeletedNotifs = JSON.parse(localStorage.getItem('deleted_notifs') || '[]');
+let userReadNotifs = JSON.parse(localStorage.getItem('read_notifs') || '[]'); // Read mark track karne ke liye
 let currentNotifs = [];
 
 window.toggleNotifPanel = function(e) {
@@ -467,6 +470,7 @@ async function loadNotifications() {
     const { data, error } = await window.supabaseClient.from('app_notifications').select('*').order('created_at', { ascending: false }).limit(20);
     
     if (!error && data) {
+        // Sirf wo notifications dikhayein jo delete nahi hui hain
         currentNotifs = data.filter(n => !userDeletedNotifs.includes(n.id));
         renderNotifications();
     }
@@ -483,29 +487,49 @@ function renderNotifications() {
         return;
     }
 
+    // Badge count: Sirf unread notifications ka count
+    const unreadCount = currentNotifs.filter(n => !userReadNotifs.includes(n.id)).length;
+
     if(badge) {
-        badge.style.display = 'flex';
-        badge.innerText = currentNotifs.length;
+        if (unreadCount > 0) {
+            badge.style.display = 'flex';
+            badge.innerText = unreadCount;
+        } else {
+            badge.style.display = 'none'; // Agar sab parh liye hain toh badge gayab
+        }
     }
 
-    // ⭐ UPDATE: Notification par click karne se handleNotifClick chalega jo expiry check karega
     list.innerHTML = currentNotifs.map(n => {
         const cursorStyle = n.product_slug ? 'cursor: pointer;' : '';
         const clickAttr = n.product_slug ? `onclick="handleNotifClick('${n.id}', '${n.product_slug}', '${n.type || 'product'}')"` : '';
+        const isRead = userReadNotifs.includes(n.id);
+        
+        // Agar parh liya hai toh thora light background
+        const bgStyle = isRead ? 'background: #F8FAFC;' : 'background: #fff;';
         
         return `
-        <div class="notif-item" id="notif-${n.id}" ${clickAttr} style="${cursorStyle}">
+        <div class="notif-item" id="notif-${n.id}" ${clickAttr} style="${cursorStyle} ${bgStyle}">
             <div style="flex: 1;">
-                <h4>${escapeHTML(n.title)}</h4>
+                <h4 style="color: ${isRead ? '#64748B' : '#1E1B4B'};">${escapeHTML(n.title)}</h4>
                 <p>${escapeHTML(n.message)}</p>
                 <span style="font-size: 0.65rem; color: #94A3B8;">${new Date(n.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
             </div>
-            <button class="notif-del" onclick="event.stopPropagation(); deleteNotif('${n.id}')"><i class="fa-solid fa-xmark"></i></button>
+            <button class="notif-del" onclick="event.stopPropagation(); deleteNotif('${n.id}')" title="Delete Notification"><i class="fa-solid fa-xmark"></i></button>
         </div>
     `}).join('');
 }
 
+// Naya function: Sirf Read mark karega, delete nahi karega
+window.markAsRead = function(id) {
+    if (!userReadNotifs.includes(id)) {
+        userReadNotifs.push(id);
+        localStorage.setItem('read_notifs', JSON.stringify(userReadNotifs));
+        renderNotifications(); // Turant badge update hoga
+    }
+}
+
 window.deleteNotif = function(id) {
+    // Jab user manually 'X' par click kare tabhi delete hoga
     if(!userDeletedNotifs.includes(id)) {
         userDeletedNotifs.push(id);
         localStorage.setItem('deleted_notifs', JSON.stringify(userDeletedNotifs));
@@ -514,14 +538,14 @@ window.deleteNotif = function(id) {
     renderNotifications();
 }
 
-// ⭐ NAYA FUNCTION: Notification click, Badge count kam karna aur Expire check karna
+// Notification par click hone par kya karna hai
 window.handleNotifClick = async function(id, slug, type) {
-    // 1. Sab se pehle notification ko read mark karein (top ka badge count kam hoga)
-    window.deleteNotif(id);
+    // 1. Sirf Read mark karein, delete na karein
+    window.markAsRead(id);
 
     if (!slug) return;
 
-    // 2. Database se product ki current state fetch karein
+    // 2. Database se product ki current state check karein
     const { data: product } = await window.supabaseClient
         .from('products')
         .select('is_available, sale_end_date, is_special_deal')
@@ -530,21 +554,21 @@ window.handleNotifClick = async function(id, slug, type) {
 
     if (!product || product.is_available === false) {
         alert("Yeh product ab available nahi hai.");
-        return; // Product page par redirect nahi hoga
+        return;
     }
 
     // 3. Flash Sale expire check
     if (type === 'flash_sale' && product.sale_end_date) {
         if (new Date(product.sale_end_date) < new Date()) {
             alert("Yeh Flash Sale ab khatam ho chuki hai.");
-            return; // Redirect nahi hoga
+            return;
         }
     }
 
     // 4. Special Deal remove check
     if (type === 'special_deal' && product.is_special_deal === false) {
         alert("Yeh Special Deal ab khatam ho chuki hai.");
-        return; // Redirect nahi hoga
+        return;
     }
 
     // 5. Sab theek hai, product page par le jayen
@@ -558,6 +582,8 @@ window.clearAllNotifs = function(e) {
     currentNotifs = [];
     renderNotifications();
 }
+
+// ⭐ UPDATED NOTIFICATION LOGIC ENDS HERE ⭐
 
 function showBrowserNotification(title, body) {
     if (!("Notification" in window)) return;
@@ -642,11 +668,11 @@ function setupRealtime() {
         .channel('schema-db-changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
             triggerRealtimeUpdate(payload);
-            // ⭐ UPDATE: Yahan se Auto Notification hata diya gaya hai. Ab notification sirf Admin Panel se aayega.
         })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'affiliate_offers' }, triggerRealtimeUpdate)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'site_settings' }, triggerRealtimeUpdate)
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'app_notifications' }, (payload) => {
+            console.log("🔔 New Notification Received Realtime!");
             loadNotifications(); 
             showBrowserNotification(payload.new.title, payload.new.message);
         })
