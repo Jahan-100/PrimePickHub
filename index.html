@@ -30,7 +30,7 @@
     <link rel="canonical" href="https://www.primepickhub.com/">
     <link rel="icon" type="image/png" href="assets/favicon.png?v=4">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="css/main.css?v=17">
+    <link rel="stylesheet" href="css/main.css?v=18">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,800;0,900;1,800&family=Roboto:wght@400;700;900&family=Oswald:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Lobster&family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
@@ -106,7 +106,6 @@
         </div>
     </header>
 
-    <!-- AD SLOT 1 (Top Banner) -->
     <div class="container" style="margin-top: 15px;">
         <div class="ad-slot" id="ad-slot-top">
             <div class="ad-fallback-container" id="ad-fallback-top"></div>
@@ -114,7 +113,6 @@
     </div>
 
     <main class="container">
-        <!-- Special Deal Section -->
         <div id="specialDealSection" class="alibaba-special-deal" style="margin-top: 5px; display: none;">
             <div class="special-deal-left">
                 <h2 id="specialDealTitle">First order deal</h2>
@@ -132,7 +130,6 @@
             </div>
         </div>
 
-        <!-- Sale Section 1 -->
         <div id="flashSaleSection" class="flash-sale-split" style="display: none;">
             <canvas id="fireworksCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;"></canvas>
             <div class="flash-sale-left">
@@ -157,7 +154,6 @@
             </div>
         </div>
 
-        <!-- Sale Section 2 -->
         <div id="flashSaleSection2" class="flash-sale-split-2" style="display: none;">
             <canvas id="fireworksCanvas2" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;"></canvas>
             <div class="flash-sale-2-left">
@@ -187,7 +183,6 @@
             <div class="horizontal-category-scroll" id="categoryScrollContainer"></div>
         </div>
 
-        <!-- AD SLOT 2 (Middle Banner) -->
         <div class="ad-slot" id="ad-slot-middle" style="margin-bottom: 20px;">
             <div class="ad-fallback-container" id="ad-fallback-middle"></div>
         </div>
@@ -198,7 +193,6 @@
         </div>
     </main>
 
-    <!-- ⭐ NEWSLETTER SECTION START ⭐ -->
     <div class="newsletter-wrapper">
         <div class="newsletter-box">
             <h2>Get the Best Deals in Your Inbox!</h2>
@@ -210,7 +204,6 @@
             <p id="newsletterMsg" style="margin-top: 10px; font-weight: 600; font-size: 0.9rem;"></p>
         </div>
     </div>
-    <!-- ⭐ NEWSLETTER SECTION END ⭐ -->
 
     <footer class="footer">
         <p><strong>PrimePickHub</strong> — Compare. Click. Save Smarter.</p>
@@ -229,7 +222,6 @@
         </div>
     </div>
 
-    <!-- ⭐ FLOATING CONTACT FORM START ⭐ -->
     <div id="floatingContactBtn" class="floating-contact-btn" onclick="toggleContactForm()">
         <span>Contact Us</span>
     </div>
@@ -262,7 +254,6 @@
             <p id="contactFormMsg" style="text-align: center; margin-top: 10px; font-size: 0.85rem;"></p>
         </div>
     </div>
-    <!-- ⭐ FLOATING CONTACT FORM END ⭐ -->
 
     <div id="appPopupOverlay" class="app-popup-overlay" onclick="toggleAppPopup()" style="display: none;"></div>
     <div id="appDownloadPopup" class="app-popup" style="display: none;">
@@ -283,12 +274,14 @@
     </div>
 
     <button id="floatingAppIcon" class="floating-app-btn" onclick="toggleAppPopup()" style="display: none;">
-        <img src="assets/icon-192.png?v=4" alt="Download App"><span class="pulse-ring"></span>
+        <img src="assets/icon-192.png?v=4" alt="Download App">
+        <span class="btn-text">For App</span>
+        <span class="pulse-ring"></span>
     </button>
 
     <script src="js/config.js?v=6"></script>
     <script src="js/api.js?v=7"></script>
-    <script src="js/app.js?v=14"></script>
+    <script src="js/app.js?v=15"></script>
     <script src="js/affiliate.js?v=6"></script>
     <script>
         function toggleCatDropdown(event) {
@@ -310,7 +303,6 @@
             if (wrap && !wrap.contains(e.target) && menu) { menu.style.display = 'none'; }
         });
 
-        // Newsletter Form Submit Logic
         document.getElementById('newsletterForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const emailInput = document.getElementById('newsletterEmail');
@@ -319,39 +311,25 @@
             const email = emailInput.value.trim();
 
             if(!email) return;
-
             btn.innerText = "Subscribing...";
             btn.disabled = true;
             msg.innerText = "";
 
             try {
-                const { error } = await window.supabaseClient
-                    .from('newsletter_subscribers')
-                    .insert([{ email: email }]);
-
+                const { error } = await window.supabaseClient.from('newsletter_subscribers').insert([{ email: email }]);
                 if (error) {
-                    if (error.code === '23505') { // Unique violation
-                        msg.style.color = "#FBBF24"; // Yellow
-                        msg.innerText = "You are already subscribed!";
-                    } else {
-                        throw error;
-                    }
+                    if (error.code === '23505') { msg.style.color = "#FBBF24"; msg.innerText = "You are already subscribed!"; } 
+                    else { throw error; }
                 } else {
-                    msg.style.color = "#4ADE80"; // Green
-                    msg.innerText = "Successfully subscribed! Check your inbox for deals.";
-                    emailInput.value = "";
+                    msg.style.color = "#4ADE80"; msg.innerText = "Successfully subscribed! Check your inbox for deals."; emailInput.value = "";
                 }
             } catch (err) {
-                console.error(err);
-                msg.style.color = "#F87171"; // Red
-                msg.innerText = "Something went wrong. Please try again.";
+                console.error(err); msg.style.color = "#F87171"; msg.innerText = "Something went wrong. Please try again.";
             } finally {
-                btn.innerText = "Subscribe";
-                btn.disabled = false;
+                btn.innerText = "Subscribe"; btn.disabled = false;
             }
         });
 
-        // ⭐ FLOATING CONTACT FORM LOGIC ⭐
         function toggleContactForm() {
             const panel = document.getElementById('contactFormPanel');
             panel.classList.toggle('open');
@@ -364,9 +342,7 @@
             const msg = document.getElementById('contactFormMsg');
             const originalText = btn.innerText;
 
-            btn.innerText = "Sending...";
-            btn.disabled = true;
-            msg.innerText = "";
+            btn.innerText = "Sending..."; btn.disabled = true; msg.innerText = "";
 
             const formData = new FormData(form);
             const object = Object.fromEntries(formData);
@@ -375,35 +351,24 @@
             try {
                 const res = await fetch('https://api.web3forms.com/submit', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                     body: json
                 });
-
                 const data = await res.json();
-
                 if (data.success) {
-                    msg.style.color = "#16a34a";
-                    msg.innerText = "Message sent successfully! We'll reply soon.";
+                    msg.style.color = "#16a34a"; msg.innerText = "Message sent successfully! We'll reply soon.";
                     form.reset();
-                    setTimeout(() => {
-                        toggleContactForm(); // Auto close form
-                        msg.innerText = ""; // Clear message
-                    }, 2000);
+                    setTimeout(() => { toggleContactForm(); msg.innerText = ""; }, 2000);
                 } else {
-                    msg.style.color = "#EF4444";
-                    msg.innerText = data.message || "Something went wrong.";
+                    msg.style.color = "#EF4444"; msg.innerText = data.message || "Something went wrong.";
                 }
             } catch (error) {
-                msg.style.color = "#EF4444";
-                msg.innerText = "Failed to send. Please try again.";
+                msg.style.color = "#EF4444"; msg.innerText = "Failed to send. Please try again.";
             } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
+                btn.innerText = originalText; btn.disabled = false;
             }
         });
     </script>
+    <script src="js/floating-widgets.js?v=2"></script>
 </body>
 </html>
