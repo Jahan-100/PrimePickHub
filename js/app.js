@@ -139,7 +139,7 @@ function renderProductCard(product) {
         </div>`;
 }
 
-function renderFlashCard(product) {
+function renderFlashCard(product, section = 1) {
     const title = escapeHTML(product.title || 'Untitled');
     const productUrl = `/product/${encodeURIComponent(product.slug)}`;
     const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png';
@@ -175,6 +175,8 @@ function renderFlashCard(product) {
         priceDisplay = `<div class="price" style="font-size:0.95rem;">${sym}${finalBasePrice.toFixed(2)}</div>`;
     }
 
+    const endTime = section === 1 ? product.sale_end_date : product.sale_end_date_2;
+
     return `
         <a href="${productUrl}" class="special-deal-card flash-card">
             <div class="img-box">
@@ -183,7 +185,7 @@ function renderFlashCard(product) {
             <div class="info-box">
                 ${priceDisplay}
                 <div class="title">${title}</div>
-                <div class="card-timer" data-endtime="${product.sale_end_date}">⏳ Calculating...</div>
+                <div class="card-timer" data-endtime="${endTime}">⏳ Calculating...</div>
             </div>
         </a>
     `;
@@ -252,6 +254,13 @@ window.scrollFlash = function(direction) {
     else container.scrollLeft += scrollAmount;
 };
 
+window.scrollFlash2 = function(direction) {
+    const container = document.getElementById('flashSaleScroll2');
+    const scrollAmount = 300;
+    if (direction === 'left') container.scrollLeft -= scrollAmount;
+    else container.scrollLeft += scrollAmount;
+};
+
 window.selectCategory = async function(catSlug, element) {
     document.querySelectorAll('.category-item').forEach(el => el.classList.remove('active'));
     if (element) element.classList.add('active');
@@ -274,7 +283,8 @@ window.selectCategory = async function(catSlug, element) {
             const now = new Date();
             const normalProducts = allProducts.filter(p => {
                 const endDate = p.sale_end_date ? new Date(p.sale_end_date) : null;
-                return !(endDate && endDate > now);
+                const endDate2 = p.sale_end_date_2 ? new Date(p.sale_end_date_2) : null;
+                return !(endDate && endDate > now) && !(endDate2 && endDate2 > now);
             });
             renderProductsGrid(normalProducts, grid);
         } else {
@@ -290,6 +300,10 @@ async function loadHomepageProducts() {
     const grid = document.getElementById('productGrid');
     const flashScroll = document.getElementById('flashSaleScroll');
     const flashSection = document.getElementById('flashSaleSection');
+    
+    const flashScroll2 = document.getElementById('flashSaleScroll2');
+    const flashSection2 = document.getElementById('flashSaleSection2');
+    
     const floatingAppIcon = document.getElementById('floatingAppIcon');
     if (!grid) return;
 
@@ -319,36 +333,65 @@ async function loadHomepageProducts() {
             }
         }
 
-        if (settings && document.getElementById('specialDealTitle')) {
-            const spTitle = document.getElementById('specialDealTitle');
-            spTitle.innerText = settings.special_deal_title || 'First order deal';
-            spTitle.style.fontFamily = settings.title_font_family || 'Poppins, sans-serif';
-            spTitle.style.fontSize = settings.title_font_size || '2rem';
-            spTitle.style.fontWeight = settings.title_font_weight || '800';
-            spTitle.style.fontStyle = settings.title_font_style || 'normal';
-        }
-        
-        if (settings && document.getElementById('flashSaleTitle')) {
-            const flTitle = document.getElementById('flashSaleTitle');
-            const endingSoonBtn = document.querySelector('.blinking-ending-soon');
+        if (settings) {
+            // Special Deal Title
+            if (document.getElementById('specialDealTitle')) {
+                const spTitle = document.getElementById('specialDealTitle');
+                spTitle.innerText = settings.special_deal_title || 'First order deal';
+                spTitle.style.fontFamily = settings.title_font_family || 'Poppins, sans-serif';
+                spTitle.style.fontSize = settings.title_font_size || '2rem';
+                spTitle.style.fontWeight = settings.title_font_weight || '800';
+                spTitle.style.fontStyle = settings.title_font_style || 'normal';
+            }
 
-            const titleFontFamily = settings.flash_title_font_family || 'Poppins, sans-serif';
-            const titleBaseSize = settings.flash_title_font_size || '2rem';
-            const titleFontWeight = settings.flash_title_font_weight || '900';
-            const titleFontStyle = settings.flash_title_font_style || 'normal';
+            // Sale Section 1 Title
+            if (document.getElementById('flashSaleTitle')) {
+                const flTitle = document.getElementById('flashSaleTitle');
+                const endingSoonBtn = document.querySelector('#flashSaleSection .blinking-ending-soon');
 
-            flTitle.innerText = settings.flash_title_text || 'Mega Sale 11.11';
-            flTitle.style.fontFamily = titleFontFamily;
-            flTitle.style.fontSize = titleBaseSize;
-            flTitle.style.fontWeight = titleFontWeight;
-            flTitle.style.fontStyle = titleFontStyle;
+                const titleFontFamily = settings.flash_title_font_family || 'Poppins, sans-serif';
+                const titleBaseSize = settings.flash_title_font_size || '2rem';
+                const titleFontWeight = settings.flash_title_font_weight || '900';
+                const titleFontStyle = settings.flash_title_font_style || 'normal';
 
-            if (endingSoonBtn) {
-                endingSoonBtn.style.fontFamily = titleFontFamily;
-                endingSoonBtn.style.fontWeight = titleFontWeight;
-                endingSoonBtn.style.fontStyle = titleFontStyle;
-                endingSoonBtn.style.fontSize = '1.92rem';
-                endingSoonBtn.style.padding = '7px 24px';
+                flTitle.innerText = settings.flash_title_text || 'Sale Section 1';
+                flTitle.style.fontFamily = titleFontFamily;
+                flTitle.style.fontSize = titleBaseSize;
+                flTitle.style.fontWeight = titleFontWeight;
+                flTitle.style.fontStyle = titleFontStyle;
+
+                if (endingSoonBtn) {
+                    endingSoonBtn.style.fontFamily = titleFontFamily;
+                    endingSoonBtn.style.fontWeight = titleFontWeight;
+                    endingSoonBtn.style.fontStyle = titleFontStyle;
+                    endingSoonBtn.style.fontSize = '1.92rem';
+                    endingSoonBtn.style.padding = '7px 24px';
+                }
+            }
+
+            // Sale Section 2 Title
+            if (document.getElementById('flashSaleTitle2')) {
+                const flTitle2 = document.getElementById('flashSaleTitle2');
+                const endingSoonBtn2 = document.querySelector('#flashSaleSection2 .blinking-ending-soon');
+
+                const titleFontFamily = settings.sale_section_2_font_family || 'Poppins, sans-serif';
+                const titleBaseSize = settings.sale_section_2_font_size || '2rem';
+                const titleFontWeight = settings.sale_section_2_font_weight || '900';
+                const titleFontStyle = settings.sale_section_2_font_style || 'normal';
+
+                flTitle2.innerText = settings.sale_section_2_title || 'Sale Section 2';
+                flTitle2.style.fontFamily = titleFontFamily;
+                flTitle2.style.fontSize = titleBaseSize;
+                flTitle2.style.fontWeight = titleFontWeight;
+                flTitle2.style.fontStyle = titleFontStyle;
+
+                if (endingSoonBtn2) {
+                    endingSoonBtn2.style.fontFamily = titleFontFamily;
+                    endingSoonBtn2.style.fontWeight = titleFontWeight;
+                    endingSoonBtn2.style.fontStyle = titleFontStyle;
+                    endingSoonBtn2.style.fontSize = '1.92rem';
+                    endingSoonBtn2.style.padding = '7px 24px';
+                }
             }
         }
 
@@ -359,32 +402,49 @@ async function loadHomepageProducts() {
         renderDynamicCategories(allProducts);
 
         const now = new Date();
-        const flashSaleProducts = [];
+        const flashSaleProducts1 = [];
+        const flashSaleProducts2 = [];
         const normalProducts = [];
 
         allProducts.forEach(p => {
-            const endDate = p.sale_end_date ? new Date(p.sale_end_date) : null;
-            if (endDate && endDate > now) flashSaleProducts.push(p);
-            else normalProducts.push(p);
+            const endDate1 = p.sale_end_date ? new Date(p.sale_end_date) : null;
+            const endDate2 = p.sale_end_date_2 ? new Date(p.sale_end_date_2) : null;
+            
+            if (endDate1 && endDate1 > now) {
+                flashSaleProducts1.push(p);
+            } else if (endDate2 && endDate2 > now) {
+                flashSaleProducts2.push(p);
+            } else {
+                normalProducts.push(p);
+            }
         });
 
-        if (flashSaleProducts.length > 0) {
+        // Render Sale Section 1
+        if (flashSaleProducts1.length > 0) {
             flashSection.style.display = 'flex';
-            if (!settings || !settings.flash_title_text) {
-                 document.getElementById('flashSaleTitle').innerText = flashSaleProducts[0].event_name || 'Mega Sale 11.11';
-            }
-
             const exploreBtn = document.querySelector('#flashSaleSection .explore-btn');
             if (exploreBtn) {
-                const currentEventName = flashSaleProducts[0].event_name || (settings && settings.flash_title_text) || 'Mega Sale 11.11';
+                const currentEventName = flashSaleProducts1[0].event_name || (settings && settings.flash_title_text) || 'Sale Section 1';
                 exploreBtn.href = `search.html?flash=true&event=${encodeURIComponent(currentEventName)}`;
             }
-
-            flashScroll.innerHTML = flashSaleProducts.map(renderFlashCard).join('');
+            flashScroll.innerHTML = flashSaleProducts1.map(p => renderFlashCard(p, 1)).join('');
             startFireworks(); 
         } else {
             flashSection.style.display = 'none';
             stopFireworks(); 
+        }
+
+        // Render Sale Section 2
+        if (flashSaleProducts2.length > 0) {
+            flashSection2.style.display = 'flex';
+            const exploreBtn2 = document.querySelector('#flashSaleSection2 .explore-btn');
+            if (exploreBtn2) {
+                const currentEventName2 = flashSaleProducts2[0].event_name_2 || (settings && settings.sale_section_2_title) || 'Sale Section 2';
+                exploreBtn2.href = `search.html?flash=true&event=${encodeURIComponent(currentEventName2)}`;
+            }
+            flashScroll2.innerHTML = flashSaleProducts2.map(p => renderFlashCard(p, 2)).join('');
+        } else {
+            flashSection2.style.display = 'none';
         }
 
         renderProductsGrid(normalProducts, grid);
@@ -499,270 +559,4 @@ function renderNotifications() {
 
     list.innerHTML = currentNotifs.map(n => {
         const cursorStyle = n.product_slug ? 'cursor: pointer;' : '';
-        const clickAttr = n.product_slug ? `onclick="handleNotifClick('${n.id}', '${n.product_slug}', '${n.type || 'product'}')"` : '';
-        const isRead = userReadNotifs.includes(n.id);
-        const bgStyle = isRead ? 'background: #F8FAFC;' : 'background: #fff;';
-        
-        return `
-        <div class="notif-item" id="notif-${n.id}" ${clickAttr} style="${cursorStyle} ${bgStyle}">
-            <div style="flex: 1;">
-                <h4 style="color: ${isRead ? '#64748B' : '#1E1B4B'};">${escapeHTML(n.title)}</h4>
-                <p>${escapeHTML(n.message)}</p>
-                <span style="font-size: 0.65rem; color: #94A3B8;">${new Date(n.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-            </div>
-            <button class="notif-del" onclick="event.stopPropagation(); deleteNotif('${n.id}')" title="Delete Notification"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-    `}).join('');
-}
-
-window.markAsRead = function(id) {
-    if (!userReadNotifs.includes(id)) {
-        userReadNotifs.push(id);
-        localStorage.setItem('read_notifs', JSON.stringify(userReadNotifs));
-        renderNotifications(); 
-    }
-}
-
-window.deleteNotif = function(id) {
-    if(!userDeletedNotifs.includes(id)) {
-        userDeletedNotifs.push(id);
-        localStorage.setItem('deleted_notifs', JSON.stringify(userDeletedNotifs));
-    }
-    currentNotifs = currentNotifs.filter(n => n.id !== id);
-    renderNotifications();
-}
-
-window.handleNotifClick = async function(id, slug, type) {
-    window.markAsRead(id);
-    if (!slug) return;
-
-    const { data: product } = await window.supabaseClient
-        .from('products')
-        .select('is_available, sale_end_date, is_special_deal')
-        .eq('slug', slug)
-        .maybeSingle();
-
-    if (!product || product.is_available === false) {
-        alert("Yeh product ab available nahi hai.");
-        return;
-    }
-
-    if (type === 'flash_sale' && product.sale_end_date) {
-        if (new Date(product.sale_end_date) < new Date()) {
-            alert("Yeh Flash Sale ab khatam ho chuki hai.");
-            return;
-        }
-    }
-
-    if (type === 'special_deal' && product.is_special_deal === false) {
-        alert("Yeh Special Deal ab khatam ho chuki hai.");
-        return;
-    }
-
-    window.location.href = `/product/${slug}`;
-}
-
-window.clearAllNotifs = function(e) {
-    if(e) e.stopPropagation();
-    currentNotifs.forEach(n => { if(!userDeletedNotifs.includes(n.id)) userDeletedNotifs.push(n.id); });
-    localStorage.setItem('deleted_notifs', JSON.stringify(userDeletedNotifs));
-    currentNotifs = [];
-    renderNotifications();
-}
-
-// ⭐ NOTIFICATION LOGIC ENDS HERE ⭐
-
-function showBrowserNotification(title, body) {
-    if (!("Notification" in window)) return;
-    if (Notification.permission === "granted") {
-        new Notification(title, { body: body, icon: '/assets/icon-192.png' });
-    } else if (Notification.permission !== "denied") {
-        Notification.requestPermission().then(permission => {
-            if (permission === "granted") new Notification(title, { body: body, icon: '/assets/icon-192.png' });
-        });
-    }
-}
-
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-});
-
-window.triggerPWAInstall = function() {
-    if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
-                toggleAppPopup();
-            }
-            deferredPrompt = null;
-        });
-    } else {
-        alert("To install: Tap the browser menu (3 dots) and select 'Add to Home screen'.");
-    }
-}
-
-window.toggleAppPopup = function() {
-    const popup = document.getElementById('appDownloadPopup');
-    const overlay = document.getElementById('appPopupOverlay');
-    const desktopContent = document.getElementById('desktopAppContent');
-    const mobileContent = document.getElementById('mobileAppContent');
-    
-    if (!popup || !overlay) return;
-
-    if (popup.style.display === 'none' || popup.style.display === '') {
-        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-
-        if (isMobile) {
-            if(mobileContent) mobileContent.style.display = 'block';
-            if(desktopContent) desktopContent.style.display = 'none';
-        } else {
-            if(desktopContent) desktopContent.style.display = 'block';
-            if(mobileContent) mobileContent.style.display = 'none';
-        }
-
-        popup.style.display = 'block';
-        overlay.style.display = 'block';
-    } else {
-        popup.style.display = 'none';
-        overlay.style.display = 'none';
-    }
-}
-
-function redirectToStore() {
-    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-    const playStoreLink = 'https://play.google.com/store/apps/details?id=your.package.name';
-    const appStoreLink = 'https://apps.apple.com/app/idYOUR_APP_ID';
-    const appGalleryLink = 'https://appgallery.huawei.com/app/CYOUR_APP_ID';
-
-    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) window.location.href = appStoreLink;
-    else if (/Huawei|HONOR/i.test(userAgent)) window.location.href = appGalleryLink;
-    else window.location.href = playStoreLink;
-}
-
-let realtimeTimeout;
-function triggerRealtimeUpdate(payload) {
-    clearTimeout(realtimeTimeout);
-    realtimeTimeout = setTimeout(() => { loadHomepageProducts(); }, 500); 
-}
-
-// ⭐ FIXED REALTIME: Prevents duplicate connections and multiple notifications ⭐
-async function setupRealtime() {
-    if (!window.supabaseClient) return;
-
-    // Pehle purane saare connections ko properly band (await) karein 
-    await window.supabaseClient.removeAllChannels();
-
-    // Sirf tab naya connection banayein jab purana khatam ho jaye 
-    window.supabaseClient
-        .channel('schema-db-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
-            triggerRealtimeUpdate(payload);
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'affiliate_offers' }, triggerRealtimeUpdate)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'site_settings' }, triggerRealtimeUpdate)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'app_notifications' }, (payload) => {
-            console.log("🔔 New Notification Received Realtime!");
-            loadNotifications(); 
-            showBrowserNotification(payload.new.title, payload.new.message);
-        })
-        .subscribe((status) => {
-            if (status === 'SUBSCRIBED') console.log('✅ Realtime connected! Live updates are ON.');
-        });
-}
-
-async function trackVisitor() {
-    if (!window.supabaseClient) return;
-    let visitorId = localStorage.getItem('visitor_id');
-    if (!visitorId) {
-        visitorId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
-        localStorage.setItem('visitor_id', visitorId);
-    }
-    await window.supabaseClient.from('website_visitors').upsert({
-        visitor_id: visitorId,
-        last_seen: new Date().toISOString()
-    }, { onConflict: 'visitor_id' });
-}
-
-async function trackActiveApp() {
-    if (!window.supabaseClient) return;
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-    if (!isPWA) return;
-
-    let deviceId = localStorage.getItem('device_id');
-    if (!deviceId) {
-        deviceId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
-        localStorage.setItem('device_id', deviceId);
-    }
-    await window.supabaseClient.from('active_app_installs').upsert({
-        device_id: deviceId,
-        last_active: new Date().toISOString()
-    }, { onConflict: 'device_id' });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    trackVisitor();
-    trackActiveApp();
-    
-    loadHomepageProducts();
-    setupRealtime(); 
-    loadNotifications();
-
-    setInterval(() => {
-        const popup = document.getElementById('appDownloadPopup');
-        if (document.getElementById('productGrid') && (!popup || popup.style.display !== 'block')) {
-            loadHomepageProducts();
-        }
-    }, 15000);
-
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/service-worker.js')
-                .then(registration => console.log('✅ Service Worker registered! PWA is ready.'))
-                .catch(err => console.log('❌ Service Worker failed:', err));
-        });
-    }
-
-    const btn = document.getElementById('searchBtn');
-    const input = document.getElementById('searchInput');
-    if (btn) btn.addEventListener('click', handleSearch);
-    if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') handleSearch(); });
-
-    const catBtn = document.getElementById('categoryDropdownBtn');
-    const catMenu = document.getElementById('categoryDropdownMenu');
-    if (catBtn && catMenu && typeof toggleCatDropdown === 'undefined') {
-        catBtn.addEventListener('click', (e) => {
-            e.preventDefault(); e.stopPropagation();
-            catMenu.style.display = catMenu.style.display === 'block' ? 'none' : 'block';
-        });
-    }
-
-    setTimeout(() => {
-        if ("Notification" in window && Notification.permission === "default") {
-            Notification.requestPermission();
-        }
-    }, 5000);
-
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.notif-wrapper')) {
-            const panel = document.getElementById('notifPanel');
-            if(panel) panel.style.display = 'none';
-        }
-    });
-
-    function hideSplash() {
-        var splash = document.getElementById('splash-screen');
-        if (splash) {
-            splash.classList.add('hidden');
-            document.body.classList.remove('app-loading');
-            setTimeout(() => { splash.style.display = 'none'; }, 800); 
-        }
-    }
-    setTimeout(hideSplash, 1500);
-    setTimeout(() => { 
-        var splash = document.getElementById('splash-screen');
-        if (splash && !splash.classList.contains('hidden')) hideSplash(); 
-    }, 3500);
-});
+        const clickAttr = n.product_slug ? `onclick="handleNotifClick('${n.id}',
