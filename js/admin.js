@@ -653,6 +653,9 @@ function setupProductForm() {
                         // Fetch ALL settings to ensure no column name mismatch
                         const { data: settings } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).maybeSingle();
                         
+                        // ⭐ DEBUG LOG ⭐
+                        console.log("1. Settings Fetched from DB:", settings);
+
                         // ⭐ FIX: Bulletproof Title Extraction
                         let spTitle = 'Special Deal';
                         let s1Title = 'Sale Section 1';
@@ -663,6 +666,9 @@ function setupProductForm() {
                             if (settings.flash_title_text) s1Title = settings.flash_title_text;
                             if (settings.sale_section_2_title) s2Title = settings.sale_section_2_title;
                         }
+                        
+                        // ⭐ DEBUG LOG ⭐
+                        console.log("2. Extracted Titles:", { spTitle, s1Title, s2Title });
                         
                         let notifType = 'product';
                         let notifTitle = isEditing ? "Product Updated! 🛍️" : "New Product Added! 🛍️";
@@ -686,6 +692,8 @@ function setupProductForm() {
                             notifTitle = `🎁 ${spTitle} Alert!`;
                             notifMsg = `${productData.title} is now in ${spTitle}!`;
                         }
+
+                        console.log("3. Final Notification to Insert:", { notifTitle, notifMsg, notifType });
 
                         await window.supabaseClient.from('app_notifications').insert([{
                             title: notifTitle,
