@@ -516,22 +516,17 @@ function setupProductForm() {
         });
     });
 
-    // ⭐ CANCEL EDIT BUTTON LOGIC (Auto Close Form) ⭐
     cancelBtn.addEventListener('click', () => {
-        form.reset(); 
-        document.getElementById('variationsContainer').innerHTML = '';
+        form.reset(); document.getElementById('variationsContainer').innerHTML = '';
         document.getElementById('pId').value = ''; document.getElementById('pOfferId').value = '';
         
         document.getElementById('pImgFile').value = ''; document.getElementById('pGalleryFile').value = '';
         document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen';
 
-        document.getElementById('formTitle').innerText = "Add / Update Product"; 
-        document.getElementById('saveBtn').innerText = "Save Product"; 
-        cancelBtn.style.display = "none";
+        document.getElementById('formTitle').innerText = "Add / Update Product"; document.getElementById('saveBtn').innerText = "Save Product"; cancelBtn.style.display = "none";
         
         document.querySelectorAll('.error-input').forEach(el => el.classList.remove('error-input'));
-
-        // Form container ko close karein aur button ko wapis Green "Show Product Form" banayein
+        
         document.getElementById('addProductContainer').style.display = 'none';
         const toggleBtn = document.getElementById('toggleAddProductBtn');
         toggleBtn.textContent = 'Show Product Form';
@@ -644,21 +639,28 @@ function setupProductForm() {
             const sendNotif = document.getElementById('pSendNotification').checked;
             if (sendNotif) {
                 try {
-                    const isFlash = eventName && saleEndDate;
-                    const isSpecial = document.getElementById('pSpecialDeal').checked;
+                    // ⭐ DYNAMIC TITLES FETCH LOGIC ⭐
+                    const { data: settings } = await window.supabaseClient.from('site_settings').select('special_deal_title, flash_title_text, sale_section_2_title').eq('id', 1).maybeSingle();
+                    const spTitle = settings?.special_deal_title || 'Special Deal';
+                    const s1Title = settings?.flash_title_text || 'Sale Section 1';
+                    const s2Title = settings?.sale_section_2_title || 'Sale Section 2';
                     
                     let notifType = 'product';
                     let notifTitle = isEditing ? "Product Updated! 🛍️" : "New Product Added! 🛍️";
                     let notifMsg = `Check out ${productData.title}`;
                     
-                    if (isFlash) {
+                    if (eventName && saleEndDate) {
                         notifType = 'flash_sale';
-                        notifTitle = "🔥 Flash Sale Started!";
-                        notifMsg = `${productData.title} is now on Flash Sale!`;
-                    } else if (isSpecial) {
+                        notifTitle = `🔥 ${s1Title} Started!`;
+                        notifMsg = `${productData.title} is now in ${s1Title}!`;
+                    } else if (eventName2 && saleEndDate2) {
+                        notifType = 'flash_sale_2'; // ⭐ New Type for Section 2 ⭐
+                        notifTitle = `🔥 ${s2Title} Started!`;
+                        notifMsg = `${productData.title} is now in ${s2Title}!`;
+                    } else if (document.getElementById('pSpecialDeal').checked) {
                         notifType = 'special_deal';
-                        notifTitle = "🎁 New Special Deal!";
-                        notifMsg = `${productData.title} is now in Special Deals!`;
+                        notifTitle = `🎁 ${spTitle} Alert!`;
+                        notifMsg = `${productData.title} is now in ${spTitle}!`;
                     }
 
                     await window.supabaseClient.from('app_notifications').insert([{
@@ -678,11 +680,10 @@ function setupProductForm() {
             primaryFileInput.value = ''; galleryFileInput.value = '';
             document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen';
 
-            // Auto Close Product Form
             document.getElementById('addProductContainer').style.display = 'none';
             const toggleBtn = document.getElementById('toggleAddProductBtn');
             toggleBtn.textContent = 'Show Product Form'; 
-            toggleBtn.style.background = '#16a34a'; // Green
+            toggleBtn.style.background = '#16a34a';
 
             await loadStats(); await loadProductsList();
         } catch (err) { 
