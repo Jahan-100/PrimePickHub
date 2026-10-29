@@ -453,6 +453,10 @@ function setupProductForm() {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
+        // ⭐ FIX: Prevent Double Submission (Dobara click hone se rokne ke liye) ⭐
+        const saveBtn = document.getElementById('saveBtn');
+        if (saveBtn.disabled) return; 
+
         let hasError = false;
         let firstErrorElement = null;
         const requiredInputs = form.querySelectorAll('[required]');
@@ -483,7 +487,6 @@ function setupProductForm() {
             return;
         }
 
-        const saveBtn = document.getElementById('saveBtn');
         const originalBtnText = saveBtn.innerText;
         saveBtn.innerText = "Saving... Please wait"; saveBtn.disabled = true;
 
@@ -546,7 +549,7 @@ function setupProductForm() {
             if (price > 0 || variations.length === 0) { mainOfferData.product_id = productId; await window.supabaseClient.from('affiliate_offers').insert([mainOfferData]); }
             if (variations.length > 0) { variations.forEach(v => v.product_id = productId); const { error: varErr } = await window.supabaseClient.from('affiliate_offers').insert(variations); if (varErr) throw varErr; }
             
-            // ⭐ NAYA CODE: Notification Send karne ka logic ⭐
+            // ⭐ Notification Send karne ka logic ⭐
             const sendNotif = document.getElementById('pSendNotification').checked;
             if (sendNotif) {
                 const isFlash = eventName && saleEndDate;
@@ -573,7 +576,6 @@ function setupProductForm() {
                     type: notifType
                 }]);
             }
-            // ⭐ NAYA CODE END ⭐
 
             alert(`"${productData.title}" saved successfully!`); 
             form.reset(); document.getElementById('variationsContainer').innerHTML = '';
