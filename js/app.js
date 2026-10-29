@@ -2,6 +2,27 @@
  * PrimePickHub Homepage Renderer + Realtime + Notifications + PWA + Tracking
  */
 
+// ⭐ COOKIE HELPER FUNCTIONS (For persistent visitor ID and notification status) ⭐
+function setCookie(name, value, days) {
+    let expires = "";
+    if (days) {
+        let date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/; SameSite=Lax";
+}
+function getCookie(name) {
+    let nameEQ = name + "=";
+    let ca = document.cookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+}
+
 function escapeHTML(str) {
     if (str === null || str === undefined) return '';
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -53,7 +74,7 @@ function renderProductCard(product) {
     const hasLink = Boolean(id);
     const productUrl = hasLink ? `/product/${id}` : '#';
     const disabledAttr = hasLink ? '' : 'aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:0.6;"';
-    const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png?v=2';
+    const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png?v=4';
     
     const r = Number(product.rating);
     const rating = Number.isFinite(r) && r > 0 && r <= 5 ? r : null;
@@ -142,7 +163,7 @@ function renderProductCard(product) {
 function renderFlashCard(product, section = 1) {
     const title = escapeHTML(product.title || 'Untitled');
     const productUrl = `/product/${encodeURIComponent(product.slug)}`;
-    const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png?v=2';
+    const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png?v=4';
     
     const primaryOffer = getPrimaryOffer(product) || {};
     const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
@@ -199,7 +220,7 @@ function renderProductsGrid(products, grid) {
     }
     grid.innerHTML = products.map(renderProductCard).join('');
     grid.querySelectorAll('img.product-thumb').forEach(img => {
-        img.addEventListener('error', function () { this.src = 'assets/icon-192.png?v=2'; }, { once: true });
+        img.addEventListener('error', function () { this.src = 'assets/icon-192.png?v=4'; }, { once: true });
     });
 }
 
@@ -425,7 +446,6 @@ async function loadHomepageProducts() {
             if (inSec1) flashSaleProducts1.push(p);
             if (inSec2) flashSaleProducts2.push(p);
             
-            // Agar kisi bhi sale section mein nahi hai, toh normal products mein daalein
             if (!inSec1 && !inSec2) {
                 normalProducts.push(p);
             }
@@ -497,7 +517,7 @@ async function loadHomepageProducts() {
                     
                     return `
                         <a href="/product/${encodeURIComponent(p.slug)}" class="special-deal-card">
-                            <div class="img-box"><img src="${p.image_url || '/assets/icon-192.png?v=2'}" alt="${p.title}"></div>
+                            <div class="img-box"><img src="${p.image_url || '/assets/icon-192.png?v=4'}" alt="${p.title}"></div>
                             <div class="info-box">
                                 ${priceDisplay}
                                 <div class="title">${p.title}</div>
@@ -525,9 +545,10 @@ function handleSearch() {
     }
 }
 
-// NOTIFICATION LOGIC
-let userDeletedNotifs = JSON.parse(localStorage.getItem('deleted_notifs') || '[]');
-let userReadNotifs = JSON.parse(localStorage.getItem('read_notifs') || '[]'); 
+// ⭐ NOTIFICATION LOGIC (Using Cookies for persistence across cache clears) ⭐
+
+let userDeletedNotifs = JSON.parse(getCookie('deleted_notifs') || '[]');
+let userReadNotifs = JSON.parse(getCookie('read_notifs') || '[]'); 
 let currentNotifs = [];
 
 window.toggleNotifPanel = function(e) {
@@ -589,7 +610,7 @@ function renderNotifications() {
 window.markAsRead = function(id) {
     if (!userReadNotifs.includes(id)) {
         userReadNotifs.push(id);
-        localStorage.setItem('read_notifs', JSON.stringify(userReadNotifs));
+        setCookie('read_notifs', JSON.stringify(userReadNotifs), 30); // Save in cookie for 30 days
         renderNotifications(); 
     }
 }
@@ -597,7 +618,7 @@ window.markAsRead = function(id) {
 window.deleteNotif = function(id) {
     if(!userDeletedNotifs.includes(id)) {
         userDeletedNotifs.push(id);
-        localStorage.setItem('deleted_notifs', JSON.stringify(userDeletedNotifs));
+        setCookie('deleted_notifs', JSON.stringify(userDeletedNotifs), 30); // Save in cookie for 30 days
     }
     currentNotifs = currentNotifs.filter(n => n.id !== id);
     renderNotifications();
@@ -636,20 +657,20 @@ window.handleNotifClick = async function(id, slug, type) {
 window.clearAllNotifs = function(e) {
     if(e) e.stopPropagation();
     currentNotifs.forEach(n => { if(!userDeletedNotifs.includes(n.id)) userDeletedNotifs.push(n.id); });
-    localStorage.setItem('deleted_notifs', JSON.stringify(userDeletedNotifs));
+    setCookie('deleted_notifs', JSON.stringify(userDeletedNotifs), 30);
     currentNotifs = [];
     renderNotifications();
 }
 
-// NOTIFICATION LOGIC ENDS HERE
+// ⭐ NOTIFICATION LOGIC ENDS HERE ⭐
 
 function showBrowserNotification(title, body) {
     if (!("Notification" in window)) return;
     if (Notification.permission === "granted") {
-        new Notification(title, { body: body, icon: '/assets/icon-192.png?v=2' });
+        new Notification(title, { body: body, icon: '/assets/icon-192.png?v=4' });
     } else if (Notification.permission !== "denied") {
         Notification.requestPermission().then(permission => {
-            if (permission === "granted") new Notification(title, { body: body, icon: '/assets/icon-192.png?v=2' });
+            if (permission === "granted") new Notification(title, { body: body, icon: '/assets/icon-192.png?v=4' });
         });
     }
 }
@@ -743,10 +764,11 @@ async function setupRealtime() {
 
 async function trackVisitor() {
     if (!window.supabaseClient) return;
-    let visitorId = localStorage.getItem('visitor_id');
+    // ⭐ VISITOR ID FIX (Using Cookie instead of localStorage) ⭐
+    let visitorId = getCookie('visitor_id');
     if (!visitorId) {
         visitorId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
-        localStorage.setItem('visitor_id', visitorId);
+        setCookie('visitor_id', visitorId, 365); // Save for 1 year
     }
     await window.supabaseClient.from('website_visitors').upsert({
         visitor_id: visitorId,
@@ -759,10 +781,10 @@ async function trackActiveApp() {
     const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     if (!isPWA) return;
 
-    let deviceId = localStorage.getItem('device_id');
+    let deviceId = getCookie('device_id');
     if (!deviceId) {
         deviceId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
-        localStorage.setItem('device_id', deviceId);
+        setCookie('device_id', deviceId, 365);
     }
     await window.supabaseClient.from('active_app_installs').upsert({
         device_id: deviceId,
