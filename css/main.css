@@ -374,6 +374,95 @@ body {
 .ad-fallback-container .product-card .card-title { font-size: 0.75rem; min-height: 2.2em; line-height: 1.2; }
 .ad-fallback-container .product-card .btn-check-price { padding: 5px; font-size: 0.7rem; border-radius: 4px; }
 
+/* ⭐ NEWSLETTER SECTION STYLES ⭐ */
+.newsletter-wrapper {
+    padding: 40px 5%;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.newsletter-box {
+    background: linear-gradient(135deg, #1E1B4B 0%, #4c1d95 100%);
+    border-radius: 16px;
+    padding: 40px 20px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(30, 27, 75, 0.2);
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+
+.newsletter-box::before {
+    content: "📧";
+    position: absolute;
+    font-size: 10rem;
+    opacity: 0.05;
+    top: -20px;
+    right: -20px;
+    transform: rotate(15deg);
+}
+
+.newsletter-box h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 10px;
+    color: #fff;
+    position: relative;
+    z-index: 1;
+}
+
+.newsletter-box p {
+    font-size: 1rem;
+    color: #CBD5E1;
+    margin-bottom: 25px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+    z-index: 1;
+}
+
+.newsletter-form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    max-width: 500px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+.newsletter-form input {
+    flex: 1;
+    padding: 14px 20px;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.newsletter-form button {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 14px 30px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    white-space: nowrap;
+    box-shadow: 0 4px 10px rgba(255, 90, 60, 0.3);
+}
+
+.newsletter-form button:hover {
+    background: #e0482d;
+    transform: translateY(-2px);
+}
+
 .cookie-banner {
     position: fixed;
     bottom: 20px;
@@ -423,6 +512,19 @@ body {
     }
     .ad-fallback-container .product-card .card-img-wrap { height: 80px; }
     .ad-fallback-container .product-card .card-title { font-size: 0.65rem; }
+    
+    .newsletter-form {
+        flex-direction: column;
+    }
+    .newsletter-form input {
+        width: 100%;
+    }
+    .newsletter-form button {
+        width: 100%;
+    }
+    .newsletter-box h2 {
+        font-size: 1.5rem;
+    }
     
     .cookie-banner {
         bottom: 70px;
