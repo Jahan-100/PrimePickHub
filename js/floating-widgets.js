@@ -1,7 +1,7 @@
 // js/floating-widgets.js
 document.addEventListener('DOMContentLoaded', () => {
     
-    // Agar page par pehle se contact form mojood hai (jaise index.html mein), toh naya mat banao
+    // Agar page par pehle se contact form mojood hai, toh naya mat banao
     if (document.getElementById('floatingContactBtn')) return;
 
     // 1. Inject HTML for Floating Elements
@@ -40,10 +40,10 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         </div>
 
-        <!-- FLOATING APP BUTTON -->
-        <button id="floatingAppIcon" class="floating-app-btn" onclick="toggleAppPopup()" style="display: none;">
-            <img src="/assets/icon-192.png?v=4" alt="App Icon">
-            <span class="btn-text">For App</span>
+        <!-- FLOATING APP SIDE BUTTON -->
+        <button id="floatingAppIcon" class="floating-app-side-btn" onclick="toggleAppPopup()" style="display: none;">
+            <img src="/assets/icon-192.png?v=4" alt="App">
+            <span>App</span>
         </button>
 
         <!-- APP POPUP MODAL -->
