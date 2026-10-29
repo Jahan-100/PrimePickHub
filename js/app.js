@@ -545,8 +545,7 @@ function handleSearch() {
     }
 }
 
-// ⭐ NOTIFICATION LOGIC (Using Cookies for persistence across cache clears) ⭐
-
+// ⭐ NOTIFICATION LOGIC (Using Cookies) ⭐
 let userDeletedNotifs = JSON.parse(getCookie('deleted_notifs') || '[]');
 let userReadNotifs = JSON.parse(getCookie('read_notifs') || '[]'); 
 let currentNotifs = [];
@@ -610,7 +609,7 @@ function renderNotifications() {
 window.markAsRead = function(id) {
     if (!userReadNotifs.includes(id)) {
         userReadNotifs.push(id);
-        setCookie('read_notifs', JSON.stringify(userReadNotifs), 30); // Save in cookie for 30 days
+        setCookie('read_notifs', JSON.stringify(userReadNotifs), 30);
         renderNotifications(); 
     }
 }
@@ -618,7 +617,7 @@ window.markAsRead = function(id) {
 window.deleteNotif = function(id) {
     if(!userDeletedNotifs.includes(id)) {
         userDeletedNotifs.push(id);
-        setCookie('deleted_notifs', JSON.stringify(userDeletedNotifs), 30); // Save in cookie for 30 days
+        setCookie('deleted_notifs', JSON.stringify(userDeletedNotifs), 30);
     }
     currentNotifs = currentNotifs.filter(n => n.id !== id);
     renderNotifications();
@@ -630,7 +629,7 @@ window.handleNotifClick = async function(id, slug, type) {
 
     const { data: product } = await window.supabaseClient
         .from('products')
-        .select('is_available, sale_end_date, is_special_deal')
+        .select('is_available, sale_end_date, sale_end_date_2, is_special_deal')
         .eq('slug', slug)
         .maybeSingle();
 
@@ -641,7 +640,15 @@ window.handleNotifClick = async function(id, slug, type) {
 
     if (type === 'flash_sale' && product.sale_end_date) {
         if (new Date(product.sale_end_date) < new Date()) {
-            alert("Yeh Flash Sale ab khatam ho chuki hai.");
+            alert("Yeh Sale khatam ho chuki hai.");
+            return;
+        }
+    }
+
+    // ⭐ NEW CHECK FOR SALE SECTION 2 ⭐
+    if (type === 'flash_sale_2' && product.sale_end_date_2) {
+        if (new Date(product.sale_end_date_2) < new Date()) {
+            alert("Yeh Sale Section 2 khatam ho chuki hai.");
             return;
         }
     }
@@ -764,11 +771,10 @@ async function setupRealtime() {
 
 async function trackVisitor() {
     if (!window.supabaseClient) return;
-    // ⭐ VISITOR ID FIX (Using Cookie instead of localStorage) ⭐
     let visitorId = getCookie('visitor_id');
     if (!visitorId) {
         visitorId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
-        setCookie('visitor_id', visitorId, 365); // Save for 1 year
+        setCookie('visitor_id', visitorId, 365); 
     }
     await window.supabaseClient.from('website_visitors').upsert({
         visitor_id: visitorId,
