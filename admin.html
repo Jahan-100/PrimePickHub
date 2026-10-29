@@ -43,6 +43,42 @@
         .card-installs p { color: #ea580c !important; font-weight: 600; }
         .card-add-product { background: linear-gradient(135deg, #ffe4e6 0%, #fecdd3 100%); border: 1px solid #fda4af !important; box-shadow: 0 4px 15px rgba(244, 63, 94, 0.1); border-radius: 12px; }
         .card-add-product h2 { color: #be123c !important; }
+
+        <!-- ⭐ NAYA BLOG SECTION START ⭐ -->
+                <div class="admin-card" style="background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <h2 id="blogFormTitle" style="margin: 0; color: #166534;">Add New Blog Post</h2>
+                        <button type="button" id="toggleBlogFormBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#16a34a; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Show Blog Form</button>
+                    </div>
+
+                    <div id="blogFormContainer" style="display: none; margin-top: 20px; background: #fff; padding: 20px; border-radius: 8px;">
+                        <form id="blogForm" novalidate>
+                            <input type="hidden" id="bId" value="">
+                            
+                            <div class="form-group"><label>Blog Title *</label><input type="text" id="bTitle" required style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
+                            <div class="form-group"><label>URL Slug * (e.g. best-winter-coats)</label><input type="text" id="bSlug" required pattern="[a-z0-9\-]+" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
+                            <div class="form-group"><label>Cover Image URL (Optional)</label><input type="url" id="bImg" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
+                            <div class="form-group"><label>Article Content (HTML allowed) *</label><textarea id="bContent" rows="10" required placeholder="<h2>Heading</h2><p>Paragraph...</p>" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></textarea></div>
+                            
+                            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                <button type="submit" id="saveBlogBtn" class="btn-check-price" style="width:auto; padding:10px 20px; background:#16a34a;">Publish Post</button>
+                                <button type="button" id="cancelBlogBtn" class="btn-check-price" style="width:auto; padding:10px 20px; background:#64748B; display:none;">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="blogListContainer" style="display: none; margin-top: 20px; background: #fff; padding: 15px; border-radius: 8px;">
+                        <table class="admin-table">
+                            <thead><tr><th>Image</th><th>Title</th><th>Date</th><th>Actions</th></tr></thead>
+                            <tbody id="blogListBody"></tbody>
+                        </table>
+                    </div>
+                    
+                    <div style="margin-top: 10px;">
+                        <button type="button" id="toggleBlogListBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#4f46e5; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Show / Hide Blogs List</button>
+                    </div>
+                </div>
+                <!-- ⭐ NAYA BLOG SECTION END ⭐ -->
         
         /* ⭐ Yahan Heading ka color Green kar diya gaya hai ⭐ */
         #formTitle { color: #16a34a !important; }
