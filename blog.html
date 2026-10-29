@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog - PrimePickHub</title>
     <link rel="icon" type="image/png" href="/assets/favicon.png?v=4">
-    <link rel="stylesheet" href="css/main.css?v=16">
+    <link rel="stylesheet" href="css/main.css?v=18">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -25,7 +25,6 @@
         <div class="product-grid" id="blogGrid"></div>
     </main>
 
-    <!-- ⭐ NEWSLETTER SECTION START ⭐ -->
     <div class="newsletter-wrapper">
         <div class="newsletter-box">
             <h2>Get the Best Deals in Your Inbox!</h2>
@@ -37,12 +36,10 @@
             <p id="newsletterMsg" style="margin-top: 10px; font-weight: 600; font-size: 0.9rem;"></p>
         </div>
     </div>
-    <!-- ⭐ NEWSLETTER SECTION END ⭐ -->
 
     <script src="js/config.js?v=6"></script>
     <script src="js/blog.js?v=2"></script>
     <script>
-        // Newsletter Form Submit Logic (Blog Page)
         document.getElementById('newsletterForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const emailInput = document.getElementById('newsletterEmail');
@@ -51,37 +48,25 @@
             const email = emailInput.value.trim();
 
             if(!email) return;
-
             btn.innerText = "Subscribing...";
             btn.disabled = true;
             msg.innerText = "";
 
             try {
-                const { error } = await window.supabaseClient
-                    .from('newsletter_subscribers')
-                    .insert([{ email: email }]);
-
+                const { error } = await window.supabaseClient.from('newsletter_subscribers').insert([{ email: email }]);
                 if (error) {
-                    if (error.code === '23505') {
-                        msg.style.color = "#FBBF24"; // Yellow
-                        msg.innerText = "You are already subscribed!";
-                    } else {
-                        throw error;
-                    }
+                    if (error.code === '23505') { msg.style.color = "#FBBF24"; msg.innerText = "You are already subscribed!"; } 
+                    else { throw error; }
                 } else {
-                    msg.style.color = "#4ADE80"; // Green
-                    msg.innerText = "Successfully subscribed! Check your inbox for deals.";
-                    emailInput.value = "";
+                    msg.style.color = "#4ADE80"; msg.innerText = "Successfully subscribed! Check your inbox for deals."; emailInput.value = "";
                 }
             } catch (err) {
-                console.error(err);
-                msg.style.color = "#F87171"; // Red
-                msg.innerText = "Something went wrong. Please try again.";
+                console.error(err); msg.style.color = "#F87171"; msg.innerText = "Something went wrong. Please try again.";
             } finally {
-                btn.innerText = "Subscribe";
-                btn.disabled = false;
+                btn.innerText = "Subscribe"; btn.disabled = false;
             }
         });
     </script>
+    <script src="js/floating-widgets.js?v=2"></script>
 </body>
 </html>
