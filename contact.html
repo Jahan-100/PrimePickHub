@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact Us - PrimePickHub</title>
     <meta name="description" content="Contact PrimePickHub for partnership inquiries, product suggestions, or support.">
-    <link rel="icon" type="image/png" href="/assets/favicon.png">
-    <link rel="stylesheet" href="css/main.css">
+    <link rel="icon" type="image/png" href="/assets/favicon.png?v=4">
+    <link rel="stylesheet" href="css/main.css?v=16">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -23,8 +23,17 @@
             Have a question, partnership inquiry, or product suggestion? Send us a message — we usually reply within 48 hours.
         </p>
 
-        <form action="https://formspree.io/f/YOUR_FORMSPREE_ID" method="POST"
+        <!-- ⭐ WEB3FORMS UPDATE ⭐ -->
+        <form action="https://api.web3forms.com/submit" method="POST"
               style="background:#fff;padding:30px;border-radius:12px;border:1px solid var(--border);">
+            
+            <!-- Web3Forms Access Key -->
+            <input type="hidden" name="access_key" value="59aca094-d044-44c9-b57e-5b19c9572270">
+            
+            <!-- Email Subject (Optional but Recommended) -->
+            <input type="hidden" name="subject" value="New Message from PrimePickHub Contact Form">
+            <input type="hidden" name="from_name" value="PrimePickHub Website">
+
             <div style="margin-bottom:15px;">
                 <label style="display:block;font-weight:600;margin-bottom:6px;">Your Name</label>
                 <input type="text" name="name" required
