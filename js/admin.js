@@ -650,19 +650,24 @@ function setupProductForm() {
                     if (existingNotifs && existingNotifs.length > 0) {
                         console.log("Duplicate notification blocked (Recent one exists).");
                     } else {
-                        // ⭐ FIX: Fetch ALL settings to ensure no column name mismatch
+                        // Fetch ALL settings to ensure no column name mismatch
                         const { data: settings } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).maybeSingle();
                         
-                        // ⭐ FIX: Use the correct variable names
-                        const spTitle = settings?.special_deal_title || 'Special Deal';
-                        const s1Title = settings?.flash_title_text || 'Sale Section 1';
-                        const s2Title = settings?.sale_section_2_title || 'Sale Section 2';
+                        // ⭐ FIX: Bulletproof Title Extraction
+                        let spTitle = 'Special Deal';
+                        let s1Title = 'Sale Section 1';
+                        let s2Title = 'Sale Section 2';
+
+                        if (settings) {
+                            if (settings.special_deal_title) spTitle = settings.special_deal_title;
+                            if (settings.flash_title_text) s1Title = settings.flash_title_text;
+                            if (settings.sale_section_2_title) s2Title = settings.sale_section_2_title;
+                        }
                         
                         let notifType = 'product';
                         let notifTitle = isEditing ? "Product Updated! 🛍️" : "New Product Added! 🛍️";
                         let notifMsg = `Check out ${productData.title}`;
                         
-                        // ⭐ FIX: Check if dates are actually in the future, so old dates don't override Special Deal
                         const now = new Date();
                         const isFlash1Active = eventName && saleEndDate && new Date(saleEndDate) > now;
                         const isFlash2Active = eventName2 && saleEndDate2 && new Date(saleEndDate2) > now;
