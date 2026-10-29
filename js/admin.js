@@ -67,7 +67,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }).eq('id', 1);
 
         if (error) alert("Error: " + error.message);
-        else alert("Special Deal Design updated successfully!");
+        else {
+            alert("Special Deal Design updated successfully!");
+            // Auto Close Box
+            document.getElementById('specialDealContainer').style.display = 'none';
+            const btn = document.getElementById('toggleSpecialDealBtn');
+            btn.textContent = 'Show Settings';
+            btn.style.background = '#d946ef';
+        }
     });
 
     // Save Sale Section 1 Settings
@@ -89,7 +96,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }).eq('id', 1);
 
         if (error) alert("Error: " + error.message);
-        else alert("Sale Section 1 Design updated successfully!");
+        else {
+            alert("Sale Section 1 Design updated successfully!");
+            // Auto Close Box
+            document.getElementById('flashSaleContainer').style.display = 'none';
+            const btn = document.getElementById('toggleFlashSaleBtn');
+            btn.textContent = 'Show Settings';
+            btn.style.background = '#ea580c';
+        }
     });
 
     // Save Sale Section 2 Settings
@@ -111,7 +125,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }).eq('id', 1);
 
         if (error) alert("Error: " + error.message);
-        else alert("Sale Section 2 Design updated successfully!");
+        else {
+            alert("Sale Section 2 Design updated successfully!");
+            // Auto Close Box
+            document.getElementById('sale2Container').style.display = 'none';
+            const btn = document.getElementById('toggleSale2Btn');
+            btn.textContent = 'Show Settings';
+            btn.style.background = '#10b981';
+        }
     });
 
     // Check Availability Button
@@ -152,11 +173,11 @@ function setupToggleAddProduct() {
         toggleBtn.addEventListener('click', () => {
             if (formContainer.style.display === 'none') {
                 formContainer.style.display = 'block'; 
-                toggleBtn.textContent = 'Hide Add Product Form'; 
+                toggleBtn.textContent = 'Product Form'; 
                 toggleBtn.style.background = '#EF4444';
             } else {
                 formContainer.style.display = 'none'; 
-                toggleBtn.textContent = 'Show Add Product Form'; 
+                toggleBtn.textContent = 'Product Form'; 
                 toggleBtn.style.background = '#e11d48';
             }
         });
@@ -459,12 +480,12 @@ window.editProduct = async function(id) {
         document.getElementById('pImgFile').value = ''; document.getElementById('pGalleryFile').value = '';
         document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen';
 
-        document.getElementById('formTitle').innerText = "Edit Product"; document.getElementById('saveBtn').innerText = "Update Product"; document.getElementById('cancelEditBtn').style.display = "block";
+        document.getElementById('formTitle').innerText = "Add / Update Product"; document.getElementById('saveBtn').innerText = "Update Product"; document.getElementById('cancelEditBtn').style.display = "block";
         
         const formContainer = document.getElementById('addProductContainer');
         const toggleBtn = document.getElementById('toggleAddProductBtn');
         if (formContainer && formContainer.style.display === 'none') {
-            formContainer.style.display = 'block'; toggleBtn.textContent = 'Hide Add Product Form'; toggleBtn.style.background = '#EF4444';
+            formContainer.style.display = 'block'; toggleBtn.textContent = 'Product Form'; toggleBtn.style.background = '#EF4444';
         }
         document.getElementById('productForm').scrollIntoView({ behavior: 'smooth' });
         
@@ -503,7 +524,7 @@ function setupProductForm() {
         document.getElementById('pImgFile').value = ''; document.getElementById('pGalleryFile').value = '';
         document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen';
 
-        document.getElementById('formTitle').innerText = "Add New Product"; document.getElementById('saveBtn').innerText = "Save Product"; cancelBtn.style.display = "none";
+        document.getElementById('formTitle').innerText = "Add / Update Product"; document.getElementById('saveBtn').innerText = "Save Product"; cancelBtn.style.display = "none";
         
         document.querySelectorAll('.error-input').forEach(el => el.classList.remove('error-input'));
     });
@@ -644,13 +665,14 @@ function setupProductForm() {
 
             alert(`"${productData.title}" saved successfully!`); 
             form.reset(); document.getElementById('variationsContainer').innerHTML = '';
-            document.getElementById('pId').value = ''; document.getElementById('formTitle').innerText = "Add New Product"; cancelBtn.style.display = "none";
+            document.getElementById('pId').value = ''; document.getElementById('formTitle').innerText = "Add / Update Product"; cancelBtn.style.display = "none";
             primaryFileInput.value = ''; galleryFileInput.value = '';
             document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen';
 
+            // Auto Close Product Form
             document.getElementById('addProductContainer').style.display = 'none';
             const toggleBtn = document.getElementById('toggleAddProductBtn');
-            toggleBtn.textContent = 'Show Add Product Form';
+            toggleBtn.textContent = 'Product Form';
             toggleBtn.style.background = '#e11d48';
 
             await loadStats(); await loadProductsList();
