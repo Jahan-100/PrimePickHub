@@ -456,7 +456,7 @@ function handleSearch() {
 // ⭐ NOTIFICATION LOGIC (Read/Unread & Delete System) ⭐
 
 let userDeletedNotifs = JSON.parse(localStorage.getItem('deleted_notifs') || '[]');
-let userReadNotifs = JSON.parse(localStorage.getItem('read_notifs') || '[]'); // Read mark track karne ke liye
+let userReadNotifs = JSON.parse(localStorage.getItem('read_notifs') || '[]'); 
 let currentNotifs = [];
 
 window.toggleNotifPanel = function(e) {
@@ -470,7 +470,6 @@ async function loadNotifications() {
     const { data, error } = await window.supabaseClient.from('app_notifications').select('*').order('created_at', { ascending: false }).limit(20);
     
     if (!error && data) {
-        // Sirf wo notifications dikhayein jo delete nahi hui hain
         currentNotifs = data.filter(n => !userDeletedNotifs.includes(n.id));
         renderNotifications();
     }
@@ -487,7 +486,6 @@ function renderNotifications() {
         return;
     }
 
-    // Badge count: Sirf unread notifications ka count
     const unreadCount = currentNotifs.filter(n => !userReadNotifs.includes(n.id)).length;
 
     if(badge) {
@@ -495,7 +493,7 @@ function renderNotifications() {
             badge.style.display = 'flex';
             badge.innerText = unreadCount;
         } else {
-            badge.style.display = 'none'; // Agar sab parh liye hain toh badge gayab
+            badge.style.display = 'none';
         }
     }
 
@@ -503,8 +501,6 @@ function renderNotifications() {
         const cursorStyle = n.product_slug ? 'cursor: pointer;' : '';
         const clickAttr = n.product_slug ? `onclick="handleNotifClick('${n.id}', '${n.product_slug}', '${n.type || 'product'}')"` : '';
         const isRead = userReadNotifs.includes(n.id);
-        
-        // Agar parh liya hai toh thora light background
         const bgStyle = isRead ? 'background: #F8FAFC;' : 'background: #fff;';
         
         return `
@@ -519,17 +515,15 @@ function renderNotifications() {
     `}).join('');
 }
 
-// Naya function: Sirf Read mark karega, delete nahi karega
 window.markAsRead = function(id) {
     if (!userReadNotifs.includes(id)) {
         userReadNotifs.push(id);
         localStorage.setItem('read_notifs', JSON.stringify(userReadNotifs));
-        renderNotifications(); // Turant badge update hoga
+        renderNotifications(); 
     }
 }
 
 window.deleteNotif = function(id) {
-    // Jab user manually 'X' par click kare tabhi delete hoga
     if(!userDeletedNotifs.includes(id)) {
         userDeletedNotifs.push(id);
         localStorage.setItem('deleted_notifs', JSON.stringify(userDeletedNotifs));
@@ -538,14 +532,10 @@ window.deleteNotif = function(id) {
     renderNotifications();
 }
 
-// Notification par click hone par kya karna hai
 window.handleNotifClick = async function(id, slug, type) {
-    // 1. Sirf Read mark karein, delete na karein
     window.markAsRead(id);
-
     if (!slug) return;
 
-    // 2. Database se product ki current state check karein
     const { data: product } = await window.supabaseClient
         .from('products')
         .select('is_available, sale_end_date, is_special_deal')
@@ -557,7 +547,6 @@ window.handleNotifClick = async function(id, slug, type) {
         return;
     }
 
-    // 3. Flash Sale expire check
     if (type === 'flash_sale' && product.sale_end_date) {
         if (new Date(product.sale_end_date) < new Date()) {
             alert("Yeh Flash Sale ab khatam ho chuki hai.");
@@ -565,13 +554,11 @@ window.handleNotifClick = async function(id, slug, type) {
         }
     }
 
-    // 4. Special Deal remove check
     if (type === 'special_deal' && product.is_special_deal === false) {
         alert("Yeh Special Deal ab khatam ho chuki hai.");
         return;
     }
 
-    // 5. Sab theek hai, product page par le jayen
     window.location.href = `/product/${slug}`;
 }
 
@@ -662,12 +649,13 @@ function triggerRealtimeUpdate(payload) {
 }
 
 // ⭐ FIXED REALTIME: Prevents duplicate connections and multiple notifications ⭐
-function setupRealtime() {
+async function setupRealtime() {
     if (!window.supabaseClient) return;
 
-    // Remove all existing channels to prevent multiple listeners if script runs again
-    window.supabaseClient.removeAllChannels();
+    // Pehle purane saare connections ko properly band (await) karein 
+    await window.supabaseClient.removeAllChannels();
 
+    // Sirf tab naya connection banayein jab purana khatam ho jaye 
     window.supabaseClient
         .channel('schema-db-changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
