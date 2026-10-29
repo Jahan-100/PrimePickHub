@@ -30,7 +30,7 @@
     <link rel="canonical" href="https://www.primepickhub.com/">
     <link rel="icon" type="image/png" href="assets/favicon.png?v=4">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="css/main.css?v=15">
+    <link rel="stylesheet" href="css/main.css?v=16">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,800;0,900;1,800&family=Roboto:wght@400;700;900&family=Oswald:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Lobster&family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
@@ -76,7 +76,6 @@
 
     <header class="header">
         <div class="nav-main">
-            <!-- ⭐ Yahan Blog ka button add kiya gaya hai ⭐ -->
             <div style="display:flex; align-items:center; gap:20px;">
                 <a href="index.html" class="logo">PrimePick<span>Hub</span></a>
                 <a href="blog.html" style="text-decoration:none; font-weight:600; color:var(--primary); font-size:1rem;">Blog</a>
@@ -107,7 +106,7 @@
         </div>
     </header>
 
-    <!-- ⭐ AD SLOT 1 (Top Banner) ⭐ -->
+    <!-- AD SLOT 1 (Top Banner) -->
     <div class="container" style="margin-top: 15px;">
         <div class="ad-slot" id="ad-slot-top">
             <div class="ad-fallback-container" id="ad-fallback-top"></div>
@@ -188,7 +187,7 @@
             <div class="horizontal-category-scroll" id="categoryScrollContainer"></div>
         </div>
 
-        <!-- ⭐ AD SLOT 2 (Middle Banner) ⭐ -->
+        <!-- AD SLOT 2 (Middle Banner) -->
         <div class="ad-slot" id="ad-slot-middle" style="margin-bottom: 20px;">
             <div class="ad-fallback-container" id="ad-fallback-middle"></div>
         </div>
@@ -198,6 +197,20 @@
             <div class="product-grid" id="productGrid"></div>
         </div>
     </main>
+
+    <!-- ⭐ NEWSLETTER SECTION START ⭐ -->
+    <div class="newsletter-wrapper">
+        <div class="newsletter-box">
+            <h2>Get the Best Deals in Your Inbox!</h2>
+            <p>Subscribe to PrimePickHub and never miss out on exclusive sales, flash deals, and top-rated products.</p>
+            <form id="newsletterForm" class="newsletter-form">
+                <input type="email" id="newsletterEmail" placeholder="Enter your email address..." required>
+                <button type="submit" id="newsletterBtn">Subscribe</button>
+            </form>
+            <p id="newsletterMsg" style="margin-top: 10px; font-weight: 600; font-size: 0.9rem;"></p>
+        </div>
+    </div>
+    <!-- ⭐ NEWSLETTER SECTION END ⭐ -->
 
     <footer class="footer">
         <p><strong>PrimePickHub</strong> — Compare. Click. Save Smarter.</p>
@@ -240,7 +253,7 @@
 
     <script src="js/config.js?v=6"></script>
     <script src="js/api.js?v=7"></script>
-    <script src="js/app.js?v=12"></script>
+    <script src="js/app.js?v=13"></script>
     <script src="js/affiliate.js?v=6"></script>
     <script>
         function toggleCatDropdown(event) {
@@ -260,6 +273,47 @@
             var wrap = document.getElementById('categoryDropdownWrap');
             var menu = document.getElementById('categoryDropdownMenu');
             if (wrap && !wrap.contains(e.target) && menu) { menu.style.display = 'none'; }
+        });
+
+        // Newsletter Form Submit Logic
+        document.getElementById('newsletterForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const emailInput = document.getElementById('newsletterEmail');
+            const btn = document.getElementById('newsletterBtn');
+            const msg = document.getElementById('newsletterMsg');
+            const email = emailInput.value.trim();
+
+            if(!email) return;
+
+            btn.innerText = "Subscribing...";
+            btn.disabled = true;
+            msg.innerText = "";
+
+            try {
+                const { error } = await window.supabaseClient
+                    .from('newsletter_subscribers')
+                    .insert([{ email: email }]);
+
+                if (error) {
+                    if (error.code === '23505') { // Unique violation
+                        msg.style.color = "#FBBF24"; // Yellow
+                        msg.innerText = "You are already subscribed!";
+                    } else {
+                        throw error;
+                    }
+                } else {
+                    msg.style.color = "#4ADE80"; // Green
+                    msg.innerText = "Successfully subscribed! Check your inbox for deals.";
+                    emailInput.value = "";
+                }
+            } catch (err) {
+                console.error(err);
+                msg.style.color = "#F87171"; // Red
+                msg.innerText = "Something went wrong. Please try again.";
+            } finally {
+                btn.innerText = "Subscribe";
+                btn.disabled = false;
+            }
         });
     </script>
 </body>
