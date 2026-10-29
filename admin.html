@@ -44,7 +44,6 @@
         .card-add-product { background: linear-gradient(135deg, #ffe4e6 0%, #fecdd3 100%); border: 1px solid #fda4af !important; box-shadow: 0 4px 15px rgba(244, 63, 94, 0.1); border-radius: 12px; }
         .card-add-product h2 { color: #be123c !important; }
         
-        /* Heading Green Color (Locked) */
         #formTitle { color: #16a34a !important; }
 
         .card-manage-products { background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); border: 1px solid #a5b4fc !important; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.1); border-radius: 12px; }
@@ -52,7 +51,6 @@
         
         .error-input { border: 2px solid #EF4444 !important; background-color: #FEF2F2 !important; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important; }
         
-        /* Settings row ko ek line me rakhne ke liye */
         .settings-row { display: flex; flex-wrap: nowrap; gap: 10px; margin-bottom: 15px; align-items: flex-end; overflow-x: auto; padding-bottom: 5px; }
         .settings-row .form-group { margin-bottom: 0; flex: 1; min-width: 110px; }
         .settings-row .form-group:first-child { flex: 2; min-width: 150px; }
@@ -388,7 +386,8 @@
                 <div class="admin-card" style="background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2 id="blogFormTitle" style="margin: 0; color: #166534;">Add New Blog Post</h2>
-                        <button type="button" id="toggleBlogFormBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#16a34a; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Show Blog Form</button>
+                        <!-- Color changed to Teal -->
+                        <button type="button" id="toggleBlogFormBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#0d9488; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Show Blog Form</button>
                     </div>
 
                     <div id="blogFormContainer" style="display: none; margin-top: 20px; background: #fff; padding: 20px; border-radius: 8px;">
@@ -401,7 +400,7 @@
                             <div class="form-group"><label>Article Content (HTML allowed) *</label><textarea id="bContent" rows="10" required placeholder="<h2>Heading</h2><p>Paragraph...</p>" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></textarea></div>
                             
                             <div style="display: flex; gap: 10px; margin-top: 15px;">
-                                <button type="submit" id="saveBlogBtn" class="btn-check-price" style="width:auto; padding:10px 20px; background:#16a34a;">Publish Post</button>
+                                <button type="submit" id="saveBlogBtn" class="btn-check-price" style="width:auto; padding:10px 20px; background:#0d9488;">Publish Post</button>
                                 <button type="button" id="cancelBlogBtn" class="btn-check-price" style="width:auto; padding:10px 20px; background:#64748B; display:none;">Cancel</button>
                             </div>
                         </form>
@@ -415,7 +414,8 @@
                     </div>
                     
                     <div style="margin-top: 10px;">
-                        <button type="button" id="toggleBlogListBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#4f46e5; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Show / Hide Blogs List</button>
+                        <!-- Color changed to Purple -->
+                        <button type="button" id="toggleBlogListBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#9333ea; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Show / Hide Blogs List</button>
                     </div>
                 </div>
                 <!-- ⭐ NAYA BLOG SECTION END ⭐ -->
@@ -449,6 +449,6 @@
 
     <script src="/js/config.js?v=6"></script>
     <script src="/js/api.js?v=7"></script>
-    <script src="/js/admin.js?v=6"></script>
+    <script src="/js/admin.js?v=7"></script>
 </body>
 </html>
