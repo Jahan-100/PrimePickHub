@@ -639,38 +639,51 @@ function setupProductForm() {
             const sendNotif = document.getElementById('pSendNotification').checked;
             if (sendNotif) {
                 try {
-                    // ⭐ DYNAMIC TITLES FETCH LOGIC ⭐
-                    const { data: settings } = await window.supabaseClient.from('site_settings').select('special_deal_title, flash_title_text, sale_section_2_title').eq('id', 1).maybeSingle();
-                    const spTitle = settings?.special_deal_title || 'Special Deal';
-                    const s1Title = settings?.flash_title_text || 'Sale Section 1';
-                    const s2Title = settings?.sale_section_2_title || 'Sale Section 2';
-                    
-                    let notifType = 'product';
-                    let notifTitle = isEditing ? "Product Updated! 🛍️" : "New Product Added! 🛍️";
-                    let notifMsg = `Check out ${productData.title}`;
-                    
-                    if (eventName && saleEndDate) {
-                        notifType = 'flash_sale';
-                        notifTitle = `🔥 ${s1Title} Started!`;
-                        notifMsg = `${productData.title} is now in ${s1Title}!`;
-                    } else if (eventName2 && saleEndDate2) {
-                        notifType = 'flash_sale_2'; // ⭐ New Type for Section 2 ⭐
-                        notifTitle = `🔥 ${s2Title} Started!`;
-                        notifMsg = `${productData.title} is now in ${s2Title}!`;
-                    } else if (document.getElementById('pSpecialDeal').checked) {
-                        notifType = 'special_deal';
-                        notifTitle = `🎁 ${spTitle} Alert!`;
-                        notifMsg = `${productData.title} is now in ${spTitle}!`;
-                    }
+                    // ⭐ STRICT DUPLICATE PREVENTION: Check if notification for this product was created in the last 10 seconds ⭐
+                    const tenSecondsAgo = new Date(Date.now() - 10000).toISOString();
+                    const { data: existingNotifs } = await window.supabaseClient
+                        .from('app_notifications')
+                        .select('id')
+                        .eq('product_slug', productData.slug)
+                        .gte('created_at', tenSecondsAgo);
 
-                    await window.supabaseClient.from('app_notifications').insert([{
-                        title: notifTitle,
-                        message: notifMsg,
-                        product_slug: productData.slug,
-                        type: notifType
-                    }]);
+                    if (existingNotifs && existingNotifs.length > 0) {
+                        console.log("Duplicate notification blocked (Recent one exists).");
+                    } else {
+                        // Fetch dynamic titles from settings
+                        const { data: settings } = await window.supabaseClient.from('site_settings').select('special_deal_title, flash_title_text, sale_section_2_title').eq('id', 1).maybeSingle();
+                        const spTitle = settings?.special_deal_title || 'Special Deal';
+                        const s1Title = settings?.flash_title_text || 'Sale Section 1';
+                        const s2Title = settings?.sale_section_2_title || 'Sale Section 2';
+                        
+                        let notifType = 'product';
+                        let notifTitle = isEditing ? "Product Updated! 🛍️" : "New Product Added! 🛍️";
+                        let notifMsg = `Check out ${productData.title}`;
+                        
+                        // Determine the correct title based on what is currently checked/filled in the form
+                        if (eventName && saleEndDate) {
+                            notifType = 'flash_sale';
+                            notifTitle = `🔥 ${s1Title} Started!`;
+                            notifMsg = `${productData.title} is now in ${s1Title}!`;
+                        } else if (eventName2 && saleEndDate2) {
+                            notifType = 'flash_sale_2';
+                            notifTitle = `🔥 ${s2Title} Started!`;
+                            notifMsg = `${productData.title} is now in ${s2Title}!`;
+                        } else if (document.getElementById('pSpecialDeal').checked) {
+                            notifType = 'special_deal';
+                            notifTitle = `🎁 ${spTitle} Alert!`;
+                            notifMsg = `${productData.title} is now in ${spTitle}!`;
+                        }
+
+                        await window.supabaseClient.from('app_notifications').insert([{
+                            title: notifTitle,
+                            message: notifMsg,
+                            product_slug: productData.slug,
+                            type: notifType
+                        }]);
+                    }
                 } catch (notifError) {
-                    console.warn("Notification send nahi ho saki, lekin product save ho gaya hai:", notifError);
+                    console.warn("Notification send error:", notifError);
                 }
             }
 
