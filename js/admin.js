@@ -69,7 +69,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (error) alert("Error: " + error.message);
         else {
             alert("Special Deal Design updated successfully!");
-            // Auto Close Box
             document.getElementById('specialDealContainer').style.display = 'none';
             const btn = document.getElementById('toggleSpecialDealBtn');
             btn.textContent = 'Show Settings';
@@ -98,7 +97,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (error) alert("Error: " + error.message);
         else {
             alert("Sale Section 1 Design updated successfully!");
-            // Auto Close Box
             document.getElementById('flashSaleContainer').style.display = 'none';
             const btn = document.getElementById('toggleFlashSaleBtn');
             btn.textContent = 'Show Settings';
@@ -127,7 +125,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (error) alert("Error: " + error.message);
         else {
             alert("Sale Section 2 Design updated successfully!");
-            // Auto Close Box
             document.getElementById('sale2Container').style.display = 'none';
             const btn = document.getElementById('toggleSale2Btn');
             btn.textContent = 'Show Settings';
@@ -173,12 +170,12 @@ function setupToggleAddProduct() {
         toggleBtn.addEventListener('click', () => {
             if (formContainer.style.display === 'none') {
                 formContainer.style.display = 'block'; 
-                toggleBtn.textContent = 'Product Form'; 
-                toggleBtn.style.background = '#EF4444';
+                toggleBtn.textContent = 'Hide Product Form'; 
+                toggleBtn.style.background = '#EF4444'; // Red
             } else {
                 formContainer.style.display = 'none'; 
-                toggleBtn.textContent = 'Product Form'; 
-                toggleBtn.style.background = '#e11d48';
+                toggleBtn.textContent = 'Show Product Form'; 
+                toggleBtn.style.background = '#16a34a'; // Green
             }
         });
     }
@@ -485,7 +482,9 @@ window.editProduct = async function(id) {
         const formContainer = document.getElementById('addProductContainer');
         const toggleBtn = document.getElementById('toggleAddProductBtn');
         if (formContainer && formContainer.style.display === 'none') {
-            formContainer.style.display = 'block'; toggleBtn.textContent = 'Product Form'; toggleBtn.style.background = '#EF4444';
+            formContainer.style.display = 'block'; 
+            toggleBtn.textContent = 'Hide Product Form'; 
+            toggleBtn.style.background = '#EF4444';
         }
         document.getElementById('productForm').scrollIntoView({ behavior: 'smooth' });
         
@@ -672,8 +671,8 @@ function setupProductForm() {
             // Auto Close Product Form
             document.getElementById('addProductContainer').style.display = 'none';
             const toggleBtn = document.getElementById('toggleAddProductBtn');
-            toggleBtn.textContent = 'Product Form';
-            toggleBtn.style.background = '#e11d48';
+            toggleBtn.textContent = 'Show Product Form'; 
+            toggleBtn.style.background = '#16a34a'; // Green
 
             await loadStats(); await loadProductsList();
         } catch (err) { 
