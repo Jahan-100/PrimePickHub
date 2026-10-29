@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
     document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
     
-    // ⭐ Save App Download Setting ⭐
+    // Save App Download Setting
     document.getElementById('saveAppSettingsBtn')?.addEventListener('click', async function() {
         const isLive = document.getElementById('appDownloadStatusToggle').checked;
         const { error } = await window.supabaseClient.from('site_settings').update({ 
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         finally { btn.innerText = originalText; btn.disabled = false; }
     });
 
-    // ⭐ Cancel Offer Button Logic ⭐
+    // Cancel Offer Button Logic
     document.getElementById('cancelOfferBtn')?.addEventListener('click', () => {
         document.getElementById('pEventName').value = '';
         document.getElementById('pSaleEndDate').value = '';
@@ -390,7 +390,7 @@ window.editProduct = async function(id) {
         document.getElementById('pFeatured').checked = p.is_featured || false; document.getElementById('pTrending').checked = p.is_trending || false;
         document.getElementById('pSpecialDeal').checked = p.is_special_deal || false;
         
-        // ⭐ Edit karte waqt notification checkbox default off rakhein taake baar baar notification na jaye
+        // Edit karte waqt notification checkbox default off rakhein taake baar baar notification na jaye
         document.getElementById('pSendNotification').checked = false;
 
         const varContainer = document.getElementById('variationsContainer'); varContainer.innerHTML = '';
@@ -409,7 +409,6 @@ window.editProduct = async function(id) {
         }
         document.getElementById('productForm').scrollIntoView({ behavior: 'smooth' });
         
-        // Remove any existing error borders when opening for edit
         document.querySelectorAll('.error-input').forEach(el => el.classList.remove('error-input'));
 
     } catch (err) { alert("Error loading product: " + err.message); }
@@ -453,9 +452,9 @@ function setupProductForm() {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // ⭐ FIX: Prevent Double Submission (Dobara click hone se rokne ke liye) ⭐
-        const saveBtn = document.getElementById('saveBtn');
-        if (saveBtn.disabled) return; 
+        // ⭐ FIX 1: Prevent Double Submission (Dobara click hone se rokne ke liye) ⭐
+        if (window.isSavingProduct) return;
+        window.isSavingProduct = true;
 
         let hasError = false;
         let firstErrorElement = null;
@@ -484,9 +483,11 @@ function setupProductForm() {
                 firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 setTimeout(() => { firstErrorElement.focus(); }, 500);
             }
+            window.isSavingProduct = false; // Lock open if validation fails
             return;
         }
 
+        const saveBtn = document.getElementById('saveBtn');
         const originalBtnText = saveBtn.innerText;
         saveBtn.innerText = "Saving... Please wait"; saveBtn.disabled = true;
 
@@ -549,7 +550,7 @@ function setupProductForm() {
             if (price > 0 || variations.length === 0) { mainOfferData.product_id = productId; await window.supabaseClient.from('affiliate_offers').insert([mainOfferData]); }
             if (variations.length > 0) { variations.forEach(v => v.product_id = productId); const { error: varErr } = await window.supabaseClient.from('affiliate_offers').insert(variations); if (varErr) throw varErr; }
             
-            // ⭐ Notification Send karne ka logic ⭐
+            // Notification Send karne ka logic
             const sendNotif = document.getElementById('pSendNotification').checked;
             if (sendNotif) {
                 const isFlash = eventName && saleEndDate;
@@ -592,7 +593,9 @@ function setupProductForm() {
         } catch (err) { 
             alert('Error: ' + (err.message || 'Check RLS policies and Storage Bucket.')); 
         } finally {
-            saveBtn.innerText = originalBtnText; saveBtn.disabled = false;
+            saveBtn.innerText = originalBtnText; 
+            saveBtn.disabled = false;
+            window.isSavingProduct = false; // ⭐ Lock open ⭐
         }
     });
 
