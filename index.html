@@ -30,7 +30,7 @@
     <link rel="canonical" href="https://www.primepickhub.com/">
     <link rel="icon" type="image/png" href="assets/favicon.png?v=4">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="css/main.css?v=14">
+    <link rel="stylesheet" href="css/main.css?v=15">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,800;0,900;1,800&family=Roboto:wght@400;700;900&family=Oswald:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Lobster&family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
@@ -76,7 +76,12 @@
 
     <header class="header">
         <div class="nav-main">
-            <a href="index.html" class="logo">PrimePick<span>Hub</span></a>
+            <!-- ⭐ Yahan Blog ka button add kiya gaya hai ⭐ -->
+            <div style="display:flex; align-items:center; gap:20px;">
+                <a href="index.html" class="logo">PrimePick<span>Hub</span></a>
+                <a href="blog.html" style="text-decoration:none; font-weight:600; color:var(--primary); font-size:1rem;">Blog</a>
+            </div>
+
             <div style="display: flex; align-items: center; flex: 1; justify-content: flex-end;">
                 <div class="notif-wrapper" onclick="toggleNotifPanel(event)">
                     <i class="fa-solid fa-bell notif-bell"></i>
