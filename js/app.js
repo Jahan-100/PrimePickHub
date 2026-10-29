@@ -53,7 +53,7 @@ function renderProductCard(product) {
     const hasLink = Boolean(id);
     const productUrl = hasLink ? `/product/${id}` : '#';
     const disabledAttr = hasLink ? '' : 'aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:0.6;"';
-    const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png';
+    const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png?v=2';
     
     const r = Number(product.rating);
     const rating = Number.isFinite(r) && r > 0 && r <= 5 ? r : null;
@@ -142,7 +142,7 @@ function renderProductCard(product) {
 function renderFlashCard(product, section = 1) {
     const title = escapeHTML(product.title || 'Untitled');
     const productUrl = `/product/${encodeURIComponent(product.slug)}`;
-    const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png';
+    const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png?v=2';
     
     const primaryOffer = getPrimaryOffer(product) || {};
     const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
@@ -199,7 +199,7 @@ function renderProductsGrid(products, grid) {
     }
     grid.innerHTML = products.map(renderProductCard).join('');
     grid.querySelectorAll('img.product-thumb').forEach(img => {
-        img.addEventListener('error', function () { this.src = 'assets/icon-192.png'; }, { once: true });
+        img.addEventListener('error', function () { this.src = 'assets/icon-192.png?v=2'; }, { once: true });
     });
 }
 
@@ -497,7 +497,7 @@ async function loadHomepageProducts() {
                     
                     return `
                         <a href="/product/${encodeURIComponent(p.slug)}" class="special-deal-card">
-                            <div class="img-box"><img src="${p.image_url || '/assets/icon-192.png'}" alt="${p.title}"></div>
+                            <div class="img-box"><img src="${p.image_url || '/assets/icon-192.png?v=2'}" alt="${p.title}"></div>
                             <div class="info-box">
                                 ${priceDisplay}
                                 <div class="title">${p.title}</div>
@@ -525,8 +525,7 @@ function handleSearch() {
     }
 }
 
-// ⭐ NOTIFICATION LOGIC (Read/Unread & Delete System) ⭐
-
+// NOTIFICATION LOGIC
 let userDeletedNotifs = JSON.parse(localStorage.getItem('deleted_notifs') || '[]');
 let userReadNotifs = JSON.parse(localStorage.getItem('read_notifs') || '[]'); 
 let currentNotifs = [];
@@ -642,15 +641,15 @@ window.clearAllNotifs = function(e) {
     renderNotifications();
 }
 
-// ⭐ NOTIFICATION LOGIC ENDS HERE ⭐
+// NOTIFICATION LOGIC ENDS HERE
 
 function showBrowserNotification(title, body) {
     if (!("Notification" in window)) return;
     if (Notification.permission === "granted") {
-        new Notification(title, { body: body, icon: '/assets/icon-192.png' });
+        new Notification(title, { body: body, icon: '/assets/icon-192.png?v=2' });
     } else if (Notification.permission !== "denied") {
         Notification.requestPermission().then(permission => {
-            if (permission === "granted") new Notification(title, { body: body, icon: '/assets/icon-192.png' });
+            if (permission === "granted") new Notification(title, { body: body, icon: '/assets/icon-192.png?v=2' });
         });
     }
 }
