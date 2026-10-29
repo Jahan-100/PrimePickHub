@@ -328,7 +328,6 @@ async function loadHomepageProducts() {
             spTitle.style.fontStyle = settings.title_font_style || 'normal';
         }
         
-        // ⭐ Update: Flash Sale Title aur Ending Soon Button font match karne ka logic
         if (settings && document.getElementById('flashSaleTitle')) {
             const flTitle = document.getElementById('flashSaleTitle');
             const endingSoonBtn = document.querySelector('.blinking-ending-soon');
@@ -489,15 +488,14 @@ function renderNotifications() {
         badge.innerText = currentNotifs.length;
     }
 
-    // ⭐ UPDATE: Notification par click karne se product page khulega
+    // ⭐ UPDATE: Notification par click karne se handleNotifClick chalega jo expiry check karega
     list.innerHTML = currentNotifs.map(n => {
-        const productUrl = n.product_slug ? `/product/${n.product_slug}` : '#';
-        const clickAttr = n.product_slug ? `onclick="window.location.href='${productUrl}'"` : '';
         const cursorStyle = n.product_slug ? 'cursor: pointer;' : '';
+        const clickAttr = n.product_slug ? `onclick="handleNotifClick('${n.id}', '${n.product_slug}', '${n.type || 'product'}')"` : '';
         
         return `
         <div class="notif-item" id="notif-${n.id}" ${clickAttr} style="${cursorStyle}">
-            <div>
+            <div style="flex: 1;">
                 <h4>${escapeHTML(n.title)}</h4>
                 <p>${escapeHTML(n.message)}</p>
                 <span style="font-size: 0.65rem; color: #94A3B8;">${new Date(n.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
@@ -508,10 +506,49 @@ function renderNotifications() {
 }
 
 window.deleteNotif = function(id) {
-    userDeletedNotifs.push(id);
-    localStorage.setItem('deleted_notifs', JSON.stringify(userDeletedNotifs));
+    if(!userDeletedNotifs.includes(id)) {
+        userDeletedNotifs.push(id);
+        localStorage.setItem('deleted_notifs', JSON.stringify(userDeletedNotifs));
+    }
     currentNotifs = currentNotifs.filter(n => n.id !== id);
     renderNotifications();
+}
+
+// ⭐ NAYA FUNCTION: Notification click, Badge count kam karna aur Expire check karna
+window.handleNotifClick = async function(id, slug, type) {
+    // 1. Sab se pehle notification ko read mark karein (top ka badge count kam hoga)
+    window.deleteNotif(id);
+
+    if (!slug) return;
+
+    // 2. Database se product ki current state fetch karein
+    const { data: product } = await window.supabaseClient
+        .from('products')
+        .select('is_available, sale_end_date, is_special_deal')
+        .eq('slug', slug)
+        .maybeSingle();
+
+    if (!product || product.is_available === false) {
+        alert("Yeh product ab available nahi hai.");
+        return; // Product page par redirect nahi hoga
+    }
+
+    // 3. Flash Sale expire check
+    if (type === 'flash_sale' && product.sale_end_date) {
+        if (new Date(product.sale_end_date) < new Date()) {
+            alert("Yeh Flash Sale ab khatam ho chuki hai.");
+            return; // Redirect nahi hoga
+        }
+    }
+
+    // 4. Special Deal remove check
+    if (type === 'special_deal' && product.is_special_deal === false) {
+        alert("Yeh Special Deal ab khatam ho chuki hai.");
+        return; // Redirect nahi hoga
+    }
+
+    // 5. Sab theek hai, product page par le jayen
+    window.location.href = `/product/${slug}`;
 }
 
 window.clearAllNotifs = function(e) {
@@ -605,7 +642,7 @@ function setupRealtime() {
         .channel('schema-db-changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
             triggerRealtimeUpdate(payload);
-            if (payload.eventType === 'INSERT') showBrowserNotification("New Product Added! 🛍️", payload.new.title);
+            // ⭐ UPDATE: Yahan se Auto Notification hata diya gaya hai. Ab notification sirf Admin Panel se aayega.
         })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'affiliate_offers' }, triggerRealtimeUpdate)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'site_settings' }, triggerRealtimeUpdate)
