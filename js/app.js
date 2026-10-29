@@ -261,6 +261,13 @@ window.scrollFlash2 = function(direction) {
     else container.scrollLeft += scrollAmount;
 };
 
+window.scrollSpecial = function(direction) {
+    const container = document.getElementById('specialDealScroll');
+    const scrollAmount = 300;
+    if (direction === 'left') container.scrollLeft -= scrollAmount;
+    else container.scrollLeft += scrollAmount;
+};
+
 window.selectCategory = async function(catSlug, element) {
     document.querySelectorAll('.category-item').forEach(el => el.classList.remove('active'));
     if (element) element.classList.add('active');
@@ -282,9 +289,11 @@ window.selectCategory = async function(catSlug, element) {
             const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false);
             const now = new Date();
             const normalProducts = allProducts.filter(p => {
-                const endDate = p.sale_end_date ? new Date(p.sale_end_date) : null;
+                const endDate1 = p.sale_end_date ? new Date(p.sale_end_date) : null;
                 const endDate2 = p.sale_end_date_2 ? new Date(p.sale_end_date_2) : null;
-                return !(endDate && endDate > now) && !(endDate2 && endDate2 > now);
+                const inSec1 = (endDate1 && endDate1 > now);
+                const inSec2 = (endDate2 && endDate2 > now);
+                return !inSec1 && !inSec2;
             });
             renderProductsGrid(normalProducts, grid);
         } else {
@@ -410,11 +419,14 @@ async function loadHomepageProducts() {
             const endDate1 = p.sale_end_date ? new Date(p.sale_end_date) : null;
             const endDate2 = p.sale_end_date_2 ? new Date(p.sale_end_date_2) : null;
             
-            if (endDate1 && endDate1 > now) {
-                flashSaleProducts1.push(p);
-            } else if (endDate2 && endDate2 > now) {
-                flashSaleProducts2.push(p);
-            } else {
+            let inSec1 = (endDate1 && endDate1 > now);
+            let inSec2 = (endDate2 && endDate2 > now);
+
+            if (inSec1) flashSaleProducts1.push(p);
+            if (inSec2) flashSaleProducts2.push(p);
+            
+            // Agar kisi bhi sale section mein nahi hai, toh normal products mein daalein
+            if (!inSec1 && !inSec2) {
                 normalProducts.push(p);
             }
         });
@@ -711,10 +723,8 @@ function triggerRealtimeUpdate(payload) {
 async function setupRealtime() {
     if (!window.supabaseClient) return;
 
-    // Pehle purane saare connections ko properly band (await) karein 
     await window.supabaseClient.removeAllChannels();
 
-    // Sirf tab naya connection banayein jab purana khatam ho jaye 
     window.supabaseClient
         .channel('schema-db-changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
