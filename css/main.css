@@ -17,7 +17,6 @@ html, body {
     width: 100%;
 }
 
-/* ⭐ Trendy Mesh Gradient Background ⭐ */
 body {
     background-color: #f8fafc;
     background-image: 
@@ -262,7 +261,7 @@ body {
 .left-arrow { left: 2px; }
 .right-arrow { right: 2px; }
 
-/* Flash Sale Split Section */
+/* Flash Sale Split Section (Sale Section 1) */
 .flash-sale-split { display: flex; flex-direction: column; position: relative; background: #fff; border-radius: 12px; overflow: hidden; margin-bottom: 20px; min-height: 245px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #E2E8F0; }
 .flash-sale-split::before { content: ""; position: absolute; inset: 0; background-image: url('https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'); background-size: cover; background-position: center; opacity: 0.15; z-index: 0; }
 .flash-sale-left { position: relative; z-index: 2; width: 100%; padding: 15px 25px 10px 25px; display: flex; flex-direction: column; align-items: flex-start; background: linear-gradient(135deg, #1e1b4b, #4c1d95); color: #fff; }
@@ -280,6 +279,24 @@ body {
 .flash-card .info-box { flex: 2; padding: 8px; }
 .flash-card .price { font-size: 1.05rem; color: #DC2626; }
 .flash-card .card-timer { background: #FEF2F2; color: #DC2626; font-size: 0.8rem; font-weight: 900; padding: 4px 6px; border-radius: 4px; margin-top: 5px; text-align: center; border: 1px solid #FECACA; }
+
+/* ⭐ SALE SECTION 2 - MODERN & STYLISH DESIGN ⭐ */
+.flash-sale-split-2 { display: flex; flex-direction: column; position: relative; background: #f0fdf4; border-radius: 12px; overflow: hidden; margin-bottom: 20px; min-height: 245px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid #6ee7b7; }
+.flash-sale-split-2::before { content: ""; position: absolute; inset: 0; background-image: url('https://images.unsplash.com/photo-1607082349566-187342175e2f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'); background-size: cover; background-position: center; opacity: 0.15; z-index: 0; }
+.flash-sale-2-left { position: relative; z-index: 2; width: 100%; padding: 15px 25px 10px 25px; display: flex; flex-direction: column; align-items: flex-start; background: linear-gradient(135deg, #047857, #064e3b); color: #fff; }
+.flash-sale-2-left h2 { font-family: 'Poppins', sans-serif; font-weight: 900; font-size: 2rem; line-height: 1.1; margin: 0; color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.4); }
+.flash-sale-2-left .explore-btn { color: #047857; }
+.flash-sale-2-left .explore-btn:hover { background: #fff; color: #064e3b; }
+.flash-sale-2-left .marquee-content span { color: #d1fae5; }
+.flash-sale-2-left .blinking-ending-soon { background: #f59e0b; color: #451a03; animation: blink2Colors 1.5s infinite; }
+@keyframes blink2Colors { 0% { background-color: #f59e0b; color: #451a03; transform: scale(1); } 50% { background-color: #10b981; color: #fff; transform: scale(1.05); } 100% { background-color: #f59e0b; color: #451a03; transform: scale(1); } }
+
+.flash-sale-2-right { flex: 1; padding: 15px 25px; position: relative; z-index: 1; display: flex; align-items: center; background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(5px); overflow: hidden; }
+.flash-sale-2-right .special-deal-card { border: 1px solid #a7f3d0; box-shadow: 0 4px 15px rgba(4, 120, 87, 0.1); }
+.flash-sale-2-right .special-deal-card .price { color: #047857; }
+.flash-sale-2-right .scroll-arrow:hover { background: #10b981; color: #fff; border-color: #10b981; }
+.flash-sale-2-right .card-timer { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+/* ⭐ SALE SECTION 2 DESIGN ENDS ⭐ */
 
 /* Footer */
 .footer { background: var(--primary); color: #CBD5E1; padding: 40px 5% 20px; margin-top: 30px; font-size: 0.9rem; text-align: center; }
@@ -332,15 +349,15 @@ body {
     .special-deal-card .price { font-size: 0.85rem; }
     .special-deal-card .title { font-size: 0.65rem; }
 
-    .flash-sale-split { min-height: auto; }
-    .flash-sale-left { padding: 15px 10px; align-items: center; text-align: center; }
+    .flash-sale-split, .flash-sale-split-2 { min-height: auto; }
+    .flash-sale-left, .flash-sale-2-left { padding: 15px 10px; align-items: center; text-align: center; }
     .flash-title-area { flex-direction: column; gap: 8px !important; justify-content: center !important; }
-    .flash-sale-left h2 { font-size: 1.5rem !important; text-align: center; }
+    .flash-sale-left h2, .flash-sale-2-left h2 { font-size: 1.5rem !important; text-align: center; }
     .blinking-ending-soon { font-size: 1rem !important; padding: 3px 12px !important; }
     .flash-controls { flex-direction: column; gap: 10px; width: 100%; align-items: center; }
     .flash-marquee-container { width: 100%; -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%); mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%); }
     .marquee-content span { font-size: 0.85rem; }
-    .flash-sale-right { padding: 10px 15px 15px 15px; align-items: center; justify-content: flex-start; }
+    .flash-sale-right, .flash-sale-2-right { padding: 10px 15px 15px 15px; align-items: center; justify-content: flex-start; }
     .flash-card { min-width: 160px; max-width: 160px; height: 230px; }
 
     .category-item { min-width: 60px; }
