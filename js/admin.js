@@ -639,7 +639,6 @@ function setupProductForm() {
             const sendNotif = document.getElementById('pSendNotification').checked;
             if (sendNotif) {
                 try {
-                    // STRICT DUPLICATE PREVENTION
                     const tenSecondsAgo = new Date(Date.now() - 10000).toISOString();
                     const { data: existingNotifs } = await window.supabaseClient
                         .from('app_notifications')
@@ -650,13 +649,8 @@ function setupProductForm() {
                     if (existingNotifs && existingNotifs.length > 0) {
                         console.log("Duplicate notification blocked (Recent one exists).");
                     } else {
-                        // Fetch ALL settings to ensure no column name mismatch
                         const { data: settings } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).maybeSingle();
                         
-                        // ⭐ DEBUG LOG ⭐
-                        console.log("1. Settings Fetched from DB:", settings);
-
-                        // ⭐ FIX: Bulletproof Title Extraction
                         let spTitle = 'Special Deal';
                         let s1Title = 'Sale Section 1';
                         let s2Title = 'Sale Section 2';
@@ -666,9 +660,6 @@ function setupProductForm() {
                             if (settings.flash_title_text) s1Title = settings.flash_title_text;
                             if (settings.sale_section_2_title) s2Title = settings.sale_section_2_title;
                         }
-                        
-                        // ⭐ DEBUG LOG ⭐
-                        console.log("2. Extracted Titles:", { spTitle, s1Title, s2Title });
                         
                         let notifType = 'product';
                         let notifTitle = isEditing ? "Product Updated! 🛍️" : "New Product Added! 🛍️";
@@ -692,8 +683,6 @@ function setupProductForm() {
                             notifTitle = `🎁 ${spTitle} Alert!`;
                             notifMsg = `${productData.title} is now in ${spTitle}!`;
                         }
-
-                        console.log("3. Final Notification to Insert:", { notifTitle, notifMsg, notifType });
 
                         await window.supabaseClient.from('app_notifications').insert([{
                             title: notifTitle,
@@ -799,14 +788,13 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     }
 
-    // Edit Blog (Needs global functions to be accessed from onclick)
+    // Edit Blog
     window.editBlog = async function(id, title, slug, imageUrl) {
         document.getElementById('bId').value = id;
         document.getElementById('bTitle').value = title;
         document.getElementById('bSlug').value = slug;
         document.getElementById('bImg').value = imageUrl;
         
-        // Fetch content
         const { data } = await window.supabaseClient.from('blogs').select('content_html').eq('id', id).single();
         if(data) document.getElementById('bContent').value = data.content_html;
 
