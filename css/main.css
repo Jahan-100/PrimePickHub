@@ -309,7 +309,6 @@ body {
 .close-popup { position: absolute; top: 10px; right: 15px; font-size: 1.8rem; color: #94A3B8; cursor: pointer; transition: color 0.2s; line-height: 1; }
 .close-popup:hover { color: #EF4444; }
 
-/* ⭐ IMAGE GLITCH FIXES (Hardware Acceleration & Image Rendering) ⭐ */
 .splash-logo-img {
     width: 120px; height: 120px; border-radius: 30px; margin-bottom: 25px; 
     box-shadow: 0 15px 35px rgba(0,0,0,0.3), 0 0 0 5px rgba(255,255,255,0.1); 
@@ -341,6 +340,97 @@ body {
 .floating-app-btn:hover { transform: scale(1.1); }
 .pulse-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--accent); animation: pulseRing 1.5s infinite cubic-bezier(0.215, 0.61, 0.355, 1); }
 @keyframes pulseRing { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
+
+/* ⭐ NEW: AD SLOTS & COOKIE BANNER STYLES ⭐ */
+.ad-slot {
+    width: 100%;
+    min-height: 120px;
+    background: #fff;
+    border: 1px dashed #CBD5E1;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 20px;
+}
+.ad-fallback-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    width: 100%;
+    padding: 15px;
+}
+.ad-fallback-container .product-card {
+    box-shadow: none;
+    border: 1px solid #F1F5F9;
+    border-radius: 8px;
+}
+.ad-fallback-container .product-card .card-img-wrap { height: 140px; }
+.ad-fallback-container .product-card .card-body { padding: 10px; }
+.ad-fallback-container .product-card .card-title { font-size: 0.85rem; }
+.ad-fallback-container .product-card .btn-check-price { padding: 6px; font-size: 0.8rem; }
+
+.cookie-banner {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    background: #1E1B4B;
+    color: #fff;
+    padding: 15px 20px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
+    z-index: 999999;
+    border: 1px solid #334155;
+}
+.cookie-content p {
+    font-size: 0.85rem;
+    margin: 0;
+    color: #E2E8F0;
+}
+.cookie-buttons {
+    display: flex;
+    gap: 10px;
+}
+.btn-accept {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-accept:hover { background: #e0482d; }
+
+@media (max-width: 768px) {
+    .ad-fallback-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .cookie-banner {
+        bottom: 70px;
+        flex-direction: column;
+        text-align: center;
+        padding: 15px;
+    }
+    .cookie-buttons {
+        width: 100%;
+        justify-content: center;
+    }
+    .btn-accept {
+        width: 100%;
+    }
+}
 
 /* ================= MOBILE RESPONSIVE ================= */
 @media (max-width: 768px) {
