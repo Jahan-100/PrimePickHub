@@ -1,6 +1,9 @@
 // js/floating-widgets.js
 document.addEventListener('DOMContentLoaded', () => {
     
+    // Agar page par pehle se contact form mojood hai (jaise index.html mein), toh naya mat banao
+    if (document.getElementById('floatingContactBtn')) return;
+
     // 1. Inject HTML for Floating Elements
     const floatingHTML = `
         <!-- FLOATING CONTACT FORM -->
@@ -41,7 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
         <button id="floatingAppIcon" class="floating-app-btn" onclick="toggleAppPopup()" style="display: none;">
             <img src="/assets/icon-192.png?v=4" alt="App Icon">
             <span class="btn-text">For App</span>
-            <span class="pulse-ring"></span>
         </button>
 
         <!-- APP POPUP MODAL -->
@@ -153,16 +155,4 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-
-    // Show/Hide App Button based on settings (check if app.js didn't do it)
-    setTimeout(() => {
-        const appBtn = document.getElementById('floatingAppIcon');
-        if (appBtn && appBtn.style.display === 'none') {
-            // Just show it on pages where app.js isn't running to hide it
-            if (typeof window.supabaseClient === 'undefined' || !document.getElementById('productGrid')) {
-                appBtn.style.display = 'flex';
-            }
-        }
-    }, 1000);
-
 });
