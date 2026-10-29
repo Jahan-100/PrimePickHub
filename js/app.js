@@ -453,7 +453,7 @@ function handleSearch() {
     }
 }
 
-// ⭐ UPDATED NOTIFICATION LOGIC STARTS HERE ⭐
+// ⭐ NOTIFICATION LOGIC (Read/Unread & Delete System) ⭐
 
 let userDeletedNotifs = JSON.parse(localStorage.getItem('deleted_notifs') || '[]');
 let userReadNotifs = JSON.parse(localStorage.getItem('read_notifs') || '[]'); // Read mark track karne ke liye
@@ -583,7 +583,7 @@ window.clearAllNotifs = function(e) {
     renderNotifications();
 }
 
-// ⭐ UPDATED NOTIFICATION LOGIC ENDS HERE ⭐
+// ⭐ NOTIFICATION LOGIC ENDS HERE ⭐
 
 function showBrowserNotification(title, body) {
     if (!("Notification" in window)) return;
@@ -661,8 +661,12 @@ function triggerRealtimeUpdate(payload) {
     realtimeTimeout = setTimeout(() => { loadHomepageProducts(); }, 500); 
 }
 
+// ⭐ FIXED REALTIME: Prevents duplicate connections and multiple notifications ⭐
 function setupRealtime() {
     if (!window.supabaseClient) return;
+
+    // Remove all existing channels to prevent multiple listeners if script runs again
+    window.supabaseClient.removeAllChannels();
 
     window.supabaseClient
         .channel('schema-db-changes')
