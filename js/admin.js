@@ -389,6 +389,9 @@ window.editProduct = async function(id) {
         document.getElementById('pDesc').value = p.description || ''; document.getElementById('pReview').value = p.review_html || '';
         document.getElementById('pFeatured').checked = p.is_featured || false; document.getElementById('pTrending').checked = p.is_trending || false;
         document.getElementById('pSpecialDeal').checked = p.is_special_deal || false;
+        
+        // ⭐ Edit karte waqt notification checkbox default off rakhein taake baar baar notification na jaye
+        document.getElementById('pSendNotification').checked = false;
 
         const varContainer = document.getElementById('variationsContainer'); varContainer.innerHTML = '';
         const variations = p.affiliate_offers?.slice(1) || []; 
@@ -420,11 +423,9 @@ window.deleteProduct = async function(id) {
 function setupProductForm() {
     const form = document.getElementById('productForm'); const cancelBtn = document.getElementById('cancelEditBtn'); if (!form) return;
     
-    // ⭐ Add input listeners to remove red border when user types ⭐
     form.querySelectorAll('input, textarea, select').forEach(el => {
         el.addEventListener('input', function() {
             if (this.classList.contains('error-input')) {
-                // For Image URL, check if file is uploaded OR text is entered
                 if (this.id === 'pImg') {
                     const fileInput = document.getElementById('pImgFile');
                     if (this.value.trim() || fileInput.files.length > 0) {
@@ -446,20 +447,18 @@ function setupProductForm() {
 
         document.getElementById('formTitle').innerText = "Add New Product"; document.getElementById('saveBtn').innerText = "Save Product"; cancelBtn.style.display = "none";
         
-        // Clear all error borders on cancel
         document.querySelectorAll('.error-input').forEach(el => el.classList.remove('error-input'));
     });
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // ⭐ VALIDATION LOGIC WITH SCROLL & FOCUS ⭐
         let hasError = false;
         let firstErrorElement = null;
         const requiredInputs = form.querySelectorAll('[required]');
         
         requiredInputs.forEach(input => {
-            input.classList.remove('error-input'); // reset first
+            input.classList.remove('error-input');
             if (!input.value.trim()) {
                 input.classList.add('error-input');
                 hasError = true;
@@ -467,7 +466,6 @@ function setupProductForm() {
             }
         });
 
-        // Special check for Primary Image (URL or Upload)
         const imgUrl = document.getElementById('pImg');
         const imgFile = document.getElementById('pImgFile');
         if (!imgUrl.value.trim() && imgFile.files.length === 0) {
@@ -479,13 +477,11 @@ function setupProductForm() {
         if (hasError) {
             alert('Please fill all the required fields marked with a red star (*).');
             if (firstErrorElement) {
-                // Scroll to the first error field and focus it
                 firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 setTimeout(() => { firstErrorElement.focus(); }, 500);
             }
-            return; // Stop form submission
+            return;
         }
-        // ⭐ VALIDATION LOGIC END ⭐
 
         const saveBtn = document.getElementById('saveBtn');
         const originalBtnText = saveBtn.innerText;
@@ -550,6 +546,35 @@ function setupProductForm() {
             if (price > 0 || variations.length === 0) { mainOfferData.product_id = productId; await window.supabaseClient.from('affiliate_offers').insert([mainOfferData]); }
             if (variations.length > 0) { variations.forEach(v => v.product_id = productId); const { error: varErr } = await window.supabaseClient.from('affiliate_offers').insert(variations); if (varErr) throw varErr; }
             
+            // ⭐ NAYA CODE: Notification Send karne ka logic ⭐
+            const sendNotif = document.getElementById('pSendNotification').checked;
+            if (sendNotif) {
+                const isFlash = eventName && saleEndDate;
+                const isSpecial = document.getElementById('pSpecialDeal').checked;
+                
+                let notifType = 'product';
+                let notifTitle = isEditing ? "Product Updated! 🛍️" : "New Product Added! 🛍️";
+                let notifMsg = `Check out ${productData.title}`;
+                
+                if (isFlash) {
+                    notifType = 'flash_sale';
+                    notifTitle = "🔥 Flash Sale Started!";
+                    notifMsg = `${productData.title} is now on Flash Sale!`;
+                } else if (isSpecial) {
+                    notifType = 'special_deal';
+                    notifTitle = "🎁 New Special Deal!";
+                    notifMsg = `${productData.title} is now in Special Deals!`;
+                }
+
+                await window.supabaseClient.from('app_notifications').insert([{
+                    title: notifTitle,
+                    message: notifMsg,
+                    product_slug: productData.slug,
+                    type: notifType
+                }]);
+            }
+            // ⭐ NAYA CODE END ⭐
+
             alert(`"${productData.title}" saved successfully!`); 
             form.reset(); document.getElementById('variationsContainer').innerHTML = '';
             document.getElementById('pId').value = ''; document.getElementById('formTitle').innerText = "Add New Product"; cancelBtn.style.display = "none";
