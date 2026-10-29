@@ -516,16 +516,26 @@ function setupProductForm() {
         });
     });
 
+    // ⭐ CANCEL EDIT BUTTON LOGIC (Auto Close Form) ⭐
     cancelBtn.addEventListener('click', () => {
-        form.reset(); document.getElementById('variationsContainer').innerHTML = '';
+        form.reset(); 
+        document.getElementById('variationsContainer').innerHTML = '';
         document.getElementById('pId').value = ''; document.getElementById('pOfferId').value = '';
         
         document.getElementById('pImgFile').value = ''; document.getElementById('pGalleryFile').value = '';
         document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen';
 
-        document.getElementById('formTitle').innerText = "Add / Update Product"; document.getElementById('saveBtn').innerText = "Save Product"; cancelBtn.style.display = "none";
+        document.getElementById('formTitle').innerText = "Add / Update Product"; 
+        document.getElementById('saveBtn').innerText = "Save Product"; 
+        cancelBtn.style.display = "none";
         
         document.querySelectorAll('.error-input').forEach(el => el.classList.remove('error-input'));
+
+        // Form container ko close karein aur button ko wapis Green "Show Product Form" banayein
+        document.getElementById('addProductContainer').style.display = 'none';
+        const toggleBtn = document.getElementById('toggleAddProductBtn');
+        toggleBtn.textContent = 'Show Product Form';
+        toggleBtn.style.background = '#16a34a';
     });
 
     form.addEventListener('submit', async (e) => {
