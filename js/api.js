@@ -41,7 +41,8 @@ const API = {
         return {
             featured: data.filter(p => p.is_featured),
             trending: data.filter(p => p.is_trending),
-            latest: data.slice(0, 12)
+            // ⭐ 100+ Products fetch karne ke liye limit barha di hai ⭐
+            latest: data.slice(0, 100) 
         };
     },
 
@@ -82,7 +83,6 @@ const API = {
     },
 
     // ---------- CLICK TRACKING ----------
-    // Fire-and-forget: window.open keeps current page alive, so no navigation kills this
     recordClick(productId, store, subId) {
         if (!window.supabaseClient || !productId) return;
         window.supabaseClient.from('clicks').insert([{
