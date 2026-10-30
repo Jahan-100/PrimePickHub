@@ -469,6 +469,7 @@ window.editProduct = async function(id) {
         document.getElementById('pSpecialDeal').checked = p.is_special_deal || false;
         
         document.getElementById('pSendNotification').checked = false;
+        document.getElementById('pWriteBlog').checked = false; // Edit ke waqt blog trigger off rahe
 
         const varContainer = document.getElementById('variationsContainer'); varContainer.innerHTML = '';
         const variations = p.affiliate_offers?.slice(1) || []; 
@@ -477,7 +478,7 @@ window.editProduct = async function(id) {
         document.getElementById('pImgFile').value = ''; document.getElementById('pGalleryFile').value = '';
         document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen';
 
-        document.getElementById('formTitle').innerText = "Add / Update Product"; document.getElementById('saveBtn').innerText = "Update Product"; document.getElementById('cancelEditBtn').style.display = "block";
+        document.getElementById('formTitle').innerText = "Edit Product"; document.getElementById('saveBtn').innerText = "Update Product"; document.getElementById('cancelEditBtn').style.display = "block";
         
         const formContainer = document.getElementById('addProductContainer');
         const toggleBtn = document.getElementById('toggleAddProductBtn');
@@ -636,6 +637,30 @@ function setupProductForm() {
             if (price > 0 || variations.length === 0) { mainOfferData.product_id = productId; await window.supabaseClient.from('affiliate_offers').insert([mainOfferData]); }
             if (variations.length > 0) { variations.forEach(v => v.product_id = productId); const { error: varErr } = await window.supabaseClient.from('affiliate_offers').insert(variations); if (varErr) throw varErr; }
             
+            // ⭐ AI BLOG GENERATION TRIGGER ⭐
+            const writeBlog = document.getElementById('pWriteBlog').checked;
+            if (writeBlog && !isEditing) {
+                try {
+                    console.log("Triggering AI Blog Generation...");
+                    fetch('/api/generate-blog', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            productId: productId,
+                            title: productData.title,
+                            description: productData.description,
+                            storeName: mainOfferData.store_name,
+                            affiliateUrl: mainOfferData.affiliate_url,
+                            imageUrl: productData.image_url
+                        })
+                    }).then(res => res.json()).then(data => console.log("AI Blog Result:", data));
+                    
+                    alert("Product saved! AI is writing the blog in the background. Check 'Blogs List' in 1-2 minutes.");
+                } catch (err) {
+                    console.warn("AI Blog trigger failed:", err);
+                }
+            }
+
             const sendNotif = document.getElementById('pSendNotification').checked;
             if (sendNotif) {
                 try {
@@ -701,6 +726,7 @@ function setupProductForm() {
             document.getElementById('pId').value = ''; document.getElementById('formTitle').innerText = "Add / Update Product"; cancelBtn.style.display = "none";
             primaryFileInput.value = ''; galleryFileInput.value = '';
             document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen';
+            document.getElementById('pWriteBlog').checked = false; // Reset checkbox
 
             document.getElementById('addProductContainer').style.display = 'none';
             const toggleBtn = document.getElementById('toggleAddProductBtn');
@@ -721,7 +747,6 @@ function setupProductForm() {
 }
 
 // ⭐ BLOG MANAGEMENT LOGIC ⭐
-
 document.addEventListener('DOMContentLoaded', () => {
     if (!document.getElementById('blogForm')) return;
 
@@ -732,31 +757,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const blogForm = document.getElementById('blogForm');
     const cancelBtn = document.getElementById('cancelBlogBtn');
 
-    // Toggle Form (Teal / Red)
     if (toggleFormBtn && formContainer) {
         toggleFormBtn.addEventListener('click', () => {
             if (formContainer.style.display === 'none') {
                 formContainer.style.display = 'block';
                 toggleFormBtn.textContent = 'Hide Blog Form';
-                toggleFormBtn.style.background = '#EF4444'; // Red
+                toggleFormBtn.style.background = '#EF4444';
             } else {
                 formContainer.style.display = 'none';
                 toggleFormBtn.textContent = 'Show Blog Form';
-                toggleFormBtn.style.background = '#0d9488'; // Teal
+                toggleFormBtn.style.background = '#0d9488';
             }
         });
     }
 
-    // Toggle List (Purple / Red)
     if (toggleListBtn && listContainer) {
         toggleListBtn.addEventListener('click', () => {
             if (listContainer.style.display === 'none') {
                 listContainer.style.display = 'block';
-                toggleListBtn.style.background = '#EF4444'; // Red
+                toggleListBtn.style.background = '#EF4444';
                 loadBlogList();
             } else {
                 listContainer.style.display = 'none';
-                toggleListBtn.style.background = '#9333ea'; // Purple
+                toggleListBtn.style.background = '#9333ea';
             }
         });
     }
@@ -773,19 +796,26 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        tbody.innerHTML = blogs.map(b => `
-            <tr>
-                <td style="text-align: center;"><img src="${b.image_url || '/assets/icon-192.png?v=4'}" style="width:50px;height:40px;object-fit:cover;border-radius:4px;"></td>
-                <td>${b.title}</td>
-                <td style="text-align:center;">${new Date(b.created_at).toLocaleDateString()}</td>
-                <td>
-                    <div class="action-btns">
-                        <button class="btn-edit" onclick="editBlog('${b.id}', '${b.title}', '${b.slug}', '${b.image_url || ''}')">Edit</button>
-                        <button class="btn-delete" onclick="deleteBlog('${b.id}')">Delete</button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
+        tbody.innerHTML = blogs.map(b => {
+            const isPublished = b.is_published !== false;
+            const statusBadge = isPublished ? '' : `<span style="background:#F59E0B; color:white; padding:2px 6px; border-radius:4px; font-size:0.65rem; margin-left:5px;">DRAFT</span>`;
+            
+            let actionBtns = `<button class="btn-edit" onclick="editBlog('${b.id}', '${b.title.replace(/'/g, "\\'")}', '${b.slug}', '${b.image_url || ''}')">Edit</button>
+                            <button class="btn-delete" onclick="deleteBlog('${b.id}')">Delete</button>`;
+            
+            if (!isPublished) {
+                actionBtns = `<button onclick="publishBlog('${b.id}')" style="background:#10B981; color:white; padding:6px 12px; border:none; border-radius:4px; cursor:pointer; font-size:0.85rem; font-weight:bold;">Publish</button>` + actionBtns;
+            }
+
+            return `
+                <tr>
+                    <td style="text-align: center;"><img src="${b.image_url || '/assets/icon-192.png?v=4'}" style="width:50px;height:40px;object-fit:cover;border-radius:4px;"></td>
+                    <td>${b.title} ${statusBadge}</td>
+                    <td style="text-align:center;">${new Date(b.created_at).toLocaleDateString()}</td>
+                    <td><div class="action-btns">${actionBtns}</div></td>
+                </tr>
+            `;
+        }).join('');
     }
 
     window.editBlog = async function(id, title, slug, imageUrl) {
@@ -814,6 +844,16 @@ document.addEventListener('DOMContentLoaded', () => {
         else loadBlogList();
     }
 
+    window.publishBlog = async function(id) {
+        if (!confirm("Publish this blog to the live website?")) return;
+        try {
+            const { error } = await window.supabaseClient.from('blogs').update({ is_published: true }).eq('id', id);
+            if (error) throw error;
+            alert("Blog published successfully!");
+            loadBlogList();
+        } catch (err) { alert("Error: " + err.message); }
+    }
+
     cancelBtn.addEventListener('click', () => {
         blogForm.reset();
         document.getElementById('bId').value = '';
@@ -837,7 +877,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 title: document.getElementById('bTitle').value.trim(),
                 slug: document.getElementById('bSlug').value.trim(),
                 image_url: document.getElementById('bImg').value.trim() || null,
-                content_html: document.getElementById('bContent').value.trim()
+                content_html: document.getElementById('bContent').value.trim(),
+                is_published: true // Manual blogs directly published
             };
 
             if (id) {
