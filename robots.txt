@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /admin.html
 
-Sitemap: https://www.primepickhub.com/sitemap.xml
+Sitemap: https://primepickhub.vercel.app/sitemap.xml
