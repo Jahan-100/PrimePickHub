@@ -30,7 +30,6 @@ body {
     background-attachment: fixed;
     color: var(--text-dark);
     line-height: 1.5;
-    transition: padding-left 0.3s ease;
 }
 
 /* Header & Glassmorphism */
@@ -447,7 +446,7 @@ body {
 /* ⭐ LEFT SIDE AD SLOT (Fixed logic for 1300px+ and no overlap) ⭐ */
 .left-ad-container {
     position: fixed;
-    left: 15px;
+    left: 10px; /* Ad ko bilkul kinare par laya gaya hai */
     top: 50%;
     transform: translateY(-50%);
     width: 120px;
@@ -466,8 +465,9 @@ body {
     .left-ad-container {
         display: flex !important;
     }
-    body {
-        padding-left: 140px; /* Jaga banayi gayi hai ad ke liye */
+    /* Content ko 150px right shift kiya hai taake ad ke sath pass pass rahe */
+    .container, .nav-main {
+        padding-left: 150px !important; 
     }
 }
 
