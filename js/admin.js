@@ -798,7 +798,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tbody.innerHTML = blogs.map(b => {
             const isPublished = b.is_published !== false;
-            const statusBadge = isPublished ? '' : `<span style="background:#F59E0B; color:white; padding:2px 6px; border-radius:4px; font-size:0.65rem; margin-left:5px;">DRAFT</span>`;
+            const statusBadge = isPublished ? '' : `<span style="background:#F59E0B; color:white; padding:2px 6px; border-radius:4px; font-size:0.65rem; margin-left:5px;">🤖 AI DRAFT</span>`;
             
             let actionBtns = `<button class="btn-edit" onclick="editBlog('${b.id}', '${b.title.replace(/'/g, "\\'")}', '${b.slug}', '${b.image_url || ''}')">Edit</button>
                             <button class="btn-delete" onclick="deleteBlog('${b.id}')">Delete</button>`;
