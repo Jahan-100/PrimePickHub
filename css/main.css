@@ -220,21 +220,20 @@ body {
 
 /* Product Grid & Cards */
 .container { padding: 20px 5%; max-width: 1400px; margin: 0 auto; }
-/* Card size 30% reduced (240px -> 180px) */
 .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; margin-top: 10px; }
 
 .product-card { background: var(--card-bg); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow); transition: transform 0.2s; display: flex; flex-direction: column; }
 .product-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
-.card-img-wrap { height: 200px; position: relative; overflow: hidden; background: #fff; }
-/* Image fits full card */
+/* Card Image Height Reduced */
+.card-img-wrap { height: 130px; position: relative; overflow: hidden; background: #fff; }
 .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; padding: 0; transition: transform 0.3s; }
 .card-badge { position: absolute; top: 10px; left: 10px; background: var(--accent); color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; z-index: 2; }
-/* Extra space removed */
-.card-body { padding: 10px; display: flex; flex-direction: column; gap: 4px; flex: 1; justify-content: flex-start; }
-.card-title { font-size: 0.9rem; font-weight: 600; color: var(--text-dark); text-decoration: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 2px; }
-.card-rating { font-size: 0.8rem; color: #F59E0B; margin-bottom: 2px; }
-.card-timer { background: #FEF2F2; color: #DC2626; font-size: 0.75rem; font-weight: 800; padding: 5px 8px; border-radius: 4px; margin-bottom: 5px; text-align: center; border: 1px solid #FECACA; display: flex; align-items: center; justify-content: center; gap: 5px; }
-.btn-check-price { display: block; width: 100%; border: none; background: var(--primary); color: #fff; padding: 8px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; transition: opacity 0.2s; margin-top: auto; }
+/* Extra Space Removed */
+.card-body { padding: 8px; display: flex; flex-direction: column; gap: 4px; flex: 1; justify-content: flex-start; }
+.card-title { font-size: 0.8rem; font-weight: 600; color: var(--text-dark); text-decoration: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 2px; line-height: 1.2; }
+.card-rating { font-size: 0.75rem; color: #F59E0B; margin-bottom: 2px; }
+.card-timer { background: #FEF2F2; color: #DC2626; font-size: 0.7rem; font-weight: 800; padding: 4px 6px; border-radius: 4px; margin-bottom: 5px; text-align: center; border: 1px solid #FECACA; display: flex; align-items: center; justify-content: center; gap: 5px; }
+.btn-check-price { display: block; width: 100%; border: none; background: var(--primary); color: #fff; padding: 6px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; transition: opacity 0.2s; margin-top: auto; }
 .btn-check-price:hover { opacity: 0.9; }
 
 /* Special Deal Section */
@@ -446,7 +445,7 @@ body {
     background: #e0482d;
 }
 
-/* ⭐ LEFT SIDE AD SLOT ⭐ */
+/* ⭐ LEFT SIDE AD SLOT (Fixed overlap) ⭐ */
 .left-ad-container {
     position: fixed;
     left: 15px;
@@ -463,8 +462,8 @@ body {
     padding: 5px 0;
 }
 
-/* Breakpoint changed to 1300px so it shows on standard screens */
-@media (max-width: 1300px) {
+/* Sirf 1500px se bari screen par show hoga taake overlap na ho */
+@media (max-width: 1500px) {
     .left-ad-container {
         display: none !important;
     }
@@ -725,11 +724,11 @@ body {
 
     .product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 15px; }
     .product-card { border-radius: 8px; }
-    .card-img-wrap { height: 150px; }
+    .card-img-wrap { height: 120px; }
     .card-badge { font-size: 0.65rem; padding: 2px 6px; }
     .card-body { padding: 8px; gap: 3px; }
-    .card-title { font-size: 0.8rem; }
-    .card-rating { font-size: 0.75rem; margin-bottom: 2px; }
+    .card-title { font-size: 0.75rem; }
+    .card-rating { font-size: 0.7rem; margin-bottom: 2px; }
     .card-timer { font-size: 0.65rem; padding: 3px 5px; margin-bottom: 5px; }
     .btn-check-price { padding: 6px; font-size: 0.75rem; }
 
