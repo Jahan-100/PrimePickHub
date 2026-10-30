@@ -4,10 +4,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const blogGrid = document.getElementById('blogGrid');
     const artTitle = document.getElementById('artTitle');
 
-    // ⭐ BLOG LIST PAGE LOGIC ⭐
+    // ⭐ BLOG LIST PAGE LOGIC (Only shows published) ⭐
     if (blogGrid) {
         blogGrid.innerHTML = '<p style="grid-column:1/-1;text-align:center;">Loading articles...</p>';
-        const { data: blogs, error } = await window.supabaseClient.from('blogs').select('*').order('created_at', { ascending: false });
+        const { data: blogs, error } = await window.supabaseClient
+            .from('blogs')
+            .select('*')
+            .eq('is_published', true) // <--- Drafts Hide
+            .order('created_at', { ascending: false });
         
         if (error || !blogs || blogs.length === 0) {
             blogGrid.innerHTML = '<p style="grid-column:1/-1;text-align:center;">No articles published yet.</p>';
@@ -28,17 +32,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         `).join('');
     }
 
-    // ⭐ ARTICLE PAGE LOGIC ⭐
+    // ⭐ ARTICLE PAGE LOGIC (Only shows published) ⭐
     if (artTitle) {
         const params = new URLSearchParams(window.location.search);
         const slug = params.get('slug');
         if (!slug) { window.location.href = '/blog.html'; return; }
 
-        const { data: blog, error } = await window.supabaseClient.from('blogs').select('*').eq('slug', slug).single();
+        const { data: blog, error } = await window.supabaseClient
+            .from('blogs')
+            .select('*')
+            .eq('slug', slug)
+            .eq('is_published', true) // <--- Drafts Hide
+            .single();
         
         if (error || !blog) {
-            artTitle.innerText = "Article Not Found";
-            document.getElementById('artContent').innerHTML = "<p>This article might have been removed.</p>";
+            artTitle.innerText = "Article Not Found or Not Published";
+            document.getElementById('artContent').innerHTML = "<p>This article might have been removed or is still a draft.</p>";
             return;
         }
 
@@ -52,7 +61,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             img.style.display = 'block';
         }
         
-        // Render HTML content safely
         document.getElementById('artContent').innerHTML = blog.content_html;
     }
 });
