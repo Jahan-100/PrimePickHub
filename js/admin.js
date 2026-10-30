@@ -637,28 +637,11 @@ function setupProductForm() {
             if (price > 0 || variations.length === 0) { mainOfferData.product_id = productId; await window.supabaseClient.from('affiliate_offers').insert([mainOfferData]); }
             if (variations.length > 0) { variations.forEach(v => v.product_id = productId); const { error: varErr } = await window.supabaseClient.from('affiliate_offers').insert(variations); if (varErr) throw varErr; }
             
-            // ⭐ AI BLOG GENERATION TRIGGER ⭐
+            // ⭐ QUEUE SYSTEM TRIGGER (Background AI) ⭐
             const writeBlog = document.getElementById('pWriteBlog').checked;
             if (writeBlog && !isEditing) {
-                try {
-                    console.log("Triggering AI Blog Generation...");
-                    fetch('/api/generate-blog', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            productId: productId,
-                            title: productData.title,
-                            description: productData.description,
-                            storeName: mainOfferData.store_name,
-                            affiliateUrl: mainOfferData.affiliate_url,
-                            imageUrl: productData.image_url
-                        })
-                    }).then(res => res.json()).then(data => console.log("AI Blog Result:", data));
-                    
-                    alert("Product saved! AI is writing the blog in the background. Check 'Blogs List' in 1-2 minutes.");
-                } catch (err) {
-                    console.warn("AI Blog trigger failed:", err);
-                }
+                await window.supabaseClient.from('products').update({ blog_status: 'pending' }).eq('id', productId);
+                alert("Product saved! AI will write the blog in the background. You can safely close this tab or turn off your device.");
             }
 
             const sendNotif = document.getElementById('pSendNotification').checked;
@@ -721,12 +704,12 @@ function setupProductForm() {
                 }
             }
 
-            alert(`"${productData.title}" saved successfully!`); 
+            if (!writeBlog) alert(`"${productData.title}" saved successfully!`); 
             form.reset(); document.getElementById('variationsContainer').innerHTML = '';
             document.getElementById('pId').value = ''; document.getElementById('formTitle').innerText = "Add / Update Product"; cancelBtn.style.display = "none";
             primaryFileInput.value = ''; galleryFileInput.value = '';
             document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen';
-            document.getElementById('pWriteBlog').checked = false; // Reset checkbox
+            document.getElementById('pWriteBlog').checked = false;
 
             document.getElementById('addProductContainer').style.display = 'none';
             const toggleBtn = document.getElementById('toggleAddProductBtn');
