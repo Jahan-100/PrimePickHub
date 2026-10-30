@@ -332,12 +332,12 @@ body {
 .btn-app-download { background: var(--accent); color: #fff; border: none; padding: 12px 20px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; width: 100%; transition: background 0.2s; }
 .btn-app-download:hover { background: #e0482d; }
 
-/* ⭐ FLOATING CONTACT BUTTON (Updated for exact size & position) ⭐ */
+/* ⭐ FLOATING CONTACT BUTTON ⭐ */
 .floating-contact-btn {
     position: fixed;
-    bottom: 50%; /* Starts exactly at center */
+    bottom: 50%;
     right: 0;
-    margin-bottom: 10px; /* Gap above center */
+    margin-bottom: 10px;
     transform: none;
     background: var(--accent);
     color: #fff;
@@ -367,7 +367,7 @@ body {
 .contact-form-panel {
     position: fixed;
     top: 50%;
-    right: -350px; /* Hidden off-screen */
+    right: -350px;
     transform: translateY(-50%);
     width: 320px;
     background: #fff;
@@ -443,6 +443,30 @@ body {
     background: #e0482d;
 }
 
+/* ⭐ LEFT SIDE AD SLOT (Naya Code) ⭐ */
+.left-ad-container {
+    position: fixed;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 120px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border: 1px solid #E2E8F0;
+    z-index: 99990;
+    display: flex;
+    justify-content: center;
+    padding: 5px 0;
+}
+
+/* Jab screen choti ho, toh ad ko hide kar dein */
+@media (max-width: 1600px) {
+    .left-ad-container {
+        display: none !important;
+    }
+}
+
 /* ⭐ AD SLOTS (12 CARDS, 6x2 Desktop, 3x4 Mobile) ⭐ */
 .ad-slot {
     width: 100%;
@@ -459,7 +483,7 @@ body {
 }
 .ad-fallback-container {
     display: grid;
-    grid-template-columns: repeat(6, 1fr); /* Desktop 6 columns */
+    grid-template-columns: repeat(6, 1fr);
     gap: 12px;
     width: 100%;
     padding: 15px;
@@ -609,7 +633,7 @@ body {
 
 @media (max-width: 768px) {
     .ad-fallback-container {
-        grid-template-columns: repeat(3, 1fr); /* Mobile 3 columns */
+        grid-template-columns: repeat(3, 1fr);
         gap: 8px;
         padding: 10px;
     }
@@ -630,7 +654,7 @@ body {
     }
     
     .cookie-banner {
-        bottom: 80px; /* Shift up to avoid app btn */
+        bottom: 80px;
         flex-direction: column;
         text-align: center;
         padding: 15px;
