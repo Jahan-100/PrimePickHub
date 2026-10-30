@@ -30,7 +30,7 @@
     <link rel="canonical" href="https://www.primepickhub.com/">
     <link rel="icon" type="image/png" href="assets/favicon.png?v=4">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="css/main.css?v=21">
+    <link rel="stylesheet" href="css/main.css?v=22">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,800;0,900;1,800&family=Roboto:wght@400;700;900&family=Oswald:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Lobster&family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
@@ -58,56 +58,6 @@
         .splash-loader { width: 45px; height: 45px; border: 4px solid rgba(255,255,255,0.2); border-top-color: #FF5A3C; border-right-color: #FF5A3C; border-radius: 50%; animation: spin 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite; box-shadow: 0 0 20px rgba(255, 90, 60, 0.4); }
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* ⭐ FORCED FIX FOR APP BUTTON (Targeting ID directly to bypass cache) ⭐ */
-        #floatingAppIcon {
-            position: fixed !important;
-            top: calc(50% + 60px) !important; /* Right below Contact Us */
-            right: 0 !important;
-            left: auto !important;
-            bottom: auto !important;
-            transform: translateY(-50%) !important;
-            background: #10b981 !important;
-            color: #fff !important;
-            border: none !important;
-            border-radius: 20px 0 0 20px !important;
-            padding: 10px 8px !important;
-            display: none;
-            flex-direction: column !important;
-            align-items: center !important;
-            gap: 6px !important;
-            cursor: pointer !important;
-            box-shadow: -2px 2px 10px rgba(0,0,0,0.2) !important;
-            z-index: 999995 !important;
-            width: 45px !important;
-            height: auto !important;
-            margin: 0 !important;
-        }
-        #floatingAppIcon img {
-            width: 24px !important;
-            height: 24px !important;
-            max-width: 24px !important;
-            max-height: 24px !important;
-            object-fit: contain !important;
-            border-radius: 4px !important;
-            background: #fff !important;
-            padding: 2px !important;
-            margin: 0 !important;
-        }
-        #floatingAppIcon span {
-            writing-mode: vertical-rl !important;
-            text-orientation: mixed !important;
-            font-size: 0.75rem !important;
-            font-weight: bold !important;
-            letter-spacing: 1px !important;
-            color: #fff !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            line-height: 1 !important;
-        }
-        @media (max-width: 768px) {
-            #floatingAppIcon { top: calc(40% + 70px) !important; }
-        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -323,10 +273,50 @@
         </div>
     </div>
 
-    <!-- ID 'floatingAppIcon' is strictly styled in HEAD -->
-    <button id="floatingAppIcon" onclick="toggleAppPopup()" style="display: none;">
-        <img src="assets/icon-192.png?v=4" alt="App">
-        <span>App</span>
+    <!-- ⭐ FLOATING APP BUTTON WITH INLINE STYLES (100% CACHE PROOF) ⭐ -->
+    <button id="floatingAppIcon" onclick="toggleAppPopup()" 
+            style="display: none; 
+                   position: fixed !important; 
+                   top: calc(50% + 65px) !important; 
+                   right: 0 !important; 
+                   left: auto !important; 
+                   bottom: auto !important; 
+                   transform: translateY(-50%) !important; 
+                   background-color: #10b981 !important; 
+                   color: white !important; 
+                   border: none !important; 
+                   border-radius: 20px 0 0 20px !important; 
+                   padding: 10px 8px !important; 
+                   flex-direction: column !important; 
+                   align-items: center !important; 
+                   gap: 6px !important; 
+                   cursor: pointer !important; 
+                   box-shadow: -2px 2px 10px rgba(0,0,0,0.2) !important; 
+                   z-index: 999995 !important; 
+                   width: 45px !important; 
+                   height: auto !important; 
+                   margin: 0 !important;">
+        
+        <img src="assets/icon-192.png?v=4" alt="App" 
+             style="width: 24px !important; 
+                    height: 24px !important; 
+                    max-width: 24px !important; 
+                    max-height: 24px !important; 
+                    object-fit: contain !important; 
+                    border-radius: 4px !important; 
+                    background: white !important; 
+                    padding: 2px !important; 
+                    margin: 0 !important;">
+        
+        <span style="writing-mode: vertical-rl !important; 
+                     text-orientation: mixed !important; 
+                     font-size: 0.75rem !important; 
+                     font-weight: bold !important; 
+                     letter-spacing: 1px !important; 
+                     color: white !important; 
+                     margin: 0 !important; 
+                     padding: 0 !important; 
+                     line-height: 1 !important;">App</span>
     </button>
 
     <script src="js/config.js?v=6"></script>
