@@ -1,4 +1,3 @@
-// api/generate-blog.js
 const { createClient } = require('@supabase/supabase-js');
 
 module.exports = async function handler(req, res) {
@@ -11,7 +10,6 @@ module.exports = async function handler(req, res) {
 
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-    // ⭐ FREE & RELIABLE AI MODELS (Fallback ke sath) ⭐
     const models = [
         "google/gemini-2.0-flash-lite-preview-02-05:free",
         "meta-llama/llama-3-8b-instruct:free",
@@ -54,7 +52,7 @@ module.exports = async function handler(req, res) {
             if (aiData.choices && aiData.choices[0].message.content) {
                 generatedContent = aiData.choices[0].message.content;
                 usedModel = model;
-                break; // Agar success ho gaya toh loop rok dein
+                break;
             }
         } catch (err) {
             console.warn(`Model ${model} failed, trying next...`);
@@ -65,7 +63,6 @@ module.exports = async function handler(req, res) {
         return res.status(500).json({ error: "All AI models failed. Please try again later." });
     }
 
-    // AI ke output ko clean karein
     const cleanContent = generatedContent.replace(/```html/g, '').replace(/```/g, '').trim();
 
     try {
@@ -76,7 +73,7 @@ module.exports = async function handler(req, res) {
             slug: slug,
             content_html: cleanContent,
             image_url: imageUrl,
-            is_published: false // ⭐ DRAFT MODE ⭐
+            is_published: false // Draft Mode
         }]).select().single();
 
         if (error) throw error;
