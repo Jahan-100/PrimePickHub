@@ -32,6 +32,12 @@ body {
     line-height: 1.5;
 }
 
+/* ⭐ ADMIN PANEL FIX (Taake admin shift na ho) ⭐ */
+.admin-layout {
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+}
+
 /* Header & Glassmorphism */
 .header {
     position: sticky;
@@ -443,10 +449,10 @@ body {
     background: #e0482d;
 }
 
-/* ⭐ LEFT SIDE AD SLOT (Fixed logic for 1300px+ and no overlap) ⭐ */
+/* ⭐ LEFT SIDE AD SLOT (Only on Main Website) ⭐ */
 .left-ad-container {
     position: fixed;
-    left: 10px; /* Ad ko bilkul kinare par laya gaya hai */
+    left: 10px;
     top: 50%;
     transform: translateY(-50%);
     width: 120px;
@@ -455,18 +461,17 @@ body {
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     border: 1px solid #E2E8F0;
     z-index: 99990;
-    display: none; /* Hidden by default */
+    display: none;
     justify-content: center;
     padding: 5px 0;
 }
 
-/* Ab 1300px se bari screen par ad show hogi aur content right shift ho jayega */
+/* Ad aur content shift sirf main website par apply hoga */
 @media (min-width: 1300px) {
     .left-ad-container {
         display: flex !important;
     }
-    /* Content ko 150px right shift kiya hai taake ad ke sath pass pass rahe */
-    .container, .nav-main {
+    .header .nav-main, .container, .newsletter-wrapper, .footer {
         padding-left: 150px !important; 
     }
 }
