@@ -11,55 +11,49 @@ module.exports = async function handler(req, res) {
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
     try {
+        console.log("Starting parallel fetch...");
+
+        // Hum teeno scrapers ko ek sath (parallel) chalayenge taake Vercel timeout na ho
+        const fetchAmazon = fetch(`https://api.apify.com/v2/acts/rel8ble~amazon-bestsellers-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ categoryIds: ["electronics", "fashion", "home"], maxItems: 10 })
+        }).then(r => r.json()).catch(e => { console.warn("Amazon err", e); return []; });
+
+        const fetchAli = fetch(`https://api.apify.com/v2/acts/epctex~aliexpress-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ startUrls: [{ url: "https://www.aliexpress.com/w/wholesale-best-selling.html" }], maxItems: 10 })
+        }).then(r => r.json()).catch(e => { console.warn("Ali err", e); return []; });
+
+        const fetchAlibaba = fetch(`https://api.apify.com/v2/acts/epctex~alibaba-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ keyword: "hot selling products", maxItems: 10 })
+        }).then(r => r.json()).catch(e => { console.warn("Alibaba err", e); return []; });
+
+        // Teeno ka wait karein
+        const [amazonData, aliData, alibabaData] = await Promise.all([fetchAmazon, fetchAli, fetchAlibaba]);
+
         let allRawProducts = [];
 
-        // 1. Amazon (Fetch up to 15)
-        try {
-            const amazonRes = await fetch(`https://api.apify.com/v2/acts/rel8ble~amazon-bestsellers-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ categoryIds: ["electronics", "fashion", "home", "beauty"], maxItems: 15 })
-            });
-            const amazonData = await amazonRes.json();
-            if (Array.isArray(amazonData) && amazonData.length > 0) {
-                allRawProducts = allRawProducts.concat(amazonData.map(p => ({ ...p, source: 'Amazon' })));
-            }
-        } catch (e) { console.warn("Amazon failed", e); }
-
-        // 2. AliExpress (Fetch up to 15)
-        try {
-            const aliRes = await fetch(`https://api.apify.com/v2/acts/epctex~aliexpress-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    startUrls: [{ url: "https://www.aliexpress.com/w/wholesale-best-selling.html" }],
-                    maxItems: 15 
-                })
-            });
-            const aliData = await aliRes.json();
-            if (Array.isArray(aliData) && aliData.length > 0) {
-                allRawProducts = allRawProducts.concat(aliData.map(p => ({ ...p, source: 'AliExpress' })));
-            }
-        } catch (e) { console.warn("AliExpress failed", e); }
-
-        // 3. Alibaba (Fetch up to 15)
-        try {
-            const alibabaRes = await fetch(`https://api.apify.com/v2/acts/epctex~alibaba-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ keyword: "hot selling products", maxItems: 15 })
-            });
-            const alibabaData = await alibabaRes.json();
-            if (Array.isArray(alibabaData) && alibabaData.length > 0) {
-                allRawProducts = allRawProducts.concat(alibabaData.map(p => ({ ...p, source: 'Alibaba' })));
-            }
-        } catch (e) { console.warn("Alibaba failed", e); }
-
-        if (allRawProducts.length === 0) {
-            return res.status(500).json({ error: "No data found from Apify. Check your Apify limits." });
+        if (Array.isArray(amazonData) && amazonData.length > 0) {
+            allRawProducts = allRawProducts.concat(amazonData.map(p => ({ ...p, source: 'Amazon' })));
+        }
+        if (Array.isArray(aliData) && aliData.length > 0) {
+            allRawProducts = allRawProducts.concat(aliData.map(p => ({ ...p, source: 'AliExpress' })));
+        }
+        if (Array.isArray(alibabaData) && alibabaData.length > 0) {
+            allRawProducts = allRawProducts.concat(alibabaData.map(p => ({ ...p, source: 'Alibaba' })));
         }
 
-        // 4. AI Prompt for 15 Items, Mix Platforms, Price, and Category
+        console.log("Total raw products fetched:", allRawProducts.length);
+
+        if (allRawProducts.length === 0) {
+            return res.status(500).json({ error: "No data found. Aapka Apify free plan ka credit khatam ho gaya hai ya actors fail ho rahe hain. Apify dashboard check karein." });
+        }
+
+        // AI Prompt
         const prompt = `You are a JSON-only API. Select exactly 15 top best-selling products for US, UK, Europe markets from this raw data.
         
         CRITICAL RULES:
@@ -83,7 +77,7 @@ module.exports = async function handler(req, res) {
             "rank_position": 1
           }
         ]
-        Raw Data: ${JSON.stringify(allRawProducts.slice(0, 45))}`;
+        Raw Data: ${JSON.stringify(allRawProducts.slice(0, 30))}`;
 
         const freeModels = [
             "google/gemma-4-26b-a4b-it:free", 
@@ -124,7 +118,7 @@ module.exports = async function handler(req, res) {
             return res.status(500).json({ error: "AI failed. Last error: " + lastError });
         }
 
-        // 5. Save to DB (Ignore Duplicates based on asin_or_id)
+        // Save to DB (Ignore Duplicates)
         const insertData = finalProducts.map(p => ({ ...p, status: 'pending' }));
         
         const { error: dbError } = await supabase
