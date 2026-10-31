@@ -30,8 +30,16 @@ function isValidExternalURL(url) { if (typeof url !== 'string') return false; tr
 function isValidURL(url) { if (!url || typeof url !== 'string') return false; try { const p = new URL(url, window.location.origin); return p.protocol === 'http:' || p.protocol === 'https:'; } catch { return false; } }
 function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb; }
 
-function getPrimaryOffer(product) { 
-    if (!product || !Array.isArray(product.affiliate_offers)) return null; 
+// ⭐ SAFE PRODUCT URL HELPER ⭐
+function getProductUrl(product) {
+    if (!product) return '#';
+    if (product.slug) return `/product/${encodeURIComponent(product.slug)}`;
+    if (product.id != null) return `/product.html?id=${encodeURIComponent(product.id)}`;
+    return '#';
+}
+
+function getPrimaryOffer(product) {
+    if (!product || !Array.isArray(product.affiliate_offers)) return null;
     const offers = product.affiliate_offers.filter(o => o && isValidExternalURL(o.affiliate_url));
     const defaultOffer = offers.find(o => !o.variation_name);
     return defaultOffer || offers[0] || null;
@@ -69,18 +77,17 @@ function renderDynamicCategories(allProducts) {
 function renderProductCard(product) {
     if (!product || typeof product !== 'object') return '';
     const title = escapeHTML(product.title || 'Untitled');
-    let id = product.slug ? `${encodeURIComponent(product.slug)}` : (product.id != null ? `id-${encodeURIComponent(product.id)}` : '');
-    const hasLink = Boolean(id);
-    const productUrl = hasLink ? `/product/${id}` : '#';
+    const productUrl = getProductUrl(product);
+    const hasLink = productUrl !== '#';
     const disabledAttr = hasLink ? '' : 'aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:0.6;"';
     const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png?v=4';
-    
+
     const r = Number(product.rating);
     const rating = Number.isFinite(r) && r > 0 && r <= 5 ? r : null;
     const rc = Number(product.reviews_count);
     const reviewCount = Number.isInteger(rc) && rc >= 0 ? rc : 0;
     const ratingText = rating !== null ? `★ ${rating.toFixed(1)} (${reviewCount})` : 'Not yet rated';
-    
+
     let timerHtml = '';
     if (product.sale_end_date) {
         const endDate = new Date(product.sale_end_date).getTime();
@@ -105,23 +112,18 @@ function renderProductCard(product) {
         const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
         const offerCurrency = (primaryOffer.currency || 'USD').toUpperCase();
         const offerSymbol = currencySymbols[offerCurrency] || offerCurrency + ' ';
-        
+
         const basePrice = parseFloat(primaryOffer.price) || 0;
         const salePrice = parseFloat(primaryOffer.sale_price) || 0;
         const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
-        
         let finalBasePrice = basePrice;
         let finalSalePrice = salePrice;
-
         if (commissionRate > 0) {
             finalBasePrice = basePrice + (basePrice * (commissionRate / 100));
-            if (salePrice > 0) {
-                finalSalePrice = salePrice + (salePrice * (commissionRate / 100));
-            }
+            if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100));
         }
-        
-        let priceDisplay = '';
 
+        let priceDisplay = '';
         if (salePrice > 0) {
             priceDisplay = `
                 <div style="margin-bottom:5px; display:flex; align-items:center; gap:8px;">
@@ -161,27 +163,23 @@ function renderProductCard(product) {
 
 function renderFlashCard(product, section = 1) {
     const title = escapeHTML(product.title || 'Untitled');
-    const productUrl = `/product/${encodeURIComponent(product.slug)}`;
+    const productUrl = getProductUrl(product);
     const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png?v=4';
-    
+
     const primaryOffer = getPrimaryOffer(product) || {};
     const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
     const sym = currencySymbols[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
-    
+
     const basePrice = parseFloat(primaryOffer.price) || 0;
     const salePrice = parseFloat(primaryOffer.sale_price) || 0;
     const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
-    
     let finalBasePrice = basePrice;
     let finalSalePrice = salePrice;
-
     if (commissionRate > 0) {
         finalBasePrice = basePrice + (basePrice * (commissionRate / 100));
-        if (salePrice > 0) {
-            finalSalePrice = salePrice + (salePrice * (commissionRate / 100));
-        }
+        if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100));
     }
-    
+
     let priceDisplay = '';
     if (salePrice > 0) {
         priceDisplay = `
@@ -243,7 +241,7 @@ setInterval(() => {
             const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-            if (days > 0) { el.innerHTML = `⏳ ${days}d ${hours}h ${minutes}m`; } 
+            if (days > 0) { el.innerHTML = `⏳ ${days}d ${hours}h ${minutes}m`; }
             else { el.innerHTML = `🔥 ${hours}h ${minutes}m ${seconds}s`; }
         }
     });
@@ -291,15 +289,15 @@ window.scrollSpecial = function(direction) {
 window.selectCategory = async function(catSlug, element) {
     document.querySelectorAll('.category-item').forEach(el => el.classList.remove('active'));
     if (element) element.classList.add('active');
-    
+
     const titleEl = document.getElementById('productSectionTitle');
     const grid = document.getElementById('productGrid');
-    
+
     if (titleEl) {
         const catName = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? (CONFIG.categories.find(c => c.slug === catSlug)?.name || catSlug) : catSlug;
         titleEl.innerHTML = (catSlug === 'all') ? 'For You' : catName;
     }
-    
+
     showGridMessage(grid, 'Loading products...');
 
     try {
@@ -325,19 +323,17 @@ window.selectCategory = async function(catSlug, element) {
     }
 };
 
-// ⭐ Render 12 Small Products inside Ad Slots (Scales to 100+ products) ⭐
 function renderAdFallback(products) {
     const topSlot = document.getElementById('ad-fallback-top');
     const midSlot = document.getElementById('ad-fallback-middle');
 
     if (products && products.length > 0) {
-        // Shuffle and pick 12 random products for ads fallback
         const shuffled = [...products].sort(() => 0.5 - Math.random());
         const selected = shuffled.slice(0, 12);
 
         const html = selected.map(p => {
             const title = escapeHTML(p.title || 'Product');
-            const productUrl = `/product/${encodeURIComponent(p.slug)}`;
+            const productUrl = getProductUrl(p);
             const imageSrc = isValidURL(p.image_url) ? escapeHTML(p.image_url) : 'assets/icon-192.png?v=4';
             const primaryOffer = getPrimaryOffer(p) || {};
             const sym = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' }[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
@@ -366,18 +362,18 @@ async function loadHomepageProducts() {
     const grid = document.getElementById('productGrid');
     const flashScroll = document.getElementById('flashSaleScroll');
     const flashSection = document.getElementById('flashSaleSection');
-    
+
     const flashScroll2 = document.getElementById('flashSaleScroll2');
     const flashSection2 = document.getElementById('flashSaleSection2');
-    
+
     const floatingAppIcon = document.getElementById('floatingAppIcon');
     if (!grid) return;
 
     try {
         if (typeof API === 'undefined' || !API.getHomepageProducts) throw new Error('API missing');
-        
+
         const { data: settings } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).maybeSingle();
-        
+
         if (settings) {
             const showApp = settings.show_app_download !== false;
             const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
@@ -400,7 +396,6 @@ async function loadHomepageProducts() {
         }
 
         if (settings) {
-            // Special Deal Title
             if (document.getElementById('specialDealTitle')) {
                 const spTitle = document.getElementById('specialDealTitle');
                 spTitle.innerText = settings.special_deal_title || 'First order deal';
@@ -410,22 +405,18 @@ async function loadHomepageProducts() {
                 spTitle.style.fontStyle = settings.title_font_style || 'normal';
             }
 
-            // Sale Section 1 Title
             if (document.getElementById('flashSaleTitle')) {
                 const flTitle = document.getElementById('flashSaleTitle');
                 const endingSoonBtn = document.querySelector('#flashSaleSection .blinking-ending-soon');
-
                 const titleFontFamily = settings.flash_title_font_family || 'Poppins, sans-serif';
                 const titleBaseSize = settings.flash_title_font_size || '2rem';
                 const titleFontWeight = settings.flash_title_font_weight || '900';
                 const titleFontStyle = settings.flash_title_font_style || 'normal';
-
                 flTitle.innerText = settings.flash_title_text || 'Sale Section 1';
                 flTitle.style.fontFamily = titleFontFamily;
                 flTitle.style.fontSize = titleBaseSize;
                 flTitle.style.fontWeight = titleFontWeight;
                 flTitle.style.fontStyle = titleFontStyle;
-
                 if (endingSoonBtn) {
                     endingSoonBtn.style.fontFamily = titleFontFamily;
                     endingSoonBtn.style.fontWeight = titleFontWeight;
@@ -435,22 +426,18 @@ async function loadHomepageProducts() {
                 }
             }
 
-            // Sale Section 2 Title
             if (document.getElementById('flashSaleTitle2')) {
                 const flTitle2 = document.getElementById('flashSaleTitle2');
                 const endingSoonBtn2 = document.querySelector('#flashSaleSection2 .blinking-ending-soon');
-
                 const titleFontFamily = settings.sale_section_2_font_family || 'Poppins, sans-serif';
                 const titleBaseSize = settings.sale_section_2_font_size || '2rem';
                 const titleFontWeight = settings.sale_section_2_font_weight || '900';
                 const titleFontStyle = settings.sale_section_2_font_style || 'normal';
-
                 flTitle2.innerText = settings.sale_section_2_title || 'Sale Section 2';
                 flTitle2.style.fontFamily = titleFontFamily;
                 flTitle2.style.fontSize = titleBaseSize;
                 flTitle2.style.fontWeight = titleFontWeight;
                 flTitle2.style.fontStyle = titleFontStyle;
-
                 if (endingSoonBtn2) {
                     endingSoonBtn2.style.fontFamily = titleFontFamily;
                     endingSoonBtn2.style.fontWeight = titleFontWeight;
@@ -466,8 +453,6 @@ async function loadHomepageProducts() {
         const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false);
 
         renderDynamicCategories(allProducts);
-
-        // ⭐ Render Fallback Ads (100+ scaling) ⭐
         renderAdFallback(allProducts);
 
         const now = new Date();
@@ -478,19 +463,13 @@ async function loadHomepageProducts() {
         allProducts.forEach(p => {
             const endDate1 = p.sale_end_date ? new Date(p.sale_end_date) : null;
             const endDate2 = p.sale_end_date_2 ? new Date(p.sale_end_date_2) : null;
-            
             let inSec1 = (endDate1 && endDate1 > now);
             let inSec2 = (endDate2 && endDate2 > now);
-
             if (inSec1) flashSaleProducts1.push(p);
             if (inSec2) flashSaleProducts2.push(p);
-            
-            if (!inSec1 && !inSec2) {
-                normalProducts.push(p);
-            }
+            if (!inSec1 && !inSec2) normalProducts.push(p);
         });
 
-        // Render Sale Section 1
         if (flashSaleProducts1.length > 0) {
             flashSection.style.display = 'flex';
             const exploreBtn = document.querySelector('#flashSaleSection .explore-btn');
@@ -499,13 +478,12 @@ async function loadHomepageProducts() {
                 exploreBtn.href = `search.html?flash=true&event=${encodeURIComponent(currentEventName)}`;
             }
             flashScroll.innerHTML = flashSaleProducts1.map(p => renderFlashCard(p, 1)).join('');
-            startFireworks(); 
+            startFireworks();
         } else {
             flashSection.style.display = 'none';
-            stopFireworks(); 
+            stopFireworks();
         }
 
-        // Render Sale Section 2
         if (flashSaleProducts2.length > 0) {
             flashSection2.style.display = 'flex';
             const exploreBtn2 = document.querySelector('#flashSaleSection2 .explore-btn');
@@ -519,31 +497,25 @@ async function loadHomepageProducts() {
         }
 
         renderProductsGrid(normalProducts, grid);
-        
+
         if (settings) {
             const { data: specialProducts } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').eq('is_special_deal', true).eq('is_available', true);
             const container = document.getElementById('specialDealScroll');
             const section = document.getElementById('specialDealSection');
             if (specialProducts && specialProducts.length > 0) {
-                section.style.display = 'flex'; 
+                section.style.display = 'flex';
                 container.innerHTML = specialProducts.map(p => {
                     const primaryOffer = getPrimaryOffer(p) || {};
                     const sym = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' }[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
-                    
                     const basePrice = parseFloat(primaryOffer.price) || 0;
                     const salePrice = parseFloat(primaryOffer.sale_price) || 0;
                     const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
-                    
                     let finalBasePrice = basePrice;
                     let finalSalePrice = salePrice;
-
                     if (commissionRate > 0) {
                         finalBasePrice = basePrice + (basePrice * (commissionRate / 100));
-                        if (salePrice > 0) {
-                            finalSalePrice = salePrice + (salePrice * (commissionRate / 100));
-                        }
+                        if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100));
                     }
-                    
                     let priceDisplay = '';
                     if (salePrice > 0) {
                         priceDisplay = `<div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
@@ -553,13 +525,12 @@ async function loadHomepageProducts() {
                     } else {
                         priceDisplay = `<div class="price">${sym}${finalBasePrice.toFixed(2)}</div>`;
                     }
-                    
                     return `
-                        <a href="/product/${encodeURIComponent(p.slug)}" class="special-deal-card">
-                            <div class="img-box"><img src="${p.image_url || '/assets/icon-192.png?v=4'}" alt="${p.title}"></div>
+                        <a href="${getProductUrl(p)}" class="special-deal-card">
+                            <div class="img-box"><img src="${p.image_url || '/assets/icon-192.png?v=4'}" alt="${escapeHTML(p.title)}"></div>
                             <div class="info-box">
                                 ${priceDisplay}
-                                <div class="title">${p.title}</div>
+                                <div class="title">${escapeHTML(p.title)}</div>
                             </div>
                         </a>`;
                 }).join('');
@@ -576,7 +547,7 @@ function handleSearch() {
     if (!input) return;
     const q = input.value.trim();
     const cat = select ? select.value : 'all';
-    
+
     if (q) {
         let url = `search.html?q=${encodeURIComponent(q)}`;
         if (cat !== 'all') url += `&cat=${encodeURIComponent(cat)}`;
@@ -586,7 +557,7 @@ function handleSearch() {
 
 // NOTIFICATION LOGIC
 let userDeletedNotifs = JSON.parse(getCookie('deleted_notifs') || '[]');
-let userReadNotifs = JSON.parse(getCookie('read_notifs') || '[]'); 
+let userReadNotifs = JSON.parse(getCookie('read_notifs') || '[]');
 let currentNotifs = [];
 
 window.toggleNotifPanel = function(e) {
@@ -598,7 +569,7 @@ window.toggleNotifPanel = function(e) {
 async function loadNotifications() {
     if (!window.supabaseClient) return;
     const { data, error } = await window.supabaseClient.from('app_notifications').select('*').order('created_at', { ascending: false }).limit(20);
-    
+
     if (!error && data) {
         currentNotifs = data.filter(n => !userDeletedNotifs.includes(n.id));
         renderNotifications();
@@ -632,7 +603,7 @@ function renderNotifications() {
         const clickAttr = n.product_slug ? `onclick="handleNotifClick('${n.id}', '${n.product_slug}', '${n.type || 'product'}')"` : '';
         const isRead = userReadNotifs.includes(n.id);
         const bgStyle = isRead ? 'background: #F8FAFC;' : 'background: #fff;';
-        
+
         return `
         <div class="notif-item" id="notif-${n.id}" ${clickAttr} style="${cursorStyle} ${bgStyle}">
             <div style="flex: 1;">
@@ -649,7 +620,7 @@ window.markAsRead = function(id) {
     if (!userReadNotifs.includes(id)) {
         userReadNotifs.push(id);
         setCookie('read_notifs', JSON.stringify(userReadNotifs), 30);
-        renderNotifications(); 
+        renderNotifications();
     }
 }
 
@@ -745,7 +716,7 @@ window.toggleAppPopup = function() {
     const overlay = document.getElementById('appPopupOverlay');
     const desktopContent = document.getElementById('desktopAppContent');
     const mobileContent = document.getElementById('mobileAppContent');
-    
+
     if (!popup || !overlay) return;
 
     if (popup.style.display === 'none' || popup.style.display === '') {
@@ -782,7 +753,7 @@ function redirectToStore() {
 let realtimeTimeout;
 function triggerRealtimeUpdate(payload) {
     clearTimeout(realtimeTimeout);
-    realtimeTimeout = setTimeout(() => { loadHomepageProducts(); }, 500); 
+    realtimeTimeout = setTimeout(() => { loadHomepageProducts(); }, 500);
 }
 
 async function setupRealtime() {
@@ -799,7 +770,7 @@ async function setupRealtime() {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'site_settings' }, triggerRealtimeUpdate)
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'app_notifications' }, (payload) => {
             console.log("🔔 New Notification Received Realtime!");
-            loadNotifications(); 
+            loadNotifications();
             showBrowserNotification(payload.new.title, payload.new.message);
         })
         .subscribe((status) => {
@@ -812,7 +783,7 @@ async function trackVisitor() {
     let visitorId = getCookie('visitor_id');
     if (!visitorId) {
         visitorId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
-        setCookie('visitor_id', visitorId, 365); 
+        setCookie('visitor_id', visitorId, 365);
     }
     await window.supabaseClient.from('website_visitors').upsert({
         visitor_id: visitorId,
@@ -845,9 +816,9 @@ window.acceptCookies = function() {
 document.addEventListener('DOMContentLoaded', () => {
     trackVisitor();
     trackActiveApp();
-    
+
     loadHomepageProducts();
-    setupRealtime(); 
+    setupRealtime();
     loadNotifications();
 
     if (!getCookie('cookie_consent')) {
@@ -904,12 +875,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (splash) {
             splash.classList.add('hidden');
             document.body.classList.remove('app-loading');
-            setTimeout(() => { splash.style.display = 'none'; }, 800); 
+            setTimeout(() => { splash.style.display = 'none'; }, 800);
         }
     }
     setTimeout(hideSplash, 1500);
-    setTimeout(() => { 
+    setTimeout(() => {
         var splash = document.getElementById('splash-screen');
-        if (splash && !splash.classList.contains('hidden')) hideSplash(); 
+        if (splash && !splash.classList.contains('hidden')) hideSplash();
     }, 3500);
 });
