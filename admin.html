@@ -37,7 +37,7 @@
             overflow-x: hidden;
         }
 
-        /* ⭐ TABLE STYLES FIXED TO FIT BOX ⭐ */
+        /* ⭐ TABLE STYLES & COLUMNS FIXED ⭐ */
         .admin-table { 
             width: 100%; 
             border-collapse: collapse; 
@@ -46,29 +46,50 @@
         }
         .admin-table th, .admin-table td { 
             border: 1px solid #E2E8F0; 
-            padding: 6px 4px; 
+            padding: 8px 5px; 
             vertical-align: middle; 
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             word-wrap: break-word; /* Text wrap hoga */
         }
         .admin-table th { 
             background: #F8FAFC; 
             font-weight: 600; 
             text-align: center !important; 
-            font-size: 0.8rem;
+            font-size: 0.85rem;
+        }
+        .table-img {
+            width: 100%;
+            max-width: 60px; 
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            display: block;
+            margin: 0 auto;
         }
 
-        /* Column Widths (Taake sab kuch perfectly fit ho jaye) */
-        .admin-table th:nth-child(1) { width: 4%; }
-        .admin-table th:nth-child(2) { width: 6%; }
-        .admin-table th:nth-child(3) { width: 30%; text-align: left !important; }
-        .admin-table th:nth-child(4) { width: 8%; }
-        .admin-table th:nth-child(5) { width: 10%; }
-        .admin-table th:nth-child(6) { width: 8%; }
-        .admin-table th:nth-child(7) { width: 8%; }
-        .admin-table th:nth-child(8) { width: 8%; }
-        .admin-table th:nth-child(9) { width: 8%; }
-        .admin-table th:nth-child(10) { width: 10%; }
+        /* Column Widths for Manage Products */
+        #productListContainer .admin-table th:nth-child(1) { width: 10%; } /* Image */
+        #productListContainer .admin-table th:nth-child(2) { width: 50%; text-align: left !important; } /* Title */
+        #productListContainer .admin-table th:nth-child(3) { width: 20%; } /* Price */
+        #productListContainer .admin-table th:nth-child(4) { width: 20%; } /* Actions */
+
+        /* Column Widths for Blog List */
+        #blogListContainer .admin-table th:nth-child(1) { width: 10%; } /* Image */
+        #blogListContainer .admin-table th:nth-child(2) { width: 55%; text-align: left !important; } /* Title */
+        #blogListContainer .admin-table th:nth-child(3) { width: 15%; } /* Date */
+        #blogListContainer .admin-table th:nth-child(4) { width: 20%; } /* Actions */
+
+        /* Column Widths for AI Hunter */
+        #discoveredListContainer .admin-table th:nth-child(1) { width: 5%; }
+        #discoveredListContainer .admin-table th:nth-child(2) { width: 8%; }
+        #discoveredListContainer .admin-table th:nth-child(3) { width: 25%; text-align: left !important; }
+        #discoveredListContainer .admin-table th:nth-child(4) { width: 10%; }
+        #discoveredListContainer .admin-table th:nth-child(5) { width: 10%; }
+        #discoveredListContainer .admin-table th:nth-child(6) { width: 8%; }
+        #discoveredListContainer .admin-table th:nth-child(7) { width: 8%; }
+        #discoveredListContainer .admin-table th:nth-child(8) { width: 8%; }
+        #discoveredListContainer .admin-table th:nth-child(9) { width: 8%; }
+        #discoveredListContainer .admin-table th:nth-child(10) { width: 10%; }
 
         .action-btns { display: flex; justify-content: center; gap: 4px; flex-wrap: wrap; }
         .btn-edit { background: #3B82F6; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem; }
@@ -129,29 +150,11 @@
             border-radius: 6px;
         }
 
-        /* Hide Native Scrollbar Arrows */
-        .table-scroll-wrapper::-webkit-scrollbar-button {
-            display: none;
-            height: 0;
-            width: 0;
-        }
-
-        /* Custom Vertical Scrollbar styling */
-        .table-scroll-wrapper::-webkit-scrollbar {
-            width: 14px; 
-        }
-        .table-scroll-wrapper::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-left: 1px solid #E2E8F0;
-        }
-        .table-scroll-wrapper::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 0;
-            border: 2px solid #f1f5f9;
-        }
-        .table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
+        .table-scroll-wrapper::-webkit-scrollbar-button { display: none; height: 0; width: 0; }
+        .table-scroll-wrapper::-webkit-scrollbar { width: 14px; }
+        .table-scroll-wrapper::-webkit-scrollbar-track { background: #f1f5f9; border-left: 1px solid #E2E8F0; }
+        .table-scroll-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 0; border: 2px solid #f1f5f9; }
+        .table-scroll-wrapper::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
         /* ⭐ Arrows exactly ON the scrollbar track ⭐ */
         .scroll-ctrl-btn {
@@ -172,10 +175,7 @@
             padding: 0;
             line-height: 1;
         }
-        .scroll-ctrl-btn:hover { 
-            background: #cbd5e1; 
-            color: #0f172a;
-        }
+        .scroll-ctrl-btn:hover { background: #cbd5e1; color: #0f172a; }
         .scroll-up { top: 1px; }
         .scroll-down { bottom: 1px; }
 
@@ -218,6 +218,17 @@
                     <div class="stat-card card-clicks"><p>Affiliate Clicks</p><h3 id="statClicks">0</h3></div>
                     <div class="stat-card card-visitors"><p>Total Website Visitors</p><h3 id="statVisitors">0</h3></div>
                     <div class="stat-card card-installs"><p>Active App Installs</p><h3 id="statAppInstalls">0</h3></div>
+                </div>
+
+                <!-- ⭐ APP DOWNLOAD SETTINGS (MOVED TO TOP) ⭐ -->
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 20px; padding: 8px 12px; border-radius: 8px; display: inline-flex; flex-direction: column; gap: 2px; width: 100%; max-width: 500px;">
+                    <h3 style="margin: 0; color: #166534; font-size: 1rem; font-weight: 700; line-height: 1.2;">App Download Popup Settings</h3>
+                    <p style="margin: 0; font-size: 0.8rem; color: #15803d; line-height: 1.2;">(Uncheck to hide QR popup and corner button)</p>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: #1E1B4B; margin-top: 2px; line-height: 1.2;">
+                        <input type="checkbox" id="appDownloadStatusToggle" style="width: 16px; height: 16px; margin: 0; cursor: pointer;">
+                        Show App Popup & Floating Button (Live)
+                    </label>
+                    <button type="button" id="saveAppSettingsBtn" style="width: auto; padding: 5px 12px; background: #16a34a; color: white; border: none; border-radius: 4px; font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 5px; box-shadow: 0 2px 4px rgba(22,163,74,0.2); align-self: flex-start;">Update Settings</button>
                 </div>
 
                 <div class="admin-card card-add-product" style="margin-bottom: 20px;">
@@ -359,16 +370,6 @@
                             </div>
                         </form>
                     </div>
-                </div>
-
-                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 20px; padding: 8px 12px; border-radius: 8px; display: inline-flex; flex-direction: column; gap: 2px;">
-                    <h3 style="margin: 0; color: #166534; font-size: 1rem; font-weight: 700; line-height: 1.2;">App Download Popup Settings</h3>
-                    <p style="margin: 0; font-size: 0.8rem; color: #15803d; line-height: 1.2;">(Uncheck to hide QR popup and corner button)</p>
-                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: #1E1B4B; margin-top: 2px; line-height: 1.2;">
-                        <input type="checkbox" id="appDownloadStatusToggle" style="width: 16px; height: 16px; margin: 0; cursor: pointer;">
-                        Show App Popup & Floating Button (Live)
-                    </label>
-                    <button type="button" id="saveAppSettingsBtn" style="width: auto; padding: 5px 12px; background: #16a34a; color: white; border: none; border-radius: 4px; font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 5px; box-shadow: 0 2px 4px rgba(22,163,74,0.2); align-self: flex-start;">Update Settings</button>
                 </div>
 
                 <div class="admin-card" style="background: #fdf4ff; border: 1px solid #fbcfe8; margin-bottom: 20px;">
@@ -625,7 +626,6 @@
                             <button type="button" id="scrollDownBtn" class="scroll-ctrl-btn scroll-down">▼</button>
                             
                             <div class="table-scroll-wrapper">
-                                <!-- Min-width hata di hai taake table box mein fit ho jaye -->
                                 <table class="admin-table" style="margin-top: 0;">
                                     <thead>
                                         <tr>
