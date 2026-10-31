@@ -84,17 +84,31 @@
             background: #94a3b8;
         }
 
-        /* Scroll Arrows (Fixed outside scroll area) */
+        /* ⭐ UPDATED: Small, Circular Scroll Arrows ⭐ */
         .scroll-ctrl-btn {
-            position: absolute; right: 20px; background: #4f46e5; color: white;
-            border: none; border-radius: 50%; width: 36px; height: 36px;
-            cursor: pointer; z-index: 20; display: flex; align-items: center;
-            justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            transition: background 0.2s; font-size: 1.1rem;
+            position: absolute; 
+            right: -12px; /* Thora bahar nikal kar border par set kiya hai */
+            background: #ffffff; 
+            color: #64748b;
+            border: 1px solid #cbd5e1; 
+            border-radius: 50%; 
+            width: 26px; 
+            height: 26px;
+            cursor: pointer; 
+            z-index: 20; 
+            display: flex; 
+            align-items: center;
+            justify-content: center; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.2s; 
+            font-size: 0.7rem;
         }
-        .scroll-ctrl-btn:hover { background: #4338ca; }
-        .scroll-up { top: -10px; }
-        .scroll-down { bottom: -10px; }
+        .scroll-ctrl-btn:hover { 
+            background: #f8fafc; 
+            color: #1e1b4b;
+        }
+        .scroll-up { top: 40px; } /* Header ke thora neeche */
+        .scroll-down { bottom: 40px; } /* Footer se thora upar */
 
         /* AI Hunter Row Colors */
         .row-existing { background-color: #e0f2fe !important; transition: background 0.3s; cursor: pointer; } /* Light Blue */
