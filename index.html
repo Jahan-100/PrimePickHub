@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="theme-color" content="#f8fafc">
     <style> html, body { background-color: #f8fafc !important; margin: 0; padding: 0; } </style>
-    
+
     <meta name="mitgo-verification" content="e3f69518-ab0c-46db-a669-34aacd83fd21" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PrimePickHub - Compare & Click The Best Deals</title>
@@ -13,8 +13,8 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="PrimePickHub - Compare & Click The Best Deals">
     <meta property="og:description" content="Compare products across top stores. Live prices.">
-    <meta property="og:image" content="https://primepickhub.vercel.app/assets/og-image.jpg">
-    <meta property="og:url" content="https://primepickhub.vercel.app/">
+    <meta property="og:image" content="https://www.primepickhub.com/assets/og-image.jpg">
+    <meta property="og:url" content="https://www.primepickhub.com/">
     <meta property="og:site_name" content="PrimePickHub">
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-7VE3L1Y8PQ"></script>
@@ -27,23 +27,23 @@
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-    <link rel="canonical" href="https://primepickhub.vercel.app/">
+    <link rel="canonical" href="https://www.primepickhub.com/">
     <link rel="icon" type="image/png" href="assets/favicon.png?v=4">
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/main.css?v=27">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,800;0,900;1,800&family=Roboto:wght@400;700;900&family=Oswald:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Lobster&family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
-    
+
     <style>
         .card-timer { background: #FEF2F2; color: #DC2626; font-size: 0.75rem; font-weight: 800; padding: 5px 8px; border-radius: 4px; margin-bottom: 8px; text-align: center; border: 1px solid #FECACA; display: flex; align-items: center; justify-content: center; gap: 5px; }
         body.app-loading { overflow: hidden; }
 
-        #splash-screen { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: linear-gradient(135deg, #1E1B4B 0%, #4c1d95 50%, #FF5A3C 100%); 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            z-index: 9999999; transition: opacity 0.6s ease-out, visibility 0.6s ease-out; 
+        #splash-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #1E1B4B 0%, #4c1d95 50%, #FF5A3C 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9999999; transition: opacity 0.6s ease-out, visibility 0.6s ease-out;
         }
         #splash-screen.hidden { opacity: 0; visibility: hidden; }
         .splash-bg-circle { position: absolute; border-radius: 50%; filter: blur(70px); opacity: 0.6; animation: pulseBg 4s infinite alternate; }
@@ -59,7 +59,6 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ⭐ FORCED FIX FOR APP BUTTON (Inline Styles) ⭐ */
         #floatingAppIcon {
             position: fixed !important;
             top: 50% !important;
@@ -111,12 +110,12 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="app-loading">
-    
+
     <div id="splash-screen">
         <div class="splash-bg-circle c1"></div>
         <div class="splash-bg-circle c2"></div>
         <div class="splash-content">
-            <img src="assets/icon-192.png?v=4" alt="Logo" class="splash-logo-img" onerror="this.style.display='none'">
+            <img src="assets/icon-192.png?v=4" alt="Logo" class="splash-logo-img" id="splashLogo">
             <h1 class="splash-title">PrimePick<span>Hub</span></h1>
             <div class="splash-subtitle">Smart Shopping · Better Choices</div>
         </div>
@@ -155,12 +154,10 @@
         </div>
     </header>
 
-    <!-- ⭐ LEFT SIDE AD SLOT (Naya Code) ⭐ -->
     <div id="left-side-ad" class="left-ad-container">
         <div style="text-align: center; color: #94A3B8; font-size: 0.8rem; font-weight: bold; padding: 10px;">
             Advertisement
             <br><br>
-            <!-- Jab AdSense approve ho jaye, toh yahan apna script dalein -->
             <div style="width: 100px; height: 500px; border: 1px dashed #CBD5E1; margin: 0 auto; display: flex; align-items: center; justify-content: center; color: #CBD5E1; border-radius: 4px;">
                 120 x 600
             </div>
@@ -249,13 +246,11 @@
             <div class="product-grid" id="productGrid"></div>
         </div>
 
-        <!-- ⭐ Middle Ad Box (Ab yahan products ke baad hai) ⭐ -->
         <div class="ad-slot" id="ad-slot-middle" style="margin-bottom: 20px;">
             <div class="ad-fallback-container" id="ad-fallback-middle"></div>
         </div>
     </main>
 
-    <!-- NEWSLETTER SECTION -->
     <div class="newsletter-wrapper">
         <div class="newsletter-box">
             <h2>Get the Best Deals in Your Inbox!</h2>
@@ -268,7 +263,6 @@
         </div>
     </div>
 
-    <!-- ⭐ INTERNAL LINKING (SEO) ⭐ -->
     <div class="container" style="margin-bottom: 20px;">
         <div style="background: #fff; border: 1px solid #E2E8F0; border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); flex-wrap: wrap;">
             <img src="https://ae-pic-a1.aliexpress-media.com/kf/S21cf21dc513f48dc89e01d3c3e9bfe10L.jpg_220x220q75.jpg_.avif" alt="Blog" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
@@ -283,166 +277,4 @@
     <footer class="footer">
         <p><strong>PrimePickHub</strong> — Compare. Click. Save Smarter.</p>
         <p style="margin-top:10px;font-size:0.85rem;">
-            <a href="about.html" style="color:#CBD5E1;">About</a> · <a href="contact.html" style="color:#CBD5E1;">Contact</a> · <a href="privacy-policy.html" style="color:#CBD5E1;">Privacy</a> · <a href="terms.html" style="color:#CBD5E1;">Terms</a> · <a href="affiliate-disclosure.html" style="color:#CBD5E1;">Affiliate Disclosure</a>
-        </p>
-        <div class="footer-disclaimer">PrimePickHub is an affiliate website. We may earn a commission when you click our links and purchase items on official store sites at no additional cost to you.</div>
-    </footer>
-
-    <div id="cookie-consent-banner" class="cookie-banner" style="display: none;">
-        <div class="cookie-content">
-            <p>We use cookies to improve your experience. By continuing, you agree to our <a href="privacy-policy.html" style="color: #60A5FA;">Privacy Policy</a>.</p>
-        </div>
-        <div class="cookie-buttons">
-            <button onclick="acceptCookies()" class="btn-accept">Accept</button>
-        </div>
-    </div>
-
-    <div id="floatingContactBtn" class="floating-contact-btn" onclick="toggleContactForm()">
-        <span>Contact Us</span>
-    </div>
-
-    <div id="contactFormPanel" class="contact-form-panel">
-        <div class="contact-form-header">
-            <h3>Contact Us</h3>
-            <button class="close-contact-form" onclick="toggleContactForm()">&times;</button>
-        </div>
-        <div class="contact-form-body">
-            <form id="floatingContactForm" action="https://api.web3forms.com/submit" method="POST">
-                <input type="hidden" name="access_key" value="59aca094-d044-44c9-b57e-5b19c9572270">
-                <input type="hidden" name="subject" value="New Message from PrimePickHub Floating Contact">
-                <input type="hidden" name="from_name" value="PrimePickHub Website">
-                
-                <div class="form-group">
-                    <label>Your Name</label>
-                    <input type="text" name="name" required>
-                </div>
-                <div class="form-group">
-                    <label>Email Address</label>
-                    <input type="email" name="email" required>
-                </div>
-                <div class="form-group">
-                    <label>Message</label>
-                    <textarea name="message" required></textarea>
-                </div>
-                <button type="submit" id="contactSubmitBtn">Send Message</button>
-            </form>
-            <p id="contactFormMsg" style="text-align: center; margin-top: 10px; font-size: 0.85rem;"></p>
-        </div>
-    </div>
-
-    <div id="appPopupOverlay" class="app-popup-overlay" onclick="toggleAppPopup()" style="display: none;"></div>
-    <div id="appDownloadPopup" class="app-popup" style="display: none;">
-        <div class="app-popup-content">
-            <span class="close-popup" onclick="toggleAppPopup()">&times;</span>
-            <div class="app-icon"><img src="assets/icon-192.png?v=4" alt="App Icon"></div>
-            <h3>Install PrimePickHub App</h3>
-            <p>Better experience, exclusive deals & faster checkout!</p>
-            <div id="desktopAppContent" style="display: none; text-align: center;">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://primepickhub.vercel.app/" alt="Scan QR Code" style="border-radius: 10px; border: 2px solid #E2E8F0; padding: 5px; margin-bottom: 10px;">
-                <p style="font-size: 0.85rem; color: #64748B;">Scan with your phone to Install</p>
-            </div>
-            <div id="mobileAppContent" style="display: none;">
-                <button class="btn-app-download" id="pwaInstallBtn" onclick="triggerPWAInstall()" style="background: var(--accent);">Install App</button>
-                <p style="font-size: 0.75rem; color: #64748B; margin-top: 10px;">Note: For iOS, use "Share > Add to Home Screen" in Safari.</p>
-            </div>
-        </div>
-    </div>
-
-    <button id="floatingAppIcon" onclick="toggleAppPopup()" style="display: none;">
-        <img src="assets/icon-192.png?v=4" alt="App">
-        <span>App</span>
-    </button>
-
-    <script src="js/config.js?v=6"></script>
-    <script src="js/api.js?v=7"></script>
-    <script src="js/app.js?v=16"></script>
-    <script src="js/affiliate.js?v=6"></script>
-    <script>
-        function toggleCatDropdown(event) {
-            if(event) { event.preventDefault(); event.stopPropagation(); }
-            var menu = document.getElementById('categoryDropdownMenu');
-            if(menu) { menu.style.display = menu.style.display === 'block' ? 'none' : 'block'; }
-        }
-        function selectCatDropdown(val, text, element) {
-            document.getElementById('categoryDropdownText').innerText = text;
-            document.getElementById('searchCategory').value = val;
-            var items = document.querySelectorAll('#categoryDropdownMenu li');
-            for(var i=0; i<items.length; i++) { items[i].classList.remove('active'); }
-            if(element) element.classList.add('active');
-            document.getElementById('categoryDropdownMenu').style.display = 'none';
-        }
-        document.addEventListener('click', function(e) {
-            var wrap = document.getElementById('categoryDropdownWrap');
-            var menu = document.getElementById('categoryDropdownMenu');
-            if (wrap && !wrap.contains(e.target) && menu) { menu.style.display = 'none'; }
-        });
-
-        document.getElementById('newsletterForm')?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const emailInput = document.getElementById('newsletterEmail');
-            const btn = document.getElementById('newsletterBtn');
-            const msg = document.getElementById('newsletterMsg');
-            const email = emailInput.value.trim();
-
-            if(!email) return;
-            btn.innerText = "Subscribing...";
-            btn.disabled = true;
-            msg.innerText = "";
-
-            try {
-                const { error } = await window.supabaseClient.from('newsletter_subscribers').insert([{ email: email }]);
-                if (error) {
-                    if (error.code === '23505') { msg.style.color = "#FBBF24"; msg.innerText = "You are already subscribed!"; } 
-                    else { throw error; }
-                } else {
-                    msg.style.color = "#4ADE80"; msg.innerText = "Successfully subscribed! Check your inbox for deals."; emailInput.value = "";
-                }
-            } catch (err) {
-                console.error(err); msg.style.color = "#F87171"; msg.innerText = "Something went wrong. Please try again.";
-            } finally {
-                btn.innerText = "Subscribe"; btn.disabled = false;
-            }
-        });
-
-        function toggleContactForm() {
-            const panel = document.getElementById('contactFormPanel');
-            panel.classList.toggle('open');
-        }
-
-        document.getElementById('floatingContactForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const form = e.target;
-            const btn = document.getElementById('contactSubmitBtn');
-            const msg = document.getElementById('contactFormMsg');
-            const originalText = btn.innerText;
-
-            btn.innerText = "Sending..."; btn.disabled = true; msg.innerText = "";
-
-            const formData = new FormData(form);
-            const object = Object.fromEntries(formData);
-            const json = JSON.stringify(object);
-
-            try {
-                const res = await fetch('https://api.web3forms.com/submit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                    body: json
-                });
-                const data = await res.json();
-                if (data.success) {
-                    msg.style.color = "#16a34a"; msg.innerText = "Message sent successfully! We'll reply soon.";
-                    form.reset();
-                    setTimeout(() => { toggleContactForm(); msg.innerText = ""; }, 2000);
-                } else {
-                    msg.style.color = "#EF4444"; msg.innerText = data.message || "Something went wrong.";
-                }
-            } catch (error) {
-                msg.style.color = "#EF4444"; msg.innerText = "Failed to send. Please try again.";
-            } finally {
-                btn.innerText = originalText; btn.disabled = false;
-            }
-        });
-    </script>
-    <script src="js/floating-widgets.js?v=6"></script>
-</body>
-</html>
+            <a href="about.html" style="color:#CBD5E1;">About</a> · <a href="contact.html
