@@ -4,7 +4,7 @@
     { "source": "/category/:cat", "destination": "/category.html?cat=:cat" }
   ],
   "crons": [
-    { "path": "/api/process-queue", "schedule": "*/5 * * * *" },
+    { "path": "/api/process-queue", "schedule": "0 0 * * *" },
     { "path": "/api/check-status", "schedule": "0 3 * * *" }
   ]
 }
