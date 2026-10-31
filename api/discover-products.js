@@ -6,7 +6,6 @@ module.exports = async function handler(req, res) {
     const apiKey = process.env.OPENROUTER_API_KEY;
     const apifyToken = process.env.APIFY_API_TOKEN;
     
-    // Keyword get karein
     const keyword = req.body.keyword ? req.body.keyword.trim() : '';
 
     if (!apiKey || !apifyToken) return res.status(500).json({ error: 'API keys missing in Vercel.' });
@@ -14,52 +13,56 @@ module.exports = async function handler(req, res) {
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
     try {
-        console.log("Starting parallel fetch with keyword:", keyword || "Trending");
-
+        console.log("Starting fetch...");
         const searchQuery = keyword ? encodeURIComponent(keyword) : 'best-selling';
 
-        // 1. Amazon
         const fetchAmazon = fetch(`https://api.apify.com/v2/acts/rel8ble~amazon-bestsellers-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ categoryIds: ["electronics", "fashion", "home"], maxItems: 10 })
-        }).then(r => r.json()).catch(e => { console.warn("Amazon err", e); return []; });
+        }).then(r => r.json()).catch(e => []);
 
-        // 2. AliExpress (Query update)
         const fetchAli = fetch(`https://api.apify.com/v2/acts/epctex~aliexpress-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ startUrls: [{ url: `https://www.aliexpress.com/w/wholesale-${searchQuery}.html` }], maxItems: 10 })
-        }).then(r => r.json()).catch(e => { console.warn("Ali err", e); return []; });
+        }).then(r => r.json()).catch(e => []);
 
-        // 3. Alibaba (Query update)
         const fetchAlibaba = fetch(`https://api.apify.com/v2/acts/epctex~alibaba-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ keyword: keyword || "hot selling products", maxItems: 10 })
-        }).then(r => r.json()).catch(e => { console.warn("Alibaba err", e); return []; });
+        }).then(r => r.json()).catch(e => []);
 
         const [amazonData, aliData, alibabaData] = await Promise.all([fetchAmazon, fetchAli, fetchAlibaba]);
 
         let allRawProducts = [];
-        if (Array.isArray(amazonData) && amazonData.length > 0) allRawProducts = allRawProducts.concat(amazonData.map(p => ({ ...p, source: 'Amazon' })));
-        if (Array.isArray(aliData) && aliData.length > 0) allRawProducts = allRawProducts.concat(aliData.map(p => ({ ...p, source: 'AliExpress' })));
-        if (Array.isArray(alibabaData) && alibabaData.length > 0) allRawProducts = allRawProducts.concat(alibabaData.map(p => ({ ...p, source: 'Alibaba' })));
+        if (Array.isArray(amazonData)) allRawProducts = allRawProducts.concat(amazonData.map(p => ({ ...p, source: 'Amazon' })));
+        if (Array.isArray(aliData)) allRawProducts = allRawProducts.concat(aliData.map(p => ({ ...p, source: 'AliExpress' })));
+        if (Array.isArray(alibabaData)) allRawProducts = allRawProducts.concat(alibabaData.map(p => ({ ...p, source: 'Alibaba' })));
 
         if (allRawProducts.length === 0) {
-            return res.status(500).json({ error: "No data found. Apify free limit might be over or actors failed." });
+            return res.status(500).json({ error: "No data found from Apify." });
         }
 
-        // AI Prompt (Mix Platforms, Multiple Countries, Categories)
-        const prompt = `You are a JSON-only API. Select exactly 15 top best-selling products for US, UK, Europe, and Australia markets from this raw data.
-        ${keyword ? `The user is specifically looking for products related to: "${keyword}".` : 'Select the most globally trending items.'}
+        // ⭐ FIX: Data ko chota (clean) karein taake AI ke tokens bachein
+        const cleanDataForAI = allRawProducts.slice(0, 15).map(p => ({
+            title: p.title || p.name,
+            url: p.url || p.link || p.productUrl,
+            image: p.image || p.imageUrl || p.thumbnail,
+            price: p.price || p.minPrice || 0,
+            source: p.source
+        }));
 
-        CRITICAL RULES:
-        1. You MUST include a mix of platforms. Do not just pick Amazon. Pick at least 4 from AliExpress or Alibaba if available.
-        2. Diversify the countries (US, UK, Europe, Australia). Do NOT make them all "US".
-        3. Extract or guess the Category (e.g., Electronics, Fashion, Home, Beauty, Sports, Toys, etc.).
-        4. Extract the Price (number only, no currency symbols).
-        5. Return ONLY valid JSON array. No markdown.
+        // ⭐ FIX: Sirf 8 products mangein taake output limit cross na ho
+        const prompt = `You are a JSON API. Select exactly 8 best-selling products for US, UK, Europe, Australia from this raw data.
+        ${keyword ? `Focus on: "${keyword}".` : 'Select trending items.'}
+
+        RULES:
+        1. Mix platforms (Amazon, AliExpress, Alibaba).
+        2. Diversify countries (US, UK, Europe, Australia).
+        3. Extract Category (Electronics, Fashion, Home, etc.) and Price.
+        4. Return ONLY a valid JSON array. NO markdown, NO extra text.
         
         Format:
         [
@@ -68,15 +71,15 @@ module.exports = async function handler(req, res) {
             "title": "Product Name",
             "image_url": "https://...",
             "original_url": "https://...",
-            "platform": "AliExpress/Alibaba/Amazon",
-            "country": "US/UK/Europe/Australia",
-            "category": "Electronics/Fashion/Home",
+            "platform": "Amazon",
+            "country": "US",
+            "category": "Electronics",
             "price": 25.99,
             "sales_count": 15000,
             "rank_position": 1
           }
         ]
-        Raw Data: ${JSON.stringify(allRawProducts.slice(0, 30))}`;
+        Raw Data: ${JSON.stringify(cleanDataForAI)}`;
 
         const freeModels = ["google/gemma-4-26b-a4b-it:free", "meta-llama/llama-3.2-3b-instruct:free", "openrouter/free"];
         let finalProducts = null;
@@ -96,10 +99,16 @@ module.exports = async function handler(req, res) {
                     let aiContent = aiData.choices[0].message.content;
                     const jsonStart = aiContent.indexOf('[');
                     const jsonEnd = aiContent.lastIndexOf(']') + 1;
+                    
                     if (jsonStart !== -1 && jsonEnd !== -1) {
                         aiContent = aiContent.substring(jsonStart, jsonEnd);
-                        finalProducts = JSON.parse(aiContent);
-                        break;
+                        try {
+                            finalProducts = JSON.parse(aiContent);
+                            break; // Agar JSON valid hai toh loop break karein
+                        } catch (parseError) {
+                            console.warn("JSON Parse error on model:", model);
+                            lastError = "JSON Parse Error (Incomplete output)";
+                        }
                     }
                 }
             } catch (err) { lastError = err.message; }
