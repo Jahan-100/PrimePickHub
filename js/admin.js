@@ -787,7 +787,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <button class="btn-delete" onclick="deleteBlog('${b.id}')">Delete</button>`;
             
             if (!isPublished) {
-                actionBtns = `<button onclick="publishBlog('${b.id}')" style="background:#10B981; color:white; padding:6px 12px; border:none; border-radius:4px; cursor:pointer; font-size:0.85rem; font-weight:bold;">Publish</button>` + actionBtns;
+                actionBtns = `<button onclick="publishBlog('${b.id}')" style="background:#10B981; color:white; padding:6px 10px; border:none; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">Publish</button>` + actionBtns;
             }
 
             return `
@@ -1033,9 +1033,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td style="text-align:center; font-weight:bold; color:#16a34a; font-size:0.85rem;">${p.sales_count ? p.sales_count.toLocaleString() : 'N/A'}</td>
                 <td style="text-align:center;"><a href="${p.original_url}" target="_blank" style="color:#3b82f6; font-size:0.8rem; text-decoration:underline;" onclick="event.stopPropagation()">View</a></td>
                 <td onclick="event.stopPropagation()">
-                    <div style="display:flex; flex-direction:column; gap:4px;">
-                        <button onclick="approveDiscovered('${p.id}')" style="background:#10B981; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.75rem; font-weight:bold;">Approve</button>
-                        <button onclick="rejectDiscovered('${p.id}')" style="background:#EF4444; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.75rem;">Reject</button>
+                    <div style="display:flex; flex-direction:row; gap:4px; justify-content: center;">
+                        <button onclick="approveDiscovered('${p.id}')" style="background:#10B981; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">Approve</button>
+                        <button onclick="rejectDiscovered('${p.id}')" style="background:#EF4444; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem;">Reject</button>
                     </div>
                 </td>
             </tr>
