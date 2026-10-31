@@ -892,7 +892,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// ⭐ AI PRODUCT HUNTER LOGIC (Color States, Sorting, Scrollable, Europe Filter) ⭐
+// ⭐ AI PRODUCT HUNTER LOGIC (Newest on Top) ⭐
 document.addEventListener('DOMContentLoaded', () => {
     const discoverBtn = document.getElementById('discoverProductsBtn');
     const toggleBtn = document.getElementById('toggleAiListBtn');
@@ -951,10 +951,11 @@ document.addEventListener('DOMContentLoaded', () => {
     scrollDownBtn.addEventListener('mouseleave', stopScroll);
 
     async function loadDiscoveredProducts() {
+        // Changed order to created_at DESC so newest appear first
         const { data, error } = await window.supabaseClient
             .from('discovered_products')
             .select('*')
-            .order('rank_position', { ascending: true });
+            .order('created_at', { ascending: false });
 
         if (error || !data) return;
         
