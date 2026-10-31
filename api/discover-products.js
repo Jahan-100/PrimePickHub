@@ -45,7 +45,7 @@ module.exports = async function handler(req, res) {
             return res.status(500).json({ error: "No data found from Apify." });
         }
 
-        // Data ko chota (clean) karein taake AI ke tokens bachein
+        // Clean Data for AI
         const cleanDataForAI = allRawProducts.slice(0, 15).map(p => ({
             title: p.title || p.name,
             url: p.url || p.link || p.productUrl,
@@ -54,7 +54,6 @@ module.exports = async function handler(req, res) {
             source: p.source
         }));
 
-        // Sirf 8 products mangein taake output limit cross na ho
         const prompt = `You are a JSON API. Select exactly 8 best-selling products for US, UK, Europe, Australia from this raw data.
         ${keyword ? `Focus on: "${keyword}".` : 'Select trending items.'}
 
