@@ -402,8 +402,8 @@ function renderTable() {
 
         return `
             <tr class="${rowClass}">
-                <td style="text-align: center;"><img src="${p.image_url}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;"></td>
-                <td>${p.title} ${statusBadge}</td>
+                <td style="text-align: center;"><img src="${p.image_url}" class="table-img"></td>
+                <td style="text-align: left; font-weight: 500;">${p.title} ${statusBadge}</td>
                 <td style="text-align: center;">${priceStr}</td>
                 <td>
                     <div class="action-btns">
@@ -792,8 +792,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             return `
                 <tr>
-                    <td style="text-align: center;"><img src="${b.image_url || '/assets/icon-192.png?v=4'}" style="width:50px;height:40px;object-fit:cover;border-radius:4px;"></td>
-                    <td>${b.title} ${statusBadge}</td>
+                    <td style="text-align: center;"><img src="${b.image_url || '/assets/icon-192.png?v=4'}" class="table-img"></td>
+                    <td style="text-align: left; font-weight: 500;">${b.title} ${statusBadge}</td>
                     <td style="text-align:center;">${new Date(b.created_at).toLocaleDateString()}</td>
                     <td><div class="action-btns">${actionBtns}</div></td>
                 </tr>
@@ -1024,8 +1024,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <input type="checkbox" class="disc-checkbox" value="${p.id}" ${selectedIds.has(p.id) ? 'checked' : ''} onchange="toggleDiscoveredSelection('${p.id}', this.checked)" style="cursor:pointer; width:16px; height:16px; margin-right:5px;">
                     ${index + 1}
                 </td>
-                <td style="text-align:center;"><img src="${p.image_url}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;" onerror="this.src='/assets/icon-192.png?v=4'"></td>
-                <td style="font-weight:600; font-size:0.75rem; max-width:200px;">${p.title}</td>
+                <td style="text-align:center;"><img src="${p.image_url}" class="table-img" onerror="this.src='/assets/icon-192.png?v=4'"></td>
+                <td style="text-align: left; font-weight:600; font-size:0.75rem;">${p.title}</td>
                 <td style="text-align:center; font-weight:bold; color:#1E1B4B;">${p.price ? '$' + p.price : 'N/A'}</td>
                 <td style="text-align:center;"><span style="background:#f3e8ff; color:#6b21a8; padding:2px 6px; border-radius:4px; font-size:0.75rem;">${p.category || 'General'}</span></td>
                 <td style="text-align:center;"><span style="background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:0.75rem;">${p.country}</span></td>
