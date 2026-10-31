@@ -892,20 +892,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// ⭐ AI PRODUCT HUNTER LOGIC (Updated with Filters & Bulk Reject) ⭐
+// ⭐ AI PRODUCT HUNTER LOGIC (Updated with Keyword & no Select All) ⭐
 document.addEventListener('DOMContentLoaded', () => {
     const discoverBtn = document.getElementById('discoverProductsBtn');
     const toggleBtn = document.getElementById('toggleAiListBtn');
     const listContainer = document.getElementById('discoveredListContainer');
     const listBody = document.getElementById('discoveredListBody');
     const countEl = document.getElementById('discoveredCount');
+    const aiSearchKeyword = document.getElementById('aiSearchKeyword');
     
-    // Filters & Checkbox Elements
+    // Filters
     const filterPlatform = document.getElementById('filterPlatform');
     const filterCountry = document.getElementById('filterCountry');
     const filterCategory = document.getElementById('filterCategory');
     const sortSales = document.getElementById('sortSales');
-    const selectAllCheckbox = document.getElementById('selectAllDiscovered');
     const rejectSelectedBtn = document.getElementById('rejectSelectedBtn');
 
     if (!discoverBtn || !toggleBtn) return;
@@ -934,22 +934,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (error || !data) return;
         allDiscovered = data;
         selectedIds.clear(); // Reset selection on load
-        selectAllCheckbox.checked = false;
         renderDiscoveredTable();
     }
 
     function renderDiscoveredTable() {
-        // Apply Filters
         let filtered = allDiscovered.filter(p => {
             const matchPlatform = filterPlatform.value === 'all' || p.platform === filterPlatform.value;
             const matchCountry = filterCountry.value === 'all' || p.country === filterCountry.value;
-            // Category check (handle undefined categories from old data)
-            const pCat = p.category ? p.category.toLowerCase() : 'unknown';
+            const pCat = p.category ? p.category.toLowerCase() : 'general';
             const matchCategory = filterCategory.value === 'all' || pCat.includes(filterCategory.value.toLowerCase());
             return matchPlatform && matchCountry && matchCategory;
         });
 
-        // Apply Sorting
         if (sortSales.value === 'high-low') {
             filtered.sort((a, b) => (b.sales_count || 0) - (a.sales_count || 0));
         } else if (sortSales.value === 'low-high') {
@@ -959,14 +955,16 @@ document.addEventListener('DOMContentLoaded', () => {
         countEl.innerText = filtered.length;
         
         if (filtered.length === 0) {
-            listBody.innerHTML = '<tr><td colspan="11" style="text-align:center;">No products match your filters.</td></tr>';
+            listBody.innerHTML = '<tr><td colspan="10" style="text-align:center;">No products match your filters.</td></tr>';
             return;
         }
 
         listBody.innerHTML = filtered.map((p, index) => `
             <tr id="disc-${p.id}">
-                <td style="text-align:center;"><input type="checkbox" class="disc-checkbox" value="${p.id}" ${selectedIds.has(p.id) ? 'checked' : ''} onchange="toggleDiscoveredSelection('${p.id}', this.checked)" style="cursor:pointer; width:16px; height:16px;"></td>
-                <td style="text-align:center;">${index + 1}</td>
+                <td style="text-align:center;">
+                    <input type="checkbox" class="disc-checkbox" value="${p.id}" ${selectedIds.has(p.id) ? 'checked' : ''} onchange="toggleDiscoveredSelection('${p.id}', this.checked)" style="cursor:pointer; width:16px; height:16px; margin-right:5px;">
+                    ${index + 1}
+                </td>
                 <td style="text-align:center;"><img src="${p.image_url}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;" onerror="this.src='/assets/icon-192.png?v=4'"></td>
                 <td style="font-weight:600; font-size:0.8rem; max-width:200px;">${p.title}</td>
                 <td style="text-align:center; font-weight:bold; color:#1E1B4B;">${p.price ? '$' + p.price : 'N/A'}</td>
@@ -983,12 +981,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
             </tr>
         `).join('');
-        
-        // Update Select All checkbox state
-        const checkboxes = document.querySelectorAll('.disc-checkbox');
-        if (checkboxes.length > 0) {
-            selectAllCheckbox.checked = Array.from(checkboxes).every(cb => cb.checked);
-        }
     }
 
     // Filter Event Listeners
@@ -1001,19 +993,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.toggleDiscoveredSelection = (id, isChecked) => {
         if (isChecked) selectedIds.add(id);
         else selectedIds.delete(id);
-        
-        const checkboxes = document.querySelectorAll('.disc-checkbox');
-        selectAllCheckbox.checked = Array.from(checkboxes).every(cb => cb.checked);
     };
-
-    selectAllCheckbox.addEventListener('change', (e) => {
-        const checkboxes = document.querySelectorAll('.disc-checkbox');
-        checkboxes.forEach(cb => {
-            cb.checked = e.target.checked;
-            if (e.target.checked) selectedIds.add(cb.value);
-            else selectedIds.delete(cb.value);
-        });
-    });
 
     // Bulk Reject
     rejectSelectedBtn.addEventListener('click', async () => {
@@ -1030,8 +1010,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (error) throw error;
             
             selectedIds.clear();
-            selectAllCheckbox.checked = false;
-            await loadDiscoveredProducts(); // Reload table
+            await loadDiscoveredProducts();
         } catch (err) {
             alert("Error: " + err.message);
         } finally {
@@ -1040,14 +1019,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Manual Search
+    // Manual Search with Keyword
     discoverBtn.addEventListener('click', async () => {
+        const keyword = aiSearchKeyword.value.trim();
         const originalText = discoverBtn.innerText;
-        discoverBtn.innerText = "⏳ Scraping... (1-2 Mins)";
+        
+        discoverBtn.innerText = keyword ? `⏳ Searching "${keyword}"...` : "⏳ Scraping... (1-2 Mins)";
         discoverBtn.disabled = true;
 
         try {
-            const res = await fetch('/api/discover-products', { method: 'POST' });
+            const res = await fetch('/api/discover-products', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ keyword: keyword })
+            });
             const result = await res.json();
             if (result.success) {
                 alert(result.message);
@@ -1061,7 +1046,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert("Error: " + result.error);
             }
         } catch (err) {
-            alert("Failed to connect to API.");
+            alert("Failed to connect to API. Check console for errors.");
         } finally {
             discoverBtn.innerText = originalText;
             discoverBtn.disabled = false;
@@ -1079,7 +1064,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('pDesc').value = `Top selling product in ${product.country} on ${product.platform || product.source}.`;
         document.getElementById('pCurrency').value = 'USD';
         
-        // Auto-fill Price if available
         if (product.price) {
             document.getElementById('pPrice').value = product.price;
         }
@@ -1105,6 +1089,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Load list on page load
     loadDiscoveredProducts();
 });
