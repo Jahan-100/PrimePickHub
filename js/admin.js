@@ -892,27 +892,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// ⭐ AI PRODUCT HUNTER LOGIC (NEW) ⭐
+// ⭐ AI PRODUCT HUNTER LOGIC (Updated with Filters & Bulk Reject) ⭐
 document.addEventListener('DOMContentLoaded', () => {
     const discoverBtn = document.getElementById('discoverProductsBtn');
     const toggleBtn = document.getElementById('toggleAiListBtn');
     const listContainer = document.getElementById('discoveredListContainer');
     const listBody = document.getElementById('discoveredListBody');
     const countEl = document.getElementById('discoveredCount');
+    
+    // Filters & Checkbox Elements
+    const filterPlatform = document.getElementById('filterPlatform');
+    const filterCountry = document.getElementById('filterCountry');
+    const filterCategory = document.getElementById('filterCategory');
+    const sortSales = document.getElementById('sortSales');
+    const selectAllCheckbox = document.getElementById('selectAllDiscovered');
+    const rejectSelectedBtn = document.getElementById('rejectSelectedBtn');
 
     if (!discoverBtn || !toggleBtn) return;
     let allDiscovered = [];
+    let selectedIds = new Set();
 
-    // Toggle Button Logic (Show/Hide List + Color Change)
+    // Toggle Button Logic
     toggleBtn.addEventListener('click', () => {
         if (listContainer.style.display === 'none') {
             listContainer.style.display = 'block';
             toggleBtn.innerText = 'Hide List';
-            toggleBtn.style.background = '#EF4444'; // Red color for hide
+            toggleBtn.style.background = '#EF4444';
         } else {
             listContainer.style.display = 'none';
             toggleBtn.innerText = 'Show List';
-            toggleBtn.style.background = '#4f46e5'; // Blue color for show
+            toggleBtn.style.background = '#4f46e5';
         }
     });
 
@@ -924,34 +933,114 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (error || !data) return;
         allDiscovered = data;
+        selectedIds.clear(); // Reset selection on load
+        selectAllCheckbox.checked = false;
+        renderDiscoveredTable();
+    }
+
+    function renderDiscoveredTable() {
+        // Apply Filters
+        let filtered = allDiscovered.filter(p => {
+            const matchPlatform = filterPlatform.value === 'all' || p.platform === filterPlatform.value;
+            const matchCountry = filterCountry.value === 'all' || p.country === filterCountry.value;
+            // Category check (handle undefined categories from old data)
+            const pCat = p.category ? p.category.toLowerCase() : 'unknown';
+            const matchCategory = filterCategory.value === 'all' || pCat.includes(filterCategory.value.toLowerCase());
+            return matchPlatform && matchCountry && matchCategory;
+        });
+
+        // Apply Sorting
+        if (sortSales.value === 'high-low') {
+            filtered.sort((a, b) => (b.sales_count || 0) - (a.sales_count || 0));
+        } else if (sortSales.value === 'low-high') {
+            filtered.sort((a, b) => (a.sales_count || 0) - (b.sales_count || 0));
+        }
+
+        countEl.innerText = filtered.length;
         
-        countEl.innerText = data.length;
-        
-        if (data.length === 0) {
-            listBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No products found yet. Click Search Now.</td></tr>';
+        if (filtered.length === 0) {
+            listBody.innerHTML = '<tr><td colspan="11" style="text-align:center;">No products match your filters.</td></tr>';
             return;
         }
 
-        listBody.innerHTML = data.map((p, index) => `
+        listBody.innerHTML = filtered.map((p, index) => `
             <tr id="disc-${p.id}">
+                <td style="text-align:center;"><input type="checkbox" class="disc-checkbox" value="${p.id}" ${selectedIds.has(p.id) ? 'checked' : ''} onchange="toggleDiscoveredSelection('${p.id}', this.checked)" style="cursor:pointer; width:16px; height:16px;"></td>
                 <td style="text-align:center;">${index + 1}</td>
-                <td style="text-align:center;"><img src="${p.image_url}" style="width:50px;height:50px;object-fit:cover;border-radius:4px;" onerror="this.src='/assets/icon-192.png?v=4'"></td>
-                <td style="font-weight:600; font-size:0.85rem;">${p.title}</td>
-                <td style="text-align:center;"><span style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:4px; font-weight:bold;">${p.country}</span></td>
-                <td style="text-align:center;">${p.platform || p.source}</td>
-                <td style="text-align:center; font-weight:bold; color:#16a34a;">${p.sales_count ? p.sales_count.toLocaleString() : 'N/A'}</td>
-                <td style="text-align:center;"><a href="${p.original_url}" target="_blank" style="color:#3b82f6; text-decoration:underline;">View Original</a></td>
+                <td style="text-align:center;"><img src="${p.image_url}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;" onerror="this.src='/assets/icon-192.png?v=4'"></td>
+                <td style="font-weight:600; font-size:0.8rem; max-width:200px;">${p.title}</td>
+                <td style="text-align:center; font-weight:bold; color:#1E1B4B;">${p.price ? '$' + p.price : 'N/A'}</td>
+                <td style="text-align:center;"><span style="background:#f3e8ff; color:#6b21a8; padding:2px 6px; border-radius:4px; font-size:0.75rem;">${p.category || 'General'}</span></td>
+                <td style="text-align:center;"><span style="background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:0.75rem;">${p.country}</span></td>
+                <td style="text-align:center; font-size:0.8rem;">${p.platform || p.source}</td>
+                <td style="text-align:center; font-weight:bold; color:#16a34a; font-size:0.85rem;">${p.sales_count ? p.sales_count.toLocaleString() : 'N/A'}</td>
+                <td style="text-align:center;"><a href="${p.original_url}" target="_blank" style="color:#3b82f6; font-size:0.8rem; text-decoration:underline;">View</a></td>
                 <td>
-                    <div style="display:flex; flex-direction:column; gap:5px;">
-                        <button onclick="approveDiscovered('${p.id}')" style="background:#10B981; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">Approve & Add</button>
-                        <button onclick="rejectDiscovered('${p.id}')" style="background:#EF4444; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem;">Reject</button>
+                    <div style="display:flex; flex-direction:column; gap:4px;">
+                        <button onclick="approveDiscovered('${p.id}')" style="background:#10B981; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.75rem; font-weight:bold;">Approve</button>
+                        <button onclick="rejectDiscovered('${p.id}')" style="background:#EF4444; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.75rem;">Reject</button>
                     </div>
                 </td>
             </tr>
         `).join('');
+        
+        // Update Select All checkbox state
+        const checkboxes = document.querySelectorAll('.disc-checkbox');
+        if (checkboxes.length > 0) {
+            selectAllCheckbox.checked = Array.from(checkboxes).every(cb => cb.checked);
+        }
     }
 
-    // Manual Search Trigger
+    // Filter Event Listeners
+    filterPlatform.addEventListener('change', renderDiscoveredTable);
+    filterCountry.addEventListener('change', renderDiscoveredTable);
+    filterCategory.addEventListener('change', renderDiscoveredTable);
+    sortSales.addEventListener('change', renderDiscoveredTable);
+
+    // Checkbox Logic
+    window.toggleDiscoveredSelection = (id, isChecked) => {
+        if (isChecked) selectedIds.add(id);
+        else selectedIds.delete(id);
+        
+        const checkboxes = document.querySelectorAll('.disc-checkbox');
+        selectAllCheckbox.checked = Array.from(checkboxes).every(cb => cb.checked);
+    };
+
+    selectAllCheckbox.addEventListener('change', (e) => {
+        const checkboxes = document.querySelectorAll('.disc-checkbox');
+        checkboxes.forEach(cb => {
+            cb.checked = e.target.checked;
+            if (e.target.checked) selectedIds.add(cb.value);
+            else selectedIds.delete(cb.value);
+        });
+    });
+
+    // Bulk Reject
+    rejectSelectedBtn.addEventListener('click', async () => {
+        if (selectedIds.size === 0) return alert("Please select at least one product to reject.");
+        if (!confirm(`Are you sure you want to reject ${selectedIds.size} products?`)) return;
+
+        rejectSelectedBtn.innerText = "Rejecting...";
+        rejectSelectedBtn.disabled = true;
+
+        try {
+            const idsToDelete = Array.from(selectedIds);
+            const { error } = await window.supabaseClient.from('discovered_products').delete().in('id', idsToDelete);
+            
+            if (error) throw error;
+            
+            selectedIds.clear();
+            selectAllCheckbox.checked = false;
+            await loadDiscoveredProducts(); // Reload table
+        } catch (err) {
+            alert("Error: " + err.message);
+        } finally {
+            rejectSelectedBtn.innerText = "Reject Selected";
+            rejectSelectedBtn.disabled = false;
+        }
+    });
+
+    // Manual Search
     discoverBtn.addEventListener('click', async () => {
         const originalText = discoverBtn.innerText;
         discoverBtn.innerText = "⏳ Scraping... (1-2 Mins)";
@@ -988,8 +1077,13 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('pAffUrl').value = product.original_url;
         document.getElementById('pStore').value = (product.platform || product.source || 'amazon').toLowerCase();
         document.getElementById('pDesc').value = `Top selling product in ${product.country} on ${product.platform || product.source}.`;
-        document.getElementById('pCurrency').value = (product.country === 'UK') ? 'GBP' : 'USD';
+        document.getElementById('pCurrency').value = 'USD';
         
+        // Auto-fill Price if available
+        if (product.price) {
+            document.getElementById('pPrice').value = product.price;
+        }
+
         const formContainer = document.getElementById('addProductContainer');
         const toggleProductBtn = document.getElementById('toggleAddProductBtn');
         if (formContainer.style.display === 'none') {
@@ -1006,8 +1100,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if(!confirm("Remove this product from the list?")) return;
         const { error } = await window.supabaseClient.from('discovered_products').delete().eq('id', id);
         if (!error) {
-            document.getElementById(`disc-${id}`).remove();
-            countEl.innerText = parseInt(countEl.innerText) - 1;
+            selectedIds.delete(id);
+            await loadDiscoveredProducts();
         }
     };
 
