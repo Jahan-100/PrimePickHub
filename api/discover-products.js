@@ -13,12 +13,12 @@ module.exports = async function handler(req, res) {
     try {
         let allRawProducts = [];
 
-        // 1. Amazon Best Sellers (Multiple Categories)
+        // 1. Amazon (Fetch up to 15)
         try {
             const amazonRes = await fetch(`https://api.apify.com/v2/acts/rel8ble~amazon-bestsellers-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ categoryIds: ["electronics", "fashion", "home", "beauty"], maxItems: 10 })
+                body: JSON.stringify({ categoryIds: ["electronics", "fashion", "home", "beauty"], maxItems: 15 })
             });
             const amazonData = await amazonRes.json();
             if (Array.isArray(amazonData) && amazonData.length > 0) {
@@ -26,14 +26,14 @@ module.exports = async function handler(req, res) {
             }
         } catch (e) { console.warn("Amazon failed", e); }
 
-        // 2. AliExpress (General Trending)
+        // 2. AliExpress (Fetch up to 15)
         try {
             const aliRes = await fetch(`https://api.apify.com/v2/acts/epctex~aliexpress-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     startUrls: [{ url: "https://www.aliexpress.com/w/wholesale-best-selling.html" }],
-                    maxItems: 10 
+                    maxItems: 15 
                 })
             });
             const aliData = await aliRes.json();
@@ -42,12 +42,12 @@ module.exports = async function handler(req, res) {
             }
         } catch (e) { console.warn("AliExpress failed", e); }
 
-        // 3. Alibaba (General Trending)
+        // 3. Alibaba (Fetch up to 15)
         try {
             const alibabaRes = await fetch(`https://api.apify.com/v2/acts/epctex~alibaba-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ keyword: "hot selling products", maxItems: 10 })
+                body: JSON.stringify({ keyword: "hot selling products", maxItems: 15 })
             });
             const alibabaData = await alibabaRes.json();
             if (Array.isArray(alibabaData) && alibabaData.length > 0) {
@@ -56,15 +56,19 @@ module.exports = async function handler(req, res) {
         } catch (e) { console.warn("Alibaba failed", e); }
 
         if (allRawProducts.length === 0) {
-            return res.status(500).json({ error: "No data found from Apify. Check your Apify free limits." });
+            return res.status(500).json({ error: "No data found from Apify. Check your Apify limits." });
         }
 
-        // 4. AI ko call karein (Mix categories aur global sales ke liye)
-        const prompt = `You are a JSON-only API. Select exactly 5 top best-selling products for the US, UK, and Europe markets from this raw data.
+        // 4. AI Prompt for 15 Items, Mix Platforms, Price, and Category
+        const prompt = `You are a JSON-only API. Select exactly 15 top best-selling products for US, UK, Europe markets from this raw data.
         
-        IMPORTANT: The user wants a DIVERSE mix of products across ALL categories (Home & Kitchen, Beauty, Fashion, Electronics, Sports, etc.). Do NOT restrict to just one niche. Pick the most globally trending items.
+        CRITICAL RULES:
+        1. You MUST include a mix of platforms. Do not just pick Amazon. Pick at least 4 from AliExpress/Alibaba if available.
+        2. Extract or guess the Category (Electronics, Fashion, Home, Beauty, etc.).
+        3. Extract the Price (number only, no currency symbols).
+        4. Return ONLY valid JSON array. No markdown.
         
-        NO markdown, NO explanation, ONLY the JSON array. Format:
+        Format:
         [
           {
             "asin_or_id": "Unique_ID",
@@ -73,11 +77,13 @@ module.exports = async function handler(req, res) {
             "original_url": "https://...",
             "platform": "AliExpress/Alibaba/Amazon",
             "country": "US",
+            "category": "Electronics/Fashion/Home",
+            "price": 25.99,
             "sales_count": 15000,
             "rank_position": 1
           }
         ]
-        Raw Data: ${JSON.stringify(allRawProducts.slice(0, 20))}`;
+        Raw Data: ${JSON.stringify(allRawProducts.slice(0, 45))}`;
 
         const freeModels = [
             "google/gemma-4-26b-a4b-it:free", 
@@ -118,7 +124,7 @@ module.exports = async function handler(req, res) {
             return res.status(500).json({ error: "AI failed. Last error: " + lastError });
         }
 
-        // 5. Supabase mein save karein
+        // 5. Save to DB (Ignore Duplicates based on asin_or_id)
         const insertData = finalProducts.map(p => ({ ...p, status: 'pending' }));
         
         const { error: dbError } = await supabase
@@ -127,7 +133,7 @@ module.exports = async function handler(req, res) {
 
         if (dbError) throw dbError;
 
-        return res.status(200).json({ success: true, message: `${finalProducts.length} products discovered!` });
+        return res.status(200).json({ success: true, message: `${finalProducts.length} new products discovered!` });
 
     } catch (error) {
         console.error(error);
