@@ -422,21 +422,24 @@
                 </div>
                 <!-- BLOG SECTION END -->
 
-                <div class="admin-card card-manage-products" style="margin-bottom: 30px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                                        <!-- ⭐ AI PRODUCT HUNTER SECTION ⭐ -->
-                <div class="admin-card" style="background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 30px;">
+                <!-- ⭐ AI PRODUCT HUNTER SECTION (Separate Box) ⭐ -->
+                <div class="admin-card" style="background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
                         <div>
                             <h2 style="margin: 0; color: #166534;">AI Product Hunter</h2>
-                            <p style="font-size: 0.85rem; color: #15803d; margin-top: 5px;">Fetch daily trending products from Amazon & AliExpress (US, UK, Europe).</p>
+                            <p style="font-size: 0.85rem; color: #15803d; margin-top: 5px;">Daily trending products from Amazon, AliExpress, Alibaba & Admitad (US, UK, Europe).</p>
                         </div>
-                        <button type="button" id="discoverProductsBtn" class="btn-check-price" style="width:auto; padding:10px 20px; background:#16a34a; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
-                            🤖 Discover New Products
-                        </button>
+                        <div style="display: flex; gap: 10px;">
+                            <button type="button" id="discoverProductsBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#16a34a; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
+                                🤖 Search Now
+                            </button>
+                            <button type="button" id="toggleAiListBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#4f46e5; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
+                                Show List
+                            </button>
+                        </div>
                     </div>
 
-                    <div id="discoveredListContainer" style="display: block; background: #fff; padding: 15px; border-radius: 8px; overflow-x: auto;">
+                    <div id="discoveredListContainer" style="display: none; background: #fff; padding: 15px; border-radius: 8px; overflow-x: auto;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center;">
                             <strong style="color: #166534;">Total Discovered: <span id="discoveredCount" style="background: #dcfce7; padding: 4px 10px; border-radius: 12px;">0</span></strong>
                         </div>
@@ -454,12 +457,14 @@
                                 </tr>
                             </thead>
                             <tbody id="discoveredListBody">
-                                <tr><td colspan="8" style="text-align:center;">Click "Discover New Products" to fetch data.</td></tr>
+                                <tr><td colspan="8" style="text-align:center;">Click "Search Now" to fetch data.</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
-                <!-- ⭐ AI PRODUCT HUNTER SECTION END ⭐ -->
+
+                <div class="admin-card card-manage-products" style="margin-bottom: 30px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2 style="margin: 0;">Manage Products</h2>
                         <div style="display: flex; gap: 10px;">
                             <button type="button" id="checkAvailabilityBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#FF5A3C; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Check Availability</button>
