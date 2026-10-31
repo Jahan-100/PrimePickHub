@@ -58,57 +58,57 @@
         /* ⭐ Custom Scrollable Table & Buttons for AI Hunter ⭐ */
         .table-scroll-outer {
             position: relative;
+            padding-right: 15px; /* Native scrollbar ke liye jagah */
         }
 
         .table-scroll-wrapper {
             max-height: 450px; /* 5 products ke baad scroll */
-            overflow-y: auto;
+            overflow-y: scroll; /* Force scrollbar to always show */
             border: 1px solid #E2E8F0;
             border-radius: 6px;
         }
 
-        /* Custom Scrollbar */
+        /* Custom Scrollbar styling */
         .table-scroll-wrapper::-webkit-scrollbar {
-            width: 10px;
+            width: 14px; /* Thora mota kiya taake arrows adjust ho sakein */
         }
         .table-scroll-wrapper::-webkit-scrollbar-track {
             background: #f1f5f9;
-            border-radius: 6px;
+            border-left: 1px solid #E2E8F0;
         }
         .table-scroll-wrapper::-webkit-scrollbar-thumb {
             background: #cbd5e1;
-            border-radius: 6px;
+            border-radius: 0;
             border: 2px solid #f1f5f9;
         }
         .table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
 
-        /* ⭐ UPDATED: Small, Circular Scroll Arrows ⭐ */
+        /* ⭐ UPDATED: Simple Small Arrows (No Circle) ⭐ */
         .scroll-ctrl-btn {
             position: absolute; 
-            right: -12px; /* Thora bahar nikal kar border par set kiya hai */
-            background: #ffffff; 
-            color: #64748b;
-            border: 1px solid #cbd5e1; 
-            border-radius: 50%; 
-            width: 26px; 
-            height: 26px;
+            right: 1px; /* Bilkul right edge par */
+            width: 12px; /* Scrollbar ki width ke barabar */
+            height: 14px;
+            background: #f1f5f9; /* Background match track */
+            color: #475569;
+            border: none; 
+            border-radius: 0; 
             cursor: pointer; 
             z-index: 20; 
             display: flex; 
             align-items: center;
             justify-content: center; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: all 0.2s; 
-            font-size: 0.7rem;
+            font-size: 8px;
+            padding: 0;
         }
         .scroll-ctrl-btn:hover { 
-            background: #f8fafc; 
-            color: #1e1b4b;
+            background: #cbd5e1; 
+            color: #0f172a;
         }
-        .scroll-up { top: 40px; } /* Header ke thora neeche */
-        .scroll-down { bottom: 40px; } /* Footer se thora upar */
+        .scroll-up { top: 1px; }
+        .scroll-down { bottom: 1px; }
 
         /* AI Hunter Row Colors */
         .row-existing { background-color: #e0f2fe !important; transition: background 0.3s; cursor: pointer; } /* Light Blue */
