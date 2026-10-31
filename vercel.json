@@ -2,5 +2,9 @@
   "rewrites": [
     { "source": "/product/:slug", "destination": "/product.html?slug=:slug" },
     { "source": "/category/:cat", "destination": "/category.html?cat=:cat" }
+  ],
+  "crons": [
+    { "path": "/api/process-queue", "schedule": "*/5 * * * *" },
+    { "path": "/api/check-status", "schedule": "0 3 * * *" }
   ]
 }
