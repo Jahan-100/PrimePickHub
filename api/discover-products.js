@@ -45,7 +45,7 @@ module.exports = async function handler(req, res) {
             return res.status(500).json({ error: "No data found from Apify." });
         }
 
-        // ⭐ FIX: Data ko chota (clean) karein taake AI ke tokens bachein
+        // Data ko chota (clean) karein taake AI ke tokens bachein
         const cleanDataForAI = allRawProducts.slice(0, 15).map(p => ({
             title: p.title || p.name,
             url: p.url || p.link || p.productUrl,
@@ -54,7 +54,7 @@ module.exports = async function handler(req, res) {
             source: p.source
         }));
 
-        // ⭐ FIX: Sirf 8 products mangein taake output limit cross na ho
+        // Sirf 8 products mangein taake output limit cross na ho
         const prompt = `You are a JSON API. Select exactly 8 best-selling products for US, UK, Europe, Australia from this raw data.
         ${keyword ? `Focus on: "${keyword}".` : 'Select trending items.'}
 
@@ -104,9 +104,8 @@ module.exports = async function handler(req, res) {
                         aiContent = aiContent.substring(jsonStart, jsonEnd);
                         try {
                             finalProducts = JSON.parse(aiContent);
-                            break; // Agar JSON valid hai toh loop break karein
+                            break;
                         } catch (parseError) {
-                            console.warn("JSON Parse error on model:", model);
                             lastError = "JSON Parse Error (Incomplete output)";
                         }
                     }
