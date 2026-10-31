@@ -891,3 +891,110 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// ⭐ AI PRODUCT HUNTER LOGIC ⭐
+document.addEventListener('DOMContentLoaded', () => {
+    const discoverBtn = document.getElementById('discoverProductsBtn');
+    const listBody = document.getElementById('discoveredListBody');
+    const countEl = document.getElementById('discoveredCount');
+
+    if (!discoverBtn) return;
+    let allDiscovered = [];
+
+    async function loadDiscoveredProducts() {
+        const { data, error } = await window.supabaseClient
+            .from('discovered_products')
+            .select('*')
+            .order('rank_position', { ascending: true });
+
+        if (error || !data) return;
+        allDiscovered = data;
+        
+        countEl.innerText = data.length;
+        
+        if (data.length === 0) {
+            listBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No products found yet. Click Discover.</td></tr>';
+            return;
+        }
+
+        listBody.innerHTML = data.map((p, index) => `
+            <tr id="disc-${p.id}">
+                <td style="text-align:center;">${index + 1}</td>
+                <td style="text-align:center;"><img src="${p.image_url}" style="width:50px;height:50px;object-fit:cover;border-radius:4px;" onerror="this.src='/assets/icon-192.png?v=4'"></td>
+                <td style="font-weight:600; font-size:0.85rem;">${p.title}</td>
+                <td style="text-align:center;"><span style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:4px; font-weight:bold;">${p.country}</span></td>
+                <td style="text-align:center;">${p.platform}</td>
+                <td style="text-align:center; font-weight:bold; color:#16a34a;">${p.sales_count ? p.sales_count.toLocaleString() : 'N/A'}</td>
+                <td style="text-align:center;"><a href="${p.original_url}" target="_blank" style="color:#3b82f6; text-decoration:underline;">View Original</a></td>
+                <td>
+                    <div style="display:flex; flex-direction:column; gap:5px;">
+                        <button onclick="approveDiscovered('${p.id}')" style="background:#10B981; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">Approve & Add</button>
+                        <button onclick="rejectDiscovered('${p.id}')" style="background:#EF4444; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem;">Reject</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    discoverBtn.addEventListener('click', async () => {
+        const originalText = discoverBtn.innerText;
+        discoverBtn.innerText = "⏳ Scraping & AI Filtering... (Wait 1-2 Mins)";
+        discoverBtn.disabled = true;
+
+        try {
+            const res = await fetch('/api/discover-products', { method: 'POST' });
+            const result = await res.json();
+            if (result.success) {
+                alert(result.message);
+                await loadDiscoveredProducts();
+            } else {
+                alert("Error: " + result.error);
+            }
+        } catch (err) {
+            alert("Failed to connect to API. Make sure APIFY_API_TOKEN is added in Vercel.");
+        } finally {
+            discoverBtn.innerText = originalText;
+            discoverBtn.disabled = false;
+        }
+    });
+
+    // ⭐ Yahan magic ho raha hai: Approve dabate hi form auto-fill hoga
+    window.approveDiscovered = function(id) {
+        const product = allDiscovered.find(p => p.id === id);
+        if (!product) return;
+
+        // Add Product form ke fields fill karein
+        document.getElementById('pTitle').value = product.title;
+        document.getElementById('pImg').value = product.image_url;
+        document.getElementById('pAffUrl').value = product.original_url; // User isay apne affiliate link se replace karega
+        document.getElementById('pStore').value = product.platform.toLowerCase();
+        document.getElementById('pDesc').value = `Top selling product in ${product.country} on ${product.platform}.`;
+        document.getElementById('pCurrency').value = (product.country === 'UK') ? 'GBP' : 'USD';
+        
+        // Form open karein
+        const formContainer = document.getElementById('addProductContainer');
+        const toggleBtn = document.getElementById('toggleAddProductBtn');
+        if (formContainer.style.display === 'none') {
+            formContainer.style.display = 'block';
+            toggleBtn.textContent = 'Hide Product Form';
+            toggleBtn.style.background = '#EF4444';
+        }
+
+        // Form tak scroll karein
+        document.getElementById('productForm').scrollIntoView({ behavior: 'smooth' });
+        
+        // Alert mat dikhayein, bas highlight karein ke form bhar gaya hai
+        document.getElementById('pAffUrl').focus();
+    };
+
+    window.rejectDiscovered = async function(id) {
+        if(!confirm("Are you sure you want to remove this from the list?")) return;
+        const { error } = await window.supabaseClient.from('discovered_products').delete().eq('id', id);
+        if (!error) {
+            document.getElementById(`disc-${id}`).remove();
+            countEl.innerText = parseInt(countEl.innerText) - 1;
+        }
+    };
+
+    loadDiscoveredProducts();
+});
