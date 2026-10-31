@@ -13,51 +13,64 @@ module.exports = async function handler(req, res) {
     try {
         let allRawProducts = [];
 
-        // 1. Amazon Best Sellers
+        // 1. Amazon Best Sellers (Working)
         try {
             const amazonRes = await fetch(`https://api.apify.com/v2/acts/rel8ble~amazon-bestsellers-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ categoryIds: ["electronics", "fashion"], maxItems: 10 })
+                body: JSON.stringify({ categoryIds: ["electronics", "fashion"], maxItems: 5 })
             });
             const amazonData = await amazonRes.json();
-            if (Array.isArray(amazonData)) {
+            if (Array.isArray(amazonData) && amazonData.length > 0) {
                 allRawProducts = allRawProducts.concat(amazonData.map(p => ({ ...p, source: 'Amazon' })));
+                console.log("Amazon fetched:", amazonData.length);
             }
         } catch (e) { console.warn("Amazon failed", e); }
 
-        // 2. AliExpress
+        // 2. AliExpress (Using Epctex Reliable Actor)
         try {
-            const aliRes = await fetch(`https://api.apify.com/v2/acts/logical_scrapers~aliexpress-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
+            const aliRes = await fetch(`https://api.apify.com/v2/acts/epctex~aliexpress-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: "best selling", maxItems: 10 })
+                body: JSON.stringify({ 
+                    startUrls: [{ url: "https://www.aliexpress.com/w/wholesale-best-selling.html" }],
+                    maxItems: 5 
+                })
             });
             const aliData = await aliRes.json();
-            if (Array.isArray(aliData)) {
+            if (Array.isArray(aliData) && aliData.length > 0) {
                 allRawProducts = allRawProducts.concat(aliData.map(p => ({ ...p, source: 'AliExpress' })));
+                console.log("AliExpress fetched:", aliData.length);
             }
         } catch (e) { console.warn("AliExpress failed", e); }
 
-        // 3. Alibaba
+        // 3. Alibaba (Using Epctex Reliable Actor)
         try {
-            const alibabaRes = await fetch(`https://api.apify.com/v2/acts/rel8ble~alibaba-product-search-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
+            const alibabaRes = await fetch(`https://api.apify.com/v2/acts/epctex~alibaba-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: "trending", maxItems: 10 })
+                body: JSON.stringify({ 
+                    keyword: "trending products",
+                    maxItems: 5
+                })
             });
             const alibabaData = await alibabaRes.json();
-            if (Array.isArray(alibabaData)) {
+            if (Array.isArray(alibabaData) && alibabaData.length > 0) {
                 allRawProducts = allRawProducts.concat(alibabaData.map(p => ({ ...p, source: 'Alibaba' })));
+                console.log("Alibaba fetched:", alibabaData.length);
             }
         } catch (e) { console.warn("Alibaba failed", e); }
 
         if (allRawProducts.length === 0) {
-            return res.status(500).json({ error: "No data found from any platform. Check Apify tokens or actor limits." });
+            return res.status(500).json({ error: "No data found from any platform. Apify free plan limit might be over." });
         }
 
-        // 4. AI ko call karein (Data ko clean aur structured karne ke liye)
-        const prompt = `You are a JSON-only API. Select the top 5 best-selling products from this raw data (focus on US, UK, Europe market) and output them as a JSON array. 
+        // 4. AI ko call karein (Mix karne ke liye strict prompt)
+        const prompt = `You are a JSON-only API. I have scraped raw data from Amazon, AliExpress, and Alibaba.
+        
+        TASK: Select exactly 5 best-selling products for the US, UK, and Europe market.
+        CRITICAL RULE: You MUST try to include a mix of platforms. If there is AliExpress or Alibaba data, you MUST include at least 1 product from them to ensure variety.
+        
         NO markdown, NO explanation, ONLY the JSON array. Format:
         [
           {
@@ -71,7 +84,7 @@ module.exports = async function handler(req, res) {
             "rank_position": 1
           }
         ]
-        Raw Data: ${JSON.stringify(allRawProducts.slice(0, 15))}`;
+        Raw Data: ${JSON.stringify(allRawProducts.slice(0, 20))}`;
 
         const freeModels = [
             "google/gemma-4-26b-a4b-it:free", 
