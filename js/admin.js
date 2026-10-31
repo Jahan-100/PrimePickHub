@@ -1025,7 +1025,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${index + 1}
                 </td>
                 <td style="text-align:center;"><img src="${p.image_url}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;" onerror="this.src='/assets/icon-192.png?v=4'"></td>
-                <td style="font-weight:600; font-size:0.8rem; max-width:200px;">${p.title}</td>
+                <td style="font-weight:600; font-size:0.75rem; max-width:200px;">${p.title}</td>
                 <td style="text-align:center; font-weight:bold; color:#1E1B4B;">${p.price ? '$' + p.price : 'N/A'}</td>
                 <td style="text-align:center;"><span style="background:#f3e8ff; color:#6b21a8; padding:2px 6px; border-radius:4px; font-size:0.75rem;">${p.category || 'General'}</span></td>
                 <td style="text-align:center;"><span style="background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:0.75rem;">${p.country}</span></td>
