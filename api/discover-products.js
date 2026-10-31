@@ -25,14 +25,14 @@ module.exports = async function handler(req, res) {
             body: JSON.stringify({ categoryIds: ["electronics", "fashion", "home"], maxItems: 10 })
         }).then(r => r.json()).catch(e => { console.warn("Amazon err", e); return []; });
 
-        // 2. AliExpress (Query update ki hai)
+        // 2. AliExpress (Query update)
         const fetchAli = fetch(`https://api.apify.com/v2/acts/epctex~aliexpress-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ startUrls: [{ url: `https://www.aliexpress.com/w/wholesale-${searchQuery}.html` }], maxItems: 10 })
         }).then(r => r.json()).catch(e => { console.warn("Ali err", e); return []; });
 
-        // 3. Alibaba (Query update ki hai)
+        // 3. Alibaba (Query update)
         const fetchAlibaba = fetch(`https://api.apify.com/v2/acts/epctex~alibaba-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -50,14 +50,14 @@ module.exports = async function handler(req, res) {
             return res.status(500).json({ error: "No data found. Apify free limit might be over or actors failed." });
         }
 
-        // AI Prompt (Strictly mix platforms and countries)
+        // AI Prompt (Mix Platforms, Multiple Countries, Categories)
         const prompt = `You are a JSON-only API. Select exactly 15 top best-selling products for US, UK, Europe, and Australia markets from this raw data.
         ${keyword ? `The user is specifically looking for products related to: "${keyword}".` : 'Select the most globally trending items.'}
 
         CRITICAL RULES:
-        1. You MUST include a mix of platforms. Do not just pick Amazon. Pick at least 4 from AliExpress or Alibaba if available in the raw data.
+        1. You MUST include a mix of platforms. Do not just pick Amazon. Pick at least 4 from AliExpress or Alibaba if available.
         2. Diversify the countries (US, UK, Europe, Australia). Do NOT make them all "US".
-        3. Extract or guess the Category (e.g., Electronics, Fashion, Home, Beauty, etc.).
+        3. Extract or guess the Category (e.g., Electronics, Fashion, Home, Beauty, Sports, Toys, etc.).
         4. Extract the Price (number only, no currency symbols).
         5. Return ONLY valid JSON array. No markdown.
         
