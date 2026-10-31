@@ -892,7 +892,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// ⭐ AI PRODUCT HUNTER LOGIC (Color States, Sorting, Scrollable) ⭐
+// ⭐ AI PRODUCT HUNTER LOGIC (Color States, Sorting, Scrollable, Europe Filter) ⭐
 document.addEventListener('DOMContentLoaded', () => {
     const discoverBtn = document.getElementById('discoverProductsBtn');
     const toggleBtn = document.getElementById('toggleAiListBtn');
@@ -916,8 +916,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!discoverBtn || !toggleBtn) return;
     let allDiscovered = [];
     let selectedIds = new Set();
-    let seenProductIds = new Set(); // To track new vs existing products
-    let clickedProductIds = new Set(); // To track read/clicked products
+    let seenProductIds = new Set(); 
+    let clickedProductIds = new Set(); 
 
     // Toggle Button Logic
     toggleBtn.addEventListener('click', () => {
@@ -958,10 +958,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (error || !data) return;
         
-        // Check which products are new
         allDiscovered = data.map(p => {
-            const isNew = !seenProductIds.has(p.id); // Check before adding to seen
-            seenProductIds.add(p.id); // Add to seen
+            const isNew = !seenProductIds.has(p.id); 
+            seenProductIds.add(p.id); 
             return { ...p, isNew };
         });
 
@@ -970,11 +969,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderDiscoveredTable() {
+        // ⭐ Europe ke tamam countries ki list ⭐
+        const europeCountries = ['europe', 'uk', 'germany', 'france', 'spain', 'italy', 'netherlands', 'poland', 'sweden', 'belgium', 'switzerland', 'austria', 'ireland', 'denmark', 'finland', 'norway', 'portugal', 'greece'];
+
         let filtered = allDiscovered.filter(p => {
             const matchPlatform = filterPlatform.value === 'all' || p.platform === filterPlatform.value;
-            const matchCountry = filterCountry.value === 'all' || p.country === filterCountry.value;
+            
+            // ⭐ Updated Country Filter ⭐
+            let matchCountry = false;
+            if (filterCountry.value === 'all') {
+                matchCountry = true;
+            } else if (filterCountry.value === 'Europe') {
+                // Agar Europe select hai, toh check karein ke country list mein hai ya nahi
+                matchCountry = p.country ? europeCountries.some(c => p.country.toLowerCase().includes(c)) : false;
+            } else {
+                matchCountry = p.country === filterCountry.value;
+            }
+
             const pCat = p.category ? p.category.toLowerCase() : 'general';
             const matchCategory = filterCategory.value === 'all' || pCat.includes(filterCategory.value.toLowerCase());
+            
             return matchPlatform && matchCountry && matchCategory;
         });
 
@@ -997,12 +1011,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         listBody.innerHTML = filtered.map((p, index) => {
-            // Determine Row Color Class
             let rowClass = 'row-existing';
             if (clickedProductIds.has(p.id)) {
-                rowClass = 'row-clicked'; // White if clicked
+                rowClass = 'row-clicked'; 
             } else if (p.isNew) {
-                rowClass = 'row-new'; // Yellow if new
+                rowClass = 'row-new'; 
             }
 
             return `
@@ -1031,14 +1044,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Row Click Logic
     window.markProductClicked = (id, event) => {
-        // Ignore if click was on checkbox or buttons or links
         if (event.target.tagName === 'INPUT' || event.target.tagName === 'BUTTON' || event.target.tagName === 'A' || event.target.tagName === 'IMG') return;
         
         clickedProductIds.add(id);
         const row = document.getElementById(`disc-${id}`);
         if (row) {
             row.classList.remove('row-new', 'row-existing');
-            row.classList.add('row-clicked'); // Make it white
+            row.classList.add('row-clicked'); 
         }
     };
 
