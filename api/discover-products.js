@@ -45,11 +45,13 @@ module.exports = async function handler(req, res) {
         ]
         Raw Data: ${JSON.stringify(rawProducts.slice(0, 5))}`;
 
-        // ⭐ NAYA: Multiple Free Models ka Fallback System (Agar ek fail ho toh doosra try karega) ⭐
+        // ⭐ NAYA: Updated Active Free Models (Oct 2026) ⭐
+        // Humne wo models select kiye hain jo abhi OpenRouter par active hain.
         const freeModels = [
-            "meta-llama/llama-3.1-8b-instruct:free", 
-            "google/gemma-4-26b-a4b-it:free",
-            "deepseek/deepseek-r1:free"
+            "google/gemma-4-26b-a4b-it:free", 
+            "meta-llama/llama-3.2-3b-instruct:free",
+            "mistralai/mistral-7b-instruct:free",
+            "openrouter/free" // ⭐ Ye "Free Models Router" hai, jo automatically kisi bhi available free model par request bhej dega agar upar wale fail hon.
         ];
 
         let finalProducts = null;
@@ -69,28 +71,35 @@ module.exports = async function handler(req, res) {
 
                 const aiData = await aiResponse.json();
                 
+                // Agar API se error aaye (jaise rate limit ya model not found)
                 if (aiData.error) {
                     lastError = aiData.error.message;
-                    continue; // Agar is model par error aaya, toh agla model try karein
+                    console.warn(`Model ${model} failed:`, lastError);
+                    continue; // Agla model try karein
                 }
 
+                // Agar AI ne sahi jawab diya
                 if (aiData.choices && aiData.choices[0] && aiData.choices[0].message) {
                     let aiContent = aiData.choices[0].message.content;
                     
+                    // JSON ko safely extract karein (kabhi kabhi AI text bhi likh deta hai)
                     const jsonStart = aiContent.indexOf('[');
                     const jsonEnd = aiContent.lastIndexOf(']') + 1;
                     
                     if (jsonStart !== -1 && jsonEnd !== -1) {
                         aiContent = aiContent.substring(jsonStart, jsonEnd);
                         finalProducts = JSON.parse(aiContent);
-                        break; // Agar successful ho gaya, toh loop se bahar nikal jayein
+                        console.log(`Success with model: ${model}`);
+                        break; // Kaam ho gaya, loop se bahar
                     }
                 }
             } catch (err) {
                 lastError = err.message;
+                console.warn(`Exception with model ${model}:`, err.message);
             }
         }
 
+        // Agar saare models fail ho jayein
         if (!finalProducts) {
             return res.status(500).json({ error: "All AI models failed. Last error: " + lastError });
         }
