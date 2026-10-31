@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const category = params.get('cat') || '';
     const isSpecial = params.get('special') === 'true';
     const isFlash = params.get('flash') === 'true';
-    const flashEvent = params.get('event'); // ⭐ Flash Event Name
+    const flashEvent = params.get('event');
     const grid = document.getElementById('searchGrid');
     const title = document.getElementById('searchTitle');
 
@@ -42,14 +42,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             let req = window.supabaseClient
                 .from('products')
                 .select('*, affiliate_offers(*)')
-                .gt('sale_end_date', now) 
+                .gt('sale_end_date', now)
                 .eq('is_available', true);
-            
-            // ⭐ Agar specific event ka naam URL mein hai toh sirf usi ki products layein
-            if (flashEvent) {
-                req = req.eq('event_name', flashEvent);
-            }
-            
+            if (flashEvent) req = req.eq('event_name', flashEvent);
             const { data, error } = await req;
             if (!error) results = data || [];
         } else {
@@ -59,6 +54,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error(err);
     }
 
+    results = (results || []).filter(p => p.is_available !== false);
+
     if (!results || results.length === 0) {
         grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;"><p>No products found.</p></div>`;
         return;
@@ -67,33 +64,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     grid.innerHTML = results.map(p => {
         const offers = p.affiliate_offers || [];
         const primaryOffer = offers[0] || {};
-        
         const storeName = primaryOffer.store_name || 'Amazon';
-        
-        const cfg = CONFIG.networks[storeName.toLowerCase()] || CONFIG.networks.amazon;
+        const cfg = CONFIG.networks[storeName.toLowerCase()] || CONFIG.networks[storeName] || CONFIG.networks.amazon;
         const bg = /^#[0-9a-fA-F]{6}$/.test(cfg.brandColor) ? cfg.brandColor : '#2563eb';
         const fg = /^#[0-9a-fA-F]{6}$/.test(cfg.textColor) ? cfg.textColor : '#ffffff';
         const affUrl = primaryOffer.affiliate_url || '#';
 
         const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
         const offerSymbol = currencySymbols[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
-        
+
         const basePrice = parseFloat(primaryOffer.price) || 0;
         const salePrice = parseFloat(primaryOffer.sale_price) || 0;
         const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
-        
         let finalBasePrice = basePrice;
         let finalSalePrice = salePrice;
-
         if (commissionRate > 0) {
             finalBasePrice = basePrice + (basePrice * (commissionRate / 100));
-            if (salePrice > 0) {
-                finalSalePrice = salePrice + (salePrice * (commissionRate / 100));
-            }
+            if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100));
         }
-        
-        let priceDisplay = '';
 
+        let priceDisplay = '';
         if (salePrice > 0) {
             priceDisplay = `
                 <div style="margin: 5px 0 10px 0; display:flex; align-items:center; gap:8px;">
@@ -104,7 +94,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             priceDisplay = `<div style="font-weight:bold; color:#1E1B4B; margin: 5px 0 10px 0; font-size:1.1rem;">${offerSymbol}${finalBasePrice.toFixed(2)}</div>`;
         }
 
-        const pUrl = p.slug ? `/product/${encodeURIComponent(p.slug)}` : '#';
+        const pUrl = p.slug ? `/product/${encodeURIComponent(p.slug)}` : (p.id ? `/product.html?id=${encodeURIComponent(p.id)}` : '#');
         const imgSrc = p.image_url ? escapeHTML(p.image_url) : 'assets/icon-192.png';
 
         return `
