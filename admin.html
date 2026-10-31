@@ -58,7 +58,6 @@
         /* ⭐ Custom Scrollable Table & Buttons for AI Hunter ⭐ */
         .table-scroll-outer {
             position: relative;
-            padding-right: 15px; /* Native scrollbar ke liye jagah */
         }
 
         .table-scroll-wrapper {
@@ -68,9 +67,16 @@
             border-radius: 6px;
         }
 
+        /* Hide Native Scrollbar Arrows */
+        .table-scroll-wrapper::-webkit-scrollbar-button {
+            display: none;
+            height: 0;
+            width: 0;
+        }
+
         /* Custom Scrollbar styling */
         .table-scroll-wrapper::-webkit-scrollbar {
-            width: 14px; /* Thora mota kiya taake arrows adjust ho sakein */
+            width: 14px; 
         }
         .table-scroll-wrapper::-webkit-scrollbar-track {
             background: #f1f5f9;
@@ -85,13 +91,13 @@
             background: #94a3b8;
         }
 
-        /* ⭐ UPDATED: Simple Small Arrows (No Circle) ⭐ */
+        /* ⭐ UPDATED: Arrows exactly ON the scrollbar track ⭐ */
         .scroll-ctrl-btn {
             position: absolute; 
-            right: 1px; /* Bilkul right edge par */
-            width: 12px; /* Scrollbar ki width ke barabar */
-            height: 14px;
-            background: #f1f5f9; /* Background match track */
+            right: 1px; /* Right on the scrollbar */
+            width: 12px; /* Match scrollbar width */
+            height: 12px; /* Small square */
+            background: #f1f5f9; /* Match track background */
             color: #475569;
             border: none; 
             border-radius: 0; 
@@ -102,11 +108,13 @@
             justify-content: center; 
             font-size: 8px;
             padding: 0;
+            line-height: 1;
         }
         .scroll-ctrl-btn:hover { 
             background: #cbd5e1; 
             color: #0f172a;
         }
+        /* Position exactly inside the border corners */
         .scroll-up { top: 1px; }
         .scroll-down { bottom: 1px; }
 
