@@ -10,6 +10,20 @@
     <link rel="stylesheet" href="/css/admin.css?v=5">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* ⭐ ADMIN LAYOUT FIX (To stop side scrolling) ⭐ */
+        .admin-layout { 
+            display: flex; 
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden; 
+        }
+        .admin-content { 
+            flex: 1; 
+            min-width: 0; /* This is the magic fix that prevents the table from stretching the page */
+            padding: 35px; 
+            overflow-x: hidden;
+        }
+
         .admin-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         .admin-table th, .admin-table td { border: 1px solid #E2E8F0; padding: 10px; vertical-align: middle; }
         .admin-table th { background: #F8FAFC; font-weight: 600; text-align: center !important; }
@@ -62,7 +76,7 @@
 
         .table-scroll-wrapper {
             max-height: 450px; /* 5 products ke baad scroll */
-            overflow-y: scroll; /* Force scrollbar to always show */
+            overflow: auto; /* Changed to auto for both x and y */
             border: 1px solid #E2E8F0;
             border-radius: 6px;
         }
@@ -77,6 +91,7 @@
         /* Custom Scrollbar styling */
         .table-scroll-wrapper::-webkit-scrollbar {
             width: 14px; 
+            height: 14px;
         }
         .table-scroll-wrapper::-webkit-scrollbar-track {
             background: #f1f5f9;
@@ -94,10 +109,10 @@
         /* ⭐ UPDATED: Arrows exactly ON the scrollbar track ⭐ */
         .scroll-ctrl-btn {
             position: absolute; 
-            right: 1px; /* Right on the scrollbar */
-            width: 12px; /* Match scrollbar width */
-            height: 12px; /* Small square */
-            background: #f1f5f9; /* Match track background */
+            right: 1px; 
+            width: 12px; 
+            height: 12px; 
+            background: #f1f5f9; 
             color: #475569;
             border: none; 
             border-radius: 0; 
@@ -114,7 +129,6 @@
             background: #cbd5e1; 
             color: #0f172a;
         }
-        /* Position exactly inside the border corners */
         .scroll-up { top: 1px; }
         .scroll-down { bottom: 1px; }
 
@@ -171,12 +185,12 @@
                             <input type="hidden" id="pOfferId" value="">
 
                             <div class="form-section-title">Basic Info</div>
-                            <div class="form-group"><label>Product Title <span style="color: #EF4444;">*</span></label><input type="text" id="pTitle" required style="background:#fff;"></div>
-                            <div class="form-group"><label>URL Slug <span style="color: #EF4444;">*</span></label><input type="text" id="pSlug" required pattern="[a-z0-9\-]+" style="background:#fff;"></div>
+                            <div class="form-group"><label>Product Title <span style="color: #EF4444;">*</span></label><input type="text" id="pTitle" required style="background:#fff; width: 100%; max-width: 100%;"></div>
+                            <div class="form-group"><label>URL Slug <span style="color: #EF4444;">*</span></label><input type="text" id="pSlug" required pattern="[a-z0-9\-]+" style="background:#fff; width: 100%; max-width: 100%;"></div>
                             
                             <div class="form-group">
                                 <label>Primary Image (URL or Upload) <span style="color: #EF4444;">*</span></label>
-                                <input type="url" id="pImg" placeholder="https://...main-image.jpg" style="background:#fff;">
+                                <input type="url" id="pImg" placeholder="https://...main-image.jpg" style="background:#fff; width: 100%; max-width: 100%;">
                                 <div class="upload-btn-wrap">
                                     <input type="file" id="pImgFile" accept="image/*" style="display: none;" onchange="document.getElementById('pImgFileName').innerText = this.files[0] ? this.files[0].name : 'No file chosen'">
                                     <button type="button" class="btn-upload" onclick="document.getElementById('pImgFile').click()">📁 Choose from PC</button>
@@ -186,7 +200,7 @@
 
                             <div class="form-group">
                                 <label>Gallery Images (URLs or Upload)</label>
-                                <textarea id="pGallery" rows="3" placeholder="https://...image2.jpg&#10;https://...image3.jpg" style="background:#fff;"></textarea>
+                                <textarea id="pGallery" rows="3" placeholder="https://...image2.jpg&#10;https://...image3.jpg" style="background:#fff; width: 100%; max-width: 100%;"></textarea>
                                 <div class="upload-btn-wrap">
                                     <input type="file" id="pGalleryFile" accept="image/*" multiple style="display: none;" onchange="document.getElementById('pGalleryFileName').innerText = this.files.length > 0 ? this.files.length + ' files selected' : 'No files chosen'">
                                     <button type="button" class="btn-upload" onclick="document.getElementById('pGalleryFile').click()">📁 Choose Multiple from PC</button>
@@ -194,7 +208,7 @@
                                 </div>
                             </div>
 
-                            <div class="form-group"><label>Video URL (YouTube - Optional)</label><input type="url" id="pVideo" placeholder="https://www.youtube.com/watch?v=..." style="background:#fff;"></div>
+                            <div class="form-group"><label>Video URL (YouTube - Optional)</label><input type="url" id="pVideo" placeholder="https://www.youtube.com/watch?v=..." style="background:#fff; width: 100%; max-width: 100%;"></div>
 
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                                 <div class="form-group" style="flex: 1; min-width: 120px;">
@@ -248,17 +262,17 @@
                             </div>
 
                             <div class="form-section-title">Main Offer Details</div>
-                            <div class="form-group"><label>Store Name <span style="color: #EF4444;">*</span></label><input type="text" id="pStore" required placeholder="aliexpress, amazon, daraz" style="background:#fff;"></div>
-                            <div class="form-group"><label>Affiliate URL <span style="color: #EF4444;">*</span></label><input type="url" id="pAffUrl" required style="background:#fff;"></div>
+                            <div class="form-group"><label>Store Name <span style="color: #EF4444;">*</span></label><input type="text" id="pStore" required placeholder="aliexpress, amazon, daraz" style="background:#fff; width: 100%; max-width: 100%;"></div>
+                            <div class="form-group"><label>Affiliate URL <span style="color: #EF4444;">*</span></label><input type="url" id="pAffUrl" required style="background:#fff; width: 100%; max-width: 100%;"></div>
                             
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <div class="form-group" style="flex: 1; min-width: 120px;"><label>Color/Size/Qty (Optional)</label><input type="text" id="pMainVarName" placeholder="e.g. Default / Red" style="background:#fff;"></div>
-                                <div class="form-group" style="flex: 1; min-width: 120px;"><label>Base Price <span style="color: #EF4444;">*</span></label><input type="number" step="0.01" id="pPrice" required style="background:#fff;"></div>
-                                <div class="form-group" style="flex: 1; min-width: 120px;"><label style="color:#FF5A3C;">Sale Price</label><input type="number" step="0.01" id="pSalePrice" style="background:#fff;"></div>
-                                <div class="form-group" style="flex: 1; min-width: 120px;"><label>Commission %</label><input type="number" step="0.1" id="pCommission" style="background:#fff;"></div>
+                                <div class="form-group" style="flex: 1; min-width: 120px;"><label>Color/Size/Qty (Optional)</label><input type="text" id="pMainVarName" placeholder="e.g. Default / Red" style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
+                                <div class="form-group" style="flex: 1; min-width: 120px;"><label>Base Price <span style="color: #EF4444;">*</span></label><input type="number" step="0.01" id="pPrice" required style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
+                                <div class="form-group" style="flex: 1; min-width: 120px;"><label style="color:#FF5A3C;">Sale Price</label><input type="number" step="0.01" id="pSalePrice" style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
+                                <div class="form-group" style="flex: 1; min-width: 120px;"><label>Commission %</label><input type="number" step="0.1" id="pCommission" style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
                                 <div class="form-group" style="flex: 1; min-width: 120px;">
                                     <label>Currency</label>
-                                    <select id="pCurrency" style="background:#fff;">
+                                    <select id="pCurrency" style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
                                         <option value="USD">USD ($)</option><option value="PKR">PKR (Rs)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option><option value="INR">INR (₹)</option><option value="AED">AED (د.إ)</option>
                                     </select>
                                 </div>
@@ -269,8 +283,8 @@
                             <button type="button" id="addVariationBtn" class="btn-add-var">+ Add Variation (Size/Color)</button>
 
                             <div class="form-section-title">SEO Content</div>
-                            <div class="form-group"><label>Short Description <span style="color: #EF4444;">*</span></label><input type="text" id="pDesc" required style="background:#fff;"></div>
-                            <div class="form-group"><label>Detailed Review (HTML allowed) <span style="color: #EF4444;">*</span></label><textarea id="pReview" rows="6" required style="background:#fff;"></textarea></div>
+                            <div class="form-group"><label>Short Description <span style="color: #EF4444;">*</span></label><input type="text" id="pDesc" required style="background:#fff; width: 100%; max-width: 100%;"></div>
+                            <div class="form-group"><label>Detailed Review (HTML allowed) <span style="color: #EF4444;">*</span></label><textarea id="pReview" rows="6" required style="background:#fff; width: 100%; max-width: 100%;"></textarea></div>
 
                             <!-- Checkboxes ek line me -->
                             <div class="form-group" style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; margin-top: 15px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
