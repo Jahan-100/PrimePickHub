@@ -892,14 +892,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// ⭐ AI PRODUCT HUNTER LOGIC ⭐
+// ⭐ AI PRODUCT HUNTER LOGIC (NEW) ⭐
 document.addEventListener('DOMContentLoaded', () => {
     const discoverBtn = document.getElementById('discoverProductsBtn');
+    const toggleBtn = document.getElementById('toggleAiListBtn');
+    const listContainer = document.getElementById('discoveredListContainer');
     const listBody = document.getElementById('discoveredListBody');
     const countEl = document.getElementById('discoveredCount');
 
-    if (!discoverBtn) return;
+    if (!discoverBtn || !toggleBtn) return;
     let allDiscovered = [];
+
+    // Toggle Button Logic (Show/Hide List + Color Change)
+    toggleBtn.addEventListener('click', () => {
+        if (listContainer.style.display === 'none') {
+            listContainer.style.display = 'block';
+            toggleBtn.innerText = 'Hide List';
+            toggleBtn.style.background = '#EF4444'; // Red color for hide
+        } else {
+            listContainer.style.display = 'none';
+            toggleBtn.innerText = 'Show List';
+            toggleBtn.style.background = '#4f46e5'; // Blue color for show
+        }
+    });
 
     async function loadDiscoveredProducts() {
         const { data, error } = await window.supabaseClient
@@ -913,7 +928,7 @@ document.addEventListener('DOMContentLoaded', () => {
         countEl.innerText = data.length;
         
         if (data.length === 0) {
-            listBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No products found yet. Click Discover.</td></tr>';
+            listBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No products found yet. Click Search Now.</td></tr>';
             return;
         }
 
@@ -923,7 +938,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td style="text-align:center;"><img src="${p.image_url}" style="width:50px;height:50px;object-fit:cover;border-radius:4px;" onerror="this.src='/assets/icon-192.png?v=4'"></td>
                 <td style="font-weight:600; font-size:0.85rem;">${p.title}</td>
                 <td style="text-align:center;"><span style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:4px; font-weight:bold;">${p.country}</span></td>
-                <td style="text-align:center;">${p.platform}</td>
+                <td style="text-align:center;">${p.platform || p.source}</td>
                 <td style="text-align:center; font-weight:bold; color:#16a34a;">${p.sales_count ? p.sales_count.toLocaleString() : 'N/A'}</td>
                 <td style="text-align:center;"><a href="${p.original_url}" target="_blank" style="color:#3b82f6; text-decoration:underline;">View Original</a></td>
                 <td>
@@ -936,9 +951,10 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     }
 
+    // Manual Search Trigger
     discoverBtn.addEventListener('click', async () => {
         const originalText = discoverBtn.innerText;
-        discoverBtn.innerText = "⏳ Scraping & AI Filtering... (Wait 1-2 Mins)";
+        discoverBtn.innerText = "⏳ Scraping... (1-2 Mins)";
         discoverBtn.disabled = true;
 
         try {
@@ -947,48 +963,47 @@ document.addEventListener('DOMContentLoaded', () => {
             if (result.success) {
                 alert(result.message);
                 await loadDiscoveredProducts();
+                if (listContainer.style.display === 'none') {
+                    listContainer.style.display = 'block';
+                    toggleBtn.innerText = 'Hide List';
+                    toggleBtn.style.background = '#EF4444';
+                }
             } else {
                 alert("Error: " + result.error);
             }
         } catch (err) {
-            alert("Failed to connect to API. Make sure APIFY_API_TOKEN is added in Vercel.");
+            alert("Failed to connect to API.");
         } finally {
             discoverBtn.innerText = originalText;
             discoverBtn.disabled = false;
         }
     });
 
-    // ⭐ Yahan magic ho raha hai: Approve dabate hi form auto-fill hoga
     window.approveDiscovered = function(id) {
         const product = allDiscovered.find(p => p.id === id);
         if (!product) return;
 
-        // Add Product form ke fields fill karein
         document.getElementById('pTitle').value = product.title;
         document.getElementById('pImg').value = product.image_url;
-        document.getElementById('pAffUrl').value = product.original_url; // User isay apne affiliate link se replace karega
-        document.getElementById('pStore').value = product.platform.toLowerCase();
-        document.getElementById('pDesc').value = `Top selling product in ${product.country} on ${product.platform}.`;
+        document.getElementById('pAffUrl').value = product.original_url;
+        document.getElementById('pStore').value = (product.platform || product.source || 'amazon').toLowerCase();
+        document.getElementById('pDesc').value = `Top selling product in ${product.country} on ${product.platform || product.source}.`;
         document.getElementById('pCurrency').value = (product.country === 'UK') ? 'GBP' : 'USD';
         
-        // Form open karein
         const formContainer = document.getElementById('addProductContainer');
-        const toggleBtn = document.getElementById('toggleAddProductBtn');
+        const toggleProductBtn = document.getElementById('toggleAddProductBtn');
         if (formContainer.style.display === 'none') {
             formContainer.style.display = 'block';
-            toggleBtn.textContent = 'Hide Product Form';
-            toggleBtn.style.background = '#EF4444';
+            toggleProductBtn.textContent = 'Hide Product Form';
+            toggleProductBtn.style.background = '#EF4444';
         }
 
-        // Form tak scroll karein
         document.getElementById('productForm').scrollIntoView({ behavior: 'smooth' });
-        
-        // Alert mat dikhayein, bas highlight karein ke form bhar gaya hai
         document.getElementById('pAffUrl').focus();
     };
 
     window.rejectDiscovered = async function(id) {
-        if(!confirm("Are you sure you want to remove this from the list?")) return;
+        if(!confirm("Remove this product from the list?")) return;
         const { error } = await window.supabaseClient.from('discovered_products').delete().eq('id', id);
         if (!error) {
             document.getElementById(`disc-${id}`).remove();
@@ -996,5 +1011,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Load list on page load
     loadDiscoveredProducts();
 });
