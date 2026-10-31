@@ -892,7 +892,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// ⭐ AI PRODUCT HUNTER LOGIC (Updated with Keyword & no Select All) ⭐
+// ⭐ AI PRODUCT HUNTER LOGIC (Color States, Sorting, Scrollable) ⭐
 document.addEventListener('DOMContentLoaded', () => {
     const discoverBtn = document.getElementById('discoverProductsBtn');
     const toggleBtn = document.getElementById('toggleAiListBtn');
@@ -901,16 +901,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const countEl = document.getElementById('discoveredCount');
     const aiSearchKeyword = document.getElementById('aiSearchKeyword');
     
-    // Filters
+    // Filters & Sorting
     const filterPlatform = document.getElementById('filterPlatform');
     const filterCountry = document.getElementById('filterCountry');
     const filterCategory = document.getElementById('filterCategory');
     const sortSales = document.getElementById('sortSales');
     const rejectSelectedBtn = document.getElementById('rejectSelectedBtn');
 
+    // Scroll Buttons
+    const scrollUpBtn = document.getElementById('scrollUpBtn');
+    const scrollDownBtn = document.getElementById('scrollDownBtn');
+    const tableWrapper = document.querySelector('.table-scroll-wrapper');
+
     if (!discoverBtn || !toggleBtn) return;
     let allDiscovered = [];
     let selectedIds = new Set();
+    let seenProductIds = new Set(); // To track new vs existing products
+    let clickedProductIds = new Set(); // To track read/clicked products
 
     // Toggle Button Logic
     toggleBtn.addEventListener('click', () => {
@@ -925,6 +932,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Scroll Buttons Logic (Press and hold scroll)
+    let scrollInterval;
+    const startScroll = (direction) => {
+        scrollInterval = setInterval(() => {
+            if (direction === 'up') tableWrapper.scrollTop -= 10;
+            else tableWrapper.scrollTop += 10;
+        }, 20);
+    };
+    const stopScroll = () => clearInterval(scrollInterval);
+
+    scrollUpBtn.addEventListener('mousedown', () => startScroll('up'));
+    scrollUpBtn.addEventListener('mouseup', stopScroll);
+    scrollUpBtn.addEventListener('mouseleave', stopScroll);
+    
+    scrollDownBtn.addEventListener('mousedown', () => startScroll('down'));
+    scrollDownBtn.addEventListener('mouseup', stopScroll);
+    scrollDownBtn.addEventListener('mouseleave', stopScroll);
+
     async function loadDiscoveredProducts() {
         const { data, error } = await window.supabaseClient
             .from('discovered_products')
@@ -932,8 +957,15 @@ document.addEventListener('DOMContentLoaded', () => {
             .order('rank_position', { ascending: true });
 
         if (error || !data) return;
-        allDiscovered = data;
-        selectedIds.clear(); // Reset selection on load
+        
+        // Check which products are new
+        allDiscovered = data.map(p => {
+            const isNew = !seenProductIds.has(p.id); // Check before adding to seen
+            seenProductIds.add(p.id); // Add to seen
+            return { ...p, isNew };
+        });
+
+        selectedIds.clear(); 
         renderDiscoveredTable();
     }
 
@@ -946,10 +978,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return matchPlatform && matchCountry && matchCategory;
         });
 
+        // Sorting Logic
         if (sortSales.value === 'high-low') {
             filtered.sort((a, b) => (b.sales_count || 0) - (a.sales_count || 0));
         } else if (sortSales.value === 'low-high') {
             filtered.sort((a, b) => (a.sales_count || 0) - (b.sales_count || 0));
+        } else if (sortSales.value === 'price-high-low') {
+            filtered.sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0));
+        } else if (sortSales.value === 'price-low-high') {
+            filtered.sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
         }
 
         countEl.innerText = filtered.length;
@@ -959,8 +996,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        listBody.innerHTML = filtered.map((p, index) => `
-            <tr id="disc-${p.id}">
+        listBody.innerHTML = filtered.map((p, index) => {
+            // Determine Row Color Class
+            let rowClass = 'row-existing';
+            if (clickedProductIds.has(p.id)) {
+                rowClass = 'row-clicked'; // White if clicked
+            } else if (p.isNew) {
+                rowClass = 'row-new'; // Yellow if new
+            }
+
+            return `
+            <tr id="disc-${p.id}" class="${rowClass}" onclick="markProductClicked('${p.id}', event)">
                 <td style="text-align:center;">
                     <input type="checkbox" class="disc-checkbox" value="${p.id}" ${selectedIds.has(p.id) ? 'checked' : ''} onchange="toggleDiscoveredSelection('${p.id}', this.checked)" style="cursor:pointer; width:16px; height:16px; margin-right:5px;">
                     ${index + 1}
@@ -972,16 +1018,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td style="text-align:center;"><span style="background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:0.75rem;">${p.country}</span></td>
                 <td style="text-align:center; font-size:0.8rem;">${p.platform || p.source}</td>
                 <td style="text-align:center; font-weight:bold; color:#16a34a; font-size:0.85rem;">${p.sales_count ? p.sales_count.toLocaleString() : 'N/A'}</td>
-                <td style="text-align:center;"><a href="${p.original_url}" target="_blank" style="color:#3b82f6; font-size:0.8rem; text-decoration:underline;">View</a></td>
-                <td>
+                <td style="text-align:center;"><a href="${p.original_url}" target="_blank" style="color:#3b82f6; font-size:0.8rem; text-decoration:underline;" onclick="event.stopPropagation()">View</a></td>
+                <td onclick="event.stopPropagation()">
                     <div style="display:flex; flex-direction:column; gap:4px;">
                         <button onclick="approveDiscovered('${p.id}')" style="background:#10B981; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.75rem; font-weight:bold;">Approve</button>
                         <button onclick="rejectDiscovered('${p.id}')" style="background:#EF4444; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.75rem;">Reject</button>
                     </div>
                 </td>
             </tr>
-        `).join('');
+        `}).join('');
     }
+
+    // Row Click Logic
+    window.markProductClicked = (id, event) => {
+        // Ignore if click was on checkbox or buttons or links
+        if (event.target.tagName === 'INPUT' || event.target.tagName === 'BUTTON' || event.target.tagName === 'A' || event.target.tagName === 'IMG') return;
+        
+        clickedProductIds.add(id);
+        const row = document.getElementById(`disc-${id}`);
+        if (row) {
+            row.classList.remove('row-new', 'row-existing');
+            row.classList.add('row-clicked'); // Make it white
+        }
+    };
 
     // Filter Event Listeners
     filterPlatform.addEventListener('change', renderDiscoveredTable);
@@ -1019,7 +1078,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Manual Search with Keyword
+    // Manual Search
     discoverBtn.addEventListener('click', async () => {
         const keyword = aiSearchKeyword.value.trim();
         const originalText = discoverBtn.innerText;
