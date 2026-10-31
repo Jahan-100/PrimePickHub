@@ -10,26 +10,70 @@
     <link rel="stylesheet" href="/css/admin.css?v=5">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ⭐ ADMIN LAYOUT FIX (To stop side scrolling) ⭐ */
+        /* ⭐ ADMIN LAYOUT FIX ⭐ */
         .admin-layout { 
             display: flex; 
             width: 100%;
             max-width: 100vw;
             overflow-x: hidden; 
         }
+        .admin-sidebar { 
+            width: 160px; /* Sidebar chota kar diya */
+            padding: 15px 10px; 
+        }
+        .admin-sidebar h2 { 
+            font-size: 1.1rem; 
+            margin-bottom: 20px; 
+            text-align: center;
+        }
+        .admin-nav a { 
+            padding: 10px; 
+            font-size: 0.9rem; 
+        }
         .admin-content { 
             flex: 1; 
-            min-width: 0; /* This is the magic fix that prevents the table from stretching the page */
-            padding: 35px; 
+            min-width: 0; /* Prevent stretching */
+            padding: 15px; /* Right side ki khali jagah kam ki */
             overflow-x: hidden;
         }
 
-        .admin-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .admin-table th, .admin-table td { border: 1px solid #E2E8F0; padding: 10px; vertical-align: middle; }
-        .admin-table th { background: #F8FAFC; font-weight: 600; text-align: center !important; }
-        .action-btns { display: flex; justify-content: center; gap: 8px; }
-        .btn-edit { background: #3B82F6; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
-        .btn-delete { background: #EF4444; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
+        /* ⭐ TABLE STYLES FIXED TO FIT BOX ⭐ */
+        .admin-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 15px; 
+            table-layout: fixed; /* MAGIC FIX: Table will not stretch */
+        }
+        .admin-table th, .admin-table td { 
+            border: 1px solid #E2E8F0; 
+            padding: 6px 4px; 
+            vertical-align: middle; 
+            font-size: 0.75rem;
+            word-wrap: break-word; /* Text wrap hoga */
+        }
+        .admin-table th { 
+            background: #F8FAFC; 
+            font-weight: 600; 
+            text-align: center !important; 
+            font-size: 0.8rem;
+        }
+
+        /* Column Widths (Taake sab kuch perfectly fit ho jaye) */
+        .admin-table th:nth-child(1) { width: 4%; }
+        .admin-table th:nth-child(2) { width: 6%; }
+        .admin-table th:nth-child(3) { width: 30%; text-align: left !important; }
+        .admin-table th:nth-child(4) { width: 8%; }
+        .admin-table th:nth-child(5) { width: 10%; }
+        .admin-table th:nth-child(6) { width: 8%; }
+        .admin-table th:nth-child(7) { width: 8%; }
+        .admin-table th:nth-child(8) { width: 8%; }
+        .admin-table th:nth-child(9) { width: 8%; }
+        .admin-table th:nth-child(10) { width: 10%; }
+
+        .action-btns { display: flex; justify-content: center; gap: 4px; flex-wrap: wrap; }
+        .btn-edit { background: #3B82F6; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem; }
+        .btn-delete { background: #EF4444; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem; }
+        
         .variation-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; background: #F8FAFC; padding: 10px; border-radius: 6px; border: 1px solid #E2E8F0; flex-wrap: wrap; }
         .variation-row input { flex: 1; min-width: 90px; padding: 8px; border: 1px solid #CBD5E1; border-radius: 4px; font-size: 0.9rem; }
         .variation-row input.var-name { flex: 2; min-width: 120px; }
@@ -43,6 +87,7 @@
         .btn-upload { background: #E2E8F0; color: #1E1B4B; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; border: 1px solid #CBD5E1; transition: 0.2s; display: inline-block; }
         .btn-upload:hover { background: #CBD5E1; }
         .file-name { font-size: 0.8rem; color: #64748B; }
+        
         .card-products { background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); border: 1px solid #7dd3fc !important; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.15); border-radius: 12px; }
         .card-products h3 { color: #0369a1 !important; font-weight: 800 !important; }
         .card-products p { color: #0284c7 !important; font-weight: 600; }
@@ -69,14 +114,17 @@
         .settings-row .form-group { margin-bottom: 0; flex: 1; min-width: 110px; }
         .settings-row .form-group:first-child { flex: 2; min-width: 150px; }
 
-        /* ⭐ Custom Scrollable Table & Buttons for AI Hunter ⭐ */
+        /* ⭐ Custom Scrollable Table (ONLY VERTICAL SCROLL) ⭐ */
         .table-scroll-outer {
             position: relative;
+            width: 100%;
         }
 
         .table-scroll-wrapper {
-            max-height: 450px; /* 5 products ke baad scroll */
-            overflow: auto; /* Changed to auto for both x and y */
+            max-height: 450px; /* 5 products ke baad vertical scroll */
+            overflow-y: auto; 
+            overflow-x: hidden; /* Horizontal scroll khatam */
+            width: 100%;
             border: 1px solid #E2E8F0;
             border-radius: 6px;
         }
@@ -88,10 +136,9 @@
             width: 0;
         }
 
-        /* Custom Scrollbar styling */
+        /* Custom Vertical Scrollbar styling */
         .table-scroll-wrapper::-webkit-scrollbar {
             width: 14px; 
-            height: 14px;
         }
         .table-scroll-wrapper::-webkit-scrollbar-track {
             background: #f1f5f9;
@@ -106,7 +153,7 @@
             background: #94a3b8;
         }
 
-        /* ⭐ UPDATED: Arrows exactly ON the scrollbar track ⭐ */
+        /* ⭐ Arrows exactly ON the scrollbar track ⭐ */
         .scroll-ctrl-btn {
             position: absolute; 
             right: 1px; 
@@ -133,9 +180,9 @@
         .scroll-down { bottom: 1px; }
 
         /* AI Hunter Row Colors */
-        .row-existing { background-color: #e0f2fe !important; transition: background 0.3s; cursor: pointer; } /* Light Blue */
-        .row-new { background-color: #fef08a !important; transition: background 0.3s; cursor: pointer; } /* Light Yellow */
-        .row-clicked { background-color: #ffffff !important; transition: background 0.3s; cursor: pointer; } /* White */
+        .row-existing { background-color: #e0f2fe !important; transition: background 0.3s; cursor: pointer; }
+        .row-new { background-color: #fef08a !important; transition: background 0.3s; cursor: pointer; }
+        .row-clicked { background-color: #ffffff !important; transition: background 0.3s; cursor: pointer; }
         
         .admin-table th { position: sticky; top: 0; z-index: 5; }
     </style>
@@ -185,12 +232,12 @@
                             <input type="hidden" id="pOfferId" value="">
 
                             <div class="form-section-title">Basic Info</div>
-                            <div class="form-group"><label>Product Title <span style="color: #EF4444;">*</span></label><input type="text" id="pTitle" required style="background:#fff; width: 100%; max-width: 100%;"></div>
-                            <div class="form-group"><label>URL Slug <span style="color: #EF4444;">*</span></label><input type="text" id="pSlug" required pattern="[a-z0-9\-]+" style="background:#fff; width: 100%; max-width: 100%;"></div>
+                            <div class="form-group"><label>Product Title <span style="color: #EF4444;">*</span></label><input type="text" id="pTitle" required style="background:#fff; width: 100%;"></div>
+                            <div class="form-group"><label>URL Slug <span style="color: #EF4444;">*</span></label><input type="text" id="pSlug" required pattern="[a-z0-9\-]+" style="background:#fff; width: 100%;"></div>
                             
                             <div class="form-group">
                                 <label>Primary Image (URL or Upload) <span style="color: #EF4444;">*</span></label>
-                                <input type="url" id="pImg" placeholder="https://...main-image.jpg" style="background:#fff; width: 100%; max-width: 100%;">
+                                <input type="url" id="pImg" placeholder="https://...main-image.jpg" style="background:#fff; width: 100%;">
                                 <div class="upload-btn-wrap">
                                     <input type="file" id="pImgFile" accept="image/*" style="display: none;" onchange="document.getElementById('pImgFileName').innerText = this.files[0] ? this.files[0].name : 'No file chosen'">
                                     <button type="button" class="btn-upload" onclick="document.getElementById('pImgFile').click()">📁 Choose from PC</button>
@@ -200,7 +247,7 @@
 
                             <div class="form-group">
                                 <label>Gallery Images (URLs or Upload)</label>
-                                <textarea id="pGallery" rows="3" placeholder="https://...image2.jpg&#10;https://...image3.jpg" style="background:#fff; width: 100%; max-width: 100%;"></textarea>
+                                <textarea id="pGallery" rows="3" placeholder="https://...image2.jpg&#10;https://...image3.jpg" style="background:#fff; width: 100%;"></textarea>
                                 <div class="upload-btn-wrap">
                                     <input type="file" id="pGalleryFile" accept="image/*" multiple style="display: none;" onchange="document.getElementById('pGalleryFileName').innerText = this.files.length > 0 ? this.files.length + ' files selected' : 'No files chosen'">
                                     <button type="button" class="btn-upload" onclick="document.getElementById('pGalleryFile').click()">📁 Choose Multiple from PC</button>
@@ -208,7 +255,7 @@
                                 </div>
                             </div>
 
-                            <div class="form-group"><label>Video URL (YouTube - Optional)</label><input type="url" id="pVideo" placeholder="https://www.youtube.com/watch?v=..." style="background:#fff; width: 100%; max-width: 100%;"></div>
+                            <div class="form-group"><label>Video URL (YouTube - Optional)</label><input type="url" id="pVideo" placeholder="https://www.youtube.com/watch?v=..." style="background:#fff; width: 100%;"></div>
 
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                                 <div class="form-group" style="flex: 1; min-width: 120px;">
@@ -262,8 +309,8 @@
                             </div>
 
                             <div class="form-section-title">Main Offer Details</div>
-                            <div class="form-group"><label>Store Name <span style="color: #EF4444;">*</span></label><input type="text" id="pStore" required placeholder="aliexpress, amazon, daraz" style="background:#fff; width: 100%; max-width: 100%;"></div>
-                            <div class="form-group"><label>Affiliate URL <span style="color: #EF4444;">*</span></label><input type="url" id="pAffUrl" required style="background:#fff; width: 100%; max-width: 100%;"></div>
+                            <div class="form-group"><label>Store Name <span style="color: #EF4444;">*</span></label><input type="text" id="pStore" required placeholder="aliexpress, amazon, daraz" style="background:#fff; width: 100%;"></div>
+                            <div class="form-group"><label>Affiliate URL <span style="color: #EF4444;">*</span></label><input type="url" id="pAffUrl" required style="background:#fff; width: 100%;"></div>
                             
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                                 <div class="form-group" style="flex: 1; min-width: 120px;"><label>Color/Size/Qty (Optional)</label><input type="text" id="pMainVarName" placeholder="e.g. Default / Red" style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
@@ -283,8 +330,8 @@
                             <button type="button" id="addVariationBtn" class="btn-add-var">+ Add Variation (Size/Color)</button>
 
                             <div class="form-section-title">SEO Content</div>
-                            <div class="form-group"><label>Short Description <span style="color: #EF4444;">*</span></label><input type="text" id="pDesc" required style="background:#fff; width: 100%; max-width: 100%;"></div>
-                            <div class="form-group"><label>Detailed Review (HTML allowed) <span style="color: #EF4444;">*</span></label><textarea id="pReview" rows="6" required style="background:#fff; width: 100%; max-width: 100%;"></textarea></div>
+                            <div class="form-group"><label>Short Description <span style="color: #EF4444;">*</span></label><input type="text" id="pDesc" required style="background:#fff; width: 100%;"></div>
+                            <div class="form-group"><label>Detailed Review (HTML allowed) <span style="color: #EF4444;">*</span></label><textarea id="pReview" rows="6" required style="background:#fff; width: 100%;"></textarea></div>
 
                             <!-- Checkboxes ek line me -->
                             <div class="form-group" style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; margin-top: 15px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
@@ -572,13 +619,14 @@
                             </button>
                         </div>
 
-                        <!-- ⭐ SCROLL OUTER WRAPPER (To keep arrows fixed) ⭐ -->
+                        <!-- ⭐ SCROLL OUTER WRAPPER ⭐ -->
                         <div class="table-scroll-outer">
                             <button type="button" id="scrollUpBtn" class="scroll-ctrl-btn scroll-up">▲</button>
                             <button type="button" id="scrollDownBtn" class="scroll-ctrl-btn scroll-down">▼</button>
                             
                             <div class="table-scroll-wrapper">
-                                <table class="admin-table" style="min-width: 1100px; margin-top: 0;">
+                                <!-- Min-width hata di hai taake table box mein fit ho jaye -->
+                                <table class="admin-table" style="margin-top: 0;">
                                     <thead>
                                         <tr>
                                             <th>Sr. No.</th>
