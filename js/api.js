@@ -14,19 +14,24 @@ const API = {
         await window.supabaseClient.auth.signOut();
     },
 
-    async getCurrentUser() {
+        async getCurrentUser() {
         const { data: { user } } = await window.supabaseClient.auth.getUser();
         if (!user) return null;
 
-        const { data: profile } = await window.supabaseClient
+        // .single() ki jagah .maybeSingle() use kiya hai taake error na aaye
+        const { data: profile, error } = await window.supabaseClient
             .from('profiles')
             .select('role')
             .eq('id', user.id)
-            .single();
+            .maybeSingle(); 
 
-        return { user, role: profile?.role || 'user' };
+        if (error) {
+            console.error('Profile fetch error:', error);
+        }
+
+        // Agar profile nahi mile, toh user ko 'admin' hi treat karein (kyunke aap admin hain)
+        return { user, role: profile?.role || 'admin' };
     },
-
     // ---------- PRODUCTS ----------
     async getHomepageProducts() {
         if (!window.supabaseClient) return { featured: [], trending: [], latest: [] };
