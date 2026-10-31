@@ -45,7 +45,6 @@ module.exports = async function handler(req, res) {
             return res.status(500).json({ error: "No data found from Apify." });
         }
 
-        // Clean Data for AI
         const cleanDataForAI = allRawProducts.slice(0, 15).map(p => ({
             title: p.title || p.name,
             url: p.url || p.link || p.productUrl,
@@ -80,7 +79,14 @@ module.exports = async function handler(req, res) {
         ]
         Raw Data: ${JSON.stringify(cleanDataForAI)}`;
 
-        const freeModels = ["google/gemma-4-26b-a4b-it:free", "meta-llama/llama-3.2-3b-instruct:free", "openrouter/free"];
+        // ⭐ UPDATED: Naye active free models
+        const freeModels = [
+            "google/gemini-2.0-flash-lite-preview-02-05:free",
+            "mistralai/mistral-7b-instruct:free",
+            "huggingfaceh4/zephyr-7b-beta:free",
+            "openrouter/free"
+        ];
+        
         let finalProducts = null;
         let lastError = null;
 
@@ -92,7 +98,12 @@ module.exports = async function handler(req, res) {
                     body: JSON.stringify({ model: model, messages: [{ role: "user", content: prompt }] })
                 });
                 const aiData = await aiResponse.json();
-                if (aiData.error) { lastError = aiData.error.message; continue; }
+                
+                if (aiData.error) { 
+                    lastError = aiData.error.message; 
+                    console.warn(`Model ${model} failed:`, lastError);
+                    continue; 
+                }
 
                 if (aiData.choices && aiData.choices[0] && aiData.choices[0].message) {
                     let aiContent = aiData.choices[0].message.content;
@@ -103,7 +114,7 @@ module.exports = async function handler(req, res) {
                         aiContent = aiContent.substring(jsonStart, jsonEnd);
                         try {
                             finalProducts = JSON.parse(aiContent);
-                            break;
+                            break; // Kaam ho gaya, loop se bahar
                         } catch (parseError) {
                             lastError = "JSON Parse Error (Incomplete output)";
                         }
@@ -112,7 +123,7 @@ module.exports = async function handler(req, res) {
             } catch (err) { lastError = err.message; }
         }
 
-        if (!finalProducts) return res.status(500).json({ error: "AI failed. Last error: " + lastError });
+        if (!finalProducts) return res.status(500).json({ error: "All AI models failed. Last error: " + lastError });
 
         const insertData = finalProducts.map(p => ({ ...p, status: 'pending' }));
         const { error: dbError } = await supabase.from('discovered_products').upsert(insertData, { onConflict: 'asin_or_id', ignoreDuplicates: true });
