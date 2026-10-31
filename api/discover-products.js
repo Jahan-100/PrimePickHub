@@ -19,7 +19,7 @@ module.exports = async function handler(req, res) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 categorySlugs: ["electronics", "fashion"],
-                maxItems: 10 // Fast response ke liye kam kiya hai
+                maxItems: 10 
             })
         });
 
@@ -28,7 +28,7 @@ module.exports = async function handler(req, res) {
             return res.status(500).json({ error: "Apify error or no data found. " + (rawProducts.message || rawProducts.error || "") });
         }
 
-        // 2. AI ko call karein (Naya Stable Model Use kiya hai)
+        // 2. AI ke liye prompt tayyar karein
         const prompt = `You are a JSON-only API. Select the top 5 best-selling products from this raw data and output them as a JSON array. 
         NO markdown, NO explanation, ONLY the JSON array. Format:
         [
@@ -45,38 +45,55 @@ module.exports = async function handler(req, res) {
         ]
         Raw Data: ${JSON.stringify(rawProducts.slice(0, 5))}`;
 
-        const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
-                model: "meta-llama/llama-3-8b-instruct:free", // <--- NAYA MODEL YAHAN HAI
-                messages: [{ role: "user", content: prompt }]
-            })
-        });
+        // ⭐ NAYA: Multiple Free Models ka Fallback System (Agar ek fail ho toh doosra try karega) ⭐
+        const freeModels = [
+            "meta-llama/llama-3.1-8b-instruct:free", 
+            "google/gemma-4-26b-a4b-it:free",
+            "deepseek/deepseek-r1:free"
+        ];
 
-        const aiData = await aiResponse.json();
-        
-        // Agar AI se koi error aaye toh usay handle karein
-        if (aiData.error) {
-            return res.status(500).json({ error: "AI Error: " + aiData.error.message });
-        }
-        if (!aiData.choices || !aiData.choices[0] || !aiData.choices[0].message) {
-            return res.status(500).json({ error: "AI returned unexpected response. Try again." });
+        let finalProducts = null;
+        let lastError = null;
+
+        for (const model of freeModels) {
+            try {
+                console.log(`Trying AI Model: ${model}`);
+                const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        model: model,
+                        messages: [{ role: "user", content: prompt }]
+                    })
+                });
+
+                const aiData = await aiResponse.json();
+                
+                if (aiData.error) {
+                    lastError = aiData.error.message;
+                    continue; // Agar is model par error aaya, toh agla model try karein
+                }
+
+                if (aiData.choices && aiData.choices[0] && aiData.choices[0].message) {
+                    let aiContent = aiData.choices[0].message.content;
+                    
+                    const jsonStart = aiContent.indexOf('[');
+                    const jsonEnd = aiContent.lastIndexOf(']') + 1;
+                    
+                    if (jsonStart !== -1 && jsonEnd !== -1) {
+                        aiContent = aiContent.substring(jsonStart, jsonEnd);
+                        finalProducts = JSON.parse(aiContent);
+                        break; // Agar successful ho gaya, toh loop se bahar nikal jayein
+                    }
+                }
+            } catch (err) {
+                lastError = err.message;
+            }
         }
 
-        let aiContent = aiData.choices[0].message.content;
-        
-        // Safely JSON nikaalein
-        const jsonStart = aiContent.indexOf('[');
-        const jsonEnd = aiContent.lastIndexOf(']') + 1;
-        
-        if (jsonStart !== -1 && jsonEnd !== -1) {
-            aiContent = aiContent.substring(jsonStart, jsonEnd);
-        } else {
-            return res.status(500).json({ error: "AI did not return a valid list. Try again." });
+        if (!finalProducts) {
+            return res.status(500).json({ error: "All AI models failed. Last error: " + lastError });
         }
-
-        const finalProducts = JSON.parse(aiContent);
 
         // 3. Supabase mein save karein
         const insertData = finalProducts.map(p => ({ ...p, status: 'pending' }));
