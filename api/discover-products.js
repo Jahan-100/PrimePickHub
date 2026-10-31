@@ -11,47 +11,73 @@ module.exports = async function handler(req, res) {
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
     try {
-        // 1. Apify se Amazon ke Best Sellers fetch karein
-        const apifyUrl = `https://api.apify.com/v2/acts/zet46~amazon-best-sellers-scraper/run-sync-get-dataset-items?token=${apifyToken}`;
-        
-        const apifyResponse = await fetch(apifyUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                categorySlugs: ["electronics", "fashion"],
-                maxItems: 10 
-            })
-        });
+        let allRawProducts = [];
 
-        const rawProducts = await apifyResponse.json();
-        if (!rawProducts || rawProducts.length === 0 || rawProducts.error) {
-            return res.status(500).json({ error: "Apify error or no data found. " + (rawProducts.message || rawProducts.error || "") });
+        // 1. Amazon Best Sellers
+        try {
+            const amazonRes = await fetch(`https://api.apify.com/v2/acts/rel8ble~amazon-bestsellers-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ categoryIds: ["electronics", "fashion"], maxItems: 10 })
+            });
+            const amazonData = await amazonRes.json();
+            if (Array.isArray(amazonData)) {
+                allRawProducts = allRawProducts.concat(amazonData.map(p => ({ ...p, source: 'Amazon' })));
+            }
+        } catch (e) { console.warn("Amazon failed", e); }
+
+        // 2. AliExpress
+        try {
+            const aliRes = await fetch(`https://api.apify.com/v2/acts/logical_scrapers~aliexpress-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: "best selling", maxItems: 10 })
+            });
+            const aliData = await aliRes.json();
+            if (Array.isArray(aliData)) {
+                allRawProducts = allRawProducts.concat(aliData.map(p => ({ ...p, source: 'AliExpress' })));
+            }
+        } catch (e) { console.warn("AliExpress failed", e); }
+
+        // 3. Alibaba
+        try {
+            const alibabaRes = await fetch(`https://api.apify.com/v2/acts/rel8ble~alibaba-product-search-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: "trending", maxItems: 10 })
+            });
+            const alibabaData = await alibabaRes.json();
+            if (Array.isArray(alibabaData)) {
+                allRawProducts = allRawProducts.concat(alibabaData.map(p => ({ ...p, source: 'Alibaba' })));
+            }
+        } catch (e) { console.warn("Alibaba failed", e); }
+
+        if (allRawProducts.length === 0) {
+            return res.status(500).json({ error: "No data found from any platform. Check Apify tokens or actor limits." });
         }
 
-        // 2. AI ke liye prompt tayyar karein
-        const prompt = `You are a JSON-only API. Select the top 5 best-selling products from this raw data and output them as a JSON array. 
+        // 4. AI ko call karein (Data ko clean aur structured karne ke liye)
+        const prompt = `You are a JSON-only API. Select the top 5 best-selling products from this raw data (focus on US, UK, Europe market) and output them as a JSON array. 
         NO markdown, NO explanation, ONLY the JSON array. Format:
         [
           {
-            "asin_or_id": "B0XXXXXX",
+            "asin_or_id": "Unique_ID",
             "title": "Product Name",
             "image_url": "https://...",
-            "original_url": "https://amazon.com/dp/...",
-            "platform": "Amazon",
+            "original_url": "https://...",
+            "platform": "Amazon/AliExpress/Alibaba",
             "country": "US",
             "sales_count": 15000,
             "rank_position": 1
           }
         ]
-        Raw Data: ${JSON.stringify(rawProducts.slice(0, 5))}`;
+        Raw Data: ${JSON.stringify(allRawProducts.slice(0, 15))}`;
 
-        // ⭐ NAYA: Updated Active Free Models (Oct 2026) ⭐
-        // Humne wo models select kiye hain jo abhi OpenRouter par active hain.
         const freeModels = [
             "google/gemma-4-26b-a4b-it:free", 
             "meta-llama/llama-3.2-3b-instruct:free",
             "mistralai/mistral-7b-instruct:free",
-            "openrouter/free" // ⭐ Ye "Free Models Router" hai, jo automatically kisi bhi available free model par request bhej dega agar upar wale fail hon.
+            "openrouter/free"
         ];
 
         let finalProducts = null;
@@ -59,7 +85,6 @@ module.exports = async function handler(req, res) {
 
         for (const model of freeModels) {
             try {
-                console.log(`Trying AI Model: ${model}`);
                 const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                     method: "POST",
                     headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -71,40 +96,32 @@ module.exports = async function handler(req, res) {
 
                 const aiData = await aiResponse.json();
                 
-                // Agar API se error aaye (jaise rate limit ya model not found)
                 if (aiData.error) {
                     lastError = aiData.error.message;
-                    console.warn(`Model ${model} failed:`, lastError);
-                    continue; // Agla model try karein
+                    continue;
                 }
 
-                // Agar AI ne sahi jawab diya
                 if (aiData.choices && aiData.choices[0] && aiData.choices[0].message) {
                     let aiContent = aiData.choices[0].message.content;
-                    
-                    // JSON ko safely extract karein (kabhi kabhi AI text bhi likh deta hai)
                     const jsonStart = aiContent.indexOf('[');
                     const jsonEnd = aiContent.lastIndexOf(']') + 1;
                     
                     if (jsonStart !== -1 && jsonEnd !== -1) {
                         aiContent = aiContent.substring(jsonStart, jsonEnd);
                         finalProducts = JSON.parse(aiContent);
-                        console.log(`Success with model: ${model}`);
-                        break; // Kaam ho gaya, loop se bahar
+                        break;
                     }
                 }
             } catch (err) {
                 lastError = err.message;
-                console.warn(`Exception with model ${model}:`, err.message);
             }
         }
 
-        // Agar saare models fail ho jayein
         if (!finalProducts) {
             return res.status(500).json({ error: "All AI models failed. Last error: " + lastError });
         }
 
-        // 3. Supabase mein save karein
+        // 5. Supabase mein save karein
         const insertData = finalProducts.map(p => ({ ...p, status: 'pending' }));
         
         const { error: dbError } = await supabase
