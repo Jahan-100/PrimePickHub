@@ -422,14 +422,16 @@
                 </div>
                 <!-- BLOG SECTION END -->
 
-                <!-- ⭐ AI PRODUCT HUNTER SECTION (Updated with Filters & Checkboxes) ⭐ -->
+                <!-- ⭐ AI PRODUCT HUNTER SECTION ⭐ -->
                 <div class="admin-card" style="background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
                         <div>
                             <h2 style="margin: 0; color: #166534;">AI Product Hunter</h2>
-                            <p style="font-size: 0.85rem; color: #15803d; margin-top: 5px;">Daily trending products from Amazon, AliExpress, Alibaba.</p>
+                            <p style="font-size: 0.85rem; color: #15803d; margin-top: 5px;">Search daily trending products from Amazon, AliExpress, Alibaba.</p>
                         </div>
-                        <div style="display: flex; gap: 10px;">
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="text" id="aiSearchKeyword" placeholder="e.g., iPhone, Shoes..." style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; width: 200px; outline: none;">
+                            
                             <button type="button" id="discoverProductsBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#16a34a; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
                                 🤖 Search Now
                             </button>
@@ -455,6 +457,7 @@
                                 <option value="US">US</option>
                                 <option value="UK">UK</option>
                                 <option value="Europe">Europe</option>
+                                <option value="Australia">Australia</option>
                             </select>
                             <select id="filterCategory" class="filter-input" style="padding:6px; border-radius:4px; border:1px solid #cbd5e1;">
                                 <option value="all">All Categories</option>
@@ -462,6 +465,15 @@
                                 <option value="Fashion">Fashion</option>
                                 <option value="Home">Home & Kitchen</option>
                                 <option value="Beauty">Beauty</option>
+                                <option value="Sports">Sports</option>
+                                <option value="Toys">Toys</option>
+                                <option value="Automotive">Automotive</option>
+                                <option value="Health">Health</option>
+                                <option value="Pets">Pets</option>
+                                <option value="Baby">Baby</option>
+                                <option value="Office">Office</option>
+                                <option value="Garden">Garden</option>
+                                <option value="Tools">Tools</option>
                             </select>
                             <select id="sortSales" class="filter-input" style="padding:6px; border-radius:4px; border:1px solid #cbd5e1;">
                                 <option value="default">Sort by Rank</option>
@@ -477,7 +489,6 @@
                         <table class="admin-table" style="min-width: 1100px;">
                             <thead>
                                 <tr>
-                                    <th style="width: 30px;"><input type="checkbox" id="selectAllDiscovered" style="cursor:pointer; width:16px; height:16px;"></th>
                                     <th>Sr. No.</th>
                                     <th>Photo</th>
                                     <th>Title</th>
@@ -491,7 +502,7 @@
                                 </tr>
                             </thead>
                             <tbody id="discoveredListBody">
-                                <tr><td colspan="11" style="text-align:center;">Click "Search Now" to fetch data.</td></tr>
+                                <tr><td colspan="10" style="text-align:center;">Click "Search Now" to fetch data.</td></tr>
                             </tbody>
                         </table>
                     </div>
