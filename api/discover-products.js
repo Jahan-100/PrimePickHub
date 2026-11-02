@@ -6,46 +6,80 @@ module.exports = async function handler(req, res) {
     const apiKey = process.env.OPENROUTER_API_KEY;
     const apifyToken = process.env.APIFY_API_TOKEN;
     
-    const keyword = req.body.keyword ? req.body.keyword.trim() : '';
+    // Agar req.body khali hai (Cron Job ki wajah se), toh default empty keyword
+    const keyword = req.body && req.body.keyword ? req.body.keyword.trim() : '';
+    const isAutoSearch = !keyword; // Agar keyword nahi hai matlab Cron Job ne bheja hai
 
     if (!apiKey || !apifyToken) return res.status(500).json({ error: 'API keys missing in Vercel.' });
 
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
     try {
-        console.log("Starting fetch...");
+        console.log("Starting multi-platform fetch...");
         const searchQuery = keyword ? encodeURIComponent(keyword) : 'best-selling';
 
+        // Admitad ke tamam joined brands ki list
+        const admitadBrands = [
+            "Hacoo", "Redmagic", "AliExpress", "Alibaba", "Govee", 
+            "Lenovo", "ChicMe", "MEShology", "Turbo VPN", "Stylewe", 
+            "Gshopper", "JustFashionNow", "Noracora", "Openhagen", "Italo"
+        ];
+
+        // 1. Amazon Scraper
         const fetchAmazon = fetch(`https://api.apify.com/v2/acts/rel8ble~amazon-bestsellers-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ categoryIds: ["electronics", "fashion", "home"], maxItems: 10 })
         }).then(r => r.json()).catch(e => []);
 
+        // 2. AliExpress Scraper
         const fetchAli = fetch(`https://api.apify.com/v2/acts/epctex~aliexpress-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ startUrls: [{ url: `https://www.aliexpress.com/w/wholesale-${searchQuery}.html` }], maxItems: 10 })
         }).then(r => r.json()).catch(e => []);
 
+        // 3. Alibaba Scraper
         const fetchAlibaba = fetch(`https://api.apify.com/v2/acts/epctex~alibaba-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ keyword: keyword || "hot selling products", maxItems: 10 })
         }).then(r => r.json()).catch(e => []);
 
-        const [amazonData, aliData, alibabaData] = await Promise.all([fetchAmazon, fetchAli, fetchAlibaba]);
+        // 4. Admitad ke brands ke liye generic search (Hum top 3 random brands uthayenge har dafa)
+        const shuffledBrands = admitadBrands.sort(() => 0.5 - Math.random());
+        const selectedBrands = shuffledBrands.slice(0, 3); 
+        
+        const brandFetches = selectedBrands.map(brand => {
+            return fetch(`https://api.apify.com/v2/acts/epctex~ecommerce-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: `${brand} best sellers ${searchQuery}`, maxItems: 5 })
+            }).then(r => r.json()).then(data => {
+                if (Array.isArray(data)) return data.map(p => ({ ...p, source: brand }));
+                return [];
+            }).catch(e => []);
+        });
+
+        // Sab data ek sath fetch karein (Parallel)
+        const [amazonData, aliData, alibabaData, ...brandsData] = await Promise.all([fetchAmazon, fetchAli, fetchAlibaba, ...brandFetches]);
 
         let allRawProducts = [];
         if (Array.isArray(amazonData)) allRawProducts = allRawProducts.concat(amazonData.map(p => ({ ...p, source: 'Amazon' })));
         if (Array.isArray(aliData)) allRawProducts = allRawProducts.concat(aliData.map(p => ({ ...p, source: 'AliExpress' })));
         if (Array.isArray(alibabaData)) allRawProducts = allRawProducts.concat(alibabaData.map(p => ({ ...p, source: 'Alibaba' })));
+        
+        // Admitad brands ka data shamil karein
+        brandsData.forEach(arr => {
+            if (Array.isArray(arr)) allRawProducts = allRawProducts.concat(arr);
+        });
 
         if (allRawProducts.length === 0) {
-            return res.status(500).json({ error: "No data found from Apify." });
+            return res.status(500).json({ error: "No data found from Apify. Check Apify limits." });
         }
 
-        const cleanDataForAI = allRawProducts.slice(0, 15).map(p => ({
+        // Data ko AI ke liye clean karein
+        const cleanDataForAI = allRawProducts.slice(0, 30).map(p => ({
             title: p.title || p.name,
             url: p.url || p.link || p.productUrl,
             image: p.image || p.imageUrl || p.thumbnail,
@@ -53,13 +87,14 @@ module.exports = async function handler(req, res) {
             source: p.source
         }));
 
-        const prompt = `You are a JSON API. Select exactly 8 best-selling products for US, UK, Europe, Australia from this raw data.
-        ${keyword ? `Focus on: "${keyword}".` : 'Select trending items.'}
+        // AI Prompt
+        const prompt = `You are a JSON API. Select exactly 15 best-selling products for US, UK, Europe, Australia from this raw data.
+        ${keyword ? `The user is specifically searching for: "${keyword}".` : 'Select globally trending items.'}
 
-        RULES:
-        1. Mix platforms (Amazon, AliExpress, Alibaba).
-        2. Diversify countries (US, UK, Europe, Australia).
-        3. Extract Category (Electronics, Fashion, Home, etc.) and Price.
+        CRITICAL RULES:
+        1. DIVERSITY: You MUST include products from at least 8 DIFFERENT platforms/sources. Do not just pick Amazon.
+        2. COUNTRIES: Diversify countries (US, UK, Europe, Australia). Do NOT make them all "US".
+        3. CATEGORY & PRICE: Extract Category (Electronics, Fashion, Home, etc.) and Price.
         4. Return ONLY a valid JSON array. NO markdown, NO extra text.
         
         Format:
@@ -69,9 +104,9 @@ module.exports = async function handler(req, res) {
             "title": "Product Name",
             "image_url": "https://...",
             "original_url": "https://...",
-            "platform": "Amazon",
-            "country": "US",
-            "category": "Electronics",
+            "platform": "Amazon/AliExpress/Hacoo/etc",
+            "country": "US/UK/Europe/Australia",
+            "category": "Electronics/Fashion/Home",
             "price": 25.99,
             "sales_count": 15000,
             "rank_position": 1
@@ -79,14 +114,7 @@ module.exports = async function handler(req, res) {
         ]
         Raw Data: ${JSON.stringify(cleanDataForAI)}`;
 
-        // ⭐ UPDATED: Naye active free models
-        const freeModels = [
-            "google/gemini-2.0-flash-lite-preview-02-05:free",
-            "mistralai/mistral-7b-instruct:free",
-            "huggingfaceh4/zephyr-7b-beta:free",
-            "openrouter/free"
-        ];
-        
+        const freeModels = ["google/gemini-2.0-flash-lite-preview-02-05:free", "mistralai/mistral-7b-instruct:free", "huggingfaceh4/zephyr-7b-beta:free", "openrouter/free"];
         let finalProducts = null;
         let lastError = null;
 
@@ -99,11 +127,7 @@ module.exports = async function handler(req, res) {
                 });
                 const aiData = await aiResponse.json();
                 
-                if (aiData.error) { 
-                    lastError = aiData.error.message; 
-                    console.warn(`Model ${model} failed:`, lastError);
-                    continue; 
-                }
+                if (aiData.error) { lastError = aiData.error.message; continue; }
 
                 if (aiData.choices && aiData.choices[0] && aiData.choices[0].message) {
                     let aiContent = aiData.choices[0].message.content;
@@ -114,7 +138,7 @@ module.exports = async function handler(req, res) {
                         aiContent = aiContent.substring(jsonStart, jsonEnd);
                         try {
                             finalProducts = JSON.parse(aiContent);
-                            break; // Kaam ho gaya, loop se bahar
+                            break;
                         } catch (parseError) {
                             lastError = "JSON Parse Error (Incomplete output)";
                         }
@@ -123,9 +147,17 @@ module.exports = async function handler(req, res) {
             } catch (err) { lastError = err.message; }
         }
 
-        if (!finalProducts) return res.status(500).json({ error: "All AI models failed. Last error: " + lastError });
+        if (!finalProducts) return res.status(500).json({ error: "AI failed. Last error: " + lastError });
 
-        const insertData = finalProducts.map(p => ({ ...p, status: 'pending' }));
+        // ⭐ AUTO SEARCH EMOJI ADD KAREIN ⭐
+        const insertData = finalProducts.map(p => {
+            let finalTitle = p.title;
+            if (isAutoSearch) {
+                finalTitle = `🤖 ${p.title}`; // Auto search pe emoji
+            }
+            return { ...p, title: finalTitle, status: 'pending' };
+        });
+        
         const { error: dbError } = await supabase.from('discovered_products').upsert(insertData, { onConflict: 'asin_or_id', ignoreDuplicates: true });
 
         if (dbError) throw dbError;
