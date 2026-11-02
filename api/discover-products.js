@@ -1,14 +1,18 @@
 const { createClient } = require('@supabase/supabase-js');
 
 module.exports = async function handler(req, res) {
-    if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+    // Check if it's a Vercel Cron job (automatic search)
+    const isAutoSearch = req.headers['x-vercel-cron'] === '1';
+    
+    // Allow GET for Vercel Cron, otherwise require POST
+    if (req.method !== 'POST' && !isAutoSearch) {
+        return res.status(405).json({ error: 'Method Not Allowed' });
+    }
 
     const apiKey = process.env.OPENROUTER_API_KEY;
     const apifyToken = process.env.APIFY_API_TOKEN;
     
-    // Agar req.body khali hai (Cron Job ki wajah se), toh default empty keyword
     const keyword = req.body && req.body.keyword ? req.body.keyword.trim() : '';
-    const isAutoSearch = !keyword; // Agar keyword nahi hai matlab Cron Job ne bheja hai
 
     if (!apiKey || !apifyToken) return res.status(500).json({ error: 'API keys missing in Vercel.' });
 
@@ -46,7 +50,7 @@ module.exports = async function handler(req, res) {
             body: JSON.stringify({ keyword: keyword || "hot selling products", maxItems: 10 })
         }).then(r => r.json()).catch(e => []);
 
-        // 4. Admitad ke brands ke liye generic search
+        // 4. Admitad ke brands ke liye generic search (Hum top 3 random brands uthayenge har dafa)
         const shuffledBrands = admitadBrands.sort(() => 0.5 - Math.random());
         const selectedBrands = shuffledBrands.slice(0, 3); 
         
@@ -88,7 +92,7 @@ module.exports = async function handler(req, res) {
         }));
 
         // AI Prompt
-        const prompt = `You are a JSON API. Select exactly 8 best-selling products for US, UK, Europe, Australia from this raw data.
+        const prompt = `You are a JSON API. Select exactly 15 best-selling products for US, UK, Europe, Australia from this raw data.
         ${keyword ? `The user is specifically searching for: "${keyword}".` : 'Select globally trending items.'}
 
         CRITICAL RULES:
@@ -114,9 +118,7 @@ module.exports = async function handler(req, res) {
         ]
         Raw Data: ${JSON.stringify(cleanDataForAI)}`;
 
-        // ⭐ FIX: Sirf openrouter/free use karein
         const freeModels = ["openrouter/free"];
-        
         let finalProducts = null;
         let lastError = null;
 
@@ -151,11 +153,11 @@ module.exports = async function handler(req, res) {
 
         if (!finalProducts) return res.status(500).json({ error: "AI failed. Last error: " + lastError });
 
-        // ⭐ AUTO SEARCH EMOJI ADD KAREIN ⭐
+        // ⭐ Emoji sirf Auto Search (Cron Job) par add hoga
         const insertData = finalProducts.map(p => {
             let finalTitle = p.title;
             if (isAutoSearch) {
-                finalTitle = `🤖 ${p.title}`; // Auto search pe emoji
+                finalTitle = `🤖 ${p.title}`; 
             }
             return { ...p, title: finalTitle, status: 'pending' };
         });
