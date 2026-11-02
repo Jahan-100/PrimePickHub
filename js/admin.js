@@ -892,7 +892,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// ⭐ AI PRODUCT HUNTER LOGIC (Newest on Top) ⭐
+// ⭐ AI PRODUCT HUNTER LOGIC (Select All Added) ⭐
 document.addEventListener('DOMContentLoaded', () => {
     const discoverBtn = document.getElementById('discoverProductsBtn');
     const toggleBtn = document.getElementById('toggleAiListBtn');
@@ -907,6 +907,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterCategory = document.getElementById('filterCategory');
     const sortSales = document.getElementById('sortSales');
     const rejectSelectedBtn = document.getElementById('rejectSelectedBtn');
+    const selectAllCheckbox = document.getElementById('selectAllDiscovered');
 
     // Scroll Buttons
     const scrollUpBtn = document.getElementById('scrollUpBtn');
@@ -951,7 +952,6 @@ document.addEventListener('DOMContentLoaded', () => {
     scrollDownBtn.addEventListener('mouseleave', stopScroll);
 
     async function loadDiscoveredProducts() {
-        // Changed order to created_at DESC so newest appear first
         const { data, error } = await window.supabaseClient
             .from('discovered_products')
             .select('*')
@@ -966,6 +966,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         selectedIds.clear(); 
+        if(selectAllCheckbox) selectAllCheckbox.checked = false;
         renderDiscoveredTable();
     }
 
@@ -981,7 +982,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (filterCountry.value === 'all') {
                 matchCountry = true;
             } else if (filterCountry.value === 'Europe') {
-                // Agar Europe select hai, toh check karein ke country list mein hai ya nahi
                 matchCountry = p.country ? europeCountries.some(c => p.country.toLowerCase().includes(c)) : false;
             } else {
                 matchCountry = p.country === filterCountry.value;
@@ -1008,6 +1008,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (filtered.length === 0) {
             listBody.innerHTML = '<tr><td colspan="10" style="text-align:center;">No products match your filters.</td></tr>';
+            if(selectAllCheckbox) selectAllCheckbox.checked = false;
             return;
         }
 
@@ -1041,6 +1042,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
             </tr>
         `}).join('');
+        
+        // Update Select All state
+        const checkboxes = document.querySelectorAll('.disc-checkbox');
+        if (checkboxes.length > 0 && selectAllCheckbox) {
+            selectAllCheckbox.checked = Array.from(checkboxes).every(cb => cb.checked);
+        }
+    }
+
+    // ⭐ Select All Logic ⭐
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', (e) => {
+            const isChecked = e.target.checked;
+            document.querySelectorAll('.disc-checkbox').forEach(cb => {
+                cb.checked = isChecked;
+                const id = cb.value;
+                if (isChecked) selectedIds.add(id);
+                else selectedIds.delete(id);
+            });
+        });
     }
 
     // Row Click Logic
@@ -1061,10 +1081,15 @@ document.addEventListener('DOMContentLoaded', () => {
     filterCategory.addEventListener('change', renderDiscoveredTable);
     sortSales.addEventListener('change', renderDiscoveredTable);
 
-    // Checkbox Logic
+    // Checkbox Logic (Individual)
     window.toggleDiscoveredSelection = (id, isChecked) => {
         if (isChecked) selectedIds.add(id);
         else selectedIds.delete(id);
+        
+        const checkboxes = document.querySelectorAll('.disc-checkbox');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = Array.from(checkboxes).every(cb => cb.checked);
+        }
     };
 
     // Bulk Reject
@@ -1082,6 +1107,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (error) throw error;
             
             selectedIds.clear();
+            if(selectAllCheckbox) selectAllCheckbox.checked = false;
             await loadDiscoveredProducts();
         } catch (err) {
             alert("Error: " + err.message);
