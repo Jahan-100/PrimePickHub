@@ -46,7 +46,7 @@ module.exports = async function handler(req, res) {
             body: JSON.stringify({ keyword: keyword || "hot selling products", maxItems: 10 })
         }).then(r => r.json()).catch(e => []);
 
-        // 4. Admitad ke brands ke liye generic search (Hum top 3 random brands uthayenge har dafa)
+        // 4. Admitad ke brands ke liye generic search
         const shuffledBrands = admitadBrands.sort(() => 0.5 - Math.random());
         const selectedBrands = shuffledBrands.slice(0, 3); 
         
@@ -114,7 +114,9 @@ module.exports = async function handler(req, res) {
         ]
         Raw Data: ${JSON.stringify(cleanDataForAI)}`;
 
-        const freeModels = ["google/gemini-2.0-flash-lite-preview-02-05:free", "mistralai/mistral-7b-instruct:free", "huggingfaceh4/zephyr-7b-beta:free", "openrouter/free"];
+        // ⭐ FIX: Sirf openrouter/free use karein
+        const freeModels = ["openrouter/free"];
+        
         let finalProducts = null;
         let lastError = null;
 
