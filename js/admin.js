@@ -892,8 +892,41 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// ⭐ AI PRODUCT HUNTER LOGIC (Select All Added) ⭐
+// ⭐ AI PRODUCT HUNTER & MANAGE PRODUCTS SCROLL LOGIC ⭐
 document.addEventListener('DOMContentLoaded', () => {
+    // Helper function for scroll logic
+    function setupScrollButtons(upBtnId, downBtnId, wrapperId) {
+        const upBtn = document.getElementById(upBtnId);
+        const downBtn = document.getElementById(downBtnId);
+        const wrapper = document.getElementById(wrapperId);
+
+        if (!upBtn || !downBtn || !wrapper) return;
+
+        let scrollInterval;
+        const startScroll = (direction) => {
+            scrollInterval = setInterval(() => {
+                if (direction === 'up') wrapper.scrollTop -= 10;
+                else wrapper.scrollTop += 10;
+            }, 20);
+        };
+        const stopScroll = () => clearInterval(scrollInterval);
+
+        upBtn.addEventListener('mousedown', () => startScroll('up'));
+        upBtn.addEventListener('mouseup', stopScroll);
+        upBtn.addEventListener('mouseleave', stopScroll);
+        
+        downBtn.addEventListener('mousedown', () => startScroll('down'));
+        downBtn.addEventListener('mouseup', stopScroll);
+        downBtn.addEventListener('mouseleave', stopScroll);
+    }
+
+    // Setup for AI Hunter
+    setupScrollButtons('scrollUpBtnAI', 'scrollDownBtnAI', 'tableScrollWrapperAI');
+
+    // Setup for Manage Products
+    setupScrollButtons('scrollUpBtnProducts', 'scrollDownBtnProducts', 'tableScrollWrapperProducts');
+
+    // AI Hunter Main Logic
     const discoverBtn = document.getElementById('discoverProductsBtn');
     const toggleBtn = document.getElementById('toggleAiListBtn');
     const listContainer = document.getElementById('discoveredListContainer');
@@ -908,11 +941,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const sortSales = document.getElementById('sortSales');
     const rejectSelectedBtn = document.getElementById('rejectSelectedBtn');
     const selectAllCheckbox = document.getElementById('selectAllDiscovered');
-
-    // Scroll Buttons
-    const scrollUpBtn = document.getElementById('scrollUpBtn');
-    const scrollDownBtn = document.getElementById('scrollDownBtn');
-    const tableWrapper = document.querySelector('.table-scroll-wrapper');
 
     if (!discoverBtn || !toggleBtn) return;
     let allDiscovered = [];
@@ -932,24 +960,6 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleBtn.style.background = '#4f46e5';
         }
     });
-
-    // Scroll Buttons Logic (Press and hold scroll)
-    let scrollInterval;
-    const startScroll = (direction) => {
-        scrollInterval = setInterval(() => {
-            if (direction === 'up') tableWrapper.scrollTop -= 10;
-            else tableWrapper.scrollTop += 10;
-        }, 20);
-    };
-    const stopScroll = () => clearInterval(scrollInterval);
-
-    scrollUpBtn.addEventListener('mousedown', () => startScroll('up'));
-    scrollUpBtn.addEventListener('mouseup', stopScroll);
-    scrollUpBtn.addEventListener('mouseleave', stopScroll);
-    
-    scrollDownBtn.addEventListener('mousedown', () => startScroll('down'));
-    scrollDownBtn.addEventListener('mouseup', stopScroll);
-    scrollDownBtn.addEventListener('mouseleave', stopScroll);
 
     async function loadDiscoveredProducts() {
         const { data, error } = await window.supabaseClient
