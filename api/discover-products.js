@@ -1,13 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 
 module.exports = async function handler(req, res) {
-    // Check if it's a Vercel Cron job (automatic search)
-    const isAutoSearch = req.headers['x-vercel-cron'] === '1';
-    
-    // Allow GET for Vercel Cron, otherwise require POST
-    if (req.method !== 'POST' && !isAutoSearch) {
-        return res.status(405).json({ error: 'Method Not Allowed' });
-    }
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
     const apiKey = process.env.OPENROUTER_API_KEY;
     const apifyToken = process.env.APIFY_API_TOKEN;
@@ -84,7 +78,7 @@ module.exports = async function handler(req, res) {
         }
 
         // Shuffle aur mix karein taake AI ke paas variety ho
-        let mixedRawProducts = [...amazonProducts.slice(0, 5), ...otherProducts.slice(0, 15)];
+        let mixedRawProducts = [...amazonProducts.slice(0, 10), ...otherProducts.slice(0, 15)];
         mixedRawProducts = mixedRawProducts.sort(() => 0.5 - Math.random());
 
         // Data ko AI ke liye clean karein
@@ -96,15 +90,15 @@ module.exports = async function handler(req, res) {
             source: p.source
         }));
 
-        // AI Prompt (Strictly 8 products, max 2 from Amazon)
-        const prompt = `You are a JSON API. Select exactly 8 best-selling products for US, UK, Europe, Australia from this raw data.
+        // AI Prompt (Flexible diversity rule)
+        const prompt = `You are a JSON API. Select the top 8 best-selling products for US, UK, Europe, Australia from this raw data.
         ${keyword ? `The user is specifically searching for: "${keyword}".` : 'Select globally trending items.'}
 
         CRITICAL RULES:
-        1. Pick AT MOST 2 products from Amazon. The remaining 6 products MUST be from other platforms (AliExpress, Alibaba, Hacoo, Govee, etc.).
-        2. Diversify countries (US, UK, Europe, Australia). Do NOT make them all "US".
+        1. Pick a DIVERSE mix of platforms. Do not pick all from Amazon. Include products from AliExpress, Alibaba, Hacoo, etc., if available.
+        2. Diversify countries (US, UK, Europe, Australia).
         3. Extract Category (Electronics, Fashion, Home, etc.) and Price.
-        4. Return ONLY a valid JSON array. NO markdown, NO extra text.
+        4. Return ONLY a valid JSON array of exactly 8 products. NO markdown, NO extra text.
         
         Format:
         [
@@ -156,9 +150,12 @@ module.exports = async function handler(req, res) {
             } catch (err) { lastError = err.message; }
         }
 
-        if (!finalProducts) return res.status(500).json({ error: "AI failed. Last error: " + lastError });
+        if (!finalProducts || finalProducts.length === 0) {
+            return res.status(500).json({ error: "AI failed to generate a valid list. Please try again." });
+        }
 
-        // ⭐ Emoji sirf Auto Search (Cron Job) par add hoga
+        // Emoji sirf Auto Search (Cron Job) par add hoga
+        const isAutoSearch = req.headers['x-vercel-cron'] === '1';
         const insertData = finalProducts.map(p => {
             let finalTitle = p.title;
             if (isAutoSearch) {
