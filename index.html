@@ -30,7 +30,7 @@
     <link rel="canonical" href="https://primepickhub.vercel.app/">
     <link rel="icon" type="image/png" href="assets/favicon.png?v=4">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="css/main.css?v=28">
+    <link rel="stylesheet" href="css/main.css?v=29">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,800;0,900;1,800&family=Roboto:wght@400;700;900&family=Oswald:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Lobster&family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
@@ -59,7 +59,6 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ⭐ FORCED FIX FOR APP BUTTON (Inline Styles) ⭐ */
         #floatingAppIcon {
             position: fixed !important;
             top: 50% !important;
@@ -155,12 +154,10 @@
         </div>
     </header>
 
-    <!-- ⭐ LEFT SIDE AD SLOT (Naya Code) ⭐ -->
     <div id="left-side-ad" class="left-ad-container">
         <div style="text-align: center; color: #94A3B8; font-size: 0.8rem; font-weight: bold; padding: 10px;">
             Advertisement
             <br><br>
-            <!-- Jab AdSense approve ho jaye, toh yahan apna script dalein -->
             <div style="width: 100px; height: 500px; border: 1px dashed #CBD5E1; margin: 0 auto; display: flex; align-items: center; justify-content: center; color: #CBD5E1; border-radius: 4px;">
                 120 x 600
             </div>
@@ -198,7 +195,7 @@
                 <div class="girl-character">
                     <svg viewBox="0 0 100 150" class="girl-svg">
                         <!-- Hair -->
-                        <path d="M40 30 Q50 10 60 30 Q65 40 60 50 Q50 40 40 50 Q35 40 40 30" fill="#78350f"/>
+                        <path d="M35 30 Q50 10 65 30 Q70 40 65 50 Q50 40 35 50 Q30 40 35 30" fill="#4a2e15"/>
                         <!-- Head -->
                         <circle cx="50" cy="30" r="12" fill="#fcd34d"/>
                         <!-- Body (Initially red dress, then warm coat) -->
@@ -287,13 +284,11 @@
             <div class="product-grid" id="productGrid"></div>
         </div>
 
-        <!-- ⭐ Middle Ad Box (Ab yahan products ke baad hai) ⭐ -->
         <div class="ad-slot" id="ad-slot-middle" style="margin-bottom: 20px;">
             <div class="ad-fallback-container" id="ad-fallback-middle"></div>
         </div>
     </main>
 
-    <!-- NEWSLETTER SECTION -->
     <div class="newsletter-wrapper">
         <div class="newsletter-box">
             <h2>Get the Best Deals in Your Inbox!</h2>
@@ -381,7 +376,7 @@
 
     <script src="js/config.js?v=6"></script>
     <script src="js/api.js?v=7"></script>
-    <script src="js/app.js?v=17"></script>
+    <script src="js/app.js?v=18"></script>
     <script src="js/affiliate.js?v=6"></script>
     <script>
         function toggleCatDropdown(event) {
@@ -469,6 +464,6 @@
             }
         });
     </script>
-    <script src="js/floating-widgets.js?v=7"></script>
+    <script src="js/floating-widgets.js?v=8"></script>
 </body>
 </html>
