@@ -50,9 +50,9 @@ module.exports = async function handler(req, res) {
             body: JSON.stringify({ keyword: keyword || "hot selling products", maxItems: 10 })
         }).then(r => r.json()).catch(e => []);
 
-        // 4. Admitad ke brands ke liye generic search (Hum top 3 random brands uthayenge har dafa)
+        // 4. Admitad ke brands ke liye generic search (Hum top 5 random brands uthayenge har dafa)
         const shuffledBrands = admitadBrands.sort(() => 0.5 - Math.random());
-        const selectedBrands = shuffledBrands.slice(0, 3); 
+        const selectedBrands = shuffledBrands.slice(0, 5); 
         
         const brandFetches = selectedBrands.map(brand => {
             return fetch(`https://api.apify.com/v2/acts/epctex~ecommerce-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
@@ -68,22 +68,27 @@ module.exports = async function handler(req, res) {
         // Sab data ek sath fetch karein (Parallel)
         const [amazonData, aliData, alibabaData, ...brandsData] = await Promise.all([fetchAmazon, fetchAli, fetchAlibaba, ...brandFetches]);
 
-        let allRawProducts = [];
-        if (Array.isArray(amazonData)) allRawProducts = allRawProducts.concat(amazonData.map(p => ({ ...p, source: 'Amazon' })));
-        if (Array.isArray(aliData)) allRawProducts = allRawProducts.concat(aliData.map(p => ({ ...p, source: 'AliExpress' })));
-        if (Array.isArray(alibabaData)) allRawProducts = allRawProducts.concat(alibabaData.map(p => ({ ...p, source: 'Alibaba' })));
+        let amazonProducts = [];
+        let otherProducts = [];
+
+        if (Array.isArray(amazonData)) amazonProducts = amazonData.map(p => ({ ...p, source: 'Amazon' }));
+        if (Array.isArray(aliData)) otherProducts = otherProducts.concat(aliData.map(p => ({ ...p, source: 'AliExpress' })));
+        if (Array.isArray(alibabaData)) otherProducts = otherProducts.concat(alibabaData.map(p => ({ ...p, source: 'Alibaba' })));
         
-        // Admitad brands ka data shamil karein
         brandsData.forEach(arr => {
-            if (Array.isArray(arr)) allRawProducts = allRawProducts.concat(arr);
+            if (Array.isArray(arr)) otherProducts = otherProducts.concat(arr);
         });
 
-        if (allRawProducts.length === 0) {
+        if (amazonProducts.length === 0 && otherProducts.length === 0) {
             return res.status(500).json({ error: "No data found from Apify. Check Apify limits." });
         }
 
+        // Shuffle aur mix karein taake AI ke paas variety ho
+        let mixedRawProducts = [...amazonProducts.slice(0, 5), ...otherProducts.slice(0, 15)];
+        mixedRawProducts = mixedRawProducts.sort(() => 0.5 - Math.random());
+
         // Data ko AI ke liye clean karein
-        const cleanDataForAI = allRawProducts.slice(0, 30).map(p => ({
+        const cleanDataForAI = mixedRawProducts.map(p => ({
             title: p.title || p.name,
             url: p.url || p.link || p.productUrl,
             image: p.image || p.imageUrl || p.thumbnail,
@@ -91,14 +96,14 @@ module.exports = async function handler(req, res) {
             source: p.source
         }));
 
-        // AI Prompt
-        const prompt = `You are a JSON API. Select exactly 15 best-selling products for US, UK, Europe, Australia from this raw data.
+        // AI Prompt (Strictly 8 products, max 2 from Amazon)
+        const prompt = `You are a JSON API. Select exactly 8 best-selling products for US, UK, Europe, Australia from this raw data.
         ${keyword ? `The user is specifically searching for: "${keyword}".` : 'Select globally trending items.'}
 
         CRITICAL RULES:
-        1. DIVERSITY: You MUST include products from at least 8 DIFFERENT platforms/sources. Do not just pick Amazon.
-        2. COUNTRIES: Diversify countries (US, UK, Europe, Australia). Do NOT make them all "US".
-        3. CATEGORY & PRICE: Extract Category (Electronics, Fashion, Home, etc.) and Price.
+        1. Pick AT MOST 2 products from Amazon. The remaining 6 products MUST be from other platforms (AliExpress, Alibaba, Hacoo, Govee, etc.).
+        2. Diversify countries (US, UK, Europe, Australia). Do NOT make them all "US".
+        3. Extract Category (Electronics, Fashion, Home, etc.) and Price.
         4. Return ONLY a valid JSON array. NO markdown, NO extra text.
         
         Format:
