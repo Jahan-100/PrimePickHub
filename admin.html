@@ -150,7 +150,7 @@
         }
 
         .table-scroll-wrapper {
-            max-height: 650px; 
+            max-height: 550px; /* 5 products ki height */
             overflow-y: auto; 
             overflow-x: auto; 
             width: 100%;
@@ -680,12 +680,12 @@
                             </button>
                         </div>
 
-                        <!-- ⭐ SCROLL OUTER WRAPPER ⭐ -->
+                        <!-- ⭐ SCROLL OUTER WRAPPER (AI HUNTER) ⭐ -->
                         <div class="table-scroll-outer">
-                            <button type="button" id="scrollUpBtn" class="scroll-ctrl-btn scroll-up">▲</button>
-                            <button type="button" id="scrollDownBtn" class="scroll-ctrl-btn scroll-down">▼</button>
+                            <button type="button" id="scrollUpBtnAI" class="scroll-ctrl-btn scroll-up">▲</button>
+                            <button type="button" id="scrollDownBtnAI" class="scroll-ctrl-btn scroll-down">▼</button>
                             
-                            <div class="table-scroll-wrapper">
+                            <div class="table-scroll-wrapper" id="tableScrollWrapperAI">
                                 <div class="table-responsive-mobile">
                                     <table class="admin-table" style="margin-top: 0;">
                                         <thead>
@@ -729,11 +729,20 @@
                                 <input type="text" id="adminSearchInput" placeholder="Search products..." style="padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; outline: none; width: 200px;">
                             </div>
                         </div>
-                        <div class="table-responsive-mobile">
-                            <table class="admin-table">
-                                <thead><tr><th>Image</th><th>Title</th><th>Final Price</th><th>Actions</th></tr></thead>
-                                <tbody id="productListBody"><tr><td colspan="4" style="text-align:center;">Loading...</td></tr></tbody>
-                            </table>
+                        
+                        <!-- ⭐ SCROLL OUTER WRAPPER (MANAGE PRODUCTS) ⭐ -->
+                        <div class="table-scroll-outer">
+                            <button type="button" id="scrollUpBtnProducts" class="scroll-ctrl-btn scroll-up">▲</button>
+                            <button type="button" id="scrollDownBtnProducts" class="scroll-ctrl-btn scroll-down">▼</button>
+                            
+                            <div class="table-scroll-wrapper" id="tableScrollWrapperProducts">
+                                <div class="table-responsive-mobile">
+                                    <table class="admin-table">
+                                        <thead><tr><th>Image</th><th>Title</th><th>Final Price</th><th>Actions</th></tr></thead>
+                                        <tbody id="productListBody"><tr><td colspan="4" style="text-align:center;">Loading...</td></tr></tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
