@@ -415,12 +415,13 @@ function renderTable() {
     }).join('');
 }
 
-window.addVariationRow = function(name = '', price = '', salePrice = '', commission = '', url = '') {
+window.addVariationRow = function(color = '', name = '', price = '', salePrice = '', commission = '', url = '') {
     const container = document.getElementById('variationsContainer');
     const div = document.createElement('div');
     div.className = 'variation-row';
     div.innerHTML = `
-        <input type="text" placeholder="Size/Color" value="${name}" class="var-name" required>
+        <input type="text" placeholder="Color" value="${color}" class="var-color">
+        <input type="text" placeholder="Size/Qty" value="${name}" class="var-name" required>
         <input type="number" step="0.01" placeholder="Base Price" value="${price}" class="var-price" required>
         <input type="number" step="0.01" placeholder="Sale Price" value="${salePrice}" class="var-sale-price">
         <input type="number" step="0.1" placeholder="Comm %" value="${commission}" class="var-comm">
@@ -474,7 +475,7 @@ window.editProduct = async function(id) {
 
         const varContainer = document.getElementById('variationsContainer'); varContainer.innerHTML = '';
         const variations = p.affiliate_offers?.slice(1) || []; 
-        variations.forEach(v => addVariationRow(v.variation_name, v.price, v.sale_price, (v.commission_rate > 0 ? v.commission_rate : ''), v.affiliate_url));
+        variations.forEach(v => addVariationRow(v.product_color, v.variation_name, v.price, v.sale_price, (v.commission_rate > 0 ? v.commission_rate : ''), v.affiliate_url));
 
         document.getElementById('pImgFile').value = ''; document.getElementById('pGalleryFile').value = '';
         document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen';
@@ -622,11 +623,24 @@ function setupProductForm() {
 
             const variations = [];
             document.querySelectorAll('.variation-row').forEach(row => {
-                const vName = row.querySelector('.var-name').value.trim(); const vPrice = parseFloat(row.querySelector('.var-price').value);
+                const vColor = row.querySelector('.var-color').value.trim();
+                const vName = row.querySelector('.var-name').value.trim();
+                const vPrice = parseFloat(row.querySelector('.var-price').value);
                 const vSalePrice = row.querySelector('.var-sale-price').value ? parseFloat(row.querySelector('.var-sale-price').value) : null;
                 const vCommInput = row.querySelector('.var-comm').value.trim(); const vComm = vCommInput === '' ? commission : (parseFloat(vCommInput) || 0);
                 const vUrl = row.querySelector('.var-url').value.trim() || mainOfferData.affiliate_url;
-                if (vName && !isNaN(vPrice)) { variations.push({ ...mainOfferData, price: vPrice, sale_price: vSalePrice, commission_rate: vComm, affiliate_url: vUrl, variation_name: vName }); }
+                
+                if (vName && !isNaN(vPrice)) { 
+                    variations.push({ 
+                        ...mainOfferData, 
+                        product_color: vColor || null,
+                        variation_name: vName, 
+                        price: vPrice, 
+                        sale_price: vSalePrice, 
+                        commission_rate: vComm, 
+                        affiliate_url: vUrl
+                    }); 
+                }
             });
 
             let productId = id;
