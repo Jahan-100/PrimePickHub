@@ -43,7 +43,7 @@
             width: 100%; 
             border-collapse: collapse; 
             margin-top: 15px; 
-            table-layout: auto; /* Auto layout for shrink-to-fit */
+            table-layout: auto; 
         }
         .admin-table th, .admin-table td { 
             border: 1px solid #E2E8F0; 
@@ -61,7 +61,7 @@
         
         /* ⭐ Bari Images ⭐ */
         .table-img {
-            width: 100px; /* Baray size ki image */
+            width: 100px; 
             height: 100px;
             object-fit: cover;
             border-radius: 6px;
@@ -70,16 +70,16 @@
         }
 
         /* Column Widths for Manage Products (Shrink to Fit) */
-        #productListContainer .admin-table th:nth-child(1) { width: 1%; white-space: nowrap; } /* Image */
-        #productListContainer .admin-table th:nth-child(2) { width: auto; text-align: left !important; } /* Title */
-        #productListContainer .admin-table th:nth-child(3) { width: 1%; white-space: nowrap; text-align: center !important; } /* Final Price */
-        #productListContainer .admin-table th:nth-child(4) { width: 1%; white-space: nowrap; text-align: center !important; } /* Actions */
+        #productListContainer .admin-table th:nth-child(1) { width: 1%; white-space: nowrap; } 
+        #productListContainer .admin-table th:nth-child(2) { width: auto; text-align: left !important; } 
+        #productListContainer .admin-table th:nth-child(3) { width: 1%; white-space: nowrap; text-align: center !important; } 
+        #productListContainer .admin-table th:nth-child(4) { width: 1%; white-space: nowrap; text-align: center !important; } 
 
         /* Column Widths for Blog List (Shrink to Fit) */
-        #blogListContainer .admin-table th:nth-child(1) { width: 1%; white-space: nowrap; } /* Image */
-        #blogListContainer .admin-table th:nth-child(2) { width: auto; text-align: left !important; } /* Title */
-        #blogListContainer .admin-table th:nth-child(3) { width: 1%; white-space: nowrap; text-align: center !important; } /* Date */
-        #blogListContainer .admin-table th:nth-child(4) { width: 1%; white-space: nowrap; text-align: center !important; } /* Actions */
+        #blogListContainer .admin-table th:nth-child(1) { width: 1%; white-space: nowrap; } 
+        #blogListContainer .admin-table th:nth-child(2) { width: auto; text-align: left !important; } 
+        #blogListContainer .admin-table th:nth-child(3) { width: 1%; white-space: nowrap; text-align: center !important; } 
+        #blogListContainer .admin-table th:nth-child(4) { width: 1%; white-space: nowrap; text-align: center !important; } 
 
         /* Column Widths for AI Hunter */
         #discoveredListContainer .admin-table th:nth-child(1) { width: 5%; }
@@ -152,15 +152,15 @@
         .table-scroll-wrapper {
             max-height: 450px; 
             overflow-y: auto; 
-            overflow-x: hidden; 
+            overflow-x: auto; /* Mobile pe horizontal scroll allow kiya taake table phate nahi */
             width: 100%;
             border: 1px solid #E2E8F0;
             border-radius: 6px;
         }
 
         .table-scroll-wrapper::-webkit-scrollbar-button { display: none; height: 0; width: 0; }
-        .table-scroll-wrapper::-webkit-scrollbar { width: 14px; }
-        .table-scroll-wrapper::-webkit-scrollbar-track { background: #f1f5f9; border-left: 1px solid #E2E8F0; }
+        .table-scroll-wrapper::-webkit-scrollbar { width: 14px; height: 14px; }
+        .table-scroll-wrapper::-webkit-scrollbar-track { background: #f1f5f9; border-left: 1px solid #E2E8F0; border-top: 1px solid #E2E8F0; }
         .table-scroll-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 0; border: 2px solid #f1f5f9; }
         .table-scroll-wrapper::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
@@ -185,7 +185,7 @@
         }
         .scroll-ctrl-btn:hover { background: #cbd5e1; color: #0f172a; }
         .scroll-up { top: 1px; }
-        .scroll-down { bottom: 1px; }
+        .scroll-down { bottom: 16px; }
 
         /* AI Hunter Row Colors */
         .row-existing { background-color: #e0f2fe !important; transition: background 0.3s; cursor: pointer; }
@@ -193,6 +193,76 @@
         .row-clicked { background-color: #ffffff !important; transition: background 0.3s; cursor: pointer; }
         
         .admin-table th { position: sticky; top: 0; z-index: 5; }
+
+        /* ⭐ MOBILE RESPONSIVE FIXES ⭐ */
+        @media (max-width: 768px) {
+            .admin-layout {
+                flex-direction: column;
+            }
+            .admin-sidebar {
+                width: 100%;
+                padding: 10px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+            .admin-sidebar h2 {
+                margin-bottom: 0;
+                text-align: left;
+                font-size: 1rem;
+            }
+            .admin-nav {
+                display: flex;
+                gap: 10px;
+            }
+            .admin-nav a {
+                padding: 5px 10px;
+                font-size: 0.8rem;
+            }
+            .admin-content {
+                padding: 10px;
+            }
+            
+            /* Choti screen pe table ko box ke andar scrollable banaya */
+            .table-responsive-mobile {
+                overflow-x: auto;
+                width: 100%;
+                display: block;
+            }
+            .admin-table {
+                min-width: 600px; /* Table ko squeeze hone se roka */
+            }
+            
+            .table-img {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .action-btns {
+                flex-direction: row; /* Mobile pe buttons side-by-side rahen */
+                flex-wrap: wrap; /* Agar jagah kam ho toh wrap ho jayen */
+            }
+            
+            .scroll-ctrl-btn {
+                display: none; /* Mobile pe arrows hide kardo */
+            }
+            
+            .table-scroll-wrapper {
+                max-height: 400px;
+            }
+            
+            /* AI Hunter filters mobile pe adjust karein */
+            #discoveredListContainer > div:nth-child(1) {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            #discoveredListContainer > div:nth-child(1) select,
+            #discoveredListContainer > div:nth-child(1) button {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -550,10 +620,12 @@
                     </div>
 
                     <div id="blogListContainer" style="display: none; margin-top: 20px; background: #fff; padding: 15px; border-radius: 8px;">
-                        <table class="admin-table">
-                            <thead><tr><th>Image</th><th>Title</th><th>Date</th><th>Actions</th></tr></thead>
-                            <tbody id="blogListBody"></tbody>
-                        </table>
+                        <div class="table-responsive-mobile">
+                            <table class="admin-table">
+                                <thead><tr><th>Image</th><th>Title</th><th>Date</th><th>Actions</th></tr></thead>
+                                <tbody id="blogListBody"></tbody>
+                            </table>
+                        </div>
                     </div>
                     
                     <div style="margin-top: 10px;">
@@ -634,25 +706,27 @@
                             <button type="button" id="scrollDownBtn" class="scroll-ctrl-btn scroll-down">▼</button>
                             
                             <div class="table-scroll-wrapper">
-                                <table class="admin-table" style="margin-top: 0;">
-                                    <thead>
-                                        <tr>
-                                            <th>Sr. No.</th>
-                                            <th>Photo</th>
-                                            <th>Title</th>
-                                            <th>Price</th>
-                                            <th>Category</th>
-                                            <th>Country</th>
-                                            <th>Platform</th>
-                                            <th>Sales Count</th>
-                                            <th>Original URL</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="discoveredListBody">
-                                        <tr><td colspan="10" style="text-align:center;">Click "Search Now" to fetch data.</td></tr>
-                                    </tbody>
-                                </table>
+                                <div class="table-responsive-mobile">
+                                    <table class="admin-table" style="margin-top: 0;">
+                                        <thead>
+                                            <tr>
+                                                <th>Sr. No.</th>
+                                                <th>Photo</th>
+                                                <th>Title</th>
+                                                <th>Price</th>
+                                                <th>Category</th>
+                                                <th>Country</th>
+                                                <th>Platform</th>
+                                                <th>Sales Count</th>
+                                                <th>Original URL</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="discoveredListBody">
+                                            <tr><td colspan="10" style="text-align:center;">Click "Search Now" to fetch data.</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -674,10 +748,12 @@
                                 <input type="text" id="adminSearchInput" placeholder="Search products..." style="padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; outline: none; width: 200px;">
                             </div>
                         </div>
-                        <table class="admin-table">
-                            <thead><tr><th>Image</th><th>Title</th><th>Final Price</th><th>Actions</th></tr></thead>
-                            <tbody id="productListBody"><tr><td colspan="4" style="text-align:center;">Loading...</td></tr></tbody>
-                        </table>
+                        <div class="table-responsive-mobile">
+                            <table class="admin-table">
+                                <thead><tr><th>Image</th><th>Title</th><th>Final Price</th><th>Actions</th></tr></thead>
+                                <tbody id="productListBody"><tr><td colspan="4" style="text-align:center;">Loading...</td></tr></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
