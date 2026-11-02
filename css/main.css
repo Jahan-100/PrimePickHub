@@ -240,17 +240,18 @@ body {
 .btn-check-price { display: block; width: 100%; border: none; background: var(--primary); color: #fff; padding: 6px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; transition: opacity 0.2s; margin-top: auto; }
 .btn-check-price:hover { opacity: 0.9; }
 
-/* ⭐ Special Deal Section (Winter Theme & Animation) ⭐ */
+/* ⭐ Special Deal Section (3D Interactive Winter Animation) ⭐ */
 .special-deal-section { 
     display: flex; 
     position: relative; 
-    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); /* Deep Winter Blue */
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
     border-radius: 12px; 
     overflow: hidden; 
     margin-bottom: 20px; 
-    min-height: 260px; /* Thora lamba kiya taake girl fit ho */
+    min-height: 280px; 
     box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
     border: 1px solid #3b82f6; 
+    perspective: 1000px; /* For 3D effect */
 }
 
 /* Snowfall Background */
@@ -276,88 +277,151 @@ body {
 .snow:nth-child(6) { left: 60%; animation-delay: 2.5s; }
 .snow:nth-child(7) { left: 70%; animation-delay: 0.2s; }
 .snow:nth-child(8) { left: 80%; animation-delay: 1.2s; }
+.snow:nth-child(9) { left: 90%; animation-delay: 2.2s; }
+.snow:nth-child(10) { left: 95%; animation-delay: 3s; }
 
 @keyframes fall {
     0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-    100% { transform: translateY(250px) rotate(360deg); opacity: 0; }
+    100% { transform: translateY(300px) rotate(360deg); opacity: 0; }
 }
 
-/* Girl Animation Scene */
+/* Interactive 3D Scene */
 .girl-scene {
     position: absolute;
-    top: 0; left: 0; width: 100%; height: 130px; /* Barhi height */
+    top: 0; left: 0; width: 100%; height: 160px;
     z-index: 5;
     pointer-events: none;
     overflow: hidden;
+    transform-style: preserve-3d;
 }
 .coat-on-ground {
     position: absolute;
-    bottom: 10px; left: 45%;
-    font-size: 2.5rem;
-    animation: coatPickup 20s infinite; /* Loop */
+    bottom: 15px; left: 48%;
+    width: 40px; height: 40px;
+    animation: coatPickup 20s infinite;
     z-index: 6;
+    transform: rotateX(60deg) rotateZ(-20deg); /* 3D Look */
 }
+.coat-svg { width: 100%; height: 100%; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
+
 @keyframes coatPickup {
-    0%, 40% { opacity: 1; transform: scale(1); }
-    45%, 95% { opacity: 0; transform: scale(0); } /* Gayab */
-    100% { opacity: 1; transform: scale(1); }
+    0%, 40% { opacity: 1; transform: rotateX(60deg) rotateZ(-20deg) scale(1); }
+    45%, 95% { opacity: 0; transform: rotateX(60deg) rotateZ(-20deg) scale(0); }
+    100% { opacity: 1; transform: rotateX(60deg) rotateZ(-20deg) scale(1); }
 }
 
 .girl-character {
     position: absolute;
     bottom: 0; left: -100px; 
-    width: 70px; height: 110px; /* Bari size */
-    animation: girlStory 20s infinite; /* Loop */
+    width: 70px; height: 120px;
+    animation: girlStory 20s infinite;
     transform-origin: bottom center;
     z-index: 7;
+    transform-style: preserve-3d;
+}
+
+/* Shadow below girl */
+.girl-shadow {
+    position: absolute;
+    bottom: -5px; left: 10%;
+    width: 80%; height: 10px;
+    background: rgba(0,0,0,0.4);
+    border-radius: 50%;
+    filter: blur(3px);
+    animation: shadowPulse 20s infinite;
+}
+@keyframes shadowPulse {
+    0%, 40% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.2); opacity: 0.3; } /* Jump */
+    100% { transform: scale(1); opacity: 0.5; }
 }
 
 /* The Story Animation */
 @keyframes girlStory {
-    /* 0-5%: Wait offscreen */
-    0%, 5% { left: -100px; transform: scaleX(1) translateY(0); }
+    0%, 5% { left: -100px; transform: scaleX(1) translateY(0) rotateY(0deg); }
+    20% { left: 42%; transform: scaleX(1) translateY(0) rotateY(0deg); }
     
-    /* 5-20%: Walk In */
-    20% { left: 40%; transform: scaleX(1) translateY(0); }
+    /* Shiver */
+    22% { transform: scaleX(1) translateY(0) rotateY(10deg) rotateZ(2deg); }
+    24% { transform: scaleX(1) translateY(0) rotateY(-10deg) rotateZ(-2deg); }
+    26% { transform: scaleX(1) translateY(0) rotateY(10deg) rotateZ(2deg); }
+    28% { transform: scaleX(1) translateY(0) rotateY(-10deg) rotateZ(-2deg); }
+    30% { transform: scaleX(1) translateY(0) rotateY(0deg) rotateZ(0deg); }
     
-    /* 20-30%: Shiver (Kapna) */
-    22% { transform: scaleX(1) translateY(0) rotate(5deg); }
-    24% { transform: scaleX(1) translateY(0) rotate(-5deg); }
-    26% { transform: scaleX(1) translateY(0) rotate(5deg); }
-    28% { transform: scaleX(1) translateY(0) rotate(-5deg); }
-    30% { transform: scaleX(1) translateY(0) rotate(0deg); }
+    /* Look down & Jump */
+    35% { transform: scaleX(1) translateY(-25px) rotateY(0deg); }
+    40% { transform: scaleX(1) translateY(0) rotateY(0deg); }
     
-    /* 30-40%: Look down & Jump happily */
-    35% { transform: scaleX(1) translateY(-20px); } /* Jump */
-    40% { transform: scaleX(1) translateY(0); }
+    /* Bend down */
+    45% { transform: scaleX(1) translateY(35px) rotateY(0deg) rotateX(30deg); }
     
-    /* 40-50%: Bend down and pick up coat */
-    45% { transform: scaleX(1) translateY(30px) rotate(45deg); }
+    /* Stand up */
+    50% { transform: scaleX(1) translateY(0) rotateY(0deg) rotateX(0deg); }
     
-    /* 50-60%: Stand up with coat */
-    50% { transform: scaleX(1) translateY(0) rotate(0deg); }
-    
-    /* 60-80%: Run out to left */
-    80% { left: 40%; transform: scaleX(-1) translateY(0); }
-    
-    /* 80-100%: Wait offscreen */
-    90%, 100% { left: -100px; transform: scaleX(-1) translateY(0); }
+    /* Run out */
+    60% { left: 42%; transform: scaleX(-1) translateY(0); }
+    80% { left: -100px; transform: scaleX(-1) translateY(0); }
+    90%, 100% { left: -100px; transform: scaleX(1) translateY(0); } /* Reset */
 }
 
-.girl-svg { width: 100%; height: 100%; }
-
-/* Changing coat color (Red dress -> Blue warm coat) */
-@keyframes changeCoat {
-    0%, 45% { fill: #ef4444; } /* Cold dress */
-    50%, 95% { fill: #3b82f6; } /* Warm blue coat */
-    100% { fill: #ef4444; }
+/* Detailed Girl Body Parts */
+.girl-head {
+    position: absolute;
+    top: 0; left: 15%;
+    width: 70%; height: 40%;
+    transform-style: preserve-3d;
 }
-.girl-body, .girl-arm-left, .girl-arm-right {
+.hair {
+    position: absolute; top: -5px; left: -5px; width: 100%; height: 80%;
+    background: #3f2b1d; border-radius: 50% 50% 20% 20%;
+    box-shadow: inset -5px -5px 10px rgba(0,0,0,0.5);
+}
+.face {
+    position: absolute; top: 10%; left: 10%; width: 80%; height: 70%;
+    background: #fcd34d; border-radius: 50%;
+    box-shadow: inset -3px -3px 8px rgba(0,0,0,0.1);
+}
+.eye { position: absolute; top: 40%; width: 8px; height: 8px; background: #1e293b; border-radius: 50%; }
+.eye.left { left: 25%; } .eye.right { right: 25%; }
+.blush { position: absolute; top: 55%; width: 10px; height: 5px; background: #f87171; border-radius: 50%; opacity: 0.6; filter: blur(1px); }
+.blush.left { left: 15%; } .blush.right { right: 15%; }
+.mouth { position: absolute; top: 65%; left: 40%; width: 20%; height: 5px; background: #be123c; border-radius: 0 0 10px 10px; }
+.scarf {
+    position: absolute; bottom: -5px; left: 10%; width: 80%; height: 20%;
+    background: #ef4444; border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.girl-body {
+    position: absolute;
+    top: 35%; left: 20%;
+    width: 60%; height: 40%;
+    transform-style: preserve-3d;
+}
+.torso {
+    position: absolute; width: 100%; height: 100%;
+    background: #10b981; border-radius: 10px 10px 5px 5px;
+    box-shadow: inset -5px -5px 10px rgba(0,0,0,0.2);
+    transition: background 0.5s;
     animation: changeCoat 20s infinite;
 }
+@keyframes changeCoat {
+    0%, 45% { background: #10b981; } /* Cold sweater */
+    50%, 95% { background: #3b82f6; border-radius: 15px; } /* Warm coat */
+    100% { background: #10b981; }
+}
+.arm {
+    position: absolute; top: 5%; width: 20%; height: 80%;
+    background: #10b981; border-radius: 10px;
+    transform-origin: top center;
+    box-shadow: inset -2px -2px 5px rgba(0,0,0,0.2);
+    transition: background 0.5s;
+    animation: changeCoat 20s infinite, clap 20s infinite;
+}
+.arm.left { left: -15%; }
+.arm.right { right: -15%; }
 
-/* Clapping Animation (Arms rotate) */
-@keyframes clapLeft {
+@keyframes clap {
     0%, 30% { transform: rotate(0deg); }
     32% { transform: rotate(45deg); }
     34% { transform: rotate(0deg); }
@@ -365,22 +429,32 @@ body {
     38% { transform: rotate(0deg); }
     100% { transform: rotate(0deg); }
 }
-@keyframes clapRight {
-    0%, 30% { transform: rotate(0deg); }
-    32% { transform: rotate(-45deg); }
-    34% { transform: rotate(0deg); }
-    36% { transform: rotate(-45deg); }
-    38% { transform: rotate(0deg); }
-    100% { transform: rotate(0deg); }
+
+.girl-legs {
+    position: absolute;
+    top: 75%; left: 25%;
+    width: 50%; height: 25%;
+    display: flex; justify-content: space-between;
 }
-.girl-arm-left {
+.leg {
+    width: 30%; height: 100%;
+    background: #1e293b; border-radius: 5px;
     transform-origin: top center;
-    animation: clapLeft 20s infinite;
+    animation: walk 20s infinite;
 }
-.girl-arm-right {
-    transform-origin: top center;
-    animation: clapRight 20s infinite;
+.leg.right { animation-delay: 0.2s; }
+
+@keyframes walk {
+    0%, 20% { transform: rotate(-15deg); } /* Walk in */
+    10% { transform: rotate(15deg); }
+    20%, 50% { transform: rotate(0deg); } /* Stand */
+    50%, 60% { transform: rotate(-25deg); } /* Jump */
+    55% { transform: rotate(25deg); }
+    60%, 80% { transform: rotate(-20deg); } /* Run */
+    70% { transform: rotate(20deg); }
+    80%, 100% { transform: rotate(0deg); }
 }
+
 
 /* Left Content Box */
 .special-deal-left { 
@@ -391,9 +465,9 @@ body {
     justify-content: center; 
     position: relative; 
     z-index: 2; 
-    background: rgba(15, 23, 42, 0.85); /* Frosted dark blue */
+    background: rgba(15, 23, 42, 0.85); 
     backdrop-filter: blur(5px);
-    margin-top: 130px; /* Push down for animation */
+    margin-top: 160px; 
 }
 #specialDealTitle { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1.8rem; line-height: 1.1; margin-bottom: 6px; color: #fff; }
 .special-deal-subtitle { color: #CBD5E1; font-size: 0.85rem; margin-bottom: 15px; font-weight: 500; }
@@ -412,7 +486,7 @@ body {
     display: flex; 
     align-items: flex-end; 
     overflow: hidden; 
-    margin-top: 130px; /* Push down for animation */
+    margin-top: 160px; 
 }
 .horizontal-scroll-container { display: flex; gap: 15px; overflow-x: auto; scroll-behavior: smooth; -ms-overflow-style: none; scrollbar-width: none; width: 100%; }
 .horizontal-scroll-container::-webkit-scrollbar { display: none; }
@@ -861,7 +935,7 @@ body {
     
     .notif-panel { position: absolute !important; top: 45px !important; right: 0 !important; left: auto !important; transform: none !important; width: 85vw !important; max-width: 340px !important; max-height: 70vh !important; z-index: 100000 !important; }
 
-    .special-deal-section { flex-direction: column; min-height: auto; padding-top: 130px; }
+    .special-deal-section { flex-direction: column; min-height: auto; padding-top: 160px; }
     .special-deal-left { flex: none; padding: 12px 15px; text-align: center; align-items: center; background: rgba(15, 23, 42, 0.95); margin-top: 0; }
     #specialDealTitle { font-size: 1.4rem !important; margin-bottom: 4px; }
     .special-deal-subtitle { font-size: 0.8rem !important; margin-bottom: 8px; }
