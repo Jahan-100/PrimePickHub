@@ -458,6 +458,7 @@ window.editProduct = async function(id) {
         } else { document.getElementById('pSaleEndDate2').value = ''; }
 
         document.getElementById('pStore').value = defaultOffer.store_name || ''; 
+        document.getElementById('pMainColor').value = defaultOffer.product_color || ''; 
         document.getElementById('pMainVarName').value = defaultOffer.variation_name || ''; 
         document.getElementById('pPrice').value = defaultOffer.price || '';
         document.getElementById('pSalePrice').value = defaultOffer.sale_price || '';
@@ -612,7 +613,8 @@ function setupProductForm() {
 
             const mainOfferData = {
                 store_name: document.getElementById('pStore').value.trim().toLowerCase(), 
-                variation_name: document.getElementById('pMainVarName').value.trim() || null,
+                product_color: document.getElementById('pMainColor').value.trim() || null, // ⭐ Save Color
+                variation_name: document.getElementById('pMainVarName').value.trim() || null, // ⭐ Save Size
                 price: price, sale_price: salePrice,
                 commission_rate: commission, currency: document.getElementById('pCurrency').value,
                 affiliate_url: document.getElementById('pAffUrl').value.trim()
