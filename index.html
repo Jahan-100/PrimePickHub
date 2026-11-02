@@ -30,7 +30,7 @@
     <link rel="canonical" href="https://primepickhub.vercel.app/">
     <link rel="icon" type="image/png" href="assets/favicon.png?v=4">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="css/main.css?v=27">
+    <link rel="stylesheet" href="css/main.css?v=28">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,800;0,900;1,800&family=Roboto:wght@400;700;900&family=Oswald:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Lobster&family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
@@ -174,7 +174,45 @@
     </div>
 
     <main class="container">
-        <div id="specialDealSection" class="alibaba-special-deal" style="margin-top: 5px; display: none;">
+        <!-- ⭐ SPECIAL DEAL SECTION (Winter Theme & Animation) ⭐ -->
+        <div id="specialDealSection" class="special-deal-section" style="margin-top: 5px; display: none;">
+            
+            <!-- Snowfall Effect -->
+            <div class="snowfall-bg">
+                <div class="snow">❅</div>
+                <div class="snow">❆</div>
+                <div class="snow">❅</div>
+                <div class="snow">❆</div>
+                <div class="snow">❅</div>
+                <div class="snow">❆</div>
+                <div class="snow">❅</div>
+                <div class="snow">❆</div>
+            </div>
+
+            <!-- Girl Animation Scene -->
+            <div class="girl-scene">
+                <!-- The Coat on the ground -->
+                <div class="coat-on-ground">🧥</div>
+
+                <!-- The Girl SVG -->
+                <div class="girl-character">
+                    <svg viewBox="0 0 100 150" class="girl-svg">
+                        <!-- Hair -->
+                        <path d="M40 30 Q50 10 60 30 Q65 40 60 50 Q50 40 40 50 Q35 40 40 30" fill="#78350f"/>
+                        <!-- Head -->
+                        <circle cx="50" cy="30" r="12" fill="#fcd34d"/>
+                        <!-- Body (Initially red dress, then warm coat) -->
+                        <rect x="42" y="45" width="16" height="40" rx="4" class="girl-body" fill="#ef4444"/>
+                        <!-- Arms -->
+                        <rect x="30" y="45" width="8" height="25" rx="4" class="girl-arm-left" fill="#ef4444"/>
+                        <rect x="62" y="45" width="8" height="25" rx="4" class="girl-arm-right" fill="#ef4444"/>
+                        <!-- Legs -->
+                        <rect x="45" y="85" width="6" height="25" class="girl-leg-left" fill="#1e293b"/>
+                        <rect x="50" y="85" width="6" height="25" class="girl-leg-right" fill="#1e293b"/>
+                    </svg>
+                </div>
+            </div>
+
             <div class="special-deal-left">
                 <h2 id="specialDealTitle">First order deal</h2>
                 <p class="special-deal-subtitle">Exclusive offers just for you!</p>
@@ -343,7 +381,7 @@
 
     <script src="js/config.js?v=6"></script>
     <script src="js/api.js?v=7"></script>
-    <script src="js/app.js?v=16"></script>
+    <script src="js/app.js?v=17"></script>
     <script src="js/affiliate.js?v=6"></script>
     <script>
         function toggleCatDropdown(event) {
@@ -431,6 +469,6 @@
             }
         });
     </script>
-    <script src="js/floating-widgets.js?v=6"></script>
+    <script src="js/floating-widgets.js?v=7"></script>
 </body>
 </html>
