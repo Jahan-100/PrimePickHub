@@ -88,7 +88,7 @@ module.exports = async function handler(req, res) {
         }));
 
         // AI Prompt
-        const prompt = `You are a JSON API. Select exactly 15 best-selling products for US, UK, Europe, Australia from this raw data.
+        const prompt = `You are a JSON API. Select exactly 8 best-selling products for US, UK, Europe, Australia from this raw data.
         ${keyword ? `The user is specifically searching for: "${keyword}".` : 'Select globally trending items.'}
 
         CRITICAL RULES:
