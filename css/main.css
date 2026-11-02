@@ -240,18 +240,174 @@ body {
 .btn-check-price { display: block; width: 100%; border: none; background: var(--primary); color: #fff; padding: 6px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; transition: opacity 0.2s; margin-top: auto; }
 .btn-check-price:hover { opacity: 0.9; }
 
-/* Special Deal Section */
-.alibaba-special-deal { display: flex; position: relative; background: #fff; border-radius: 12px; overflow: hidden; margin-bottom: 20px; min-height: 185px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #E2E8F0; }
-.alibaba-special-deal::before { content: ""; position: absolute; inset: 0; background-image: url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'); background-size: cover; background-position: center; opacity: 0.4; z-index: 0; }
-.special-deal-left { flex: 0 0 28%; padding: 20px 25px; display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 1; background: rgba(105, 20, 76, 0.85); }
+/* ⭐ Special Deal Section (Winter Theme & Animation) ⭐ */
+.special-deal-section { 
+    display: flex; 
+    position: relative; 
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); /* Deep Winter Blue */
+    border-radius: 12px; 
+    overflow: hidden; 
+    margin-bottom: 20px; 
+    min-height: 220px; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
+    border: 1px solid #3b82f6; 
+}
+
+/* Snowfall Background */
+.snowfall-bg {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+}
+.snow {
+    color: #fff;
+    font-size: 1.2em;
+    position: absolute;
+    top: -20px;
+    animation: fall 4s linear infinite;
+    opacity: 0.8;
+}
+.snow:nth-child(1) { left: 10%; animation-delay: 0s; }
+.snow:nth-child(2) { left: 20%; animation-delay: 1s; }
+.snow:nth-child(3) { left: 30%; animation-delay: 2s; }
+.snow:nth-child(4) { left: 40%; animation-delay: 0.5s; }
+.snow:nth-child(5) { left: 50%; animation-delay: 1.5s; }
+.snow:nth-child(6) { left: 60%; animation-delay: 2.5s; }
+.snow:nth-child(7) { left: 70%; animation-delay: 0.2s; }
+.snow:nth-child(8) { left: 80%; animation-delay: 1.2s; }
+
+@keyframes fall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(250px) rotate(360deg); opacity: 0; }
+}
+
+/* Girl Animation Scene */
+.girl-scene {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100px;
+    z-index: 5;
+    pointer-events: none;
+    overflow: hidden;
+}
+.coat-on-ground {
+    position: absolute;
+    bottom: 10px; left: 45%;
+    font-size: 2.5rem;
+    animation: coatPickup 12s forwards;
+    z-index: 6;
+}
+@keyframes coatPickup {
+    0%, 40% { opacity: 1; transform: scale(1); }
+    45%, 100% { opacity: 0; transform: scale(0); }
+}
+
+.girl-character {
+    position: absolute;
+    bottom: 0; left: -100px; 
+    width: 60px; height: 90px;
+    animation: girlStory 12s ease-in-out forwards; 
+    transform-origin: bottom center;
+    z-index: 7;
+}
+
+/* The Story Animation */
+@keyframes girlStory {
+    /* 0-20%: Walk In */
+    0% { left: -100px; transform: scaleX(1) translateY(0); }
+    20% { left: 40%; transform: scaleX(1) translateY(0); }
+    
+    /* 20-30%: Shiver (Kapna) */
+    22% { transform: scaleX(1) translateY(0) rotate(5deg); }
+    24% { transform: scaleX(1) translateY(0) rotate(-5deg); }
+    26% { transform: scaleX(1) translateY(0) rotate(5deg); }
+    28% { transform: scaleX(1) translateY(0) rotate(-5deg); }
+    30% { transform: scaleX(1) translateY(0) rotate(0deg); }
+    
+    /* 30-40%: Look down & Jump happily */
+    35% { transform: scaleX(1) translateY(-20px); } /* Jump */
+    40% { transform: scaleX(1) translateY(0); }
+    
+    /* 40-50%: Bend down and pick up coat */
+    45% { transform: scaleX(1) translateY(30px) rotate(45deg); }
+    
+    /* 50-60%: Stand up with coat */
+    50% { transform: scaleX(1) translateY(0) rotate(0deg); }
+    
+    /* 60-100%: Run out to left */
+    60% { transform: scaleX(-1) translateY(0); } /* Turn around */
+    100% { left: -100px; transform: scaleX(-1) translateY(0); }
+}
+
+.girl-svg { width: 100%; height: 100%; }
+
+/* Changing coat color (Red dress -> Blue warm coat) */
+@keyframes changeCoat {
+    0%, 45% { fill: #ef4444; } /* Cold dress */
+    50%, 100% { fill: #3b82f6; } /* Warm blue coat */
+}
+.girl-body, .girl-arm-left, .girl-arm-right {
+    animation: changeCoat 12s forwards;
+}
+
+/* Clapping Animation (Arms rotate) */
+@keyframes clapLeft {
+    0%, 30% { transform: rotate(0deg); }
+    32% { transform: rotate(45deg); }
+    34% { transform: rotate(0deg); }
+    36% { transform: rotate(45deg); }
+    38% { transform: rotate(0deg); }
+    100% { transform: rotate(0deg); }
+}
+@keyframes clapRight {
+    0%, 30% { transform: rotate(0deg); }
+    32% { transform: rotate(-45deg); }
+    34% { transform: rotate(0deg); }
+    36% { transform: rotate(-45deg); }
+    38% { transform: rotate(0deg); }
+    100% { transform: rotate(0deg); }
+}
+.girl-arm-left {
+    transform-origin: top center;
+    animation: clapLeft 12s forwards;
+}
+.girl-arm-right {
+    transform-origin: top center;
+    animation: clapRight 12s forwards;
+}
+
+/* Left Content Box */
+.special-deal-left { 
+    flex: 0 0 28%; 
+    padding: 20px 25px; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    position: relative; 
+    z-index: 2; 
+    background: rgba(15, 23, 42, 0.85); /* Frosted dark blue */
+    backdrop-filter: blur(5px);
+    margin-top: 80px; /* Space for animation */
+}
 #specialDealTitle { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1.8rem; line-height: 1.1; margin-bottom: 6px; color: #fff; }
-.special-deal-subtitle { color: #E2E8F0; font-size: 0.85rem; margin-bottom: 15px; font-weight: 500; }
+.special-deal-subtitle { color: #CBD5E1; font-size: 0.85rem; margin-bottom: 15px; font-weight: 500; }
 .special-deal-features { list-style: none; margin-bottom: 15px; }
-.special-deal-features li { font-size: 0.8rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 500; }
-.special-deal-features li i { color: #FFD700; font-size: 0.9rem; }
-.explore-btn { display: inline-block; background: #fff; color: #69144c; padding: 8px 18px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 0.8rem; width: fit-content; transition: all 0.2s; }
-.explore-btn:hover { background: #FFD700; color: #69144c; }
-.special-deal-right { flex: 1; padding: 12px 15px; position: relative; z-index: 1; display: flex; align-items: center; overflow: hidden; }
+.special-deal-features li { font-size: 0.8rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; color: #E2E8F0; font-weight: 500; }
+.special-deal-features li i { color: #60A5FA; font-size: 0.9rem; }
+.explore-btn { display: inline-block; background: #3b82f6; color: #fff; padding: 8px 18px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 0.8rem; width: fit-content; transition: all 0.2s; }
+.explore-btn:hover { background: #2563eb; }
+
+/* Right Content Area */
+.special-deal-right { 
+    flex: 1; 
+    padding: 12px 15px; 
+    position: relative; 
+    z-index: 2; 
+    display: flex; 
+    align-items: flex-end; 
+    overflow: hidden; 
+    margin-top: 80px; /* Space for animation */
+}
 .horizontal-scroll-container { display: flex; gap: 15px; overflow-x: auto; scroll-behavior: smooth; -ms-overflow-style: none; scrollbar-width: none; width: 100%; }
 .horizontal-scroll-container::-webkit-scrollbar { display: none; }
 .special-deal-card { min-width: 190px; max-width: 190px; height: 250px; background: #fff; border-radius: 8px; text-decoration: none; display: flex; flex-direction: column; position: relative; overflow: hidden; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
@@ -699,14 +855,14 @@ body {
     
     .notif-panel { position: absolute !important; top: 45px !important; right: 0 !important; left: auto !important; transform: none !important; width: 85vw !important; max-width: 340px !important; max-height: 70vh !important; z-index: 100000 !important; }
 
-    .alibaba-special-deal { flex-direction: column; min-height: auto; }
-    .special-deal-left { flex: none; padding: 12px 15px; text-align: center; align-items: center; background: rgba(105, 20, 76, 0.95); }
+    .special-deal-section { flex-direction: column; min-height: auto; padding-top: 80px; }
+    .special-deal-left { flex: none; padding: 12px 15px; text-align: center; align-items: center; background: rgba(15, 23, 42, 0.95); margin-top: 0; }
     #specialDealTitle { font-size: 1.4rem !important; margin-bottom: 4px; }
     .special-deal-subtitle { font-size: 0.8rem !important; margin-bottom: 8px; }
     .special-deal-features { display: flex; gap: 10px; margin-bottom: 10px; justify-content: center; flex-wrap: wrap; }
     .special-deal-features li { font-size: 0.75rem !important; margin-bottom: 0; }
     .explore-btn { padding: 6px 15px !important; font-size: 0.8rem !important; }
-    .special-deal-right { padding: 10px 15px; }
+    .special-deal-right { padding: 10px 15px; margin-top: 0; }
     .scroll-arrow { display: none; }
     .special-deal-card { min-width: 140px; max-width: 140px; height: 190px; }
     .special-deal-card .img-box { flex: 8; }
