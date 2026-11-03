@@ -6,6 +6,34 @@ function escapeHTML(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
+// ⭐ HD IMAGE HELPER (Removes thumbnail suffixes from URLs) ⭐
+function getHighQualityImage(url) {
+    if (!url || typeof url !== 'string') return url;
+    let cleanUrl = url;
+
+    // 1. AliExpress & Daraz: Remove _220x220q75.jpg_.avif
+    if (cleanUrl.includes('aliexpress') || cleanUrl.includes('daraz') || cleanUrl.includes('alicdn')) {
+        const match = cleanUrl.match(/^(.+?\.(?:jpg|jpeg|png|webp))_.+/i);
+        if (match) cleanUrl = match[1];
+    }
+
+    // 2. Amazon: Remove ._AC_SL1500_.jpg
+    if (cleanUrl.includes('amazon') || cleanUrl.includes('media-amazon')) {
+        const match = cleanUrl.match(/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i);
+        if (match) cleanUrl = cleanUrl.replace(/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i, '.$1');
+    }
+
+    // 3. eBay: Change s-l300.jpg to s-l1600.jpg
+    if (cleanUrl.includes('ebayimg.com')) {
+        cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, '/s-l1600.$1');
+    }
+
+    // 4. General fallback for common size patterns
+    cleanUrl = cleanUrl.replace(/_\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
+
+    return cleanUrl;
+}
+
 const currencySymbols = {
     USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ', 
     SAR: 'SAR ', CAD: 'C$', AUD: 'A$', CNY: '¥', JPY: '¥', TRY: '₺', 
@@ -74,7 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.title = `${product.title} - Best Price | PrimePickHub`;
     document.querySelector('meta[property="og:title"]')?.setAttribute('content', product.title);
-    document.querySelector('meta[property="og:image"]')?.setAttribute('content', product.image_url || '');
+    document.querySelector('meta[property="og:image"]')?.setAttribute('content', getHighQualityImage(product.image_url) || '');
     document.querySelector('meta[property="og:description"]')?.setAttribute('content', product.description || '');
 
     const allOffers = product.affiliate_offers || [];
@@ -94,6 +122,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (!uniqueColors.find(c => c.value === val)) {
                     uniqueColors.push({
                         value: val,
+                        hdValue: getHighQualityImage(val), // HD URL added
                         name: colorNames[idx] || val
                     });
                 }
@@ -141,13 +170,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 let boxStyle = '';
                 
                 if (isImageUrl) {
-                    boxStyle = `background-image: url('${colorObj.value}'); background-size: cover; background-position: center;`;
+                    boxStyle = `background-image: url('${colorObj.hdValue}'); background-size: cover; background-position: center;`; // HD image
                 } else {
                     const bgColor = getHexFromColorString(colorObj.value);
                     boxStyle = `background-color: ${bgColor};`;
                 }
 
-                // ⭐ SEQURE BOXES, NO TEXT INSIDE ⭐
                 html += `
                 <div style="cursor:pointer;" onclick="selectColor('${colorObj.value}')">
                     <div style="width:50px; height:50px; border-radius:6px; ${boxStyle} border:3px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; box-shadow:${isActive ? '0 0 0 3px rgba(255,90,60,0.3)' : 'none'}; transition:all 0.2s; box-sizing:border-box;">
@@ -179,6 +207,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     let galleryImages = (product.gallery_images && product.gallery_images.length > 0) ? product.gallery_images.filter(Boolean) : (product.image_url ? [product.image_url] : []);
+    
+    // ⭐ Apply HD Mapping to Gallery Images ⭐
+    galleryImages = galleryImages.map(getHighQualityImage);
+
     const mainImage = galleryImages[0] || '/assets/icon-192.png';
     const thumbnailsHtml = galleryImages.length > 1 ? galleryImages.map((url, i) => `<img src="${escapeHTML(url)}" alt="View ${i + 1}" class="gallery-thumb" data-src="${escapeHTML(url)}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid ${i === 0 ? '#FF5A3C' : '#E2E8F0'};transition:border-color 0.2s;">`).join('') : '';
     const videoHtml = product.video_url ? `<div style="background:#fff; padding:30px; border-radius:12px; border:1px solid #E2E8F0; margin-bottom:20px;"><h2 style="margin-bottom:15px; border-bottom:2px solid #FF5A3C; padding-bottom:10px; display:inline-block;">Product Video</h2>${getVideoHtml(product.video_url)}</div>` : '';
@@ -324,7 +356,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const jsonLd = {
         "@context": "https://schema.org/", "@type": "Product", "name": product.title,
-        "image": [product.image_url].concat(product.gallery_images || []).filter(Boolean),
+        "image": [getHighQualityImage(product.image_url)].concat((product.gallery_images || []).map(getHighQualityImage)).filter(Boolean),
         "description": product.description || product.title,
         "offers": allOffers.map(o => {
             const p = parseFloat(o.price) || 0; 
