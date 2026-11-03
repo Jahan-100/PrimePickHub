@@ -15,6 +15,38 @@ const currencySymbols = {
     CHF: 'CHF ', SEK: 'kr ', NOK: 'kr '
 };
 
+// ⭐ ADVANCED COLOR MAPPING ⭐
+function getHexFromColorString(colorStr) {
+    if (!colorStr) return '#e2e8f0';
+    if (colorStr.startsWith('#')) return colorStr; // Return hex directly if user entered it
+    
+    const c = colorStr.toLowerCase();
+    // Match common fashion colors accurately
+    if (c.includes('black')) return '#111827';
+    if (c.includes('coffee') || c.includes('brown') || c.includes('khaki') || c.includes('camel')) return '#78350f';
+    if (c.includes('white')) return '#ffffff';
+    if (c.includes('red')) return '#ef4444';
+    if (c.includes('blue')) return '#3b82f6';
+    if (c.includes('navy')) return '#1e3a8a';
+    if (c.includes('green')) return '#10b981';
+    if (c.includes('olive')) return '#84cc16';
+    if (c.includes('grey') || c.includes('gray')) return '#9ca3af';
+    if (c.includes('yellow') || c.includes('mustard')) return '#facc15';
+    if (c.includes('pink')) return '#ec4899';
+    if (c.includes('purple')) return '#a855f7';
+    if (c.includes('orange')) return '#f97316';
+    if (c.includes('beige') || c.includes('cream')) return '#f5f5dc';
+    if (c.includes('maroon')) return '#800000';
+    
+    // Fallback: Generate a consistent pastel color based on the text string
+    let hash = 0;
+    for (let i = 0; i < colorStr.length; i++) {
+        hash = colorStr.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue}, 60%, 70%)`;
+}
+
 function getVideoHtml(url) {
     if (!url || typeof url !== 'string') return '';
     if (/\.(mp4|webm|ogg)(\?|$)/i.test(url)) return `<video controls style="width:100%;border-radius:12px;background:#000;"><source src="${escapeHTML(url)}"></video>`;
@@ -52,13 +84,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const mainOffer = allOffers[0] || { price: '0', store_name: 'Store', currency: 'USD', commission_rate: 0, sale_price: null };
     const otherVariations = allOffers.slice(1);
     
-    // ⭐ COMBINE ALL OFFERS & EXTRACT INDIVIDUAL COLORS FROM COMMA-SEPARATED STRINGS ⭐
     const allVariations = [mainOffer, ...otherVariations].filter(v => v !== null && v.price !== undefined);
     let uniqueColors = [];
     
     allVariations.forEach(v => {
         if (v.product_color) {
-            // Split by comma, trim spaces, and add to unique list
             const colors = v.product_color.split(',').map(c => c.trim()).filter(Boolean);
             colors.forEach(c => {
                 if (!uniqueColors.includes(c)) uniqueColors.push(c);
@@ -70,7 +100,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     let activeOfferIndex = 0;
     
     if (activeColor) {
-        // Find the first variation that INCLUDES this color
         const idx = allVariations.findIndex(v => v.product_color && v.product_color.includes(activeColor));
         if (idx !== -1) activeOfferIndex = idx;
     }
@@ -90,38 +119,41 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </a>`;
     };
 
-    // ⭐ GENERATE COLOR & SIZE UI
     function generateVariationUI() {
         let html = '';
-        // Color Section
+        
+        // ⭐ NEW: SQUARE COLOR BOXES WITH TEXT ON TOP ⭐
         if (uniqueColors.length > 0) {
-            html += `<div style="margin-bottom: 15px;">
-                <p style="font-weight:bold; margin-bottom:8px;">Select Color:</p>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">`;
+            html += `<div style="margin-bottom: 20px;">
+                <p style="font-weight:bold; margin-bottom:12px; color:#1E1B4B;">Select Color:</p>
+                <div style="display:flex; gap:15px; flex-wrap:wrap;">`;
             
             uniqueColors.forEach(color => {
                 const isActive = color === activeColor;
-                const cLower = color.toLowerCase();
-                let bgColor = '#f8fafc'; // Default light
-                let borderColor = isActive ? '#FF5A3C' : '#E2E8F0';
-                let textColor = isActive ? '#FF5A3C' : '#1E1B4B';
+                const bgColor = getHexFromColorString(color);
                 
-                // Smart color mapping for boxes
-                if (cLower.includes('black')) { bgColor = '#1E293B'; textColor = isActive ? '#FF5A3C' : '#fff'; borderColor = isActive ? '#FF5A3C' : '#1E293B'; }
-                else if (cLower.includes('coffee') || cLower.includes('brown')) { bgColor = '#78350f'; textColor = isActive ? '#FF5A3C' : '#fff'; borderColor = isActive ? '#FF5A3C' : '#78350f'; }
-                else if (cLower.includes('red')) { bgColor = '#ef4444'; textColor = isActive ? '#FF5A3C' : '#fff'; borderColor = isActive ? '#FF5A3C' : '#ef4444'; }
-                else if (cLower.includes('blue')) { bgColor = '#3b82f6'; textColor = isActive ? '#FF5A3C' : '#fff'; borderColor = isActive ? '#FF5A3C' : '#3b82f6'; }
-                else if (cLower.includes('green')) { bgColor = '#10b981'; textColor = isActive ? '#FF5A3C' : '#fff'; borderColor = isActive ? '#FF5A3C' : '#10b981'; }
-                else if (cLower.includes('white')) { bgColor = '#ffffff'; textColor = isActive ? '#FF5A3C' : '#1E1B4B'; borderColor = isActive ? '#FF5A3C' : '#cbd5e1'; }
+                // Calculate if text should be dark or light based on background (simple luminance check)
+                let textColor = '#1E1B4B'; 
+                if (bgColor.startsWith('#') && bgColor !== '#ffffff' && bgColor !== '#f5f5dc') {
+                    const r = parseInt(bgColor.substr(1, 2), 16);
+                    const g = parseInt(bgColor.substr(3, 2), 16);
+                    const b = parseInt(bgColor.substr(5, 2), 16);
+                    if ((r * 0.299 + g * 0.587 + b * 0.114) < 128) textColor = '#ffffff';
+                } else if (bgColor.includes('hsl')) {
+                    textColor = '#ffffff'; // Dark text on pastel hsl
+                }
 
-                html += `<button onclick="selectColor('${color}')" style="padding:10px 15px; border:2px solid ${borderColor}; background:${bgColor}; border-radius:8px; cursor:pointer; font-weight:bold; color:${textColor}; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.2s;">
-                    ${color}
-                </button>`;
+                html += `
+                <div style="display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer;" onclick="selectColor('${color}')">
+                    <span style="font-size:0.75rem; font-weight:700; color:${isActive ? '#FF5A3C' : '#64748B'}; text-align:center; max-width:70px; line-height:1.1;">${color}</span>
+                    <div style="width:50px; height:50px; border-radius:8px; background-color:${bgColor}; border:3px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; box-shadow:${isActive ? '0 0 0 2px rgba(255,90,60,0.3)' : 'none'}; transition:all 0.2s; display:flex; align-items:center; justify-content:center; box-sizing:border-box;">
+                        ${isActive ? '<i class="fa-solid fa-check" style="color:'+textColor+'; font-size:1.2rem;"></i>' : ''}
+                    </div>
+                </div>`;
             });
             html += `</div></div>`;
         }
 
-        // Size Section (Filtered by active color using .includes)
         const offersForColor = activeColor ? allVariations.filter(v => v.product_color && v.product_color.includes(activeColor)) : allVariations;
         
         if (offersForColor.some(o => o.variation_name)) {
@@ -220,7 +252,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function updateUI(currency) {
         const rate = exchangeRates[currency] || 1;
-        activeOffer = allVariations[activeOfferIndex]; // Ensure we use the currently selected offer
+        activeOffer = allVariations[activeOfferIndex]; 
         
         const basePrice = parseFloat(activeOffer.price) || 0;
         const salePrice = parseFloat(activeOffer.sale_price) || 0;
@@ -263,10 +295,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     await fetchRates(); updateUI(baseCurrency);
     currencySelector.addEventListener('change', (e) => updateUI(e.target.value));
 
-    // ⭐ Global Selection Functions
     window.selectColor = function(color) {
         activeColor = color;
-        // Find the first variation that includes this color
         const idx = allVariations.findIndex(v => v.product_color && v.product_color.includes(color));
         if (idx !== -1) activeOfferIndex = idx;
         
