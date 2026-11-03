@@ -30,7 +30,7 @@ const API = {
         }
 
         // Agar profile nahi mile, toh user ko 'admin' hi treat karein (kyunke aap admin hain)
-        return { user, role: profile?.role || 'admin' };
+        return { user, role: profile?.role || 'user' };
     },
     // ---------- PRODUCTS ----------
     async getHomepageProducts() {
