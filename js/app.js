@@ -30,6 +30,34 @@ function isValidExternalURL(url) { if (typeof url !== 'string') return false; tr
 function isValidURL(url) { if (!url || typeof url !== 'string') return false; try { const p = new URL(url, window.location.origin); return p.protocol === 'http:' || p.protocol === 'https:'; } catch { return false; } }
 function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb; }
 
+// ⭐ HD IMAGE HELPER ⭐
+function getHighQualityImage(url) {
+    if (!url || typeof url !== 'string') return url;
+    let cleanUrl = url;
+
+    // AliExpress & Daraz
+    if (cleanUrl.includes('aliexpress') || cleanUrl.includes('daraz') || cleanUrl.includes('alicdn')) {
+        const match = cleanUrl.match(/^(.+?\.(?:jpg|jpeg|png|webp))_.+/i);
+        if (match) cleanUrl = match[1];
+    }
+
+    // Amazon
+    if (cleanUrl.includes('amazon') || cleanUrl.includes('media-amazon')) {
+        const match = cleanUrl.match(/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i);
+        if (match) cleanUrl = cleanUrl.replace(/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i, '.$1');
+    }
+
+    // eBay
+    if (cleanUrl.includes('ebayimg.com')) {
+        cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, '/s-l1600.$1');
+    }
+
+    // General fallback
+    cleanUrl = cleanUrl.replace(/_\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
+
+    return cleanUrl;
+}
+
 // ⭐ SAFE PRODUCT URL HELPER ⭐
 function getProductUrl(product) {
     if (!product) return '#';
@@ -80,7 +108,9 @@ function renderProductCard(product) {
     const productUrl = getProductUrl(product);
     const hasLink = productUrl !== '#';
     const disabledAttr = hasLink ? '' : 'aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:0.6;"';
-    const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png?v=4';
+    
+    // Apply HD Mapping Here
+    const imageSrc = isValidURL(product.image_url) ? escapeHTML(getHighQualityImage(product.image_url)) : 'assets/icon-192.png?v=4';
 
     const r = Number(product.rating);
     const rating = Number.isFinite(r) && r > 0 && r <= 5 ? r : null;
@@ -164,7 +194,7 @@ function renderProductCard(product) {
 function renderFlashCard(product, section = 1) {
     const title = escapeHTML(product.title || 'Untitled');
     const productUrl = getProductUrl(product);
-    const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png?v=4';
+    const imageSrc = isValidURL(product.image_url) ? escapeHTML(getHighQualityImage(product.image_url)) : 'assets/icon-192.png?v=4';
 
     const primaryOffer = getPrimaryOffer(product) || {};
     const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
@@ -334,7 +364,7 @@ function renderAdFallback(products) {
         const html = selected.map(p => {
             const title = escapeHTML(p.title || 'Product');
             const productUrl = getProductUrl(p);
-            const imageSrc = isValidURL(p.image_url) ? escapeHTML(p.image_url) : 'assets/icon-192.png?v=4';
+            const imageSrc = isValidURL(p.image_url) ? escapeHTML(getHighQualityImage(p.image_url)) : 'assets/icon-192.png?v=4';
             const primaryOffer = getPrimaryOffer(p) || {};
             const sym = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' }[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
             const price = parseFloat(primaryOffer.sale_price) || parseFloat(primaryOffer.price) || 0;
@@ -527,7 +557,7 @@ async function loadHomepageProducts() {
                     }
                     return `
                         <a href="${getProductUrl(p)}" class="special-deal-card">
-                            <div class="img-box"><img src="${p.image_url || '/assets/icon-192.png?v=4'}" alt="${escapeHTML(p.title)}"></div>
+                            <div class="img-box"><img src="${getHighQualityImage(p.image_url) || '/assets/icon-192.png?v=4'}" alt="${escapeHTML(p.title)}"></div>
                             <div class="info-box">
                                 ${priceDisplay}
                                 <div class="title">${escapeHTML(p.title)}</div>
@@ -569,7 +599,6 @@ window.toggleNotifPanel = function(e) {
 async function loadNotifications() {
     if (!window.supabaseClient) return;
     
-    // Fetch 100 so we have enough after deduplication and deletion
     const { data, error } = await window.supabaseClient
         .from('app_notifications')
         .select('*')
@@ -577,10 +606,8 @@ async function loadNotifications() {
         .limit(100);
 
     if (!error && data) {
-        // 1. Filter out deleted
         let filtered = data.filter(n => !userDeletedNotifs.includes(n.id));
         
-        // 2. Remove duplicates
         const seen = new Set();
         const unique = [];
         filtered.forEach(n => {
@@ -591,7 +618,6 @@ async function loadNotifications() {
             }
         });
 
-        // 3. Limit to 20
         currentNotifs = unique.slice(0, 20);
         
         renderNotifications();
