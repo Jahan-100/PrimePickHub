@@ -568,10 +568,32 @@ window.toggleNotifPanel = function(e) {
 
 async function loadNotifications() {
     if (!window.supabaseClient) return;
-    const { data, error } = await window.supabaseClient.from('app_notifications').select('*').order('created_at', { ascending: false }).limit(20);
+    
+    // Fetch 100 so we have enough after deduplication and deletion
+    const { data, error } = await window.supabaseClient
+        .from('app_notifications')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
 
     if (!error && data) {
-        currentNotifs = data.filter(n => !userDeletedNotifs.includes(n.id));
+        // 1. Filter out deleted
+        let filtered = data.filter(n => !userDeletedNotifs.includes(n.id));
+        
+        // 2. Remove duplicates
+        const seen = new Set();
+        const unique = [];
+        filtered.forEach(n => {
+            const key = `${n.title}|${n.message}|${n.product_slug || ''}`;
+            if (!seen.has(key)) {
+                seen.add(key);
+                unique.push(n);
+            }
+        });
+
+        // 3. Limit to 20
+        currentNotifs = unique.slice(0, 20);
+        
         renderNotifications();
     }
 }
@@ -771,7 +793,9 @@ async function setupRealtime() {
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'app_notifications' }, (payload) => {
             console.log("🔔 New Notification Received Realtime!");
             loadNotifications();
-            showBrowserNotification(payload.new.title, payload.new.message);
+            if (payload.new) {
+                showBrowserNotification(payload.new.title, payload.new.message);
+            }
         })
         .subscribe((status) => {
             if (status === 'SUBSCRIBED') console.log('✅ Realtime connected! Live updates are ON.');
