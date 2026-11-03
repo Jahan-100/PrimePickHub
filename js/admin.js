@@ -454,9 +454,10 @@ function renderTable() {
 
         return `
             <tr class="${rowClass}">
+                <!-- Category Box First -->
+                <td style="text-align: center;"><span style="background:#e2e8f0; color:#1e293b; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:600; white-space:nowrap;">${catName}</span></td>
                 <td style="text-align: center;"><img src="${p.image_url}" class="table-img" onerror="this.src='/assets/icon-192.png?v=4'"></td>
                 <td style="text-align: left; font-weight: 500;">${p.title} ${statusBadge}</td>
-                <td style="text-align: center;"><span style="background:#e2e8f0; color:#1e293b; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:600; white-space:nowrap;">${catName}</span></td>
                 <td style="text-align: center;">${priceStr}</td>
                 <td>
                     <div class="action-btns">
