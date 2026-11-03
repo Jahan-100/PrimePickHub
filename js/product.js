@@ -15,19 +15,14 @@ const currencySymbols = {
     CHF: 'CHF ', SEK: 'kr ', NOK: 'kr '
 };
 
-// ⭐ ADVANCED COLOR MAPPING (Updated for more accurate fashion colors) ⭐
+// ⭐ ADVANCED COLOR MAPPING (If only a text name is provided instead of Hex)
 function getHexFromColorString(colorStr) {
     if (!colorStr) return '#e2e8f0';
-    
-    // If user entered a hex code directly, use it
     if (colorStr.startsWith('#')) return colorStr;
-    
     const c = colorStr.toLowerCase();
-    
-    // Fashion accurate mappings
     if (c.includes('black')) return '#111827';
-    if (c.includes('coffee') || c.includes('brown') || c.includes('taupe')) return '#9C7B5C'; // Lighter, accurate coffee
-    if (c.includes('khaki') || c.includes('camel')) return '#C3B091'; // Accurate khaki
+    if (c.includes('coffee') || c.includes('brown') || c.includes('taupe')) return '#9C7B5C';
+    if (c.includes('khaki') || c.includes('camel')) return '#C3B091';
     if (c.includes('beige') || c.includes('cream') || c.includes('off-white')) return '#E8DCC4';
     if (c.includes('white')) return '#ffffff';
     if (c.includes('red')) return '#ef4444';
@@ -43,12 +38,8 @@ function getHexFromColorString(colorStr) {
     if (c.includes('pink')) return '#ec4899';
     if (c.includes('purple')) return '#a855f7';
     if (c.includes('orange')) return '#f97316';
-    
-    // Fallback: Generate a consistent pastel color based on the text string
     let hash = 0;
-    for (let i = 0; i < colorStr.length; i++) {
-        hash = colorStr.charCodeAt(i) + ((hash << 5) - hash);
-    }
+    for (let i = 0; i < colorStr.length; i++) { hash = colorStr.charCodeAt(i) + ((hash << 5) - hash); }
     const hue = Math.abs(hash) % 360;
     return `hsl(${hue}, 60%, 70%)`;
 }
@@ -91,18 +82,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     const otherVariations = allOffers.slice(1);
     
     const allVariations = [mainOffer, ...otherVariations].filter(v => v !== null && v.price !== undefined);
-    let uniqueColors = [];
     
+    // ⭐ SMART COLOR PARSING (Value + Name) ⭐
+    let uniqueColors = [];
     allVariations.forEach(v => {
         if (v.product_color) {
-            const colors = v.product_color.split(',').map(c => c.trim()).filter(Boolean);
-            colors.forEach(c => {
-                if (!uniqueColors.includes(c)) uniqueColors.push(c);
+            const colorValues = v.product_color.split(',').map(c => c.trim()).filter(Boolean);
+            const colorNames = (v.color_name || '').split(',').map(n => n.trim());
+            
+            colorValues.forEach((val, idx) => {
+                if (!uniqueColors.find(c => c.value === val)) {
+                    uniqueColors.push({
+                        value: val,
+                        name: colorNames[idx] || val // Use provided name or fallback to value
+                    });
+                }
             });
         }
     });
     
-    let activeColor = uniqueColors.length > 0 ? uniqueColors[0] : null;
+    let activeColor = uniqueColors.length > 0 ? uniqueColors[0].value : null;
     let activeOfferIndex = 0;
     
     if (activeColor) {
@@ -129,30 +128,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         let html = '';
         
         if (uniqueColors.length > 0) {
+            const activeObj = uniqueColors.find(c => c.value === activeColor);
             html += `<div style="margin-bottom: 20px;">
                 <p style="font-weight:bold; margin-bottom:12px; color:#1E1B4B; font-size:1.05rem;">
-                    Color: <span style="color: #64748B; font-weight: 500;">${activeColor || ''}</span>
+                    Color: <span style="color: #64748B; font-weight: 500;">${activeObj ? activeObj.name : activeColor || ''}</span>
                 </p>
-                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">`;
+                <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:flex-start;">`;
             
-            uniqueColors.forEach(color => {
-                const isActive = color === activeColor;
-                
-                // ⭐ THE FIX: If color is an Image URL, use it as background. Otherwise use solid color.
-                const isImageUrl = color.startsWith('http');
+            uniqueColors.forEach(colorObj => {
+                const isActive = colorObj.value === activeColor;
+                const isImageUrl = colorObj.value.startsWith('http');
                 let boxStyle = '';
                 
                 if (isImageUrl) {
-                    boxStyle = `background-image: url('${color}'); background-size: cover; background-position: center;`;
+                    boxStyle = `background-image: url('${colorObj.value}'); background-size: cover; background-position: center;`;
                 } else {
-                    const bgColor = getHexFromColorString(color);
+                    const bgColor = getHexFromColorString(colorObj.value);
                     boxStyle = `background-color: ${bgColor};`;
                 }
 
                 html += `
-                <div style="cursor:pointer;" onclick="selectColor('${color}')">
-                    <div style="width:65px; height:65px; border-radius:8px; ${boxStyle} border:3px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; box-shadow:${isActive ? '0 0 0 2px rgba(255,90,60,0.3)' : 'none'}; transition:all 0.2s; box-sizing:border-box;">
+                <div style="cursor:pointer; display:flex; flex-direction:column; align-items:center; width:70px;" onclick="selectColor('${colorObj.value}')">
+                    <div style="width:60px; height:60px; border-radius:50%; ${boxStyle} border:3px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; box-shadow:${isActive ? '0 0 0 3px rgba(255,90,60,0.3)' : 'none'}; transition:all 0.2s; box-sizing:border-box;">
                     </div>
+                    <span style="font-size: 0.75rem; text-align:center; margin-top: 6px; line-height: 1.2; color: ${isActive ? '#FF5A3C' : '#475569'}; font-weight: ${isActive ? '700' : '500'};">${colorObj.name}</span>
                 </div>`;
             });
             html += `</div></div>`;
@@ -221,7 +220,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </p>
                 </div>
 
-                <!-- ⭐ Variation Container ⭐ -->
                 <div id="variationContainer">${generateVariationUI()}</div>
 
                 <div style="margin-bottom:25px;padding:15px;background:#F8FAFC;border-radius:8px;" id="buyButtonContainer"></div>
@@ -299,9 +297,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     await fetchRates(); updateUI(baseCurrency);
     currencySelector.addEventListener('change', (e) => updateUI(e.target.value));
 
-    window.selectColor = function(color) {
-        activeColor = color;
-        const idx = allVariations.findIndex(v => v.product_color && v.product_color.includes(color));
+    window.selectColor = function(colorValue) {
+        activeColor = colorValue;
+        const idx = allVariations.findIndex(v => v.product_color && v.product_color.includes(colorValue));
         if (idx !== -1) activeOfferIndex = idx;
         
         activeOffer = allVariations[activeOfferIndex];
