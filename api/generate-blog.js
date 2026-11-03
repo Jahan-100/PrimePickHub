@@ -13,8 +13,7 @@ module.exports = async function handler(req, res) {
     const models = [
         "google/gemini-2.0-flash-lite-preview-02-05:free",
         "meta-llama/llama-3-8b-instruct:free",
-        "mistralai/mistral-7b-instruct:free",
-        "huggingfaceh4/zephyr-7b-beta:free"
+        "mistralai/mistral-7b-instruct:free"
     ];
 
     const prompt = `You are an expert SEO Copywriter. Write a highly detailed, 600-word review blog post for the following product to help it rank on Google.
@@ -49,6 +48,11 @@ module.exports = async function handler(req, res) {
             });
 
             const aiData = await response.json();
+            if (aiData.error) {
+                console.warn(`Model ${model} failed: ${aiData.error.message}`);
+                continue;
+            }
+
             if (aiData.choices && aiData.choices[0].message.content) {
                 generatedContent = aiData.choices[0].message.content;
                 usedModel = model;
@@ -68,13 +72,13 @@ module.exports = async function handler(req, res) {
     try {
         const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Math.floor(Math.random() * 1000);
         
-        const { data: newBlog, error } = await supabase.from('blogs').insert([{
+        const { error } = await supabase.from('blogs').insert([{
             title: `Review: ${title} - Is It Worth Buying?`,
             slug: slug,
             content_html: cleanContent,
             image_url: imageUrl,
             is_published: false // Draft Mode
-        }]).select().single();
+        }]);
 
         if (error) throw error;
 
