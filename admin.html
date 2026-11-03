@@ -24,10 +24,11 @@
         .table-img { width: 100px; height: 100px; object-fit: cover; border-radius: 6px; display: block; margin: 0 auto; }
 
         /* Column Widths */
-        #productListContainer .admin-table th:nth-child(1) { width: 1%; white-space: nowrap; } 
+        #productListContainer .admin-table th:nth-child(1) { width: 5%; white-space: nowrap; } 
         #productListContainer .admin-table th:nth-child(2) { width: auto; text-align: left !important; } 
-        #productListContainer .admin-table th:nth-child(3) { width: 1%; white-space: nowrap; text-align: center !important; } 
-        #productListContainer .admin-table th:nth-child(4) { width: 1%; white-space: nowrap; text-align: center !important; } 
+        #productListContainer .admin-table th:nth-child(3) { width: 15%; white-space: nowrap; text-align: center !important; } 
+        #productListContainer .admin-table th:nth-child(4) { width: 15%; white-space: nowrap; text-align: center !important; } 
+        #productListContainer .admin-table th:nth-child(5) { width: 15%; white-space: nowrap; text-align: center !important; } 
 
         #blogListContainer .admin-table th:nth-child(1) { width: 1%; white-space: nowrap; } 
         #blogListContainer .admin-table th:nth-child(2) { width: auto; text-align: left !important; } 
@@ -162,9 +163,6 @@
 
             <div id="dashboard" style="display:none;">
                 
-                <!-- ========================================== -->
-                <!-- 🌟 SECTION: PLATFORM OVERVIEW (STATS) 🌟 -->
-                <!-- ========================================== -->
                 <h1>Platform Overview</h1>
                 <br>
                 <div class="stats-grid">
@@ -174,10 +172,6 @@
                     <div class="stat-card card-installs"><p>Active App Installs</p><h3 id="statAppInstalls">0</h3></div>
                 </div>
 
-
-                <!-- ========================================== -->
-                <!-- 🌟 SECTION: APP DOWNLOAD SETTINGS 🌟 -->
-                <!-- ========================================== -->
                 <div style="background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 20px; padding: 15px; border-radius: 8px; display: inline-flex; flex-direction: column; gap: 2px; width: fit-content;">
                     <h3 style="margin: 0; color: #166534; font-size: 1rem; font-weight: 700; line-height: 1.2;">App Download Popup Settings</h3>
                     <p style="margin: 0; font-size: 0.8rem; color: #15803d; line-height: 1.2;">(Uncheck to hide QR popup and corner button)</p>
@@ -188,10 +182,6 @@
                     <button type="button" id="saveAppSettingsBtn" style="width: auto; padding: 8px 15px; background: #16a34a; color: white; border: none; border-radius: 4px; font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 8px; box-shadow: 0 2px 4px rgba(22,163,74,0.2); align-self: flex-start;">Update Settings</button>
                 </div>
 
-
-                <!-- ========================================== -->
-                <!-- 🌟 SECTION: ADD / UPDATE PRODUCT FORM 🌟 -->
-                <!-- ========================================== -->
                 <div class="admin-card card-add-product" style="margin-bottom: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2 id="formTitle" style="margin: 0;">Add / Update Product</h2>
@@ -248,7 +238,7 @@
                                 </div>
                             </div>
 
-                            <!-- ⭐ MAIN OFFER DETAILS (Moved Up) ⭐ -->
+                            <!-- ⭐ MAIN OFFER DETAILS ⭐ -->
                             <div class="form-section-title">Main Offer Details</div>
                             <div class="form-group"><label>Store Name <span style="color: #EF4444;">*</span></label><input type="text" id="pStore" required placeholder="aliexpress, amazon, daraz" style="background:#fff; width: 100%;"></div>
                             <div class="form-group"><label>Affiliate URL <span style="color: #EF4444;">*</span></label><input type="url" id="pAffUrl" required style="background:#fff; width: 100%;"></div>
@@ -269,7 +259,7 @@
                             </div>
                             <!-- ⭐ MAIN OFFER DETAILS END ⭐ -->
 
-                            <!-- ⭐ PRODUCT VARIATIONS (Moved Up) ⭐ -->
+                            <!-- ⭐ PRODUCT VARIATIONS ⭐ -->
                             <div class="form-section-title">Product Variations (Optional)</div>
                             <div id="variationsContainer"></div>
                             <button type="button" id="addVariationBtn" class="btn-add-var">+ Add Variation (Size/Color)</button>
@@ -335,10 +325,6 @@
                     </div>
                 </div>
 
-
-                <!-- ========================================== -->
-                <!-- 🌟 SECTION: SPECIAL DEAL CUSTOMIZATION 🌟 -->
-                <!-- ========================================== -->
                 <div class="admin-card box-special-deal">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h3 style="margin: 0;">Special Deal Section Customization</h3>
@@ -387,10 +373,6 @@
                     </div>
                 </div>
 
-
-                <!-- ========================================== -->
-                <!-- 🌟 SECTION: SALE SECTION 1 CUSTOMIZATION 🌟 -->
-                <!-- ========================================== -->
                 <div class="admin-card box-sale-section-1">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h3 style="margin: 0;">Sale Section 1 Customization</h3>
@@ -439,10 +421,6 @@
                     </div>
                 </div>
 
-
-                <!-- ========================================== -->
-                <!-- 🌟 SECTION: SALE SECTION 2 CUSTOMIZATION 🌟 -->
-                <!-- ========================================== -->
                 <div class="admin-card box-sale-section-2">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h3 style="margin: 0;">Sale Section 2 Customization</h3>
@@ -491,10 +469,6 @@
                     </div>
                 </div>
 
-
-                <!-- ========================================== -->
-                <!-- 🌟 SECTION: ADD NEW BLOG POST 🌟 -->
-                <!-- ========================================== -->
                 <div class="admin-card box-add-blog">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2 id="blogFormTitle" style="margin: 0;">Add New Blog Post</h2>
@@ -531,10 +505,6 @@
                     </div>
                 </div>
 
-
-                <!-- ========================================== -->
-                <!-- 🌟 SECTION: AI PRODUCT HUNTER 🌟 -->
-                <!-- ========================================== -->
                 <div class="admin-card box-ai-hunter">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <div>
@@ -636,9 +606,8 @@
                     </div>
                 </div>
 
-
                 <!-- ========================================== -->
-                <!-- 🌟 SECTION: MANAGE PRODUCTS 🌟 -->
+                <!-- 🌟 SECTION: MANAGE PRODUCTS (UPDATED) 🌟 -->
                 <!-- ========================================== -->
                 <div class="admin-card box-manage-products">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
@@ -652,6 +621,7 @@
                     <div id="productListContainer" style="display: none; margin-top: 20px; background: #fff; padding: 15px; border-radius: 8px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <!-- Filter yahan hai -->
                                 <select id="adminCategoryFilter" style="padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; outline: none;"><option value="all">All Categories</option></select>
                                 <input type="text" id="adminSearchInput" placeholder="Search products..." style="padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; outline: none; width: 200px;">
                             </div>
@@ -664,8 +634,9 @@
                             <div class="table-scroll-wrapper" id="tableScrollWrapperProducts">
                                 <div class="table-responsive-mobile">
                                     <table class="admin-table">
-                                        <thead><tr><th>Image</th><th>Title</th><th>Final Price</th><th>Actions</th></tr></thead>
-                                        <tbody id="productListBody"><tr><td colspan="4" style="text-align:center;">Loading...</td></tr></tbody>
+                                        <!-- Category Column add kiya gaya hai -->
+                                        <thead><tr><th>Image</th><th>Title</th><th>Category</th><th>Final Price</th><th>Actions</th></tr></thead>
+                                        <tbody id="productListBody"><tr><td colspan="5" style="text-align:center;">Loading...</td></tr></tbody>
                                     </table>
                                 </div>
                             </div>
