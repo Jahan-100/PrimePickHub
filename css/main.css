@@ -240,16 +240,16 @@ body {
 .btn-check-price { display: block; width: 100%; border: none; background: var(--primary); color: #fff; padding: 6px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; transition: opacity 0.2s; margin-top: auto; }
 .btn-check-price:hover { opacity: 0.9; }
 
-/* ⭐ Special Deal Section (Winter Theme Snowfall Only) ⭐ */
+/* ⭐ Special Deal Section (Split Colors & Snowfall) ⭐ */
 .special-deal-section { 
     display: flex; 
     position: relative; 
-    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
-    border-radius: 12px; 
+    background: #f8fafc; /* Light base */
+    border-radius: 16px; 
     overflow: hidden; 
     margin-bottom: 20px; 
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
-    border: 1px solid #3b82f6; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
+    border: 1px solid #e2e8f0; 
     /* Removed min-height so it shrinks to fit the cards */
 }
 
@@ -258,10 +258,10 @@ body {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
     pointer-events: none;
-    z-index: 0;
+    z-index: 10; /* Moved above backgrounds so it's visible */
 }
 .snow {
-    color: #fff;
+    color: #93c5fd; /* Light blue snow to contrast with white */
     font-size: 1.2em;
     position: absolute;
     top: -20px;
@@ -284,46 +284,83 @@ body {
     100% { transform: translateY(250px) rotate(360deg); opacity: 0; }
 }
 
-/* Left Content Box */
+/* Left Content Box (Writing Portion - Icy Blue) */
 .special-deal-left { 
     flex: 0 0 28%; 
-    padding: 20px 25px; 
+    padding: 25px 20px; 
     display: flex; 
     flex-direction: column; 
-    justify-content: center; /* Center text vertically */
+    justify-content: center; 
     position: relative; 
     z-index: 2; 
-    background: rgba(15, 23, 42, 0.85); 
-    backdrop-filter: blur(5px);
-    /* Removed margin-top so it fits perfectly */
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); /* Soft Light Blue */
+    border-right: 1px solid #bfdbfe;
 }
-#specialDealTitle { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1.8rem; line-height: 1.1; margin-bottom: 6px; color: #fff; }
-.special-deal-subtitle { color: #CBD5E1; font-size: 0.85rem; margin-bottom: 15px; font-weight: 500; }
+#specialDealTitle { 
+    font-family: 'Poppins', sans-serif; 
+    font-weight: 800; 
+    font-size: 1.8rem; 
+    line-height: 1.1; 
+    margin-bottom: 8px; 
+    color: #1e3a8a; /* Dark blue text */
+}
+.special-deal-subtitle { 
+    color: #3b82f6; 
+    font-size: 0.85rem; 
+    margin-bottom: 15px; 
+    font-weight: 600; 
+}
 .special-deal-features { list-style: none; margin-bottom: 15px; }
-.special-deal-features li { font-size: 0.8rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; color: #E2E8F0; font-weight: 500; }
-.special-deal-features li i { color: #60A5FA; font-size: 0.9rem; }
-.explore-btn { display: inline-block; background: #3b82f6; color: #fff; padding: 8px 18px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 0.8rem; width: fit-content; transition: all 0.2s; }
-.explore-btn:hover { background: #2563eb; }
+.special-deal-features li { 
+    font-size: 0.8rem; 
+    margin-bottom: 8px; 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    color: #475569; 
+    font-weight: 600; 
+}
+.special-deal-features li i { 
+    color: #2563eb; 
+    font-size: 0.9rem; 
+}
+.explore-btn { 
+    display: inline-block; 
+    background: #3b82f6; 
+    color: #fff; 
+    padding: 10px 20px; 
+    border-radius: 20px; 
+    text-decoration: none; 
+    font-weight: bold; 
+    font-size: 0.85rem; 
+    width: fit-content; 
+    transition: all 0.2s; 
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+}
+.explore-btn:hover { 
+    background: #2563eb; 
+    transform: translateY(-2px);
+}
 
-/* Right Content Area */
+/* Right Content Area (Card Portion - Clean White) */
 .special-deal-right { 
     flex: 1; 
-    padding: 15px 25px; 
+    padding: 15px 20px; 
     position: relative; 
     z-index: 2; 
     display: flex; 
     align-items: center; 
     overflow: hidden; 
-    /* Removed margin-top so it fits perfectly */
+    background: #ffffff; /* Clean white */
 }
 .horizontal-scroll-container { display: flex; gap: 15px; overflow-x: auto; scroll-behavior: smooth; -ms-overflow-style: none; scrollbar-width: none; width: 100%; }
 .horizontal-scroll-container::-webkit-scrollbar { display: none; }
-.special-deal-card { min-width: 190px; max-width: 190px; height: 250px; background: #fff; border-radius: 8px; text-decoration: none; display: flex; flex-direction: column; position: relative; overflow: hidden; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-.special-deal-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+.special-deal-card { min-width: 190px; max-width: 190px; height: 250px; background: #fff; border-radius: 10px; text-decoration: none; display: flex; flex-direction: column; position: relative; overflow: hidden; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.06); border: 1px solid #f1f5f9; }
+.special-deal-card:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); border-color: #e2e8f0; }
 .special-deal-card .img-box { flex: 8.5; width: 100%; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .special-deal-card .img-box img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
 .special-deal-card:hover .img-box img { transform: scale(1.05); }
-.special-deal-card .info-box { flex: 1.5; padding: 4px 8px; background: #fff; display: flex; flex-direction: column; justify-content: center; border-top: 1px solid #f1f1f1; }
+.special-deal-card .info-box { flex: 1.5; padding: 6px 10px; background: #fff; display: flex; flex-direction: column; justify-content: center; border-top: 1px solid #f1f5f9; }
 .special-deal-card .price { font-size: 0.95rem; font-weight: 800; color: #FF5A3C; margin-bottom: 0px; line-height: 1.1; }
 .special-deal-card .title { font-size: 0.7rem; color: #475569; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; line-height: 1.1; }
 .scroll-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; background: #fff; border: 1px solid #E2E8F0; border-radius: 50%; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); color: #1E1B4B; transition: all 0.2s; }
@@ -763,14 +800,14 @@ body {
     
     .notif-panel { position: absolute !important; top: 45px !important; right: 0 !important; left: auto !important; transform: none !important; width: 85vw !important; max-width: 340px !important; max-height: 70vh !important; z-index: 100000 !important; }
 
-    .special-deal-section { flex-direction: column; min-height: auto; }
-    .special-deal-left { flex: none; padding: 12px 15px; text-align: center; align-items: center; background: rgba(15, 23, 42, 0.95); margin-top: 0; }
-    #specialDealTitle { font-size: 1.4rem !important; margin-bottom: 4px; }
+    .special-deal-section { flex-direction: column; min-height: auto; border-radius: 12px; }
+    .special-deal-left { flex: none; padding: 20px 15px; text-align: center; align-items: center; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-right: none; border-bottom: 1px solid #bfdbfe; margin-top: 0; }
+    #specialDealTitle { font-size: 1.5rem !important; margin-bottom: 4px; }
     .special-deal-subtitle { font-size: 0.8rem !important; margin-bottom: 8px; }
     .special-deal-features { display: flex; gap: 10px; margin-bottom: 10px; justify-content: center; flex-wrap: wrap; }
     .special-deal-features li { font-size: 0.75rem !important; margin-bottom: 0; }
-    .explore-btn { padding: 6px 15px !important; font-size: 0.8rem !important; }
-    .special-deal-right { padding: 10px 15px; margin-top: 0; align-items: flex-end; }
+    .explore-btn { padding: 8px 18px !important; font-size: 0.8rem !important; }
+    .special-deal-right { padding: 15px; margin-top: 0; align-items: flex-end; background: #fff; }
     .scroll-arrow { display: none; }
     .special-deal-card { min-width: 140px; max-width: 140px; height: 190px; }
     .special-deal-card .img-box { flex: 8; }
