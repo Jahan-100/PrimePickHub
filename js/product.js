@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function generateVariationUI() {
         let html = '';
         
-        // ⭐ UPDATED: Color UI (Bigger boxes, single selected name)
+        // ⭐ UPDATED: Color UI (Bigger boxes, no icon inside, just border highlight)
         if (uniqueColors.length > 0) {
             html += `<div style="margin-bottom: 20px;">
                 <p style="font-weight:bold; margin-bottom:12px; color:#1E1B4B; font-size:1.05rem;">
@@ -131,21 +131,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             uniqueColors.forEach(color => {
                 const isActive = color === activeColor;
                 const bgColor = getHexFromColorString(color);
-                
-                let iconColor = '#1E1B4B'; 
-                if (bgColor.startsWith('#') && bgColor !== '#ffffff' && bgColor !== '#f5f5dc') {
-                    const r = parseInt(bgColor.substr(1, 2), 16);
-                    const g = parseInt(bgColor.substr(3, 2), 16);
-                    const b = parseInt(bgColor.substr(5, 2), 16);
-                    if ((r * 0.299 + g * 0.587 + b * 0.114) < 128) iconColor = '#ffffff';
-                } else if (bgColor.includes('hsl')) {
-                    iconColor = '#ffffff';
-                }
 
                 html += `
                 <div style="cursor:pointer;" onclick="selectColor('${color}')">
-                    <div style="width:65px; height:65px; border-radius:8px; background-color:${bgColor}; border:3px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; box-shadow:${isActive ? '0 0 0 2px rgba(255,90,60,0.3)' : 'none'}; transition:all 0.2s; display:flex; align-items:center; justify-content:center; box-sizing:border-box;">
-                        ${isActive ? `<i class="fa-solid fa-check" style="color:${iconColor}; font-size:1.4rem;"></i>` : ''}
+                    <div style="width:65px; height:65px; border-radius:8px; background-color:${bgColor}; border:3px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; box-shadow:${isActive ? '0 0 0 2px rgba(255,90,60,0.3)' : 'none'}; transition:all 0.2s; box-sizing:border-box;">
                     </div>
                 </div>`;
             });
