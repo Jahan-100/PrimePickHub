@@ -52,15 +52,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     const mainOffer = allOffers[0] || { price: '0', store_name: 'Store', currency: 'USD', commission_rate: 0, sale_price: null };
     const otherVariations = allOffers.slice(1);
     
-    // ⭐ COMBINE ALL OFFERS & EXTRACT COLORS
+    // ⭐ COMBINE ALL OFFERS & EXTRACT INDIVIDUAL COLORS FROM COMMA-SEPARATED STRINGS ⭐
     const allVariations = [mainOffer, ...otherVariations].filter(v => v !== null && v.price !== undefined);
-    const uniqueColors = [...new Set(allVariations.map(v => v.product_color).filter(Boolean))];
+    let uniqueColors = [];
+    
+    allVariations.forEach(v => {
+        if (v.product_color) {
+            // Split by comma, trim spaces, and add to unique list
+            const colors = v.product_color.split(',').map(c => c.trim()).filter(Boolean);
+            colors.forEach(c => {
+                if (!uniqueColors.includes(c)) uniqueColors.push(c);
+            });
+        }
+    });
     
     let activeColor = uniqueColors.length > 0 ? uniqueColors[0] : null;
     let activeOfferIndex = 0;
     
     if (activeColor) {
-        const idx = allVariations.findIndex(v => v.product_color === activeColor);
+        // Find the first variation that INCLUDES this color
+        const idx = allVariations.findIndex(v => v.product_color && v.product_color.includes(activeColor));
         if (idx !== -1) activeOfferIndex = idx;
     }
     let activeOffer = allVariations[activeOfferIndex];
@@ -110,8 +121,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             html += `</div></div>`;
         }
 
-        // Size Section (Filtered by active color)
-        const offersForColor = activeColor ? allVariations.filter(v => v.product_color === activeColor) : allVariations;
+        // Size Section (Filtered by active color using .includes)
+        const offersForColor = activeColor ? allVariations.filter(v => v.product_color && v.product_color.includes(activeColor)) : allVariations;
         
         if (offersForColor.some(o => o.variation_name)) {
             html += `<div style="margin-bottom: 15px;">
@@ -255,7 +266,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ⭐ Global Selection Functions
     window.selectColor = function(color) {
         activeColor = color;
-        const idx = allVariations.findIndex(v => v.product_color === color);
+        // Find the first variation that includes this color
+        const idx = allVariations.findIndex(v => v.product_color && v.product_color.includes(color));
         if (idx !== -1) activeOfferIndex = idx;
         
         activeOffer = allVariations[activeOfferIndex];
