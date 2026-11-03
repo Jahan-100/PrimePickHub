@@ -6,30 +6,37 @@ function escapeHTML(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-// ⭐ HD IMAGE HELPER (Removes thumbnail suffixes from URLs) ⭐
+// ⭐ UPGRADED HD IMAGE HELPER (Now supports Govee/Shopify) ⭐
 function getHighQualityImage(url) {
     if (!url || typeof url !== 'string') return url;
     let cleanUrl = url;
 
-    // 1. AliExpress & Daraz: Remove _220x220q75.jpg_.avif
+    // 1. AliExpress & Daraz
     if (cleanUrl.includes('aliexpress') || cleanUrl.includes('daraz') || cleanUrl.includes('alicdn')) {
         const match = cleanUrl.match(/^(.+?\.(?:jpg|jpeg|png|webp))_.+/i);
         if (match) cleanUrl = match[1];
     }
 
-    // 2. Amazon: Remove ._AC_SL1500_.jpg
+    // 2. Amazon
     if (cleanUrl.includes('amazon') || cleanUrl.includes('media-amazon')) {
         const match = cleanUrl.match(/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i);
         if (match) cleanUrl = cleanUrl.replace(/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i, '.$1');
     }
 
-    // 3. eBay: Change s-l300.jpg to s-l1600.jpg
+    // 3. eBay
     if (cleanUrl.includes('ebayimg.com')) {
         cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, '/s-l1600.$1');
     }
 
-    // 4. General fallback for common size patterns
-    cleanUrl = cleanUrl.replace(/_\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
+    // 4. Shopify / Govee (Removes _500x, _500x500, _small, etc.)
+    if (cleanUrl.includes('shopify') || cleanUrl.includes('govee')) {
+        cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
+        if (cleanUrl.includes('?')) cleanUrl = cleanUrl.split('?')[0]; // Remove width params
+    }
+
+    // 5. General fallback for common size patterns (e.g., _500x500)
+    cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
+    cleanUrl = cleanUrl.replace(/_\d+x(?=\.(jpg|jpeg|png|webp|avif))/i, '');
 
     return cleanUrl;
 }
@@ -111,7 +118,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     const allVariations = [mainOffer, ...otherVariations].filter(v => v !== null && v.price !== undefined);
     
-    // ⭐ SMART COLOR PARSING (Value + Name) ⭐
     let uniqueColors = [];
     allVariations.forEach(v => {
         if (v.product_color) {
@@ -122,7 +128,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (!uniqueColors.find(c => c.value === val)) {
                     uniqueColors.push({
                         value: val,
-                        hdValue: getHighQualityImage(val), // HD URL added
+                        hdValue: getHighQualityImage(val),
                         name: colorNames[idx] || val
                     });
                 }
@@ -170,7 +176,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 let boxStyle = '';
                 
                 if (isImageUrl) {
-                    boxStyle = `background-image: url('${colorObj.hdValue}'); background-size: cover; background-position: center;`; // HD image
+                    boxStyle = `background-image: url('${colorObj.hdValue}'); background-size: cover; background-position: center;`;
                 } else {
                     const bgColor = getHexFromColorString(colorObj.value);
                     boxStyle = `background-color: ${bgColor};`;
@@ -208,7 +214,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let galleryImages = (product.gallery_images && product.gallery_images.length > 0) ? product.gallery_images.filter(Boolean) : (product.image_url ? [product.image_url] : []);
     
-    // ⭐ Apply HD Mapping to Gallery Images ⭐
+    // Apply HD Mapping
     galleryImages = galleryImages.map(getHighQualityImage);
 
     const mainImage = galleryImages[0] || '/assets/icon-192.png';
