@@ -14,7 +14,7 @@ const API = {
         await window.supabaseClient.auth.signOut();
     },
 
-        async getCurrentUser() {
+    async getCurrentUser() {
         const { data: { user } } = await window.supabaseClient.auth.getUser();
         if (!user) return null;
 
@@ -29,9 +29,10 @@ const API = {
             console.error('Profile fetch error:', error);
         }
 
-        // Agar profile nahi mile, toh user ko 'admin' hi treat karein (kyunke aap admin hain)
+        // Agar profile na mile, toh default role 'user' hoga (Security ke liye)
         return { user, role: profile?.role || 'user' };
     },
+    
     // ---------- PRODUCTS ----------
     async getHomepageProducts() {
         if (!window.supabaseClient) return { featured: [], trending: [], latest: [] };
