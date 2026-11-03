@@ -576,18 +576,15 @@ window.editProduct = async function(id) {
 window.deleteProduct = async function(id) {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try { 
-        // Pehle product ka slug nikaalein
         const { data: productData } = await window.supabaseClient
             .from('products')
             .select('slug')
             .eq('id', id)
             .single();
 
-        // Product delete karein
         const { error } = await window.supabaseClient.from('products').delete().eq('id', id); 
         if (error) throw error; 
 
-        // Us product ki saari notifications bhi delete karein
         if (productData && productData.slug) {
             await window.supabaseClient
                 .from('app_notifications')
@@ -800,7 +797,11 @@ function setupProductForm() {
             const writeBlog = document.getElementById('pWriteBlog').checked;
             if (writeBlog && !isEditing) {
                 await window.supabaseClient.from('products').update({ blog_status: 'pending' }).eq('id', productId);
-                alert("Product saved! AI will write the blog in the background. You can safely close this tab or turn off your device.");
+                
+                // ⭐ NAYA CODE: API TRIGGER (Taake foran blog likha jaye) ⭐
+                fetch('/api/process-queue', { method: 'POST' }).catch(console.error);
+                
+                alert("Product saved! AI is writing the blog in the background. It will appear in the 'Show / Hide Blogs List' section as a DRAFT in a few moments.");
             }
 
             const sendNotif = document.getElementById('pSendNotification').checked;
@@ -841,7 +842,7 @@ function setupProductForm() {
                         notifMsg = `${productData.title} is now in ${spTitle}!`;
                     }
 
-                    // ⭐ DUPLICATE CHECK (Prevents sending same type of notification again for this product) ⭐
+                    // ⭐ DUPLICATE CHECK ⭐
                     const { data: existingNotifs } = await window.supabaseClient
                         .from('app_notifications')
                         .select('id')
