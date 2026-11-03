@@ -1,5 +1,5 @@
 /**
- * Product Detail Page with Real-Time Currency Conversion
+ * Product Detail Page with Real-Time Currency Conversion & Color/Size Selection
  */
 function escapeHTML(s) {
     if (s === null || s === undefined) return '';
@@ -7,11 +7,11 @@ function escapeHTML(s) {
 }
 
 const currencySymbols = {
-    USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ',
-    SAR: 'SAR ', CAD: 'C$', AUD: 'A$', CNY: '¥', JPY: '¥', TRY: '₺',
-    BDT: '৳', MYR: 'RM ', IDR: 'Rp ', QAR: 'QAR ', KWD: 'KWD ',
-    BHD: 'BHD ', OMR: 'OMR ', ZAR: 'R ', BRL: 'R$', MXN: 'MX$',
-    RUB: '₽', KRW: '₩', SGD: 'S$', HKD: 'HK$', NZD: 'NZ$',
+    USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ', 
+    SAR: 'SAR ', CAD: 'C$', AUD: 'A$', CNY: '¥', JPY: '¥', TRY: '₺', 
+    BDT: '৳', MYR: 'RM ', IDR: 'Rp ', QAR: 'QAR ', KWD: 'KWD ', 
+    BHD: 'BHD ', OMR: 'OMR ', ZAR: 'R ', BRL: 'R$', MXN: 'MX$', 
+    RUB: '₽', KRW: '₩', SGD: 'S$', HKD: 'HK$', NZD: 'NZ$', 
     CHF: 'CHF ', SEK: 'kr ', NOK: 'kr '
 };
 
@@ -51,40 +51,85 @@ document.addEventListener('DOMContentLoaded', async () => {
     const allOffers = product.affiliate_offers || [];
     const mainOffer = allOffers[0] || { price: '0', store_name: 'Store', currency: 'USD', commission_rate: 0, sale_price: null };
     const otherVariations = allOffers.slice(1);
+    
+    // ⭐ COMBINE ALL OFFERS & EXTRACT COLORS
+    const allVariations = [mainOffer, ...otherVariations].filter(v => v !== null && v.price !== undefined);
+    const uniqueColors = [...new Set(allVariations.map(v => v.product_color).filter(Boolean))];
+    
+    let activeColor = uniqueColors.length > 0 ? uniqueColors[0] : null;
+    let activeOfferIndex = 0;
+    
+    if (activeColor) {
+        const idx = allVariations.findIndex(v => v.product_color === activeColor);
+        if (idx !== -1) activeOfferIndex = idx;
+    }
+    let activeOffer = allVariations[activeOfferIndex];
 
     const baseCurrency = (mainOffer.currency || 'USD').toUpperCase();
-    let activeOffer = mainOffer;
 
     const renderBuyButton = (offer) => {
-        const cfg = CONFIG.networks[offer.store_name?.toLowerCase()] || CONFIG.networks[offer.store_name] || CONFIG.networks.amazon;
+        const cfg = CONFIG.networks[offer.store_name?.toLowerCase()] || CONFIG.networks.amazon;
         const bg = /^#[0-9a-fA-F]{6}$/.test(cfg.brandColor) ? cfg.brandColor : '#2563eb';
         const fg = /^#[0-9a-fA-F]{6}$/.test(cfg.textColor) ? cfg.textColor : '#ffffff';
         return `<a href="${escapeHTML(offer.affiliate_url || '#')}" target="_blank" rel="noopener noreferrer sponsored"
                    class="btn-check-price js-affiliate-link"
-                   style="background-color:${bg};color:${fg};padding:14px;display:block;text-align:center;"
+                   style="background-color:${bg};color:${fg};padding:14px;display:block;text-align:center;font-size:1.1rem;"
                    data-store="${escapeHTML(offer.store_name)}" data-product-id="${escapeHTML(String(product.id))}" data-url="${escapeHTML(offer.affiliate_url)}">
                    Buy on ${escapeHTML(offer.store_name || 'Store')}
                 </a>`;
     };
 
-    let variationHtml = '';
-    if (otherVariations.length > 0 || (mainOffer && mainOffer.variation_name)) {
-        variationHtml = `
-            <div style="margin-bottom: 15px;">
-                <p style="font-weight:bold; margin-bottom:8px;">Select Option:</p>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    ${(mainOffer && mainOffer.variation_name) ? `
-                        <button class="var-btn" data-index="0" style="padding:8px 16px; border:2px solid #FF5A3C; background:#fff; border-radius:6px; cursor:pointer; font-weight:bold; color:#FF5A3C; transition:all 0.2s;">
-                            ${escapeHTML(mainOffer.variation_name)}
-                        </button>
-                    ` : ''}
-                    ${otherVariations.map((v, i) => `
-                        <button class="var-btn" data-index="${i + 1}" style="padding:8px 16px; border:2px solid #E2E8F0; background:#fff; border-radius:6px; cursor:pointer; font-weight:bold; color:#1E1B4B; transition:all 0.2s;">
-                            ${escapeHTML(v.variation_name)}
-                        </button>
-                    `).join('')}
-                </div>
-            </div>`;
+    // ⭐ GENERATE COLOR & SIZE UI
+    function generateVariationUI() {
+        let html = '';
+        // Color Section
+        if (uniqueColors.length > 0) {
+            html += `<div style="margin-bottom: 15px;">
+                <p style="font-weight:bold; margin-bottom:8px;">Select Color:</p>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">`;
+            
+            uniqueColors.forEach(color => {
+                const isActive = color === activeColor;
+                const cLower = color.toLowerCase();
+                let bgColor = '#f8fafc'; // Default light
+                let borderColor = isActive ? '#FF5A3C' : '#E2E8F0';
+                let textColor = isActive ? '#FF5A3C' : '#1E1B4B';
+                
+                // Smart color mapping for boxes
+                if (cLower.includes('black')) { bgColor = '#1E293B'; textColor = isActive ? '#FF5A3C' : '#fff'; borderColor = isActive ? '#FF5A3C' : '#1E293B'; }
+                else if (cLower.includes('coffee') || cLower.includes('brown')) { bgColor = '#78350f'; textColor = isActive ? '#FF5A3C' : '#fff'; borderColor = isActive ? '#FF5A3C' : '#78350f'; }
+                else if (cLower.includes('red')) { bgColor = '#ef4444'; textColor = isActive ? '#FF5A3C' : '#fff'; borderColor = isActive ? '#FF5A3C' : '#ef4444'; }
+                else if (cLower.includes('blue')) { bgColor = '#3b82f6'; textColor = isActive ? '#FF5A3C' : '#fff'; borderColor = isActive ? '#FF5A3C' : '#3b82f6'; }
+                else if (cLower.includes('green')) { bgColor = '#10b981'; textColor = isActive ? '#FF5A3C' : '#fff'; borderColor = isActive ? '#FF5A3C' : '#10b981'; }
+                else if (cLower.includes('white')) { bgColor = '#ffffff'; textColor = isActive ? '#FF5A3C' : '#1E1B4B'; borderColor = isActive ? '#FF5A3C' : '#cbd5e1'; }
+
+                html += `<button onclick="selectColor('${color}')" style="padding:10px 15px; border:2px solid ${borderColor}; background:${bgColor}; border-radius:8px; cursor:pointer; font-weight:bold; color:${textColor}; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.2s;">
+                    ${color}
+                </button>`;
+            });
+            html += `</div></div>`;
+        }
+
+        // Size Section (Filtered by active color)
+        const offersForColor = activeColor ? allVariations.filter(v => v.product_color === activeColor) : allVariations;
+        
+        if (offersForColor.some(o => o.variation_name)) {
+            html += `<div style="margin-bottom: 15px;">
+                <p style="font-weight:bold; margin-bottom:8px;">Select Size:</p>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">`;
+
+            offersForColor.forEach((offer) => {
+                const originalIndex = allVariations.indexOf(offer);
+                const isActive = originalIndex === activeOfferIndex;
+                
+                html += `<button onclick="selectOffer(${originalIndex})" style="padding:10px 16px; border:2px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; background:#fff; border-radius:8px; cursor:pointer; font-weight:bold; color:${isActive ? '#FF5A3C' : '#1E1B4B'}; transition: all 0.2s;">
+                    ${offer.variation_name || 'Default'}
+                </button>`;
+            });
+            html += `</div></div>`;
+        }
+        
+        return html;
     }
 
     let galleryImages = (product.gallery_images && product.gallery_images.length > 0) ? product.gallery_images.filter(Boolean) : (product.image_url ? [product.image_url] : []);
@@ -97,13 +142,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:40px;background:#fff;padding:30px;border-radius:12px;border:1px solid #E2E8F0;margin-bottom:20px;">
             <div>
                 <div style="background:#F8FAFC;border-radius:12px;padding:15px;margin-bottom:15px;">
-                    <img id="mainImage" src="${escapeHTML(mainImage)}" alt="${escapeHTML(product.title)}" style="width:100%;max-height:400px;object-fit:contain;border-radius:8px;">
+                    <img id="mainImage" src="${escapeHTML(mainImage)}" alt="${escapeHTML(product.title)}" style="width:100%;max-height:400px;object-fit:contain;border-radius:8px;" onerror="this.src='/assets/icon-192.png';">
                 </div>
                 ${thumbnailsHtml ? `<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">${thumbnailsHtml}</div>` : ''}
             </div>
             <div>
                 <h1 style="font-size:1.8rem;margin-bottom:10px;">${escapeHTML(product.title)}</h1>
-
+                
                 <div style="margin-bottom: 20px; background: #F8FAFC; padding: 15px; border-radius: 8px; border: 1px solid #E2E8F0;">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
                         <div id="displayPriceContainer"></div>
@@ -121,7 +166,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
 
                 <p style="color:#64748B;margin-bottom:20px;">${escapeHTML(product.description || '')}</p>
-
+                
                 <div style="background-color:#FEF3C7; border-left:4px solid #F59E0B; padding:12px 15px; margin-bottom:15px; border-radius:6px; display:flex; align-items:flex-start; gap:10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
                     <i class="fa-solid fa-circle-info" style="color:#D97706; font-size:1.2rem; margin-top:2px;"></i>
                     <p style="font-size:0.95rem; color:#92400E; margin:0; font-weight:600; line-height:1.5;">
@@ -129,10 +174,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </p>
                 </div>
 
-                ${variationHtml}
+                <!-- ⭐ Variation Container ⭐ -->
+                <div id="variationContainer">${generateVariationUI()}</div>
 
                 <div style="margin-bottom:25px;padding:15px;background:#F8FAFC;border-radius:8px;" id="buyButtonContainer"></div>
-
+                
                 <div style="display:flex;gap:10px;flex-wrap:wrap;">
                     <a href="https://wa.me/?text=${shareText}%20${shareUrl}" target="_blank" rel="noopener" style="padding:8px 16px;background:#25D366;color:#fff;border-radius:6px;text-decoration:none;font-size:0.9rem;">Share on WhatsApp</a>
                     <a href="https://www.facebook.com/sharer/sharer.php?u=${shareUrl}" target="_blank" rel="noopener" style="padding:8px 16px;background:#1877F2;color:#fff;border-radius:6px;text-decoration:none;font-size:0.9rem;">Share on Facebook</a>
@@ -145,14 +191,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div style="color:#334155;line-height:1.8;font-size:1.05rem;">${product.review_html || '<p>Detailed review coming soon...</p>'}</div>
         </div>
     `;
-
-    // Safe main image error handling
-    const mainImgEl = document.getElementById('mainImage');
-    if (mainImgEl) {
-        mainImgEl.addEventListener('error', function () {
-            this.src = '/assets/icon-192.png';
-        }, { once: true });
-    }
 
     const currencySelector = document.getElementById('currencySelector');
     const displayPriceContainer = document.getElementById('displayPriceContainer');
@@ -171,21 +209,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function updateUI(currency) {
         const rate = exchangeRates[currency] || 1;
+        activeOffer = allVariations[activeOfferIndex]; // Ensure we use the currently selected offer
+        
         const basePrice = parseFloat(activeOffer.price) || 0;
         const salePrice = parseFloat(activeOffer.sale_price) || 0;
         const commissionRate = parseFloat(activeOffer.commission_rate) || 0;
+        
         let finalBasePrice = basePrice;
         let finalSalePrice = salePrice;
+
         if (commissionRate > 0) {
             finalBasePrice = basePrice + (basePrice * (commissionRate / 100));
-            if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100));
+            if (salePrice > 0) {
+                finalSalePrice = salePrice + (salePrice * (commissionRate / 100));
+            }
         }
-
+        
         let priceHtml = '';
+
         if (salePrice > 0) {
             const convertedSale = finalSalePrice * rate;
             const convertedOrig = finalBasePrice * rate;
             const symbol = currencySymbols[currency] || currency + ' ';
+
             priceHtml = `
                 <div style="display:flex; align-items:center; gap:10px;">
                     <span style="text-decoration:line-through; color:#94A3B8; font-size:1.2rem;">${symbol}${convertedOrig.toFixed(2)}</span>
@@ -206,19 +252,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     await fetchRates(); updateUI(baseCurrency);
     currencySelector.addEventListener('change', (e) => updateUI(e.target.value));
 
-    document.querySelectorAll('.var-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const idx = parseInt(this.dataset.index);
-            activeOffer = allOffers[idx];
-            document.querySelectorAll('.var-btn').forEach(b => {
-                b.style.borderColor = '#E2E8F0';
-                b.style.color = '#1E1B4B';
-            });
-            this.style.borderColor = '#FF5A3C';
-            this.style.color = '#FF5A3C';
-            updateUI(currencySelector.value);
-        });
-    });
+    // ⭐ Global Selection Functions
+    window.selectColor = function(color) {
+        activeColor = color;
+        const idx = allVariations.findIndex(v => v.product_color === color);
+        if (idx !== -1) activeOfferIndex = idx;
+        
+        activeOffer = allVariations[activeOfferIndex];
+        document.getElementById('variationContainer').innerHTML = generateVariationUI();
+        updateUI(currencySelector.value);
+    };
+
+    window.selectOffer = function(index) {
+        activeOfferIndex = index;
+        activeOffer = allVariations[activeOfferIndex];
+        document.getElementById('variationContainer').innerHTML = generateVariationUI();
+        updateUI(currencySelector.value);
+    };
 
     container.querySelectorAll('.gallery-thumb').forEach(thumb => {
         thumb.addEventListener('click', function () {
@@ -233,11 +283,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         "image": [product.image_url].concat(product.gallery_images || []).filter(Boolean),
         "description": product.description || product.title,
         "offers": allOffers.map(o => {
-            const p = parseFloat(o.price) || 0;
+            const p = parseFloat(o.price) || 0; 
             const sp = parseFloat(o.sale_price) || 0;
             const c = parseFloat(o.commission_rate) || 0;
+
             let finalP = sp > 0 ? sp : p;
-            if (c > 0) finalP = finalP + (finalP * (c / 100));
+            if (c > 0) {
+                finalP = finalP + (finalP * (c / 100));
+            }
+            
             return { "@type": "Offer", "url": o.affiliate_url, "priceCurrency": o.currency || "USD", "price": finalP.toFixed(2), "availability": "https://schema.org/InStock", "seller": { "@type": "Organization", "name": o.store_name } };
         })
     };
