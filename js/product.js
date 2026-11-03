@@ -15,28 +15,36 @@ const currencySymbols = {
     CHF: 'CHF ', SEK: 'kr ', NOK: 'kr '
 };
 
-// ⭐ ADVANCED COLOR MAPPING ⭐
+// ⭐ ADVANCED COLOR MAPPING (Updated for more accurate fashion colors) ⭐
 function getHexFromColorString(colorStr) {
     if (!colorStr) return '#e2e8f0';
+    
+    // If user entered a hex code directly, use it
     if (colorStr.startsWith('#')) return colorStr;
     
     const c = colorStr.toLowerCase();
+    
+    // Fashion accurate mappings
     if (c.includes('black')) return '#111827';
-    if (c.includes('coffee') || c.includes('brown') || c.includes('khaki') || c.includes('camel')) return '#78350f';
+    if (c.includes('coffee') || c.includes('brown') || c.includes('taupe')) return '#9C7B5C'; // Lighter, accurate coffee
+    if (c.includes('khaki') || c.includes('camel')) return '#C3B091'; // Accurate khaki
+    if (c.includes('beige') || c.includes('cream') || c.includes('off-white')) return '#E8DCC4';
     if (c.includes('white')) return '#ffffff';
     if (c.includes('red')) return '#ef4444';
+    if (c.includes('maroon') || c.includes('burgundy')) return '#800000';
     if (c.includes('blue')) return '#3b82f6';
     if (c.includes('navy')) return '#1e3a8a';
+    if (c.includes('sky') || c.includes('light-blue')) return '#7dd3fc';
     if (c.includes('green')) return '#10b981';
-    if (c.includes('olive')) return '#84cc16';
+    if (c.includes('olive') || c.includes('army')) return '#84cc16';
+    if (c.includes('mint')) return '#a7f3d0';
     if (c.includes('grey') || c.includes('gray')) return '#9ca3af';
     if (c.includes('yellow') || c.includes('mustard')) return '#facc15';
     if (c.includes('pink')) return '#ec4899';
     if (c.includes('purple')) return '#a855f7';
     if (c.includes('orange')) return '#f97316';
-    if (c.includes('beige') || c.includes('cream')) return '#f5f5dc';
-    if (c.includes('maroon')) return '#800000';
     
+    // Fallback: Generate a consistent pastel color based on the text string
     let hash = 0;
     for (let i = 0; i < colorStr.length; i++) {
         hash = colorStr.charCodeAt(i) + ((hash << 5) - hash);
@@ -120,7 +128,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     function generateVariationUI() {
         let html = '';
         
-        // ⭐ UPDATED: Color UI (Bigger boxes, no icon inside, just border highlight)
         if (uniqueColors.length > 0) {
             html += `<div style="margin-bottom: 20px;">
                 <p style="font-weight:bold; margin-bottom:12px; color:#1E1B4B; font-size:1.05rem;">
@@ -130,11 +137,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             uniqueColors.forEach(color => {
                 const isActive = color === activeColor;
-                const bgColor = getHexFromColorString(color);
+                
+                // ⭐ THE FIX: If color is an Image URL, use it as background. Otherwise use solid color.
+                const isImageUrl = color.startsWith('http');
+                let boxStyle = '';
+                
+                if (isImageUrl) {
+                    boxStyle = `background-image: url('${color}'); background-size: cover; background-position: center;`;
+                } else {
+                    const bgColor = getHexFromColorString(color);
+                    boxStyle = `background-color: ${bgColor};`;
+                }
 
                 html += `
                 <div style="cursor:pointer;" onclick="selectColor('${color}')">
-                    <div style="width:65px; height:65px; border-radius:8px; background-color:${bgColor}; border:3px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; box-shadow:${isActive ? '0 0 0 2px rgba(255,90,60,0.3)' : 'none'}; transition:all 0.2s; box-sizing:border-box;">
+                    <div style="width:65px; height:65px; border-radius:8px; ${boxStyle} border:3px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; box-shadow:${isActive ? '0 0 0 2px rgba(255,90,60,0.3)' : 'none'}; transition:all 0.2s; box-sizing:border-box;">
                     </div>
                 </div>`;
             });
