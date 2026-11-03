@@ -18,10 +18,9 @@ const currencySymbols = {
 // ⭐ ADVANCED COLOR MAPPING ⭐
 function getHexFromColorString(colorStr) {
     if (!colorStr) return '#e2e8f0';
-    if (colorStr.startsWith('#')) return colorStr; // Return hex directly if user entered it
+    if (colorStr.startsWith('#')) return colorStr;
     
     const c = colorStr.toLowerCase();
-    // Match common fashion colors accurately
     if (c.includes('black')) return '#111827';
     if (c.includes('coffee') || c.includes('brown') || c.includes('khaki') || c.includes('camel')) return '#78350f';
     if (c.includes('white')) return '#ffffff';
@@ -38,7 +37,6 @@ function getHexFromColorString(colorStr) {
     if (c.includes('beige') || c.includes('cream')) return '#f5f5dc';
     if (c.includes('maroon')) return '#800000';
     
-    // Fallback: Generate a consistent pastel color based on the text string
     let hash = 0;
     for (let i = 0; i < colorStr.length; i++) {
         hash = colorStr.charCodeAt(i) + ((hash << 5) - hash);
@@ -122,32 +120,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     function generateVariationUI() {
         let html = '';
         
-        // ⭐ NEW: SQUARE COLOR BOXES WITH TEXT ON TOP ⭐
+        // ⭐ UPDATED: Color UI (Bigger boxes, single selected name)
         if (uniqueColors.length > 0) {
             html += `<div style="margin-bottom: 20px;">
-                <p style="font-weight:bold; margin-bottom:12px; color:#1E1B4B;">Select Color:</p>
-                <div style="display:flex; gap:15px; flex-wrap:wrap;">`;
+                <p style="font-weight:bold; margin-bottom:12px; color:#1E1B4B; font-size:1.05rem;">
+                    Color: <span style="color: #64748B; font-weight: 500;">${activeColor || ''}</span>
+                </p>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">`;
             
             uniqueColors.forEach(color => {
                 const isActive = color === activeColor;
                 const bgColor = getHexFromColorString(color);
                 
-                // Calculate if text should be dark or light based on background (simple luminance check)
-                let textColor = '#1E1B4B'; 
+                let iconColor = '#1E1B4B'; 
                 if (bgColor.startsWith('#') && bgColor !== '#ffffff' && bgColor !== '#f5f5dc') {
                     const r = parseInt(bgColor.substr(1, 2), 16);
                     const g = parseInt(bgColor.substr(3, 2), 16);
                     const b = parseInt(bgColor.substr(5, 2), 16);
-                    if ((r * 0.299 + g * 0.587 + b * 0.114) < 128) textColor = '#ffffff';
+                    if ((r * 0.299 + g * 0.587 + b * 0.114) < 128) iconColor = '#ffffff';
                 } else if (bgColor.includes('hsl')) {
-                    textColor = '#ffffff'; // Dark text on pastel hsl
+                    iconColor = '#ffffff';
                 }
 
                 html += `
-                <div style="display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer;" onclick="selectColor('${color}')">
-                    <span style="font-size:0.75rem; font-weight:700; color:${isActive ? '#FF5A3C' : '#64748B'}; text-align:center; max-width:70px; line-height:1.1;">${color}</span>
-                    <div style="width:50px; height:50px; border-radius:8px; background-color:${bgColor}; border:3px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; box-shadow:${isActive ? '0 0 0 2px rgba(255,90,60,0.3)' : 'none'}; transition:all 0.2s; display:flex; align-items:center; justify-content:center; box-sizing:border-box;">
-                        ${isActive ? '<i class="fa-solid fa-check" style="color:'+textColor+'; font-size:1.2rem;"></i>' : ''}
+                <div style="cursor:pointer;" onclick="selectColor('${color}')">
+                    <div style="width:65px; height:65px; border-radius:8px; background-color:${bgColor}; border:3px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; box-shadow:${isActive ? '0 0 0 2px rgba(255,90,60,0.3)' : 'none'}; transition:all 0.2s; display:flex; align-items:center; justify-content:center; box-sizing:border-box;">
+                        ${isActive ? `<i class="fa-solid fa-check" style="color:${iconColor}; font-size:1.4rem;"></i>` : ''}
                     </div>
                 </div>`;
             });
@@ -158,7 +156,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         if (offersForColor.some(o => o.variation_name)) {
             html += `<div style="margin-bottom: 15px;">
-                <p style="font-weight:bold; margin-bottom:8px;">Select Size:</p>
+                <p style="font-weight:bold; margin-bottom:8px;">Size:</p>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">`;
 
             offersForColor.forEach((offer) => {
