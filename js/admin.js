@@ -795,13 +795,23 @@ function setupProductForm() {
             
             // ⭐ QUEUE SYSTEM TRIGGER (Background AI) ⭐
             const writeBlog = document.getElementById('pWriteBlog').checked;
-            if (writeBlog && !isEditing) {
-                await window.supabaseClient.from('products').update({ blog_status: 'pending' }).eq('id', productId);
-                
-                // ⭐ NAYA CODE: API TRIGGER (Taake foran blog likha jaye) ⭐
-                fetch('/api/process-queue', { method: 'POST' }).catch(console.error);
-                
-                alert("Product saved! AI is writing the blog in the background. It will appear in the 'Show / Hide Blogs List' section as a DRAFT in a few moments.");
+            if (writeBlog) { // Ab ye Update par bhi kaam karega
+                // Check if blog already exists for this product to prevent duplicates
+                const { data: existingBlog } = await window.supabaseClient
+                    .from('blogs')
+                    .select('id')
+                    .ilike('title', `Review: ${productData.title}%`);
+
+                if (existingBlog && existingBlog.length > 0) {
+                    alert("Product saved! Note: A blog already exists for this product in the 'Blogs List'.");
+                } else {
+                    await window.supabaseClient.from('products').update({ blog_status: 'pending' }).eq('id', productId);
+                    
+                    // Trigger API immediately
+                    fetch('/api/process-queue', { method: 'POST' }).catch(console.error);
+                    
+                    alert("Product saved! AI is writing the blog in the background. It will appear in the 'Show / Hide Blogs List' section as a DRAFT in a few moments.");
+                }
             }
 
             const sendNotif = document.getElementById('pSendNotification').checked;
