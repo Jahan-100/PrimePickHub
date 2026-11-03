@@ -186,11 +186,11 @@ function setupToggleAddProduct() {
             if (formContainer.style.display === 'none') {
                 formContainer.style.display = 'block'; 
                 toggleBtn.textContent = 'Hide Product Form'; 
-                toggleBtn.style.background = '#EF4444'; // Red
+                toggleBtn.style.background = '#EF4444';
             } else {
                 formContainer.style.display = 'none'; 
                 toggleBtn.textContent = 'Show Product Form'; 
-                toggleBtn.style.background = '#16a34a'; // Green
+                toggleBtn.style.background = '#16a34a';
             }
         });
     }
@@ -361,7 +361,6 @@ async function loadProductsList() {
         
         const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
         
-        // 1. SIRF DB WALI CATEGORIES FILTER MEIN SHOW HONGI (Strict filtering)
         const dbCats = [...new Set(allProducts.map(p => p.category_slug).filter(Boolean))];
         
         const categoryFilter = document.getElementById('adminCategoryFilter');
@@ -375,7 +374,6 @@ async function loadProductsList() {
             categoryFilter.innerHTML = filterHtml;
         }
 
-        // 2. ADD PRODUCT FORM MEIN SAARI MASTER CATEGORIES SHOW HONGI
         const addCategorySelect = document.getElementById('pCategory');
         if (addCategorySelect) {
             const defaultCats = masterCats.filter(c => c.slug !== 'all');
@@ -454,8 +452,9 @@ function renderTable() {
 
         return `
             <tr class="${rowClass}">
-                <!-- Category Box First -->
-                <td style="text-align: center;"><span style="background:#e2e8f0; color:#1e293b; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:600; white-space:nowrap;">${catName}</span></td>
+                <td style="text-align: center;">
+                    <span style="background:#e2e8f0; color:#1e293b; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:600; white-space:nowrap; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis;">${catName}</span>
+                </td>
                 <td style="text-align: center;"><img src="${p.image_url}" class="table-img" onerror="this.src='/assets/icon-192.png?v=4'"></td>
                 <td style="text-align: left; font-weight: 500;">${p.title} ${statusBadge}</td>
                 <td style="text-align: center;">${priceStr}</td>
@@ -577,9 +576,26 @@ window.editProduct = async function(id) {
 window.deleteProduct = async function(id) {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try { 
+        // Pehle product ka slug nikaalein
+        const { data: productData } = await window.supabaseClient
+            .from('products')
+            .select('slug')
+            .eq('id', id)
+            .single();
+
+        // Product delete karein
         const { error } = await window.supabaseClient.from('products').delete().eq('id', id); 
         if (error) throw error; 
-        alert("Product deleted!"); 
+
+        // Us product ki saari notifications bhi delete karein
+        if (productData && productData.slug) {
+            await window.supabaseClient
+                .from('app_notifications')
+                .delete()
+                .eq('product_slug', productData.slug);
+        }
+
+        alert("Product and its notifications deleted!"); 
         await loadStats(); 
         await loadProductsList(); 
     } catch (err) { 
