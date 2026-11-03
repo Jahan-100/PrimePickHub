@@ -15,7 +15,7 @@ const currencySymbols = {
     CHF: 'CHF ', SEK: 'kr ', NOK: 'kr '
 };
 
-// ⭐ ADVANCED COLOR MAPPING (If only a text name is provided instead of Hex)
+// ⭐ ADVANCED COLOR MAPPING
 function getHexFromColorString(colorStr) {
     if (!colorStr) return '#e2e8f0';
     if (colorStr.startsWith('#')) return colorStr;
@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (!uniqueColors.find(c => c.value === val)) {
                     uniqueColors.push({
                         value: val,
-                        name: colorNames[idx] || val // Use provided name or fallback to value
+                        name: colorNames[idx] || val
                     });
                 }
             });
@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p style="font-weight:bold; margin-bottom:12px; color:#1E1B4B; font-size:1.05rem;">
                     Color: <span style="color: #64748B; font-weight: 500;">${activeObj ? activeObj.name : activeColor || ''}</span>
                 </p>
-                <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:flex-start;">`;
+                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">`;
             
             uniqueColors.forEach(colorObj => {
                 const isActive = colorObj.value === activeColor;
@@ -147,11 +147,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     boxStyle = `background-color: ${bgColor};`;
                 }
 
+                // ⭐ SEQURE BOXES, NO TEXT INSIDE ⭐
                 html += `
-                <div style="cursor:pointer; display:flex; flex-direction:column; align-items:center; width:70px;" onclick="selectColor('${colorObj.value}')">
-                    <div style="width:60px; height:60px; border-radius:50%; ${boxStyle} border:3px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; box-shadow:${isActive ? '0 0 0 3px rgba(255,90,60,0.3)' : 'none'}; transition:all 0.2s; box-sizing:border-box;">
+                <div style="cursor:pointer;" onclick="selectColor('${colorObj.value}')">
+                    <div style="width:50px; height:50px; border-radius:6px; ${boxStyle} border:3px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; box-shadow:${isActive ? '0 0 0 3px rgba(255,90,60,0.3)' : 'none'}; transition:all 0.2s; box-sizing:border-box;">
                     </div>
-                    <span style="font-size: 0.75rem; text-align:center; margin-top: 6px; line-height: 1.2; color: ${isActive ? '#FF5A3C' : '#475569'}; font-weight: ${isActive ? '700' : '500'};">${colorObj.name}</span>
                 </div>`;
             });
             html += `</div></div>`;
