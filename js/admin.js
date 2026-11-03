@@ -361,28 +361,30 @@ async function loadProductsList() {
         
         const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
         const defaultCats = masterCats.filter(c => c.slug !== 'all');
+        
+        // 1. SIRF DB WALI CATEGORIES FILTER MEIN SHOW HONGI
         const dbCats = [...new Set(allProducts.map(p => p.category_slug).filter(Boolean))];
         
-        const combinedCats = [...defaultCats];
-        dbCats.forEach(slug => {
-            if (!combinedCats.find(c => c.slug === slug)) {
-                combinedCats.push({ slug: slug, name: slug.charAt(0).toUpperCase() + slug.slice(1).replace('-', ' ') });
-            }
-        });
-
         const categoryFilter = document.getElementById('adminCategoryFilter');
         if (categoryFilter) {
-            categoryFilter.innerHTML = `<option value="all">All Categories</option>` + combinedCats.map(c => `<option value="${c.slug}">${c.name}</option>`).join('');
+            let filterHtml = `<option value="all">All Categories</option>`;
+            dbCats.forEach(slug => {
+                const catObj = masterCats.find(c => c.slug === slug);
+                const catName = catObj ? catObj.name : slug.charAt(0).toUpperCase() + slug.slice(1).replace('-', ' ');
+                filterHtml += `<option value="${slug}">${catName}</option>`;
+            });
+            categoryFilter.innerHTML = filterHtml;
         }
 
+        // 2. ADD PRODUCT FORM MEIN SAARI MASTER CATEGORIES SHOW HONGI
         const addCategorySelect = document.getElementById('pCategory');
         if (addCategorySelect) {
-            addCategorySelect.innerHTML = combinedCats.map(c => `<option value="${c.slug}">${c.name}</option>`).join('');
+            addCategorySelect.innerHTML = defaultCats.map(c => `<option value="${c.slug}">${c.name}</option>`).join('');
         }
         renderTable();
     } catch (err) { 
         console.error('List Load Error:', err); 
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Failed to load products.</td></tr>'; 
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:red;">Failed to load products.</td></tr>'; 
     }
 }
 
@@ -407,7 +409,7 @@ function renderTable() {
     });
 
     if (filteredProducts.length === 0) { 
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No products found.</td></tr>'; 
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No products found.</td></tr>'; 
         return; 
     }
 
@@ -444,11 +446,17 @@ function renderTable() {
         const isAvailable = p.is_available !== false;
         const rowClass = isAvailable ? '' : 'unavailable-row';
         const statusBadge = isAvailable ? '' : `<span class="badge-unavailable">UNAVAILABLE</span>`;
+        
+        // Category Name Setup
+        const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
+        const catObj = masterCats.find(c => c.slug === p.category_slug);
+        const catName = catObj ? catObj.name : (p.category_slug ? p.category_slug.charAt(0).toUpperCase() + p.category_slug.slice(1).replace('-', ' ') : 'Uncategorized');
 
         return `
             <tr class="${rowClass}">
                 <td style="text-align: center;"><img src="${p.image_url}" class="table-img"></td>
                 <td style="text-align: left; font-weight: 500;">${p.title} ${statusBadge}</td>
+                <td style="text-align: center;"><span style="background:#e2e8f0; color:#1e293b; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:600; white-space:nowrap;">${catName}</span></td>
                 <td style="text-align: center;">${priceStr}</td>
                 <td>
                     <div class="action-btns">
