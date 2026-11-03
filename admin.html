@@ -248,6 +248,26 @@
                                 </div>
                             </div>
 
+                            <!-- ⭐ YAHAN SE MAIN OFFER DETAILS SHURU HO RAHE HAIN (Moved Up) ⭐ -->
+                            <div class="form-section-title">Main Offer Details</div>
+                            <div class="form-group"><label>Store Name <span style="color: #EF4444;">*</span></label><input type="text" id="pStore" required placeholder="aliexpress, amazon, daraz" style="background:#fff; width: 100%;"></div>
+                            <div class="form-group"><label>Affiliate URL <span style="color: #EF4444;">*</span></label><input type="url" id="pAffUrl" required style="background:#fff; width: 100%;"></div>
+                            
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <div class="form-group" style="flex: 1; min-width: 120px;"><label>Colors (Optional)</label><input type="text" id="pMainColor" placeholder="e.g. Red, Blue, Black" style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
+                                <div class="form-group" style="flex: 1; min-width: 120px;"><label>Size/Qty (Optional)</label><input type="text" id="pMainVarName" placeholder="e.g. M, L, 1kg" style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
+                                <div class="form-group" style="flex: 1; min-width: 120px;"><label>Base Price <span style="color: #EF4444;">*</span></label><input type="number" step="0.01" id="pPrice" required style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
+                                <div class="form-group" style="flex: 1; min-width: 120px;"><label style="color:#FF5A3C;">Sale Price</label><input type="number" step="0.01" id="pSalePrice" style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
+                                <div class="form-group" style="flex: 1; min-width: 120px;"><label>Commission %</label><input type="number" step="0.1" id="pCommission" style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
+                                <div class="form-group" style="flex: 1; min-width: 120px;">
+                                    <label>Currency</label>
+                                    <select id="pCurrency" style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
+                                        <option value="USD">USD ($)</option><option value="PKR">PKR (Rs)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option><option value="INR">INR (₹)</option><option value="AED">AED (د.إ)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- ⭐ MAIN OFFER DETAILS END ⭐ -->
+
                             <div class="form-section-title" style="color: #be123c;">Sale Section 1 (Optional)</div>
                             <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
                                 <div class="form-group" style="flex: 1; min-width: 150px; margin-bottom: 0;">
@@ -275,24 +295,6 @@
                                 </div>
                                 <div class="form-group" style="flex: 0.5; min-width: 120px; margin-bottom: 0;">
                                     <button type="button" id="cancelOffer2Btn" class="btn-check-price" style="background:#64748B; padding: 10px; font-size: 0.9rem; width: 100%; border-radius:6px;">Cancel Offer 2</button>
-                                </div>
-                            </div>
-
-                            <div class="form-section-title">Main Offer Details</div>
-                            <div class="form-group"><label>Store Name <span style="color: #EF4444;">*</span></label><input type="text" id="pStore" required placeholder="aliexpress, amazon, daraz" style="background:#fff; width: 100%;"></div>
-                            <div class="form-group"><label>Affiliate URL <span style="color: #EF4444;">*</span></label><input type="url" id="pAffUrl" required style="background:#fff; width: 100%;"></div>
-                            
-                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <div class="form-group" style="flex: 1; min-width: 120px;"><label>Colors (Optional)</label><input type="text" id="pMainColor" placeholder="e.g. Red, Blue, Black" style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
-                                <div class="form-group" style="flex: 1; min-width: 120px;"><label>Size/Qty (Optional)</label><input type="text" id="pMainVarName" placeholder="e.g. M, L, 1kg" style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
-                                <div class="form-group" style="flex: 1; min-width: 120px;"><label>Base Price <span style="color: #EF4444;">*</span></label><input type="number" step="0.01" id="pPrice" required style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
-                                <div class="form-group" style="flex: 1; min-width: 120px;"><label style="color:#FF5A3C;">Sale Price</label><input type="number" step="0.01" id="pSalePrice" style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
-                                <div class="form-group" style="flex: 1; min-width: 120px;"><label>Commission %</label><input type="number" step="0.1" id="pCommission" style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
-                                <div class="form-group" style="flex: 1; min-width: 120px;">
-                                    <label>Currency</label>
-                                    <select id="pCurrency" style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
-                                        <option value="USD">USD ($)</option><option value="PKR">PKR (Rs)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option><option value="INR">INR (₹)</option><option value="AED">AED (د.إ)</option>
-                                    </select>
                                 </div>
                             </div>
 
