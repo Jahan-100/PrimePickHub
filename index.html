@@ -112,7 +112,8 @@
             line-height: 1 !important;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <!-- ⭐ FIX: Defer hata diya hai taake Supabase config.js se pehle load ho ⭐ -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="app-loading">
     
@@ -373,10 +374,10 @@
         <span>App</span>
     </button>
 
-    <script src="js/config.js?v=6"></script>
-    <script src="js/api.js?v=7"></script>
-    <script src="js/app.js?v=27"></script>
-    <script src="js/affiliate.js?v=6"></script>
+    <script src="js/config.js?v=7"></script>
+    <script src="js/api.js?v=8"></script>
+    <script src="js/app.js?v=28"></script>
+    <script src="js/affiliate.js?v=7"></script>
     <script>
         function toggleCatDropdown(event) {
             if(event) { event.preventDefault(); event.stopPropagation(); }
@@ -463,6 +464,6 @@
             }
         });
     </script>
-    <script src="js/floating-widgets.js?v=10"></script>
+    <script src="js/floating-widgets.js?v=11"></script>
 </body>
 </html>
