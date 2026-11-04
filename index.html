@@ -17,6 +17,12 @@
     <meta property="og:url" content="https://primepickhub.vercel.app/">
     <meta property="og:site_name" content="PrimePickHub">
 
+    <!-- Preconnect for faster font/script loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://smxjiwywepeaybhekrck.supabase.co">
+
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-7VE3L1Y8PQ"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -25,12 +31,12 @@
       gtag('config', 'G-7VE3L1Y8PQ');
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" defer></script>
 
     <link rel="canonical" href="https://primepickhub.vercel.app/">
     <link rel="icon" type="image/png" href="assets/favicon.png?v=4">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="css/main.css?v=35">
+    <link rel="stylesheet" href="css/main.css?v=37">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,800;0,900;1,800&family=Roboto:wght@400;700;900&family=Oswald:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Lobster&family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
@@ -107,7 +113,7 @@
             line-height: 1 !important;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 </head>
 <body class="app-loading">
     
@@ -131,7 +137,9 @@
 
             <div style="display: flex; align-items: center; flex: 1; justify-content: flex-end;">
                 <div class="notif-wrapper" onclick="toggleNotifPanel(event)">
-                    <i class="fa-solid fa-bell notif-bell" aria-label="Notifications"></i>
+                    <button class="notif-btn" style="background:none;border:none;cursor:pointer;" aria-label="Notifications">
+                        <i class="fa-solid fa-bell notif-bell"></i>
+                    </button>
                     <span id="notifBadge" class="notif-badge">0</span>
                     <div id="notifPanel" class="notif-panel" onclick="event.stopPropagation()">
                         <div class="notif-header"><span>Notifications</span><button onclick="clearAllNotifs(event)" style="background:none; border:none; color:#EF4444; font-size:0.75rem; cursor:pointer; font-weight:600;">Clear All</button></div>
@@ -155,7 +163,7 @@
     </header>
 
     <div id="left-side-ad" class="left-ad-container">
-        <div style="text-align: center; color: #94A3B8; font-size: 0.8rem; font-weight: bold; padding: 10px;">
+        <div style="text-align: center; color: #475569; font-size: 0.8rem; font-weight: bold; padding: 10px;">
             Advertisement
             <br><br>
             <div style="width: 100px; height: 500px; border: 1px dashed #CBD5E1; margin: 0 auto; display: flex; align-items: center; justify-content: center; color: #CBD5E1; border-radius: 4px;">
@@ -268,13 +276,13 @@
             <div id="ad-fallback-middle"></div>
         </div>
 
-        <!-- ⭐ LATEST BLOG SECTION ⭐ -->
-        <div id="latestBlogSection" style="display: none; margin-bottom: 20px;">
+        <!-- ⭐ LATEST BLOG SECTION (CLS FIX: min-height added) ⭐ -->
+        <div id="latestBlogSection" style="display: none; margin-bottom: 20px; min-height: 250px;">
             <h2 style="margin-bottom: 15px; font-family: 'Poppins', sans-serif; font-weight: 800; color: var(--text-dark);">Latest From Our Blog</h2>
             <a href="blog.html" id="latestBlogLink" style="text-decoration: none; display: block;">
                 <div class="latest-blog-card">
                     <div class="latest-blog-img-wrap">
-                        <img id="latestBlogImg" src="" alt="Latest Blog" width="300" height="180">
+                        <img id="latestBlogImg" src="" alt="Latest Blog Article" width="300" height="180" style="aspect-ratio: 16/9; object-fit: cover;">
                     </div>
                     <div class="latest-blog-content">
                         <h3 id="latestBlogTitle">Loading...</h3>
@@ -288,7 +296,8 @@
 
     </main>
 
-    <div class="newsletter-wrapper">
+    <!-- CLS FIX: min-height added to newsletter -->
+    <div class="newsletter-wrapper" style="min-height: 220px;">
         <div class="newsletter-box">
             <h2>Get the Best Deals in Your Inbox!</h2>
             <p>Subscribe to PrimePickHub and never miss out on exclusive sales, flash deals, and top-rated products.</p>
@@ -369,13 +378,13 @@
     </div>
 
     <button id="floatingAppIcon" onclick="toggleAppPopup()" style="display: none;" aria-label="Open App Download Popup">
-        <img src="assets/icon-192.png?v=4" alt="App" width="20" height="20">
+        <img src="assets/icon-192.png?v=4" alt="" width="20" height="20">
         <span>App</span>
     </button>
 
     <script src="js/config.js?v=6"></script>
     <script src="js/api.js?v=7"></script>
-    <script src="js/app.js?v=24"></script>
+    <script src="js/app.js?v=26"></script>
     <script src="js/affiliate.js?v=6"></script>
     <script>
         function toggleCatDropdown(event) {
