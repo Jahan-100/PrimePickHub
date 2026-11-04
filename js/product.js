@@ -6,35 +6,30 @@ function escapeHTML(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-// ⭐ UPGRADED HD IMAGE HELPER (Now supports Govee/Shopify) ⭐
+// ⭐ UPGRADED HD IMAGE HELPER ⭐
 function getHighQualityImage(url) {
     if (!url || typeof url !== 'string') return url;
     let cleanUrl = url;
 
-    // 1. AliExpress & Daraz
     if (cleanUrl.includes('aliexpress') || cleanUrl.includes('daraz') || cleanUrl.includes('alicdn')) {
         const match = cleanUrl.match(/^(.+?\.(?:jpg|jpeg|png|webp))_.+/i);
         if (match) cleanUrl = match[1];
     }
 
-    // 2. Amazon
     if (cleanUrl.includes('amazon') || cleanUrl.includes('media-amazon')) {
         const match = cleanUrl.match(/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i);
         if (match) cleanUrl = cleanUrl.replace(/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i, '.$1');
     }
 
-    // 3. eBay
     if (cleanUrl.includes('ebayimg.com')) {
         cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, '/s-l1600.$1');
     }
 
-    // 4. Shopify / Govee (Removes _500x, _500x500, _small, etc.)
     if (cleanUrl.includes('shopify') || cleanUrl.includes('govee')) {
         cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
-        if (cleanUrl.includes('?')) cleanUrl = cleanUrl.split('?')[0]; // Remove width params
+        if (cleanUrl.includes('?')) cleanUrl = cleanUrl.split('?')[0]; 
     }
 
-    // 5. General fallback for common size patterns (e.g., _500x500)
     cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
     cleanUrl = cleanUrl.replace(/_\d+x(?=\.(jpg|jpeg|png|webp|avif))/i, '');
 
@@ -50,7 +45,6 @@ const currencySymbols = {
     CHF: 'CHF ', SEK: 'kr ', NOK: 'kr '
 };
 
-// ⭐ ADVANCED COLOR MAPPING
 function getHexFromColorString(colorStr) {
     if (!colorStr) return '#e2e8f0';
     if (colorStr.startsWith('#')) return colorStr;
@@ -213,8 +207,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     let galleryImages = (product.gallery_images && product.gallery_images.length > 0) ? product.gallery_images.filter(Boolean) : (product.image_url ? [product.image_url] : []);
-    
-    // Apply HD Mapping
     galleryImages = galleryImages.map(getHighQualityImage);
 
     const mainImage = galleryImages[0] || '/assets/icon-192.png';
@@ -226,7 +218,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:40px;background:#fff;padding:30px;border-radius:12px;border:1px solid #E2E8F0;margin-bottom:20px;">
             <div>
                 <div style="background:#F8FAFC;border-radius:12px;padding:15px;margin-bottom:15px;">
-                    <img id="mainImage" src="${escapeHTML(mainImage)}" alt="${escapeHTML(product.title)}" style="width:100%;max-height:400px;object-fit:contain;border-radius:8px;" onerror="this.src='/assets/icon-192.png';">
+                    <!-- Added onclick for Full Screen -->
+                    <img id="mainImage" src="${escapeHTML(mainImage)}" alt="${escapeHTML(product.title)}" style="width:100%;max-height:400px;object-fit:contain;border-radius:8px; cursor: pointer;" onclick="openFullScreenImage(this.src)" onerror="this.src='/assets/icon-192.png';">
                 </div>
                 ${thumbnailsHtml ? `<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">${thumbnailsHtml}</div>` : ''}
             </div>
@@ -272,6 +265,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div style="background:#fff;padding:30px;border-radius:12px;border:1px solid #E2E8F0;">
             <h2 style="margin-bottom:20px;border-bottom:2px solid #FF5A3C;padding-bottom:10px;display:inline-block;">Our Detailed Review</h2>
             <div style="color:#334155;line-height:1.8;font-size:1.05rem;">${product.review_html || '<p>Detailed review coming soon...</p>'}</div>
+        </div>
+
+        <!-- ⭐ FULL SCREEN IMAGE MODAL ⭐ -->
+        <div id="fullScreenImageModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); z-index:9999999; align-items:center; justify-content:center; flex-direction:column;">
+            <button onclick="closeFullScreenImage(event)" style="position:absolute; top:20px; right:30px; background:transparent; border:none; color:white; font-size:3rem; cursor:pointer; z-index:10000000;">&times;</button>
+            <img id="fullScreenImageSrc" src="" style="max-width:95vw; max-height:90vh; object-fit:contain; user-select:none;">
         </div>
     `;
 
@@ -352,12 +351,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateUI(currencySelector.value);
     };
 
+    // Thumbnail click aur Full Screen image function
     container.querySelectorAll('.gallery-thumb').forEach(thumb => {
         thumb.addEventListener('click', function () {
-            document.getElementById('mainImage').src = this.dataset.src;
+            const src = this.dataset.src;
+            document.getElementById('mainImage').src = src;
             container.querySelectorAll('.gallery-thumb').forEach(t => t.style.borderColor = '#E2E8F0');
             this.style.borderColor = '#FF5A3C';
+            
+            // Naya: Thumbnail par click karne se full screen khulega
+            window.openFullScreenImage(src);
         });
+    });
+
+    // Full Screen Functions
+    window.openFullScreenImage = function(src) {
+        const modal = document.getElementById('fullScreenImageModal');
+        const img = document.getElementById('fullScreenImageSrc');
+        img.src = src;
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // Background scrolling band karein
+    };
+
+    window.closeFullScreenImage = function(e) {
+        if (e) e.stopPropagation(); // Event bubbling rok dein
+        const modal = document.getElementById('fullScreenImageModal');
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto'; // Background scrolling wapas chalu karein
+    };
+
+    // Background par click karne se bhi band ho jaye
+    document.getElementById('fullScreenImageModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            window.closeFullScreenImage();
+        }
     });
 
     const jsonLd = {
