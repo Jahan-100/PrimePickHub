@@ -4,6 +4,36 @@ function escapeHTML(s) {
         .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
+// ⭐ SMART IMAGE OPTIMIZER ⭐
+function getHighQualityImage(url, size = 400) {
+    if (!url || typeof url !== 'string') return url;
+    let cleanUrl = url.trim();
+    if (cleanUrl.includes('aliexpress') || cleanUrl.includes('daraz') || cleanUrl.includes('alicdn') || cleanUrl.includes('alibaba')) {
+        const qIdx = cleanUrl.indexOf('?');
+        if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
+        cleanUrl = cleanUrl.replace(/(\.(?:jpg|jpeg|png|webp))(?:_[^.?]*)?(?:\.(?:jpg|jpeg|png|webp|avif))?$/i, `$1_${size}x${size}q80.jpg`);
+    } else if (cleanUrl.includes('amazon') || cleanUrl.includes('media-amazon')) {
+        const qIdx = cleanUrl.indexOf('?');
+        if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
+        if (/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i.test(cleanUrl)) {
+            cleanUrl = cleanUrl.replace(/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i, `._AC_SL${size}_.$1`);
+        } else {
+            cleanUrl = cleanUrl.replace(/(\.(?:jpg|jpeg|png|webp))$/i, `._AC_SL${size}_$1`);
+        }
+    } else if (cleanUrl.includes('ebayimg.com')) {
+        cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, `/s-l${size}.$1`);
+    } else if (cleanUrl.includes('shopify') || cleanUrl.includes('govee') || cleanUrl.includes('allegra-k.com') || cleanUrl.includes('cdn.shopify')) {
+        cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
+        cleanUrl = cleanUrl.replace(/[?&]width=\d+/g, '');
+        const sep = cleanUrl.includes('?') ? '&' : '?';
+        cleanUrl = cleanUrl + sep + `width=${size}`;
+    } else {
+        cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
+        cleanUrl = cleanUrl.replace(/_\d+x(?=\.(jpg|jpeg|png|webp|avif))/i, '');
+    }
+    return cleanUrl;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(window.location.search);
     const query = params.get('q') || '';
@@ -15,11 +45,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const title = document.getElementById('searchTitle');
 
     if (title) {
-        if (isSpecial) {
-            title.innerText = 'Special Deals';
-        } else if (isFlash) {
-            title.innerText = flashEvent ? `${flashEvent} Deals` : 'Flash Sale Deals';
-        } else {
+        if (isSpecial) title.innerText = 'Special Deals';
+        else if (isFlash) title.innerText = flashEvent ? `${flashEvent} Deals` : 'Flash Sale Deals';
+        else {
             let titleText = query ? `Results for "${query}"` : 'All Products';
             if (category) titleText += ` in ${category}`;
             title.innerText = titleText;
@@ -32,27 +60,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         if (isSpecial) {
             const { data, error } = await window.supabaseClient
-                .from('products')
-                .select('*, affiliate_offers(*)')
-                .eq('is_special_deal', true)
-                .eq('is_available', true);
+                .from('products').select('*, affiliate_offers(*)')
+                .eq('is_special_deal', true).eq('is_available', true).limit(100);
             if (!error) results = data || [];
         } else if (isFlash) {
             const now = new Date().toISOString();
             let req = window.supabaseClient
-                .from('products')
-                .select('*, affiliate_offers(*)')
-                .gt('sale_end_date', now)
-                .eq('is_available', true);
+                .from('products').select('*, affiliate_offers(*)')
+                .gt('sale_end_date', now).eq('is_available', true).limit(100);
             if (flashEvent) req = req.eq('event_name', flashEvent);
             const { data, error } = await req;
             if (!error) results = data || [];
         } else {
             results = await API.searchProducts({ query, category });
         }
-    } catch (err) {
-        console.error(err);
-    }
+    } catch (err) { console.error(err); }
 
     results = (results || []).filter(p => p.is_available !== false);
 
@@ -61,7 +83,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    grid.innerHTML = results.map(p => {
+    grid.innerHTML = results.map((p, i) => {
         const offers = p.affiliate_offers || [];
         const primaryOffer = offers[0] || {};
         const storeName = primaryOffer.store_name || 'Amazon';
@@ -87,7 +109,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (salePrice > 0) {
             priceDisplay = `
                 <div style="margin: 5px 0 10px 0; display:flex; align-items:center; gap:8px;">
-                    <span style="text-decoration:line-through; color:#94A3B8; font-size:0.9rem;">${offerSymbol}${finalBasePrice.toFixed(2)}</span>
+                    <span style="text-decoration:line-through; color:#64748B; font-size:0.9rem;">${offerSymbol}${finalBasePrice.toFixed(2)}</span>
                     <span style="font-weight:bold; color:#FF5A3C; font-size:1.1rem;">${offerSymbol}${finalSalePrice.toFixed(2)}</span>
                 </div>`;
         } else {
@@ -95,12 +117,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const pUrl = p.slug ? `/product/${encodeURIComponent(p.slug)}` : (p.id ? `/product.html?id=${encodeURIComponent(p.id)}` : '#');
-        const imgSrc = p.image_url ? escapeHTML(p.image_url) : 'assets/icon-192.png';
+        const imgSrc = p.image_url ? escapeHTML(getHighQualityImage(p.image_url, 300)) : 'assets/icon-192.png';
+        const imgPriority = i === 0 ? 'fetchpriority="high"' : 'loading="lazy"';
 
         return `
             <div class="product-card">
                 <div class="card-img-wrap">
-                    <img src="${imgSrc}" alt="${escapeHTML(p.title)}" loading="lazy">
+                    <img src="${imgSrc}" alt="${escapeHTML(p.title)}" width="200" height="200" ${imgPriority}>
                 </div>
                 <div class="card-body">
                     <a href="${pUrl}" class="card-title">${escapeHTML(p.title)}</a>
