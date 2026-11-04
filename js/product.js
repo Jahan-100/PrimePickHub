@@ -425,7 +425,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (newIndex < 0) newIndex = 0;
         if (newIndex >= galleryImages.length) newIndex = galleryImages.length - 1;
         
-        if (newIndex === currentFullScreenIndex) return; // Reached the end, do nothing
+        if (newIndex === currentFullScreenIndex) return; 
 
         currentFullScreenIndex = newIndex;
         
@@ -461,11 +461,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     function handleSwipe() {
         const swipeThreshold = 50;
         if (touchEndX < touchStartX - swipeThreshold) {
-            // Swiped Left -> Next Image
             window.changeFullScreenImage(1);
         }
         if (touchEndX > touchStartX + swipeThreshold) {
-            // Swiped Right -> Prev Image
             window.changeFullScreenImage(-1);
         }
     }
@@ -482,12 +480,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // Background click to close
-    modal.addEventListener('click', function(e) {
-        if (e.target === this || e.target.id === 'fullScreenImageSrc') {
-            window.closeFullScreenImage();
-        }
-    });
+    // NOTE: Background click to close REMOVED as per user request. 
+    // Users must now click the 'X' button or press Escape.
 
     const jsonLd = {
         "@context": "https://schema.org/", "@type": "Product", "name": product.title,
