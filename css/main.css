@@ -56,6 +56,8 @@ body {
     justify-content: space-between;
     padding: 15px 30px;
     gap: 20px;
+    max-width: 100%;
+    margin: 0 auto;
 }
 
 .logo {
@@ -225,7 +227,7 @@ body {
 }
 
 /* Product Grid & Cards */
-.container { padding: 10px 30px; max-width: 1400px; margin: 0 auto; }
+.container { padding: 10px 30px; max-width: 100%; margin: 0 auto; }
 .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; margin-top: 10px; }
 
 .product-card { background: var(--card-bg); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow); transition: transform 0.2s; display: flex; flex-direction: column; }
@@ -469,7 +471,7 @@ body {
 }
 
 /* Footer */
-.footer { background: var(--primary); color: #CBD5E1; padding: 40px 30px 20px; margin-top: 30px; font-size: 0.9rem; text-align: center; }
+.footer { background: var(--primary); color: #CBD5E1; padding: 20px 30px 20px; margin-top: 15px; font-size: 0.9rem; text-align: center; }
 .footer a { text-decoration: none; }
 .footer-disclaimer { border-top: 1px solid #334155; padding-top: 20px; margin-top: 20px; font-size: 0.8rem; opacity: 0.8; }
 
@@ -632,14 +634,15 @@ body {
     padding: 5px 0;
 }
 
-/* Ad aur content shift sirf main website par apply hoga */
+/* ⭐ MAIN LAYOUT FIX: SHIRNK TO FIT ⭐ */
 @media (min-width: 1300px) {
     .left-ad-container {
         display: flex !important;
     }
     .header .nav-main, .container, .newsletter-wrapper, .footer {
-        padding-left: 150px !important; 
-        padding-right: 50px !important;
+        padding-left: 145px !important; /* 10px left pos + 120px width + 15px gap */
+        padding-right: 45px !important; /* Right floating button width + 5px gap */
+        max-width: 100% !important;
     }
 }
 
@@ -678,8 +681,8 @@ body {
 
 /* ⭐ NEWSLETTER SECTION STYLES ⭐ */
 .newsletter-wrapper {
-    padding: 40px 30px;
-    max-width: 1400px;
+    padding: 15px 30px; /* Space reduced */
+    max-width: 100%;
     margin: 0 auto;
 }
 
