@@ -35,7 +35,7 @@
     <link rel="canonical" href="https://primepickhub.vercel.app/">
     <link rel="icon" type="image/png" href="assets/favicon.png?v=4">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="css/main.css?v=38">
+    <link rel="stylesheet" href="css/main.css?v=39">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,800;0,900;1,800&family=Roboto:wght@400;700;900&family=Oswald:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Lobster&family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
@@ -112,7 +112,6 @@
             line-height: 1 !important;
         }
     </style>
-    <!-- ⭐ FIX: Defer hata diya hai taake Supabase config.js se pehle load ho ⭐ -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="app-loading">
@@ -271,7 +270,8 @@
             <div id="ad-fallback-middle"></div>
         </div>
 
-        <div id="latestBlogSection" style="display: none; margin-bottom: 20px; min-height: 250px;">
+        <!-- ⭐ CLS FIX: visibility: hidden aur min-height reserve kar diya hai ⭐ -->
+        <div id="latestBlogSection" style="visibility: hidden; opacity: 0; transition: opacity 0.3s; margin-bottom: 20px; min-height: 280px;">
             <h2 style="margin-bottom: 15px; font-family: 'Poppins', sans-serif; font-weight: 800; color: var(--text-dark);">Latest From Our Blog</h2>
             <a href="blog.html" id="latestBlogLink" style="text-decoration: none; display: block;">
                 <div class="latest-blog-card">
@@ -289,7 +289,7 @@
 
     </main>
 
-    <div class="newsletter-wrapper" style="min-height: 220px;">
+    <div class="newsletter-wrapper" style="min-height: 250px;">
         <div class="newsletter-box">
             <h2>Get the Best Deals in Your Inbox!</h2>
             <p>Subscribe to PrimePickHub and never miss out on exclusive sales, flash deals, and top-rated products.</p>
@@ -374,10 +374,10 @@
         <span>App</span>
     </button>
 
-    <script src="js/config.js?v=7"></script>
-    <script src="js/api.js?v=8"></script>
-    <script src="js/app.js?v=28"></script>
-    <script src="js/affiliate.js?v=7"></script>
+    <script src="js/config.js?v=8"></script>
+    <script src="js/api.js?v=9"></script>
+    <script src="js/app.js?v=29"></script>
+    <script src="js/affiliate.js?v=8"></script>
     <script>
         function toggleCatDropdown(event) {
             if(event) { event.preventDefault(); event.stopPropagation(); }
@@ -464,6 +464,6 @@
             }
         });
     </script>
-    <script src="js/floating-widgets.js?v=11"></script>
+    <script src="js/floating-widgets.js?v=12"></script>
 </body>
 </html>
