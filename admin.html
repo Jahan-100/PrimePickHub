@@ -138,23 +138,23 @@
                 
                 <h1>Platform Overview</h1>
                 <br>
-                <!-- ⭐ CLICKABLE STATS GRID ⭐ -->
+                <!-- ⭐ CLICKABLE STATS GRID (Direct Redirect) ⭐ -->
                 <div class="stats-grid">
                     <div class="stat-card card-products">
                         <p>Total Products</p>
                         <h3 id="statProducts">0</h3>
                     </div>
-                    <div class="stat-card card-clicks" onclick="showAnalyticsModal('clicks')">
+                    <div class="stat-card card-clicks" onclick="window.location.href='/analytics.html?type=clicks'">
                         <p>Affiliate Clicks</p>
                         <h3 id="statClicks">0</h3>
                         <p style="font-size:0.7rem; color:#6b21a8; margin-top:5px;">Click to view details</p>
                     </div>
-                    <div class="stat-card card-visitors" onclick="showAnalyticsModal('visitors')">
+                    <div class="stat-card card-visitors" onclick="window.location.href='/analytics.html?type=visitors'">
                         <p>Total Website Visitors</p>
                         <h3 id="statVisitors">0</h3>
                         <p style="font-size:0.7rem; color:#166534; margin-top:5px;">Click to view sources</p>
                     </div>
-                    <div class="stat-card card-installs" onclick="showAnalyticsModal('installs')">
+                    <div class="stat-card card-installs" onclick="window.location.href='/analytics.html?type=installs'">
                         <p>Active App Installs</p>
                         <h3 id="statAppInstalls">0</h3>
                         <p style="font-size:0.7rem; color:#9a3412; margin-top:5px;">Click to view devices</p>
@@ -657,19 +657,8 @@
         </div>
     </div>
 
-    <!-- ⭐ SMART ANALYTICS MODAL ⭐ -->
-    <div id="analyticsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999999; align-items: center; justify-content: center; backdrop-filter: blur(3px);">
-        <div style="background: #fff; width: 90%; max-width: 600px; max-height: 85vh; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px; margin-bottom: 15px;">
-                <h3 id="modalTitle" style="margin: 0; color: #1E1B4B;">Details</h3>
-                <button onclick="document.getElementById('analyticsModal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #EF4444;">&times;</button>
-            </div>
-            <div id="modalContent" style="overflow-y: auto; flex: 1; padding-right: 5px;"></div>
-        </div>
-    </div>
-
     <script src="/js/config.js?v=6"></script>
     <script src="/js/api.js?v=7"></script>
-    <script src="/js/admin.js?v=23"></script>
+    <script src="/js/admin.js?v=24"></script>
 </body>
 </html>
