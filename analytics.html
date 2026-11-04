@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Detailed Analytics - PrimePickHub</title>
+    <link rel="icon" type="image/png" href="/assets/favicon.png?v=4">
+    <link rel="stylesheet" href="/css/main.css?v=15">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background-color: #f8fafc; padding: 20px; font-family: sans-serif; }
+        .container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #E2E8F0; padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .header h1 { margin: 0; color: #1E1B4B; font-size: 1.5rem; }
+        .btn-back { background: #64748B; color: #fff; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.9rem; }
+        .btn-back:hover { background: #475569; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #E2E8F0; padding: 10px; text-align: left; font-size: 0.9rem; }
+        th { background: #F8FAFC; font-weight: 600; color: #1E1B4B; position: sticky; top: 0; z-index: 10; }
+        tr:hover { background: #F1F5F9; }
+        
+        .table-wrapper { max-height: 70vh; overflow-y: auto; border: 1px solid #E2E8F0; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1 id="pageTitle">Loading Details...</h1>
+            <a href="/admin.html" class="btn-back">← Back to Dashboard</a>
+        </div>
+        
+        <div class="table-wrapper">
+            <table id="analyticsTable">
+                <thead id="tableHead"></thead>
+                <tbody id="tableBody">
+                    <tr><td style="text-align:center; padding: 30px;">Fetching data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="/js/config.js?v=6"></script>
+    <script src="/js/api.js?v=7"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!window.supabaseClient) {
+                alert("Supabase not loaded!"); return;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const type = urlParams.get('type') || 'clicks';
+            
+            const titleEl = document.getElementById('pageTitle');
+            const thead = document.getElementById('tableHead');
+            const tbody = document.getElementById('tableBody');
+
+            try {
+                if (type === 'clicks') {
+                    titleEl.innerText = "All Affiliate Clicks (Detailed)";
+                    thead.innerHTML = `<tr><th>Sr. No.</th><th>Store Name</th><th>Product ID</th><th>Date & Time</th></tr>`;
+                    
+                    const { data, error } = await window.supabaseClient.from('clicks').select('*').order('created_at', { ascending: false });
+                    if (error) throw error;
+
+                    if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No clicks recorded yet.</td></tr>'; return; }
+
+                    tbody.innerHTML = data.map((row, idx) => `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td style="font-weight:bold; color:#6b21a8;">${row.store || 'Unknown'}</td>
+                            <td style="font-size:0.8rem; color:#64748B;">${row.product_id || 'N/A'}</td>
+                            <td>${new Date(row.created_at).toLocaleString()}</td>
+                        </tr>
+                    `).join('');
+
+                } else if (type === 'visitors') {
+                    titleEl.innerText = "All Website Visitors (Detailed)";
+                    thead.innerHTML = `<tr><th>Sr. No.</th><th>Source / Referrer</th><th>Device Type</th><th>Last Active</th></tr>`;
+                    
+                    const { data, error } = await window.supabaseClient.from('website_visitors').select('*').order('last_seen', { ascending: false });
+                    if (error) throw error;
+
+                    if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No visitors recorded yet.</td></tr>'; return; }
+
+                    tbody.innerHTML = data.map((row, idx) => `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td style="font-weight:bold; color:#166534;">${row.referrer || 'Direct'}</td>
+                            <td>${row.device_type || 'Unknown'}</td>
+                            <td>${new Date(row.last_seen).toLocaleString()}</td>
+                        </tr>
+                    `).join('');
+
+                } else if (type === 'installs') {
+                    titleEl.innerText = "Active App Installs (Detailed)";
+                    thead.innerHTML = `<tr><th>Sr. No.</th><th>Device ID</th><th>First Active</th><th>Last Active</th></tr>`;
+                    
+                    const { data, error } = await window.supabaseClient.from('active_app_installs').select('*').order('last_active', { ascending: false });
+                    if (error) throw error;
+
+                    if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No app installs recorded yet.</td></tr>'; return; }
+
+                    tbody.innerHTML = data.map((row, idx) => `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td style="font-family:monospace; color:#9a3412;">${row.device_id}</td>
+                            <td>${new Date(row.first_active || row.last_active).toLocaleString()}</td>
+                            <td>${new Date(row.last_active).toLocaleString()}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="4" style="color:red; text-align:center;">Error: ${err.message}</td></tr>`;
+            }
+        });
+    </script>
+</body>
+</html>
