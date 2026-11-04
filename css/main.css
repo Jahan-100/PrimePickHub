@@ -241,7 +241,8 @@ body {
 .card-badge { position: absolute; top: 10px; left: 10px; background: var(--accent); color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; z-index: 2; }
 .card-body { padding: 8px; display: flex; flex-direction: column; gap: 4px; flex: 1; justify-content: flex-start; }
 .card-title { font-size: 0.8rem; font-weight: 600; color: var(--text-dark); text-decoration: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 2px; line-height: 1.2; }
-.card-rating { font-size: 0.75rem; color: #F59E0B; margin-bottom: 2px; }
+/* Contrast Fix: Changed #F59E0B to #B45309 for better contrast */
+.card-rating { font-size: 0.75rem; color: #B45309; margin-bottom: 2px; font-weight: 600; }
 .card-timer { background: #FEF2F2; color: #DC2626; font-size: 0.7rem; font-weight: 800; padding: 4px 6px; border-radius: 4px; margin-bottom: 5px; text-align: center; border: 1px solid #FECACA; display: flex; align-items: center; justify-content: center; gap: 5px; }
 .btn-check-price { display: block; width: 100%; border: none; background: var(--primary); color: #fff; padding: 6px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; transition: opacity 0.2s; margin-top: auto; }
 .btn-check-price:hover { opacity: 0.9; }
@@ -310,7 +311,7 @@ body {
     color: #1e3a8a;
 }
 .special-deal-subtitle { 
-    color: #3b82f6; 
+    color: #2563eb; 
     font-size: 0.85rem; 
     margin-bottom: 15px; 
     font-weight: 600; 
@@ -382,8 +383,9 @@ body {
 .flash-title-area { display: flex; align-items: center; margin-bottom: 10px; }
 .flash-sale-left h2 { font-family: 'Poppins', sans-serif; font-weight: 900; font-size: 2rem; line-height: 1.1; margin: 0; color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
 .flash-controls { display: flex; align-items: center; gap: 20px; width: 100%; }
-.blinking-ending-soon { background: #fbbf24; color: #7f1d1d; font-weight: 900; font-size: 2.2rem; padding: 8px 30px; line-height: 1.1; border-radius: 10px; text-align: center; animation: blink3Colors 1.5s infinite; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 2px solid #fff; }
-@keyframes blink3Colors { 0% { background-color: #fbbf24; color: #7f1d1d; transform: scale(1); } 33% { background-color: #ef4444; color: white; transform: scale(1.05); } 66% { background-color: #3b82f6; color: white; transform: scale(1.05); } 100% { background-color: #fbbf24; color: #7f1d1d; transform: scale(1); } }
+/* CLS Fix: Removed color animation, using transform and background-color */
+.blinking-ending-soon { background: #fbbf24; color: #7f1d1d; font-weight: 900; font-size: 2.2rem; padding: 8px 30px; line-height: 1.1; border-radius: 10px; text-align: center; animation: blinkBg 1.5s infinite; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 2px solid #fff; will-change: transform; }
+@keyframes blinkBg { 0% { background-color: #fbbf24; transform: scale(1); } 50% { background-color: #ef4444; transform: scale(1.05); } 100% { background-color: #fbbf24; transform: scale(1); } }
 .flash-marquee-container { overflow: hidden; flex: 1; mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%); -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%); }
 .marquee-content { display: inline-flex; white-space: nowrap; animation: marquee 15s linear infinite; }
 .marquee-content span { font-size: 1.1rem; font-weight: 700; color: #e2e8f0; padding-right: 20px; }
@@ -402,8 +404,8 @@ body {
 .flash-sale-2-left .explore-btn { color: #047857; }
 .flash-sale-2-left .explore-btn:hover { background: #fff; color: #064e3b; }
 .flash-sale-2-left .marquee-content span { color: #d1fae5; }
-.flash-sale-2-left .blinking-ending-soon { background: #f59e0b; color: #451a03; animation: blink2Colors 1.5s infinite; }
-@keyframes blink2Colors { 0% { background-color: #f59e0b; color: #451a03; transform: scale(1); } 50% { background-color: #10b981; color: #fff; transform: scale(1.05); } 100% { background-color: #f59e0b; color: #451a03; transform: scale(1); } }
+.flash-sale-2-left .blinking-ending-soon { background: #f59e0b; color: #451a03; animation: blinkBg2 1.5s infinite; will-change: transform; }
+@keyframes blinkBg2 { 0% { background-color: #f59e0b; transform: scale(1); } 50% { background-color: #10b981; transform: scale(1.05); } 100% { background-color: #f59e0b; transform: scale(1); } }
 .flash-sale-2-right { flex: 1; padding: 15px 25px; position: relative; z-index: 1; display: flex; align-items: center; background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(5px); overflow: hidden; }
 .flash-sale-2-right .special-deal-card { border: 1px solid #a7f3d0; box-shadow: 0 4px 15px rgba(4, 120, 87, 0.1); }
 .flash-sale-2-right .special-deal-card .price { color: #047857; }
@@ -696,6 +698,7 @@ body {
     color: #fff;
     position: relative;
     overflow: hidden;
+    min-height: 220px; /* CLS Fix */
 }
 
 .newsletter-box::before {
@@ -816,7 +819,7 @@ body {
     .container { padding: 10px 15px; }
 
     .latest-blog-card { flex-direction: column; }
-    .latest-blog-img-wrap { width: 100%; max-width: 100%; height: 200px; }
+    .latest-blog-img-wrap { width: 100%; max-width: 100%; height: auto; }
     .latest-blog-content { padding: 15px; }
     .latest-blog-content h3 { font-size: 1.1rem; }
 
