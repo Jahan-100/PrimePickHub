@@ -17,6 +17,41 @@ async function uploadFileToSupabase(file) {
     return publicUrlData.publicUrl;
 }
 
+// ⭐ NAYA: BLOG LIST LOAD FUNCTION (Global) ⭐
+window.loadBlogList = async function() {
+    const tbody = document.getElementById('blogListBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading...</td></tr>';
+
+    const { data: blogs, error } = await window.supabaseClient.from('blogs').select('*').order('created_at', { ascending: false });
+    
+    if (error || !blogs || blogs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No blog posts found.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = blogs.map(b => {
+        const isPublished = b.is_published !== false;
+        const statusBadge = isPublished ? '' : `<span style="background:#F59E0B; color:white; padding:2px 6px; border-radius:4px; font-size:0.65rem; margin-left:5px;">🤖 AI DRAFT</span>`;
+        
+        let actionBtns = `<button class="btn-edit" onclick="editBlog('${b.id}', '${b.title.replace(/'/g, "\\'")}', '${b.slug}', '${b.image_url || ''}')">Edit</button>
+                        <button class="btn-delete" onclick="deleteBlog('${b.id}')">Delete</button>`;
+        
+        if (!isPublished) {
+            actionBtns = `<button onclick="publishBlog('${b.id}')" style="background:#10B981; color:white; padding:6px 10px; border:none; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">Publish</button>` + actionBtns;
+        }
+
+        return `
+            <tr>
+                <td style="text-align: center;"><img src="${b.image_url || '/assets/icon-192.png?v=4'}" class="table-img"></td>
+                <td style="text-align: left; font-weight: 500;">${b.title} ${statusBadge}</td>
+                <td style="text-align:center;">${new Date(b.created_at).toLocaleDateString()}</td>
+                <td><div class="action-btns">${actionBtns}</div></td>
+            </tr>
+        `;
+    }).join('');
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     if (typeof API === 'undefined' || !API.getCurrentUser) { 
         alert('API not loaded. Refresh the page.'); 
@@ -175,6 +210,75 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('pEventName2').value = '';
         document.getElementById('pSaleEndDate2').value = '';
         alert('Offer 2 details cleared. Save product to confirm cancellation.');
+    });
+
+    // ⭐ NAYA: QUICK AI BLOG GENERATOR BUTTON LOGIC ⭐
+    document.getElementById('quickGenerateBlogBtn')?.addEventListener('click', async function() {
+        const urlInput = document.getElementById('quickBlogUrlInput').value.trim();
+        if (!urlInput) return alert('Please paste a product URL.');
+
+        // Extract slug
+        let slug = '';
+        try {
+            if (urlInput.includes('/product/')) {
+                slug = urlInput.split('/product/')[1].split('?')[0].split('/')[0];
+            } else if (urlInput.includes('slug=')) {
+                const urlParams = new URLSearchParams(urlInput.split('?')[1]);
+                slug = urlParams.get('slug');
+            } else {
+                slug = urlInput; // Assume they pasted just the slug
+            }
+        } catch (e) { return alert('Invalid URL format. Make sure it is a valid product link.'); }
+
+        if (!slug) return alert('Could not find a valid product slug in the URL.');
+
+        const btn = this;
+        const originalText = btn.innerText;
+        btn.innerText = "⏳ Generating... (Please wait)";
+        btn.disabled = true;
+
+        try {
+            // 1. Fetch product from DB
+            const { data: product, error: pErr } = await window.supabaseClient
+                .from('products')
+                .select('*, affiliate_offers(*)')
+                .eq('slug', slug)
+                .maybeSingle();
+            
+            if (pErr || !product) throw new Error('Product not found in database. Check the URL.');
+
+            const offer = product.affiliate_offers?.[0] || { store_name: 'Store', affiliate_url: '#' };
+
+            // 2. Call API to generate blog
+            const res = await fetch('/api/generate-blog', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    productId: product.id,
+                    title: product.title,
+                    description: product.description || 'N/A',
+                    storeName: offer.store_name,
+                    affiliateUrl: offer.affiliate_url,
+                    imageUrl: product.image_url
+                })
+            });
+
+            const result = await res.json();
+            if (!res.ok) throw new Error(result.error || "API failed to generate blog.");
+
+            alert("✅ Blog generated successfully! It is now in the list below as an 'AI DRAFT'. Please review and publish.");
+            document.getElementById('quickBlogUrlInput').value = '';
+            
+            // Reload list
+            document.getElementById('blogListContainer').style.display = 'block';
+            window.loadBlogList();
+
+        } catch (err) {
+            alert("Error: " + err.message);
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
     });
 });
 
@@ -806,7 +910,6 @@ function setupProductForm() {
                 } else {
                     await window.supabaseClient.from('products').update({ blog_status: 'pending' }).eq('id', productId);
                     
-                    // Trigger API and log result
                     fetch('/api/process-queue', { method: 'POST' })
                         .then(res => res.json())
                         .then(data => {
@@ -929,11 +1032,11 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleFormBtn.addEventListener('click', () => {
             if (formContainer.style.display === 'none') {
                 formContainer.style.display = 'block';
-                toggleFormBtn.textContent = 'Hide Blog Form';
+                toggleFormBtn.textContent = 'Hide Manual Form';
                 toggleFormBtn.style.background = '#EF4444';
             } else {
                 formContainer.style.display = 'none';
-                toggleFormBtn.textContent = 'Show Blog Form';
+                toggleFormBtn.textContent = 'Show Manual Form';
                 toggleFormBtn.style.background = '#d946ef';
             }
         });
@@ -944,46 +1047,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (listContainer.style.display === 'none') {
                 listContainer.style.display = 'block';
                 toggleListBtn.style.background = '#EF4444';
-                loadBlogList();
+                window.loadBlogList();
             } else {
                 listContainer.style.display = 'none';
                 toggleListBtn.style.background = '#9333ea';
             }
         });
-    }
-
-    async function loadBlogList() {
-        const tbody = document.getElementById('blogListBody');
-        if (!tbody) return;
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading...</td></tr>';
-
-        const { data: blogs, error } = await window.supabaseClient.from('blogs').select('*').order('created_at', { ascending: false });
-        
-        if (error || !blogs || blogs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No blog posts found.</td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = blogs.map(b => {
-            const isPublished = b.is_published !== false;
-            const statusBadge = isPublished ? '' : `<span style="background:#F59E0B; color:white; padding:2px 6px; border-radius:4px; font-size:0.65rem; margin-left:5px;">🤖 AI DRAFT</span>`;
-            
-            let actionBtns = `<button class="btn-edit" onclick="editBlog('${b.id}', '${b.title.replace(/'/g, "\\'")}', '${b.slug}', '${b.image_url || ''}')">Edit</button>
-                            <button class="btn-delete" onclick="deleteBlog('${b.id}')">Delete</button>`;
-            
-            if (!isPublished) {
-                actionBtns = `<button onclick="publishBlog('${b.id}')" style="background:#10B981; color:white; padding:6px 10px; border:none; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">Publish</button>` + actionBtns;
-            }
-
-            return `
-                <tr>
-                    <td style="text-align: center;"><img src="${b.image_url || '/assets/icon-192.png?v=4'}" class="table-img"></td>
-                    <td style="text-align: left; font-weight: 500;">${b.title} ${statusBadge}</td>
-                    <td style="text-align:center;">${new Date(b.created_at).toLocaleDateString()}</td>
-                    <td><div class="action-btns">${actionBtns}</div></td>
-                </tr>
-            `;
-        }).join('');
     }
 
     window.editBlog = async function(id, title, slug, imageUrl) {
@@ -1000,7 +1069,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cancelBtn.style.display = 'block';
         
         formContainer.style.display = 'block';
-        toggleFormBtn.textContent = 'Hide Blog Form';
+        toggleFormBtn.textContent = 'Hide Manual Form';
         toggleFormBtn.style.background = '#EF4444';
         formContainer.scrollIntoView({ behavior: 'smooth' });
     }
@@ -1009,7 +1078,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!confirm("Are you sure you want to delete this post?")) return;
         const { error } = await window.supabaseClient.from('blogs').delete().eq('id', id);
         if (error) alert("Error deleting: " + error.message);
-        else loadBlogList();
+        else window.loadBlogList();
     }
 
     window.publishBlog = async function(id) {
@@ -1018,7 +1087,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const { error } = await window.supabaseClient.from('blogs').update({ is_published: true }).eq('id', id);
             if (error) throw error;
             alert("Blog published successfully!");
-            loadBlogList();
+            window.loadBlogList();
         } catch (err) { 
             alert("Error: " + err.message); 
         }
@@ -1031,7 +1100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('saveBlogBtn').innerText = "Publish Post";
         cancelBtn.style.display = 'none';
         formContainer.style.display = 'none';
-        toggleFormBtn.textContent = 'Show Blog Form';
+        toggleFormBtn.textContent = 'Show Manual Form';
         toggleFormBtn.style.background = '#d946ef';
     });
 
@@ -1066,10 +1135,10 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('saveBlogBtn').innerText = "Publish Post";
             cancelBtn.style.display = 'none';
             formContainer.style.display = 'none';
-            toggleFormBtn.textContent = 'Show Blog Form';
+            toggleFormBtn.textContent = 'Show Manual Form';
             toggleFormBtn.style.background = '#d946ef';
             
-            if(listContainer.style.display === 'block') loadBlogList();
+            if(listContainer.style.display === 'block') window.loadBlogList();
 
         } catch (err) {
             alert("Error: " + err.message);
