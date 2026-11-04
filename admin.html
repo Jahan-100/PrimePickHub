@@ -25,17 +25,19 @@
 
         /* Product List Table Columns Fix */
         #productListContainer .admin-table { table-layout: fixed; }
-        #productListContainer .admin-table th:nth-child(1) { width: 120px; text-align: center !important; } /* Category */
-        #productListContainer .admin-table th:nth-child(2) { width: 100px; text-align: center !important; } /* Image */
-        #productListContainer .admin-table th:nth-child(3) { width: auto; text-align: left !important; } /* Title (Max Space) */
-        #productListContainer .admin-table th:nth-child(4) { width: 120px; text-align: center !important; } /* Price */
-        #productListContainer .admin-table th:nth-child(5) { width: 130px; text-align: center !important; } /* Actions */
+        #productListContainer .admin-table th:nth-child(1) { width: 50px; text-align: center !important; } /* Sr. No. */
+        #productListContainer .admin-table th:nth-child(2) { width: 120px; text-align: center !important; } /* Category */
+        #productListContainer .admin-table th:nth-child(3) { width: 100px; text-align: center !important; } /* Image */
+        #productListContainer .admin-table th:nth-child(4) { width: auto; text-align: left !important; } /* Title (Max Space) */
+        #productListContainer .admin-table th:nth-child(5) { width: 120px; text-align: center !important; } /* Price */
+        #productListContainer .admin-table th:nth-child(6) { width: 130px; text-align: center !important; } /* Actions */
 
         /* Blog Table Columns Fix */
-        #blogListContainer .admin-table th:nth-child(1) { width: 100px; text-align: center !important; } 
-        #blogListContainer .admin-table th:nth-child(2) { width: auto; text-align: left !important; } 
-        #blogListContainer .admin-table th:nth-child(3) { width: 120px; text-align: center !important; } 
-        #blogListContainer .admin-table th:nth-child(4) { width: 150px; text-align: center !important; } 
+        #blogListContainer .admin-table th:nth-child(1) { width: 50px; text-align: center !important; } /* Sr. No. */
+        #blogListContainer .admin-table th:nth-child(2) { width: 100px; text-align: center !important; } /* Image */
+        #blogListContainer .admin-table th:nth-child(3) { width: auto; text-align: left !important; } /* Title */
+        #blogListContainer .admin-table th:nth-child(4) { width: 120px; text-align: center !important; } /* Date */
+        #blogListContainer .admin-table th:nth-child(5) { width: 150px; text-align: center !important; } /* Actions */
 
         /* AI Table Columns Fix */
         #discoveredListContainer .admin-table th:nth-child(1) { width: 5%; }
@@ -508,9 +510,15 @@
                     </div>
 
                     <div id="blogListContainer" style="display: none; margin-top: 20px; background: #fff; padding: 15px; border-radius: 8px;">
+                        <!-- ⭐ NAYA: Total Blogs Count ⭐ -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px;">
+                            <h4 style="margin: 0; color: #9d174d; font-size: 1rem;">Total Blogs: <span id="totalBlogsCount" style="background: #fbcfe8; padding: 2px 10px; border-radius: 12px; font-size: 0.85rem; color: #831843;">0</span></h4>
+                        </div>
+                        
                         <div class="table-responsive-mobile">
                             <table class="admin-table">
-                                <thead><tr><th>Image</th><th>Title</th><th>Date</th><th>Actions</th></tr></thead>
+                                <!-- Sr. No. Added -->
+                                <thead><tr><th>Sr. No.</th><th>Image</th><th>Title</th><th>Date</th><th>Actions</th></tr></thead>
                                 <tbody id="blogListBody"></tbody>
                             </table>
                         </div>
@@ -622,6 +630,9 @@
                     </div>
                 </div>
 
+                <!-- ========================================== -->
+                <!-- 🌟 SECTION: MANAGE PRODUCTS (UPDATED) 🌟 -->
+                <!-- ========================================== -->
                 <div class="admin-card box-manage-products">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2 style="margin: 0;">Manage Products</h2>
@@ -632,6 +643,12 @@
                     </div>
 
                     <div id="productListContainer" style="display: none; margin-top: 20px; background: #fff; padding: 15px; border-radius: 8px;">
+                        
+                        <!-- ⭐ NAYA: Total Products Count ⭐ -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px;">
+                            <h4 style="margin: 0; color: #92400e; font-size: 1rem;">Total Products: <span id="totalProductsCount" style="background: #fde68a; padding: 2px 10px; border-radius: 12px; font-size: 0.85rem; color: #78350f;">0</span></h4>
+                        </div>
+
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                                 <select id="adminCategoryFilter" style="padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; outline: none;"><option value="all">All Categories</option></select>
@@ -646,8 +663,9 @@
                             <div class="table-scroll-wrapper" id="tableScrollWrapperProducts">
                                 <div class="table-responsive-mobile">
                                     <table class="admin-table">
-                                        <thead><tr><th>Category</th><th>Image</th><th>Title</th><th>Final Price</th><th>Actions</th></tr></thead>
-                                        <tbody id="productListBody"><tr><td colspan="5" style="text-align:center;">Loading...</td></tr></tbody>
+                                        <!-- Sr. No. Added as first column -->
+                                        <thead><tr><th>Sr. No.</th><th>Category</th><th>Image</th><th>Title</th><th>Final Price</th><th>Actions</th></tr></thead>
+                                        <tbody id="productListBody"><tr><td colspan="6" style="text-align:center;">Loading...</td></tr></tbody>
                                     </table>
                                 </div>
                             </div>
@@ -661,6 +679,6 @@
 
     <script src="/js/config.js?v=6"></script>
     <script src="/js/api.js?v=7"></script>
-    <script src="/js/admin.js?v=16"></script>
+    <script src="/js/admin.js?v=18"></script>
 </body>
 </html>
