@@ -1,6 +1,6 @@
 :root {
     --primary: #1E1B4B;
-    --accent: #FF5A3C;
+    --accent: #DC2626; /* ⭐ CONTRAST FIX: Bright Orange se Dark Red kiya */
     --bg-light: #f8fafc;
     --card-bg: #FFFFFF;
     --text-dark: #0F172A;
@@ -81,7 +81,7 @@ body {
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
-.search-box:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255, 90, 60, 0.2); }
+.search-box:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2); }
 
 .custom-category-dropdown {
     position: relative; height: 100%; display: flex; align-items: center;
@@ -121,7 +121,7 @@ body {
     align-items: center; justify-content: center; border-radius: 0 6px 6px 0;
 }
 
-.search-box #searchBtn:hover { background: #e0482d; }
+.search-box #searchBtn:hover { background: #B91C1C; }
 
 /* Notifications */
 .notif-wrapper { position: relative; margin-right: 15px; cursor: pointer; display: flex; align-items: center; }
@@ -162,7 +162,7 @@ body {
     font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-align: center;
     white-space: nowrap; transition: color 0.2s; position: relative; padding-bottom: 6px;
 }
-.category-item.active .cat-icon { border-color: var(--accent); background: #FFF5F3; transform: translateY(-3px); box-shadow: 0 4px 10px rgba(255, 90, 60, 0.2); }
+.category-item.active .cat-icon { border-color: var(--accent); background: #FEF2F2; transform: translateY(-3px); box-shadow: 0 4px 10px rgba(220, 38, 38, 0.2); }
 .category-item.active span { color: var(--accent); font-weight: 800; }
 .category-item.active span::after {
     content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
@@ -225,10 +225,10 @@ body {
 .special-deal-card:hover .img-box img { transform: scale(1.05); }
 
 .special-deal-card .info-box { flex: 1.5; padding: 6px 10px; background: #fff; display: flex; flex-direction: column; justify-content: center; border-top: 1px solid #f1f5f9; }
-.special-deal-card .price { font-size: 0.95rem; font-weight: 800; color: #FF5A3C; margin-bottom: 0px; line-height: 1.1; }
+.special-deal-card .price { font-size: 0.95rem; font-weight: 800; color: #DC2626; margin-bottom: 0px; line-height: 1.1; }
 .special-deal-card .title { font-size: 0.7rem; color: #475569; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; line-height: 1.1; }
 .scroll-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; background: #fff; border: 1px solid #E2E8F0; border-radius: 50%; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); color: #1E1B4B; transition: all 0.2s; }
-.scroll-arrow:hover { background: #FF5A3C; color: #fff; border-color: #FF5A3C; }
+.scroll-arrow:hover { background: #DC2626; color: #fff; border-color: #DC2626; }
 .left-arrow { left: 2px; }
 .right-arrow { right: 2px; }
 
@@ -297,11 +297,11 @@ body {
 .app-popup-content h3 { font-size: 1.2rem; color: var(--text-dark); margin-bottom: 5px; font-family: 'Poppins', sans-serif; }
 .app-popup-content p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; }
 .btn-app-download { background: var(--accent); color: #fff; border: none; padding: 12px 20px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; width: 100%; transition: background 0.2s; }
-.btn-app-download:hover { background: #e0482d; }
+.btn-app-download:hover { background: #B91C1C; }
 
 /* FLOATING CONTACT BUTTON */
 .floating-contact-btn { position: fixed; bottom: 50%; right: 0; margin-bottom: 10px; transform: none; background: var(--accent); color: #fff; padding: 10px 6px; border-radius: 15px 0 0 15px; cursor: pointer; box-shadow: -2px 2px 10px rgba(0,0,0,0.2); z-index: 999996; display: flex; align-items: center; justify-content: center; gap: 5px; writing-mode: vertical-rl; text-orientation: mixed; transition: background 0.3s, transform 0.3s; font-weight: bold; font-size: 0.75rem; letter-spacing: 1px; width: 36px; box-sizing: border-box; }
-.floating-contact-btn:hover { background: #e0482d; transform: translateX(-3px); }
+.floating-contact-btn:hover { background: #B91C1C; transform: translateX(-3px); }
 
 .contact-form-panel { position: fixed; top: 50%; right: -350px; transform: translateY(-50%); width: 320px; background: #fff; border-radius: 12px 0 0 12px; box-shadow: -5px 0 25px rgba(0,0,0,0.2); z-index: 999998; transition: right 0.3s ease-in-out; border: 1px solid var(--border); overflow: hidden; }
 .contact-form-panel.open { right: 0; }
@@ -314,7 +314,7 @@ body {
 .contact-form-body input, .contact-form-body textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; outline: none; }
 .contact-form-body textarea { resize: none; height: 80px; }
 .contact-form-body button[type="submit"] { width: 100%; background: var(--accent); color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: 600; cursor: pointer; margin-top: 5px; }
-.contact-form-body button[type="submit"]:hover { background: #e0482d; }
+.contact-form-body button[type="submit"]:hover { background: #B91C1C; }
 
 /* LEFT SIDE AD SLOT */
 .left-ad-container { position: fixed; left: 10px; top: 50%; transform: translateY(-50%); width: 120px; background: #fff; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #E2E8F0; z-index: 99990; display: none; justify-content: center; padding: 5px 0; }
@@ -332,22 +332,22 @@ body {
 .ad-fallback-container .product-card .btn-check-price { padding: 5px; font-size: 0.7rem; border-radius: 4px; }
 
 /* NEWSLETTER SECTION */
-.newsletter-wrapper { padding: 15px 30px; max-width: 100%; margin: 0 auto; min-height: 220px; /* CLS Fix */ }
+.newsletter-wrapper { padding: 15px 30px; max-width: 100%; margin: 0 auto; min-height: 250px; /* CLS Fix */ }
 .newsletter-box { background: linear-gradient(135deg, #1E1B4B 0%, #4c1d95 100%); border-radius: 16px; padding: 40px 20px; text-align: center; box-shadow: 0 10px 30px rgba(30, 27, 75, 0.2); color: #fff; position: relative; overflow: hidden; min-height: 220px; /* CLS Fix */ }
 .newsletter-box::before { content: "📧"; position: absolute; font-size: 10rem; opacity: 0.05; top: -20px; right: -20px; transform: rotate(15deg); }
 .newsletter-box h2 { font-family: 'Poppins', sans-serif; font-size: 2rem; font-weight: 800; margin-bottom: 10px; color: #fff; position: relative; z-index: 1; }
 .newsletter-box p { font-size: 1rem; color: #CBD5E1; margin-bottom: 25px; max-width: 600px; margin-left: auto; margin-right: auto; position: relative; z-index: 1; }
 .newsletter-form { display: flex; justify-content: center; align-items: center; gap: 10px; max-width: 500px; margin: 0 auto; position: relative; z-index: 1; }
 .newsletter-form input { flex: 1; padding: 14px 20px; border-radius: 8px; border: none; outline: none; font-size: 1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-.newsletter-form button { background: var(--accent); color: #fff; border: none; padding: 14px 30px; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s, transform 0.2s; white-space: nowrap; box-shadow: 0 4px 10px rgba(255, 90, 60, 0.3); }
-.newsletter-form button:hover { background: #e0482d; transform: translateY(-2px); }
+.newsletter-form button { background: var(--accent); color: #fff; border: none; padding: 14px 30px; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s, transform 0.2s; white-space: nowrap; box-shadow: 0 4px 10px rgba(220, 38, 38, 0.3); }
+.newsletter-form button:hover { background: #B91C1C; transform: translateY(-2px); }
 
 /* Cookie Banner */
 .cookie-banner { position: fixed; bottom: 20px; left: 20px; right: 20px; max-width: 800px; margin: 0 auto; background: #1E1B4B; color: #fff; padding: 15px 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; z-index: 999999; border: 1px solid #334155; }
 .cookie-content p { font-size: 0.85rem; margin: 0; color: #E2E8F0; }
 .cookie-buttons { display: flex; gap: 10px; }
 .btn-accept { background: var(--accent); color: #fff; border: none; padding: 8px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-.btn-accept:hover { background: #e0482d; }
+.btn-accept:hover { background: #B91C1C; }
 
 /* ================= MOBILE RESPONSIVE ================= */
 @media (max-width: 768px) {
