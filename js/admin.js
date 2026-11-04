@@ -9,57 +9,7 @@ async function uploadFileToSupabase(file) {
     return publicUrlData.publicUrl;
 }
 
-// ⭐ SMART ANALYTICS LOGIC ⭐
-window.showAnalyticsModal = async function(type) {
-    const modal = document.getElementById('analyticsModal');
-    const title = document.getElementById('modalTitle');
-    const content = document.getElementById('modalContent');
-    
-    let tableName = type === 'clicks' ? 'clicks' : (type === 'visitors' ? 'website_visitors' : 'active_app_installs');
-    
-    // Check count first
-    const { count, error: countErr } = await window.supabaseClient.from(tableName).select('*', { count: 'exact', head: true });
-    if (countErr) { alert("Error fetching data: " + countErr.message); return; }
-
-    // Agar data > 50 hai to new page redirect karein
-    if (count > 50) {
-        window.location.href = `/analytics.html?type=${type}`;
-        return;
-    }
-
-    modal.style.display = 'flex';
-    content.innerHTML = '<p style="text-align:center; padding:20px;">Loading details...</p>';
-    
-    try {
-        let html = '';
-        if (type === 'clicks') {
-            title.innerText = "Affiliate Clicks Details";
-            const { data, error } = await window.supabaseClient.from('clicks').select('*').order('created_at', { ascending: false });
-            if (error) throw error;
-            html = '<table style="width:100%; border-collapse:collapse;"><tr style="background:#F8FAFC; border-bottom:2px solid #E2E8F0;"><th style="text-align:left; padding:10px;">Store</th><th style="text-align:right; padding:10px;">Date</th></tr>';
-            data.forEach(c => { html += `<tr><td style="padding:10px; border-bottom:1px solid #E2E8F0; font-weight:bold; color:#6b21a8;">${c.store || 'Unknown'}</td><td style="padding:10px; text-align:right; font-size:0.85rem; color:#64748B;">${new Date(c.created_at).toLocaleDateString()}</td></tr>`; });
-            html += '</table>';
-        } else if (type === 'visitors') {
-            title.innerText = "Website Visitors Source";
-            const { data, error } = await window.supabaseClient.from('website_visitors').select('*').order('last_seen', { ascending: false });
-            if (error) throw error;
-            html = '<table style="width:100%; border-collapse:collapse;"><tr style="background:#F8FAFC; border-bottom:2px solid #E2E8F0;"><th style="text-align:left; padding:10px;">Source</th><th style="text-align:right; padding:10px;">Device</th></tr>';
-            data.forEach(v => { html += `<tr><td style="padding:10px; border-bottom:1px solid #E2E8F0; font-weight:bold; color:#166534;">${v.referrer || 'Direct'}</td><td style="padding:10px; text-align:right; font-size:0.85rem; color:#64748B;">${v.device_type || 'Unknown'}</td></tr>`; });
-            html += '</table>';
-        } else if (type === 'installs') {
-            title.innerText = "App Installs Details";
-            const { data, error } = await window.supabaseClient.from('active_app_installs').select('*').order('last_active', { ascending: false });
-            if (error) throw error;
-            html = '<table style="width:100%; border-collapse:collapse;"><tr style="background:#F8FAFC; border-bottom:2px solid #E2E8F0;"><th style="text-align:left; padding:10px;">Device ID</th><th style="text-align:right; padding:10px;">Last Active</th></tr>';
-            data.forEach(v => { html += `<tr><td style="padding:10px; border-bottom:1px solid #E2E8F0; font-size:0.8rem; font-family:monospace; color:#9a3412;">${v.device_id.substring(0,10)}...</td><td style="padding:10px; text-align:right; font-size:0.85rem; color:#64748B;">${new Date(v.last_active).toLocaleDateString()}</td></tr>`; });
-            html += '</table>';
-        }
-        content.innerHTML = html;
-        // Add link to full page
-        content.innerHTML += `<div style="text-align:center; margin-top:20px;"><a href="/analytics.html?type=${type}" style="background:#4f46e5; color:#fff; padding:10px 20px; border-radius:6px; text-decoration:none; font-weight:bold; display:inline-block;">View Full Detailed Report (Country/City Drill-down) →</a></div>`;
-    } catch (err) { content.innerHTML = `<p style="color:red; padding:20px;">Error: ${err.message}</p>`; }
-};
-
+// ⭐ NAYA: BLOG LIST LOAD FUNCTION (Global) ⭐
 window.loadBlogList = async function() {
     const tbody = document.getElementById('blogListBody'); if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading...</td></tr>';
@@ -85,12 +35,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
     document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
     
+    // Save App Download Setting
     document.getElementById('saveAppSettingsBtn')?.addEventListener('click', async function() {
         const isLive = document.getElementById('appDownloadStatusToggle').checked;
         const { error } = await window.supabaseClient.from('site_settings').update({ show_app_download: isLive }).eq('id', 1);
         if (error) alert("Error: " + error.message); else alert(`App Download Popup is now ${isLive ? 'LIVE (Visible)' : 'STOPPED (Hidden)'} on website!`);
     });
 
+    // Save Special Deal Settings
     document.getElementById('saveTitleBtn')?.addEventListener('click', async function() {
         const newTitle = document.getElementById('specialDealTitleInput').value.trim(); const fontFamily = document.getElementById('titleFontFamily').value; const fontSize = document.getElementById('titleFontSize').value.trim() || '2.2rem'; const fontWeight = document.getElementById('titleFontWeight').value; const fontStyle = document.getElementById('titleFontStyle').value;
         if(!newTitle) return alert("Title cannot be empty");
@@ -98,6 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (error) alert("Error: " + error.message); else { alert("Special Deal Design updated successfully!"); document.getElementById('specialDealContainer').style.display = 'none'; const btn = document.getElementById('toggleSpecialDealBtn'); btn.textContent = 'Show Settings'; btn.style.background = '#d946ef'; }
     });
 
+    // Save Sale Section 1 Settings
     document.getElementById('saveFlashSettingsBtn')?.addEventListener('click', async function() {
         const newTitle = document.getElementById('flashTitleText').value.trim(); const fontFamily = document.getElementById('flashTitleFontFamily').value; const fontSize = document.getElementById('flashTitleFontSize').value.trim() || '2rem'; const fontWeight = document.getElementById('flashTitleFontWeight').value; const fontStyle = document.getElementById('flashTitleFontStyle').value;
         if(!newTitle) return alert("Sale Section 1 Title cannot be empty");
@@ -105,6 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (error) alert("Error: " + error.message); else { alert("Sale Section 1 Design updated successfully!"); document.getElementById('flashSaleContainer').style.display = 'none'; const btn = document.getElementById('toggleFlashSaleBtn'); btn.textContent = 'Show Settings'; btn.style.background = '#ea580c'; }
     });
 
+    // Save Sale Section 2 Settings
     document.getElementById('saveSale2SettingsBtn')?.addEventListener('click', async function() {
         const newTitle = document.getElementById('sale2TitleText').value.trim(); const fontFamily = document.getElementById('sale2TitleFontFamily').value; const fontSize = document.getElementById('sale2TitleFontSize').value.trim() || '2rem'; const fontWeight = document.getElementById('sale2TitleFontWeight').value; const fontStyle = document.getElementById('sale2TitleFontStyle').value;
         if(!newTitle) return alert("Sale Section 2 Title cannot be empty");
@@ -112,6 +66,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (error) alert("Error: " + error.message); else { alert("Sale Section 2 Design updated successfully!"); document.getElementById('sale2Container').style.display = 'none'; const btn = document.getElementById('toggleSale2Btn'); btn.textContent = 'Show Settings'; btn.style.background = '#10b981'; }
     });
 
+    // Check Availability Button
     document.getElementById('checkAvailabilityBtn')?.addEventListener('click', async function() {
         const btn = this; const originalText = btn.innerText; btn.innerText = "Checking... Please Wait (1-2 mins)"; btn.disabled = true;
         try {
@@ -120,9 +75,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (err) { alert('Failed to check. Make sure Vercel API is deployed.'); } finally { btn.innerText = originalText; btn.disabled = false; }
     });
 
+    // Cancel Offer Buttons
     document.getElementById('cancelOfferBtn')?.addEventListener('click', () => { document.getElementById('pEventName').value = ''; document.getElementById('pSaleEndDate').value = ''; alert('Offer 1 details cleared. Save product to confirm cancellation.'); });
     document.getElementById('cancelOffer2Btn')?.addEventListener('click', () => { document.getElementById('pEventName2').value = ''; document.getElementById('pSaleEndDate2').value = ''; alert('Offer 2 details cleared. Save product to confirm cancellation.'); });
 
+    // ⭐ NAYA: QUICK AI BLOG GENERATOR BUTTON LOGIC ⭐
     document.getElementById('quickGenerateBlogBtn')?.addEventListener('click', async function() {
         const urlInput = document.getElementById('quickBlogUrlInput').value.trim(); if (!urlInput) return alert('Please paste a product URL.');
         let slug = '';
@@ -140,6 +97,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (err) { alert("Error: " + err.message); } finally { btn.innerText = originalText; btn.disabled = false; }
     });
 
+    // ⭐ SETUP SCROLL BUTTONS ⭐
     function setupScrollButtons(upBtnId, downBtnId, wrapperId) {
         const upBtn = document.getElementById(upBtnId); const downBtn = document.getElementById(downBtnId); const wrapper = document.getElementById(wrapperId);
         if (!upBtn || !downBtn || !wrapper) return;
