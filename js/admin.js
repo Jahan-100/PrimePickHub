@@ -17,7 +17,77 @@ async function uploadFileToSupabase(file) {
     return publicUrlData.publicUrl;
 }
 
-// ⭐ NAYA: BLOG LIST LOAD FUNCTION (Global) ⭐
+// ⭐ SMART ANALYTICS FUNCTION: Short data = Popup, Long data = New Page ⭐
+window.showAnalyticsModal = async function(type) {
+    const modal = document.getElementById('analyticsModal');
+    const title = document.getElementById('modalTitle');
+    const content = document.getElementById('modalContent');
+    
+    // Check total count first to decide (Popup vs New Page)
+    let tableName = type === 'clicks' ? 'clicks' : (type === 'visitors' ? 'website_visitors' : 'active_app_installs');
+    
+    const { count, error: countErr } = await window.supabaseClient
+        .from(tableName)
+        .select('*', { count: 'exact', head: true });
+
+    if (countErr) {
+        alert("Error fetching data: " + countErr.message);
+        return;
+    }
+
+    // Agar data 50 se zyada hai, toh naye page par bhej dein
+    if (count > 50) {
+        window.location.href = `/analytics.html?type=${type}`;
+        return;
+    }
+
+    // Agar data chota hai (<= 50), toh Popup dikhayein
+    modal.style.display = 'flex';
+    content.innerHTML = '<p style="text-align:center; padding:20px;">Loading details...</p>';
+    
+    try {
+        if (type === 'clicks') {
+            title.innerText = "Affiliate Clicks Details";
+            const { data, error } = await window.supabaseClient.from('clicks').select('*').order('created_at', { ascending: false });
+            if (error) throw error;
+            
+            let html = '<table style="width:100%; border-collapse:collapse;"><tr style="background:#F8FAFC; border-bottom:2px solid #E2E8F0;"><th style="text-align:left; padding:10px;">Store</th><th style="text-align:right; padding:10px;">Date</th></tr>';
+            data.forEach(c => {
+                html += `<tr><td style="padding:10px; border-bottom:1px solid #E2E8F0; font-weight:bold; color:#6b21a8;">${c.store || 'Unknown'}</td><td style="padding:10px; text-align:right; font-size:0.85rem; color:#64748B;">${new Date(c.created_at).toLocaleDateString()}</td></tr>`;
+            });
+            html += '</table>';
+            content.innerHTML = html;
+            
+        } else if (type === 'visitors') {
+            title.innerText = "Website Visitors Source";
+            const { data, error } = await window.supabaseClient.from('website_visitors').select('*').order('last_seen', { ascending: false });
+            if (error) throw error;
+            
+            let html = '<table style="width:100%; border-collapse:collapse;"><tr style="background:#F8FAFC; border-bottom:2px solid #E2E8F0;"><th style="text-align:left; padding:10px;">Source</th><th style="text-align:right; padding:10px;">Device</th></tr>';
+            data.forEach(v => {
+                html += `<tr><td style="padding:10px; border-bottom:1px solid #E2E8F0; font-weight:bold; color:#166534;">${v.referrer || 'Direct'}</td><td style="padding:10px; text-align:right; font-size:0.85rem; color:#64748B;">${v.device_type || 'Unknown'}</td></tr>`;
+            });
+            html += '</table>';
+            content.innerHTML = html;
+            
+        } else if (type === 'installs') {
+            title.innerText = "App Installs Details";
+            const { data, error } = await window.supabaseClient.from('active_app_installs').select('*').order('last_active', { ascending: false });
+            if (error) throw error;
+            
+            let html = '<table style="width:100%; border-collapse:collapse;"><tr style="background:#F8FAFC; border-bottom:2px solid #E2E8F0;"><th style="text-align:left; padding:10px;">Device ID</th><th style="text-align:right; padding:10px;">Last Active</th></tr>';
+            data.forEach(v => {
+                html += `<tr><td style="padding:10px; border-bottom:1px solid #E2E8F0; font-size:0.8rem; font-family:monospace; color:#9a3412;">${v.device_id.substring(0,10)}...</td><td style="padding:10px; text-align:right; font-size:0.85rem; color:#64748B;">${new Date(v.last_active).toLocaleDateString()}</td></tr>`;
+            });
+            html += '</table>';
+            content.innerHTML = html;
+        }
+    } catch (err) {
+        content.innerHTML = `<p style="color:red; padding:20px;">Error: ${err.message}</p>`;
+    }
+};
+
+// ⭐ BLOG LIST LOAD FUNCTION ⭐
 window.loadBlogList = async function() {
     const tbody = document.getElementById('blogListBody');
     if (!tbody) return;
@@ -32,7 +102,6 @@ window.loadBlogList = async function() {
         return;
     }
 
-    // ⭐ Update Total Blogs Count
     const countEl = document.getElementById('totalBlogsCount');
     if (countEl) countEl.innerText = blogs.length;
 
@@ -49,7 +118,7 @@ window.loadBlogList = async function() {
 
         return `
             <tr>
-                <td style="text-align: center; font-weight: bold;">${index + 1}</td> <!-- Sr. No. -->
+                <td style="text-align: center; font-weight: bold;">${index + 1}</td>
                 <td style="text-align: center;"><img src="${b.image_url || '/assets/icon-192.png?v=4'}" class="table-img"></td>
                 <td style="text-align: left; font-weight: 500;">${b.title} ${statusBadge}</td>
                 <td style="text-align:center;">${new Date(b.created_at).toLocaleDateString()}</td>
@@ -219,7 +288,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         alert('Offer 2 details cleared. Save product to confirm cancellation.');
     });
 
-    // ⭐ NAYA: QUICK AI BLOG GENERATOR BUTTON LOGIC ⭐
+    // QUICK AI BLOG GENERATOR BUTTON LOGIC
     document.getElementById('quickGenerateBlogBtn')?.addEventListener('click', async function() {
         const urlInput = document.getElementById('quickBlogUrlInput').value.trim();
         if (!urlInput) return alert('Please paste a product URL.');
@@ -284,7 +353,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // ⭐ SETUP SCROLL BUTTONS (Yahan Blogs ka scroll bhi add kar diya hai) ⭐
+    // SETUP SCROLL BUTTONS
     function setupScrollButtons(upBtnId, downBtnId, wrapperId) {
         const upBtn = document.getElementById(upBtnId);
         const downBtn = document.getElementById(downBtnId);
@@ -312,7 +381,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     setupScrollButtons('scrollUpBtnAI', 'scrollDownBtnAI', 'tableScrollWrapperAI');
     setupScrollButtons('scrollUpBtnProducts', 'scrollDownBtnProducts', 'tableScrollWrapperProducts');
-    setupScrollButtons('scrollUpBtnBlogs', 'scrollDownBtnBlogs', 'tableScrollWrapperBlogs'); // <--- NAYA
+    setupScrollButtons('scrollUpBtnBlogs', 'scrollDownBtnBlogs', 'tableScrollWrapperBlogs'); 
 
 });
 
@@ -544,7 +613,6 @@ function renderTable() {
         return aIsAvailable ? 1 : -1;
     });
 
-    // ⭐ Update Total Products Count
     const countEl = document.getElementById('totalProductsCount');
     if (countEl) countEl.innerText = filteredProducts.length; 
 
@@ -587,14 +655,13 @@ function renderTable() {
         const rowClass = isAvailable ? '' : 'unavailable-row';
         const statusBadge = isAvailable ? '' : `<span class="badge-unavailable">UNAVAILABLE</span>`;
         
-        // Category Name Setup
         const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
         const catObj = masterCats.find(c => c.slug === p.category_slug);
         const catName = catObj ? catObj.name : (p.category_slug ? p.category_slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Uncategorized');
 
         return `
             <tr class="${rowClass}">
-                <td style="text-align: center; font-weight: bold;">${index + 1}</td> <!-- Sr. No. -->
+                <td style="text-align: center; font-weight: bold;">${index + 1}</td>
                 <td style="text-align: center;">
                     <span style="background:#e2e8f0; color:#1e293b; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:600; white-space:nowrap; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis;">${catName}</span>
                 </td>
@@ -936,7 +1003,6 @@ function setupProductForm() {
                 if (varErr) throw varErr; 
             }
             
-            // ⭐ QUEUE SYSTEM TRIGGER (Background AI) ⭐
             const writeBlog = document.getElementById('pWriteBlog').checked;
             if (writeBlog) { 
                 const { data: existingBlog } = await window.supabaseClient
@@ -999,7 +1065,6 @@ function setupProductForm() {
                         notifMsg = `${productData.title} is now in ${spTitle}!`;
                     }
 
-                    // ⭐ DUPLICATE CHECK ⭐
                     const { data: existingNotifs } = await window.supabaseClient
                         .from('app_notifications')
                         .select('id')
@@ -1056,7 +1121,6 @@ function setupProductForm() {
     });
 }
 
-// ⭐ BLOG MANAGEMENT LOGIC ⭐
 document.addEventListener('DOMContentLoaded', () => {
     if (!document.getElementById('blogForm')) return;
 
@@ -1156,7 +1220,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 slug: document.getElementById('bSlug').value.trim(),
                 image_url: document.getElementById('bImg').value.trim() || null,
                 content_html: document.getElementById('bContent').value.trim(),
-                is_published: true // Manual blogs directly published
+                is_published: true
             };
 
             if (id) {
@@ -1188,7 +1252,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// ⭐ AI PRODUCT HUNTER & MANAGE PRODUCTS SCROLL LOGIC ⭐
 document.addEventListener('DOMContentLoaded', () => {
     function setupScrollButtons(upBtnId, downBtnId, wrapperId) {
         const upBtn = document.getElementById(upBtnId);
