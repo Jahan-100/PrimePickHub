@@ -29,7 +29,7 @@
         #productListContainer .admin-table th:nth-child(2) { width: 100px; text-align: center !important; } /* Image */
         #productListContainer .admin-table th:nth-child(3) { width: auto; text-align: left !important; } /* Title (Max Space) */
         #productListContainer .admin-table th:nth-child(4) { width: 120px; text-align: center !important; } /* Price */
-        #productListContainer .admin-table th:nth-child(5) { width: 140px; text-align: center !important; } /* Actions */
+        #productListContainer .admin-table th:nth-child(5) { width: 130px; text-align: center !important; } /* Actions */
 
         /* Blog Table Columns Fix */
         #blogListContainer .admin-table th:nth-child(1) { width: 100px; text-align: center !important; } 
@@ -472,10 +472,23 @@
                     </div>
                 </div>
 
+                <!-- ========================================== -->
+                <!-- 🌟 SECTION: ADD NEW BLOG POST (UPDATED) 🌟 -->
+                <!-- ========================================== -->
                 <div class="admin-card box-add-blog">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2 id="blogFormTitle" style="margin: 0;">Add New Blog Post</h2>
-                        <button type="button" id="toggleBlogFormBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#d946ef; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Show Blog Form</button>
+                        <button type="button" id="toggleBlogFormBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#d946ef; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Show Manual Form</button>
+                    </div>
+
+                    <!-- ⭐ NAYA: QUICK AI BLOG GENERATOR ⭐ -->
+                    <div style="background: #fff; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px dashed #d946ef; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                        <h3 style="margin-bottom: 10px; color: #d946ef; font-size: 1.05rem;">✨ Quick AI Blog Generator</h3>
+                        <p style="font-size: 0.85rem; color: #64748B; margin-bottom: 10px;">Paste a product link from your website (e.g., primepickhub.vercel.app/product/your-product). AI will read the data and create a draft blog.</p>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <input type="url" id="quickBlogUrlInput" placeholder="Paste Product Link Here..." style="flex: 1; min-width: 200px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none;">
+                            <button type="button" id="quickGenerateBlogBtn" class="btn-check-price" style="width: auto; padding: 10px 20px; background: #d946ef; border-radius: 6px; font-weight: bold;">✍️ Write Blog</button>
+                        </div>
                     </div>
 
                     <div id="blogFormContainer" style="display: none; margin-top: 20px; background: #fff; padding: 20px; border-radius: 8px;">
@@ -609,9 +622,6 @@
                     </div>
                 </div>
 
-                <!-- ========================================== -->
-                <!-- 🌟 SECTION: MANAGE PRODUCTS (UPDATED) 🌟 -->
-                <!-- ========================================== -->
                 <div class="admin-card box-manage-products">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2 style="margin: 0;">Manage Products</h2>
@@ -624,7 +634,6 @@
                     <div id="productListContainer" style="display: none; margin-top: 20px; background: #fff; padding: 15px; border-radius: 8px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <!-- Filter yahan hai -->
                                 <select id="adminCategoryFilter" style="padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; outline: none;"><option value="all">All Categories</option></select>
                                 <input type="text" id="adminSearchInput" placeholder="Search products..." style="padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; outline: none; width: 200px;">
                             </div>
@@ -637,7 +646,6 @@
                             <div class="table-scroll-wrapper" id="tableScrollWrapperProducts">
                                 <div class="table-responsive-mobile">
                                     <table class="admin-table">
-                                        <!-- Category Column sab se pehle -->
                                         <thead><tr><th>Category</th><th>Image</th><th>Title</th><th>Final Price</th><th>Actions</th></tr></thead>
                                         <tbody id="productListBody"><tr><td colspan="5" style="text-align:center;">Loading...</td></tr></tbody>
                                     </table>
@@ -653,6 +661,6 @@
 
     <script src="/js/config.js?v=6"></script>
     <script src="/js/api.js?v=7"></script>
-    <script src="/js/admin.js?v=11"></script>
+    <script src="/js/admin.js?v=16"></script>
 </body>
 </html>
