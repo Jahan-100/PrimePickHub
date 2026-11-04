@@ -91,7 +91,6 @@ function renderDynamicCategories(allProducts) {
     const catContainer = document.getElementById('categoryScrollContainer');
     
     if (catContainer) {
-        // ⭐ SEO FIX: javascript:void(0) ko real URL se replace kiya + CLICK par preventDefault lagaya taake page refresh na ho ⭐
         catContainer.innerHTML = activeCats.map(c => `
             <a href="/category/${c.slug}" onclick="event.preventDefault(); selectCategory('${c.slug}', this)" class="category-item ${c.slug === 'all' ? 'active' : ''}" data-cat="${c.slug}">
                 <div class="cat-icon" ${c.slug === 'all' ? 'style="color: #EF4444;"' : ''}>${c.icon}</div>
@@ -138,7 +137,6 @@ function renderProductCard(product, isFirst = false) {
     if (primaryOffer) {
         const storeKey = primaryOffer.store_name.toLowerCase();
         const cfg = networks[storeKey] ?? networks[primaryOffer.store_name] ?? { name: primaryOffer.store_name, brandColor: '#2563eb', textColor: '#ffffff' };
-        // ⭐ CONTRAST FIX: Store ka color agar boht bright hai (jaise AliExpress ka #FF4747) to usko dark red kar diya ⭐
         let bg = safeColor(cfg.brandColor, '#2563eb');
         if (bg === '#FF4747') bg = '#DC2626'; 
         const fg = safeColor(cfg.textColor, '#ffffff');
@@ -163,7 +161,6 @@ function renderProductCard(product, isFirst = false) {
 
         let priceDisplay = '';
         if (salePrice > 0) {
-            // ⭐ CONTRAST FIX: #FF5A3C ko #DC2626 kiya ⭐
             priceDisplay = `
                 <div style="margin-bottom:5px; display:flex; align-items:center; gap:8px;">
                     <span style="text-decoration:line-through; color:#64748B; font-size:0.9rem;">${offerSymbol}${finalBasePrice.toFixed(2)}</span>
@@ -421,7 +418,7 @@ async function loadLatestBlog() {
         document.getElementById('latestBlogTitle').innerText = blog.title;
         document.getElementById('latestBlogDate').innerText = `Published on: ${new Date(blog.created_at).toLocaleDateString()}`;
         
-        // ⭐ CLS FIX: display none hata kar visibility visible kar diya hai taake space pehle se reserve rahe ⭐
+        // CLS Fix: visibility change instead of display
         section.style.visibility = 'visible';
         section.style.opacity = '1';
     } catch (err) {
