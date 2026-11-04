@@ -30,7 +30,7 @@
     <link rel="canonical" href="https://primepickhub.vercel.app/">
     <link rel="icon" type="image/png" href="assets/favicon.png?v=4">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="css/main.css?v=34">
+    <link rel="stylesheet" href="css/main.css?v=35">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,800;0,900;1,800&family=Roboto:wght@400;700;900&family=Oswald:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Lobster&family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
@@ -115,7 +115,7 @@
         <div class="splash-bg-circle c1"></div>
         <div class="splash-bg-circle c2"></div>
         <div class="splash-content">
-            <img src="assets/icon-192.png?v=4" alt="Logo" class="splash-logo-img" onerror="this.style.display='none'">
+            <img src="assets/icon-192.png?v=4" alt="Logo" width="120" height="120" class="splash-logo-img" onerror="this.style.display='none'">
             <h1 class="splash-title">PrimePick<span>Hub</span></h1>
             <div class="splash-subtitle">Smart Shopping · Better Choices</div>
         </div>
@@ -131,7 +131,7 @@
 
             <div style="display: flex; align-items: center; flex: 1; justify-content: flex-end;">
                 <div class="notif-wrapper" onclick="toggleNotifPanel(event)">
-                    <i class="fa-solid fa-bell notif-bell"></i>
+                    <i class="fa-solid fa-bell notif-bell" aria-label="Notifications"></i>
                     <span id="notifBadge" class="notif-badge">0</span>
                     <div id="notifPanel" class="notif-panel" onclick="event.stopPropagation()">
                         <div class="notif-header"><span>Notifications</span><button onclick="clearAllNotifs(event)" style="background:none; border:none; color:#EF4444; font-size:0.75rem; cursor:pointer; font-weight:600;">Clear All</button></div>
@@ -140,15 +140,15 @@
                 </div>
                 <div class="search-box">
                     <div class="custom-category-dropdown" id="categoryDropdownWrap">
-                        <button type="button" class="category-btn" id="categoryDropdownBtn" onclick="toggleCatDropdown(event)">
+                        <button type="button" class="category-btn" id="categoryDropdownBtn" onclick="toggleCatDropdown(event)" aria-label="Select Category">
                             <span id="categoryDropdownText">All</span>
                             <i class="fa-solid fa-caret-down" style="font-size: 0.75rem; color: #555;"></i>
                         </button>
                         <ul class="category-dropdown-menu" id="categoryDropdownMenu"></ul>
                         <input type="hidden" id="searchCategory" value="all">
                     </div>
-                    <input type="text" id="searchInput" placeholder="Search products, brands...">
-                    <button id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    <input type="text" id="searchInput" placeholder="Search products, brands..." aria-label="Search Products">
+                    <button id="searchBtn" aria-label="Search"><i class="fa-solid fa-magnifying-glass"></i></button>
                 </div>
             </div>
         </div>
@@ -199,9 +199,9 @@
                 <a href="search.html?special=true" class="explore-btn">Explore now</a>
             </div>
             <div class="special-deal-right">
-                <button class="scroll-arrow left-arrow" onclick="scrollSpecial('left')"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="scroll-arrow left-arrow" onclick="scrollSpecial('left')" aria-label="Scroll Left"><i class="fa-solid fa-chevron-left"></i></button>
                 <div id="specialDealScroll" class="horizontal-scroll-container"></div>
-                <button class="scroll-arrow right-arrow" onclick="scrollSpecial('right')"><i class="fa-solid fa-chevron-right"></i></button>
+                <button class="scroll-arrow right-arrow" onclick="scrollSpecial('right')" aria-label="Scroll Right"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
         </div>
 
@@ -223,9 +223,9 @@
                 </div>
             </div>
             <div class="flash-sale-right">
-                <button class="scroll-arrow left-arrow" onclick="scrollFlash('left')"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="scroll-arrow left-arrow" onclick="scrollFlash('left')" aria-label="Scroll Left"><i class="fa-solid fa-chevron-left"></i></button>
                 <div id="flashSaleScroll" class="horizontal-scroll-container"></div>
-                <button class="scroll-arrow right-arrow" onclick="scrollFlash('right')"><i class="fa-solid fa-chevron-right"></i></button>
+                <button class="scroll-arrow right-arrow" onclick="scrollFlash('right')" aria-label="Scroll Right"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
         </div>
 
@@ -247,9 +247,9 @@
                 </div>
             </div>
             <div class="flash-sale-2-right">
-                <button class="scroll-arrow left-arrow" onclick="scrollFlash2('left')"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="scroll-arrow left-arrow" onclick="scrollFlash2('left')" aria-label="Scroll Left"><i class="fa-solid fa-chevron-left"></i></button>
                 <div id="flashSaleScroll2" class="horizontal-scroll-container"></div>
-                <button class="scroll-arrow right-arrow" onclick="scrollFlash2('right')"><i class="fa-solid fa-chevron-right"></i></button>
+                <button class="scroll-arrow right-arrow" onclick="scrollFlash2('right')" aria-label="Scroll Right"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
         </div>
 
@@ -274,7 +274,7 @@
             <a href="blog.html" id="latestBlogLink" style="text-decoration: none; display: block;">
                 <div class="latest-blog-card">
                     <div class="latest-blog-img-wrap">
-                        <img id="latestBlogImg" src="" alt="Latest Blog">
+                        <img id="latestBlogImg" src="" alt="Latest Blog" width="300" height="180">
                     </div>
                     <div class="latest-blog-content">
                         <h3 id="latestBlogTitle">Loading...</h3>
@@ -293,7 +293,7 @@
             <h2>Get the Best Deals in Your Inbox!</h2>
             <p>Subscribe to PrimePickHub and never miss out on exclusive sales, flash deals, and top-rated products.</p>
             <form id="newsletterForm" class="newsletter-form">
-                <input type="email" id="newsletterEmail" placeholder="Enter your email address..." required>
+                <input type="email" id="newsletterEmail" placeholder="Enter your email address..." required aria-label="Email Address">
                 <button type="submit" id="newsletterBtn">Subscribe</button>
             </form>
             <p id="newsletterMsg" style="margin-top: 10px; font-weight: 600; font-size: 0.9rem;"></p>
@@ -324,7 +324,7 @@
     <div id="contactFormPanel" class="contact-form-panel">
         <div class="contact-form-header">
             <h3>Contact Us</h3>
-            <button class="close-contact-form" onclick="toggleContactForm()">&times;</button>
+            <button class="close-contact-form" onclick="toggleContactForm()" aria-label="Close Contact Form">&times;</button>
         </div>
         <div class="contact-form-body">
             <form id="floatingContactForm" action="https://api.web3forms.com/submit" method="POST">
@@ -333,16 +333,16 @@
                 <input type="hidden" name="from_name" value="PrimePickHub Website">
                 
                 <div class="form-group">
-                    <label>Your Name</label>
-                    <input type="text" name="name" required>
+                    <label for="fcName">Your Name</label>
+                    <input type="text" id="fcName" name="name" required>
                 </div>
                 <div class="form-group">
-                    <label>Email Address</label>
-                    <input type="email" name="email" required>
+                    <label for="fcEmail">Email Address</label>
+                    <input type="email" id="fcEmail" name="email" required>
                 </div>
                 <div class="form-group">
-                    <label>Message</label>
-                    <textarea name="message" required></textarea>
+                    <label for="fcMessage">Message</label>
+                    <textarea id="fcMessage" name="message" required></textarea>
                 </div>
                 <button type="submit" id="contactSubmitBtn">Send Message</button>
             </form>
@@ -354,11 +354,11 @@
     <div id="appDownloadPopup" class="app-popup" style="display: none;">
         <div class="app-popup-content">
             <span class="close-popup" onclick="toggleAppPopup()">&times;</span>
-            <div class="app-icon"><img src="assets/icon-192.png?v=4" alt="App Icon"></div>
+            <div class="app-icon"><img src="assets/icon-192.png?v=4" alt="App Icon" width="70" height="70"></div>
             <h3>Install PrimePickHub App</h3>
             <p>Better experience, exclusive deals & faster checkout!</p>
             <div id="desktopAppContent" style="display: none; text-align: center;">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://primepickhub.vercel.app/" alt="Scan QR Code" style="border-radius: 10px; border: 2px solid #E2E8F0; padding: 5px; margin-bottom: 10px;">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://primepickhub.vercel.app/" alt="Scan QR Code" width="150" height="150" style="border-radius: 10px; border: 2px solid #E2E8F0; padding: 5px; margin-bottom: 10px;">
                 <p style="font-size: 0.85rem; color: #64748B;">Scan with your phone to Install</p>
             </div>
             <div id="mobileAppContent" style="display: none;">
@@ -368,14 +368,14 @@
         </div>
     </div>
 
-    <button id="floatingAppIcon" onclick="toggleAppPopup()" style="display: none;">
-        <img src="assets/icon-192.png?v=4" alt="App">
+    <button id="floatingAppIcon" onclick="toggleAppPopup()" style="display: none;" aria-label="Open App Download Popup">
+        <img src="assets/icon-192.png?v=4" alt="App" width="20" height="20">
         <span>App</span>
     </button>
 
     <script src="js/config.js?v=6"></script>
     <script src="js/api.js?v=7"></script>
-    <script src="js/app.js?v=23"></script>
+    <script src="js/app.js?v=24"></script>
     <script src="js/affiliate.js?v=6"></script>
     <script>
         function toggleCatDropdown(event) {
