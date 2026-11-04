@@ -132,11 +132,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     let activeColor = uniqueColors.length > 0 ? uniqueColors[0].value : null;
     let activeOfferIndex = 0;
-    
+    let activeSize = null; // ⭐ NAYA: Track selected size
+
+    // Initial default offer index calculation
     if (activeColor) {
         const idx = allVariations.findIndex(v => v.product_color && v.product_color.includes(activeColor));
         if (idx !== -1) activeOfferIndex = idx;
     }
+    
+    // Initial default size calculation
+    const initialOffersForColor = activeColor ? allVariations.filter(v => v.product_color && v.product_color.includes(activeColor)) : allVariations;
+    let initialAvailableSizes = [];
+    initialOffersForColor.forEach(o => {
+        if (o.variation_name) {
+            const sizes = o.variation_name.split(',').map(s => s.trim()).filter(Boolean);
+            sizes.forEach(s => { if (!initialAvailableSizes.includes(s)) initialAvailableSizes.push(s); });
+        }
+    });
+    if (initialAvailableSizes.length > 0) activeSize = initialAvailableSizes[0];
+
     let activeOffer = allVariations[activeOfferIndex];
 
     const baseCurrency = (mainOffer.currency || 'USD').toUpperCase();
@@ -156,6 +170,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function generateVariationUI() {
         let html = '';
         
+        // 1. Color UI
         if (uniqueColors.length > 0) {
             const activeObj = uniqueColors.find(c => c.value === activeColor);
             html += `<div style="margin-bottom: 20px;">
@@ -185,22 +200,40 @@ document.addEventListener('DOMContentLoaded', async () => {
             html += `</div></div>`;
         }
 
+        // 2. Size UI (Split by comma)
         const offersForColor = activeColor ? allVariations.filter(v => v.product_color && v.product_color.includes(activeColor)) : allVariations;
         
-        if (offersForColor.some(o => o.variation_name)) {
+        let availableSizes = [];
+        offersForColor.forEach(o => {
+            if (o.variation_name) {
+                // Split "S, M, L, XL" into ["S", "M", "L", "XL"]
+                const sizes = o.variation_name.split(',').map(s => s.trim()).filter(Boolean);
+                sizes.forEach(s => {
+                    if (!availableSizes.includes(s)) availableSizes.push(s);
+                });
+            }
+        });
+
+        if (availableSizes.length > 0) {
+            // Agar activeSize set nahi hai ya current color ke liye available nahi hai, toh pehla size select karein
+            if (!activeSize || !availableSizes.includes(activeSize)) {
+                activeSize = availableSizes[0];
+            }
+
             html += `<div style="margin-bottom: 15px;">
                 <p style="font-weight:bold; margin-bottom:8px;">Size:</p>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">`;
 
-            offersForColor.forEach((offer) => {
-                const originalIndex = allVariations.indexOf(offer);
-                const isActive = originalIndex === activeOfferIndex;
+            availableSizes.forEach((size) => {
+                const isActive = size === activeSize;
                 
-                html += `<button onclick="selectOffer(${originalIndex})" style="padding:10px 16px; border:2px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; background:#fff; border-radius:8px; cursor:pointer; font-weight:bold; color:${isActive ? '#FF5A3C' : '#1E1B4B'}; transition: all 0.2s;">
-                    ${offer.variation_name || 'Default'}
+                html += `<button onclick="selectSize('${size}')" style="padding:10px 16px; border:2px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; background:#fff; border-radius:8px; cursor:pointer; font-weight:bold; color:${isActive ? '#FF5A3C' : '#1E1B4B'}; transition: all 0.2s;">
+                    ${size}
                 </button>`;
             });
             html += `</div></div>`;
+        } else {
+            activeSize = null;
         }
         
         return html;
@@ -268,17 +301,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         <!-- ⭐ FULL SCREEN IMAGE SLIDER MODAL ⭐ -->
         <div id="fullScreenImageModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); z-index:9999999; align-items:center; justify-content:center; flex-direction:column; touch-action: pan-y;">
-            <!-- Close Button -->
             <button onclick="closeFullScreenImage(event)" style="position:absolute; top:20px; right:20px; background:rgba(0,0,0,0.5); border:none; color:white; font-size:2.5rem; cursor:pointer; z-index:10000000; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center;">&times;</button>
             
-            <!-- Arrows -->
             <button id="prevImageBtn" onclick="changeFullScreenImage(-1, event)" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); background:rgba(255,255,255,0.2); color:white; border:none; font-size:2rem; cursor:pointer; border-radius:50%; width:45px; height:45px; display:flex; align-items:center; justify-content:center; z-index:10000000; transition: opacity 0.2s, background 0.2s;">&#10094;</button>
             <button id="nextImageBtn" onclick="changeFullScreenImage(1, event)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:rgba(255,255,255,0.2); color:white; border:none; font-size:2rem; cursor:pointer; border-radius:50%; width:45px; height:45px; display:flex; align-items:center; justify-content:center; z-index:10000000; transition: opacity 0.2s, background 0.2s;">&#10095;</button>
             
-            <!-- Image -->
             <img id="fullScreenImageSrc" src="" style="max-width:95vw; max-height:85vh; object-fit:contain; user-select:none; border-radius:8px;">
             
-            <!-- Image Counter -->
             <div id="imageCounter" style="position:absolute; bottom:20px; color:white; font-size:1.1rem; font-weight:bold; background:rgba(0,0,0,0.6); padding:5px 15px; border-radius:20px;">1 / 1</div>
         </div>
     `;
@@ -345,16 +374,64 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.selectColor = function(colorValue) {
         activeColor = colorValue;
-        const idx = allVariations.findIndex(v => v.product_color && v.product_color.includes(colorValue));
-        if (idx !== -1) activeOfferIndex = idx;
+        
+        // Find available sizes for the new color
+        const offersForColor = allVariations.filter(v => v.product_color && v.product_color.includes(colorValue));
+        let availableSizes = [];
+        offersForColor.forEach(o => {
+            if (o.variation_name) {
+                o.variation_name.split(',').map(s => s.trim()).filter(Boolean).forEach(s => {
+                    if (!availableSizes.includes(s)) availableSizes.push(s);
+                });
+            }
+        });
+
+        // Keep current size if available, otherwise pick first
+        if (availableSizes.length > 0) {
+            if (!availableSizes.includes(activeSize)) {
+                activeSize = availableSizes[0];
+            }
+        } else {
+            activeSize = null;
+        }
+
+        // Find corresponding offer index
+        let idxExact = allVariations.findIndex(v => 
+            v.product_color && v.product_color.includes(colorValue) &&
+            (activeSize ? v.variation_name && v.variation_name.trim() === activeSize : true)
+        );
+        let idxPartial = allVariations.findIndex(v => 
+            v.product_color && v.product_color.includes(colorValue) &&
+            (activeSize ? v.variation_name && v.variation_name.split(',').map(s=>s.trim()).includes(activeSize) : true)
+        );
+        
+        if (idxExact !== -1) activeOfferIndex = idxExact;
+        else if (idxPartial !== -1) activeOfferIndex = idxPartial;
+        else if (offersForColor.length > 0) activeOfferIndex = allVariations.indexOf(offersForColor[0]);
         
         activeOffer = allVariations[activeOfferIndex];
         document.getElementById('variationContainer').innerHTML = generateVariationUI();
         updateUI(currencySelector.value);
     };
 
-    window.selectOffer = function(index) {
-        activeOfferIndex = index;
+    window.selectSize = function(size) {
+        activeSize = size;
+        
+        // Find exact match first (e.g., a specific variation row for this size)
+        let idxExact = allVariations.findIndex(v => 
+            v.variation_name && v.variation_name.trim() === size &&
+            (!activeColor || (v.product_color && v.product_color.includes(activeColor)))
+        );
+        
+        // If not found, check if it's inside a comma-separated list in the main offer
+        let idxPartial = allVariations.findIndex(v => 
+            v.variation_name && v.variation_name.split(',').map(s=>s.trim()).includes(size) &&
+            (!activeColor || (v.product_color && v.product_color.includes(activeColor)))
+        );
+
+        if (idxExact !== -1) activeOfferIndex = idxExact;
+        else if (idxPartial !== -1) activeOfferIndex = idxPartial;
+        
         activeOffer = allVariations[activeOfferIndex];
         document.getElementById('variationContainer').innerHTML = generateVariationUI();
         updateUI(currencySelector.value);
@@ -373,7 +450,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        // Handle Previous Arrow
         if (currentFullScreenIndex === 0) {
             prevBtn.style.opacity = '0.2';
             prevBtn.style.cursor = 'default';
@@ -384,7 +460,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             prevBtn.style.pointerEvents = 'auto';
         }
 
-        // Handle Next Arrow
         if (currentFullScreenIndex === galleryImages.length - 1) {
             nextBtn.style.opacity = '0.2';
             nextBtn.style.cursor = 'default';
@@ -404,7 +479,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('imageCounter').innerText = `${currentFullScreenIndex + 1} / ${galleryImages.length}`;
         
         updateArrowStates();
-
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; 
     };
@@ -421,7 +495,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         let newIndex = currentFullScreenIndex + direction;
         
-        // Bounds check (no looping)
         if (newIndex < 0) newIndex = 0;
         if (newIndex >= galleryImages.length) newIndex = galleryImages.length - 1;
         
@@ -436,7 +509,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateArrowStates();
     };
 
-    // Keyboard navigation
     document.addEventListener('keydown', function(e) {
         if (modal.style.display === 'flex') {
             if (e.key === 'ArrowLeft') window.changeFullScreenImage(-1);
@@ -445,7 +517,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // ⭐ MOBILE TOUCH SWIPE LOGIC ⭐
     let touchStartX = 0;
     let touchEndX = 0;
 
@@ -468,7 +539,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Thumbnail click
     container.querySelectorAll('.gallery-thumb').forEach((thumb, index) => {
         thumb.addEventListener('click', function () {
             const src = this.dataset.src;
@@ -481,7 +551,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // NOTE: Background click to close REMOVED as per user request. 
-    // Users must now click the 'X' button or press Escape.
 
     const jsonLd = {
         "@context": "https://schema.org/", "@type": "Product", "name": product.title,
