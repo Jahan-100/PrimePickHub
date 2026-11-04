@@ -30,30 +30,32 @@ function isValidExternalURL(url) { if (typeof url !== 'string') return false; tr
 function isValidURL(url) { if (!url || typeof url !== 'string') return false; try { const p = new URL(url, window.location.origin); return p.protocol === 'http:' || p.protocol === 'https:'; } catch { return false; } }
 function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb; }
 
-// ⭐ HD IMAGE HELPER ⭐
+// ⭐ UPGRADED HD IMAGE HELPER ⭐
 function getHighQualityImage(url) {
     if (!url || typeof url !== 'string') return url;
     let cleanUrl = url;
 
-    // AliExpress & Daraz
     if (cleanUrl.includes('aliexpress') || cleanUrl.includes('daraz') || cleanUrl.includes('alicdn')) {
         const match = cleanUrl.match(/^(.+?\.(?:jpg|jpeg|png|webp))_.+/i);
         if (match) cleanUrl = match[1];
     }
 
-    // Amazon
     if (cleanUrl.includes('amazon') || cleanUrl.includes('media-amazon')) {
         const match = cleanUrl.match(/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i);
         if (match) cleanUrl = cleanUrl.replace(/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i, '.$1');
     }
 
-    // eBay
     if (cleanUrl.includes('ebayimg.com')) {
         cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, '/s-l1600.$1');
     }
 
-    // General fallback
-    cleanUrl = cleanUrl.replace(/_\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
+    if (cleanUrl.includes('shopify') || cleanUrl.includes('govee')) {
+        cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
+        if (cleanUrl.includes('?')) cleanUrl = cleanUrl.split('?')[0]; 
+    }
+
+    cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
+    cleanUrl = cleanUrl.replace(/_\d+x(?=\.(jpg|jpeg|png|webp|avif))/i, '');
 
     return cleanUrl;
 }
@@ -109,7 +111,6 @@ function renderProductCard(product) {
     const hasLink = productUrl !== '#';
     const disabledAttr = hasLink ? '' : 'aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:0.6;"';
     
-    // Apply HD Mapping Here
     const imageSrc = isValidURL(product.image_url) ? escapeHTML(getHighQualityImage(product.image_url)) : 'assets/icon-192.png?v=4';
 
     const r = Number(product.rating);
@@ -385,6 +386,35 @@ function renderAdFallback(products) {
 
         if (topSlot) topSlot.innerHTML = html;
         if (midSlot) midSlot.innerHTML = html;
+    }
+}
+
+// ⭐ LATEST BLOG FETCH & RENDER ⭐
+async function loadLatestBlog() {
+    if (!window.supabaseClient) return;
+    const section = document.getElementById('latestBlogSection');
+    if (!section) return;
+
+    try {
+        const { data: blog, error } = await window.supabaseClient
+            .from('blogs')
+            .select('*')
+            .eq('is_published', true)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (error || !blog) {
+            section.style.display = 'none';
+            return;
+        }
+
+        document.getElementById('latestBlogImg').src = getHighQualityImage(blog.image_url) || 'assets/icon-192.png';
+        document.getElementById('latestBlogTitle').innerText = blog.title;
+        document.getElementById('latestBlogDate').innerText = `Published on: ${new Date(blog.created_at).toLocaleDateString()}`;
+        section.style.display = 'block';
+    } catch (err) {
+        console.warn('Error loading latest blog:', err);
     }
 }
 
@@ -801,7 +831,10 @@ function redirectToStore() {
 let realtimeTimeout;
 function triggerRealtimeUpdate(payload) {
     clearTimeout(realtimeTimeout);
-    realtimeTimeout = setTimeout(() => { loadHomepageProducts(); }, 500);
+    realtimeTimeout = setTimeout(() => { 
+        loadHomepageProducts(); 
+        loadLatestBlog(); // Update blog on realtime if published
+    }, 500);
 }
 
 async function setupRealtime() {
@@ -816,6 +849,10 @@ async function setupRealtime() {
         })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'affiliate_offers' }, triggerRealtimeUpdate)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'site_settings' }, triggerRealtimeUpdate)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'blogs' }, (payload) => {
+            // Trigger update for blogs too
+            triggerRealtimeUpdate(payload);
+        })
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'app_notifications' }, (payload) => {
             console.log("🔔 New Notification Received Realtime!");
             loadNotifications();
@@ -868,6 +905,7 @@ document.addEventListener('DOMContentLoaded', () => {
     trackActiveApp();
 
     loadHomepageProducts();
+    loadLatestBlog(); // Yahan call kiya hai
     setupRealtime();
     loadNotifications();
 
@@ -882,6 +920,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const popup = document.getElementById('appDownloadPopup');
         if (document.getElementById('productGrid') && (!popup || popup.style.display !== 'block')) {
             loadHomepageProducts();
+            // Refresh latest blog too periodically
+            loadLatestBlog();
         }
     }, 15000);
 
