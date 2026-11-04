@@ -271,9 +271,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             <!-- Close Button -->
             <button onclick="closeFullScreenImage(event)" style="position:absolute; top:20px; right:20px; background:rgba(0,0,0,0.5); border:none; color:white; font-size:2.5rem; cursor:pointer; z-index:10000000; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center;">&times;</button>
             
-            <!-- Arrows (Visible on Mobile too) -->
-            <button id="prevImageBtn" onclick="changeFullScreenImage(-1, event)" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); background:rgba(255,255,255,0.2); color:white; border:none; font-size:2rem; cursor:pointer; border-radius:50%; width:45px; height:45px; display:flex; align-items:center; justify-content:center; z-index:10000000;">&#10094;</button>
-            <button id="nextImageBtn" onclick="changeFullScreenImage(1, event)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:rgba(255,255,255,0.2); color:white; border:none; font-size:2rem; cursor:pointer; border-radius:50%; width:45px; height:45px; display:flex; align-items:center; justify-content:center; z-index:10000000;">&#10095;</button>
+            <!-- Arrows -->
+            <button id="prevImageBtn" onclick="changeFullScreenImage(-1, event)" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); background:rgba(255,255,255,0.2); color:white; border:none; font-size:2rem; cursor:pointer; border-radius:50%; width:45px; height:45px; display:flex; align-items:center; justify-content:center; z-index:10000000; transition: opacity 0.2s, background 0.2s;">&#10094;</button>
+            <button id="nextImageBtn" onclick="changeFullScreenImage(1, event)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:rgba(255,255,255,0.2); color:white; border:none; font-size:2rem; cursor:pointer; border-radius:50%; width:45px; height:45px; display:flex; align-items:center; justify-content:center; z-index:10000000; transition: opacity 0.2s, background 0.2s;">&#10095;</button>
             
             <!-- Image -->
             <img id="fullScreenImageSrc" src="" style="max-width:95vw; max-height:85vh; object-fit:contain; user-select:none; border-radius:8px;">
@@ -363,6 +363,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ⭐ FULL SCREEN IMAGE LOGIC ⭐
     let currentFullScreenIndex = 0;
     const modal = document.getElementById('fullScreenImageModal');
+    const prevBtn = document.getElementById('prevImageBtn');
+    const nextBtn = document.getElementById('nextImageBtn');
+
+    function updateArrowStates() {
+        if (galleryImages.length <= 1) {
+            prevBtn.style.display = 'none';
+            nextBtn.style.display = 'none';
+            return;
+        }
+
+        // Handle Previous Arrow
+        if (currentFullScreenIndex === 0) {
+            prevBtn.style.opacity = '0.2';
+            prevBtn.style.cursor = 'default';
+            prevBtn.style.pointerEvents = 'none';
+        } else {
+            prevBtn.style.opacity = '1';
+            prevBtn.style.cursor = 'pointer';
+            prevBtn.style.pointerEvents = 'auto';
+        }
+
+        // Handle Next Arrow
+        if (currentFullScreenIndex === galleryImages.length - 1) {
+            nextBtn.style.opacity = '0.2';
+            nextBtn.style.cursor = 'default';
+            nextBtn.style.pointerEvents = 'none';
+        } else {
+            nextBtn.style.opacity = '1';
+            nextBtn.style.cursor = 'pointer';
+            nextBtn.style.pointerEvents = 'auto';
+        }
+    }
 
     window.openFullScreenImage = function(index) {
         currentFullScreenIndex = index;
@@ -371,15 +403,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         img.src = galleryImages[currentFullScreenIndex];
         document.getElementById('imageCounter').innerText = `${currentFullScreenIndex + 1} / ${galleryImages.length}`;
         
-        const prevBtn = document.getElementById('prevImageBtn');
-        const nextBtn = document.getElementById('nextImageBtn');
-        if (galleryImages.length <= 1) {
-            prevBtn.style.display = 'none';
-            nextBtn.style.display = 'none';
-        } else {
-            prevBtn.style.display = 'flex';
-            nextBtn.style.display = 'flex';
-        }
+        updateArrowStates();
 
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; 
@@ -395,14 +419,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (e) e.stopPropagation();
         if (galleryImages.length <= 1) return;
 
-        currentFullScreenIndex += direction;
+        let newIndex = currentFullScreenIndex + direction;
         
-        if (currentFullScreenIndex < 0) currentFullScreenIndex = galleryImages.length - 1;
-        if (currentFullScreenIndex >= galleryImages.length) currentFullScreenIndex = 0;
+        // Bounds check (no looping)
+        if (newIndex < 0) newIndex = 0;
+        if (newIndex >= galleryImages.length) newIndex = galleryImages.length - 1;
+        
+        if (newIndex === currentFullScreenIndex) return; // Reached the end, do nothing
+
+        currentFullScreenIndex = newIndex;
         
         const img = document.getElementById('fullScreenImageSrc');
         img.src = galleryImages[currentFullScreenIndex];
         document.getElementById('imageCounter').innerText = `${currentFullScreenIndex + 1} / ${galleryImages.length}`;
+        
+        updateArrowStates();
     };
 
     // Keyboard navigation
@@ -428,7 +459,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, { passive: true });
 
     function handleSwipe() {
-        const swipeThreshold = 50; // Minimum distance to consider it a swipe
+        const swipeThreshold = 50;
         if (touchEndX < touchStartX - swipeThreshold) {
             // Swiped Left -> Next Image
             window.changeFullScreenImage(1);
