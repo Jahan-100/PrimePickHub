@@ -449,10 +449,11 @@ async function loadHomepageProducts() {
             if (showApp && !isPWA) {
                 if (floatingAppIcon) floatingAppIcon.style.display = 'flex';
                 if (!sessionStorage.getItem('appPopupShown')) {
+                    // ⭐ POPUP DELAY FIX: 3000ms (3 sec) se barha kar 8000ms (8 sec) kar diya hai ⭐
                     setTimeout(() => {
                         toggleAppPopup();
                         sessionStorage.setItem('appPopupShown', 'true');
-                    }, 3000);
+                    }, 8000); 
                 }
             } else {
                 if (floatingAppIcon) floatingAppIcon.style.display = 'none';
