@@ -132,15 +132,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     let activeColor = uniqueColors.length > 0 ? uniqueColors[0].value : null;
     let activeOfferIndex = 0;
-    let activeSize = null; // ⭐ NAYA: Track selected size
+    let activeSize = null;
 
-    // Initial default offer index calculation
     if (activeColor) {
         const idx = allVariations.findIndex(v => v.product_color && v.product_color.includes(activeColor));
         if (idx !== -1) activeOfferIndex = idx;
     }
     
-    // Initial default size calculation
     const initialOffersForColor = activeColor ? allVariations.filter(v => v.product_color && v.product_color.includes(activeColor)) : allVariations;
     let initialAvailableSizes = [];
     initialOffersForColor.forEach(o => {
@@ -170,7 +168,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     function generateVariationUI() {
         let html = '';
         
-        // 1. Color UI
         if (uniqueColors.length > 0) {
             const activeObj = uniqueColors.find(c => c.value === activeColor);
             html += `<div style="margin-bottom: 20px;">
@@ -200,13 +197,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             html += `</div></div>`;
         }
 
-        // 2. Size UI (Split by comma)
         const offersForColor = activeColor ? allVariations.filter(v => v.product_color && v.product_color.includes(activeColor)) : allVariations;
         
         let availableSizes = [];
         offersForColor.forEach(o => {
             if (o.variation_name) {
-                // Split "S, M, L, XL" into ["S", "M", "L", "XL"]
                 const sizes = o.variation_name.split(',').map(s => s.trim()).filter(Boolean);
                 sizes.forEach(s => {
                     if (!availableSizes.includes(s)) availableSizes.push(s);
@@ -215,7 +210,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         if (availableSizes.length > 0) {
-            // Agar activeSize set nahi hai ya current color ke liye available nahi hai, toh pehla size select karein
             if (!activeSize || !availableSizes.includes(activeSize)) {
                 activeSize = availableSizes[0];
             }
@@ -374,8 +368,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.selectColor = function(colorValue) {
         activeColor = colorValue;
-        
-        // Find available sizes for the new color
+
+        // ⭐ NAYA: Update Main Image if color is an Image URL ⭐
+        if (colorValue.startsWith('http')) {
+            const mainImgElement = document.getElementById('mainImage');
+            if (mainImgElement) {
+                mainImgElement.src = getHighQualityImage(colorValue);
+            }
+        }
+
         const offersForColor = allVariations.filter(v => v.product_color && v.product_color.includes(colorValue));
         let availableSizes = [];
         offersForColor.forEach(o => {
@@ -386,7 +387,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        // Keep current size if available, otherwise pick first
         if (availableSizes.length > 0) {
             if (!availableSizes.includes(activeSize)) {
                 activeSize = availableSizes[0];
@@ -395,7 +395,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             activeSize = null;
         }
 
-        // Find corresponding offer index
         let idxExact = allVariations.findIndex(v => 
             v.product_color && v.product_color.includes(colorValue) &&
             (activeSize ? v.variation_name && v.variation_name.trim() === activeSize : true)
@@ -417,13 +416,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.selectSize = function(size) {
         activeSize = size;
         
-        // Find exact match first (e.g., a specific variation row for this size)
         let idxExact = allVariations.findIndex(v => 
             v.variation_name && v.variation_name.trim() === size &&
             (!activeColor || (v.product_color && v.product_color.includes(activeColor)))
         );
         
-        // If not found, check if it's inside a comma-separated list in the main offer
         let idxPartial = allVariations.findIndex(v => 
             v.variation_name && v.variation_name.split(',').map(s=>s.trim()).includes(size) &&
             (!activeColor || (v.product_color && v.product_color.includes(activeColor)))
