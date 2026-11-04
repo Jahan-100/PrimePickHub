@@ -795,8 +795,7 @@ function setupProductForm() {
             
             // ⭐ QUEUE SYSTEM TRIGGER (Background AI) ⭐
             const writeBlog = document.getElementById('pWriteBlog').checked;
-            if (writeBlog) { // Ab ye Update par bhi kaam karega
-                // Check if blog already exists for this product to prevent duplicates
+            if (writeBlog) { 
                 const { data: existingBlog } = await window.supabaseClient
                     .from('blogs')
                     .select('id')
@@ -807,8 +806,14 @@ function setupProductForm() {
                 } else {
                     await window.supabaseClient.from('products').update({ blog_status: 'pending' }).eq('id', productId);
                     
-                    // Trigger API immediately
-                    fetch('/api/process-queue', { method: 'POST' }).catch(console.error);
+                    // Trigger API and log result
+                    fetch('/api/process-queue', { method: 'POST' })
+                        .then(res => res.json())
+                        .then(data => {
+                            if(data.error) console.error("AI Blog Error:", data.error);
+                            else console.log("AI Blog Status:", data.message);
+                        })
+                        .catch(err => console.error("Fetch Error:", err));
                     
                     alert("Product saved! AI is writing the blog in the background. It will appear in the 'Show / Hide Blogs List' section as a DRAFT in a few moments.");
                 }
