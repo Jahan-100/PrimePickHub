@@ -1,11 +1,11 @@
 {
   "rewrites": [
     { "source": "/product/:slug", "destination": "/product.html?slug=:slug" },
-    { "source": "/category/:cat", "destination": "/category.html?cat=:cat" }
+    { "source": "/category/:cat", "destination": "/category.html?cat=:cat" },
+    { "source": "/api/geo", "destination": "/api/geo.js" }
   ],
   "crons": [
-    { "path": "/api/process-queue", "schedule": "0 0 * * *" },
-    { "path": "/api/check-status", "schedule": "0 3 * * *" },
-    { "path": "/api/discover-products", "schedule": "0 4 * * *" }
+    { "path": "/api/process-queue", "schedule": "*/5 * * * *" },
+    { "path": "/api/check-status", "schedule": "0 3 * * *" }
   ]
 }
