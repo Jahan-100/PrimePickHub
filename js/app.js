@@ -30,19 +30,16 @@ function isValidExternalURL(url) { if (typeof url !== 'string') return false; tr
 function isValidURL(url) { if (!url || typeof url !== 'string') return false; try { const p = new URL(url, window.location.origin); return p.protocol === 'http:' || p.protocol === 'https:'; } catch { return false; } }
 function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb; }
 
-// ⭐ SMART IMAGE OPTIMIZER (Fixes 852 KiB savings for Shopify, AliExpress, Govee, Amazon) ⭐
+// ⭐ SMART IMAGE OPTIMIZER ⭐
 function getHighQualityImage(url, size = 400) {
     if (!url || typeof url !== 'string') return url;
     let cleanUrl = url.trim();
     
-    // 1. AliExpress & Daraz & Alibaba
     if (cleanUrl.includes('aliexpress') || cleanUrl.includes('daraz') || cleanUrl.includes('alicdn') || cleanUrl.includes('alibaba')) {
         const qIdx = cleanUrl.indexOf('?');
         if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
         cleanUrl = cleanUrl.replace(/(\.(?:jpg|jpeg|png|webp))(?:_[^.?]*)?(?:\.(?:jpg|jpeg|png|webp|avif))?$/i, `$1_${size}x${size}q80.jpg`);
-    }
-    // 2. Amazon
-    else if (cleanUrl.includes('amazon') || cleanUrl.includes('media-amazon')) {
+    } else if (cleanUrl.includes('amazon') || cleanUrl.includes('media-amazon')) {
         const qIdx = cleanUrl.indexOf('?');
         if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
         if (/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i.test(cleanUrl)) {
@@ -50,20 +47,14 @@ function getHighQualityImage(url, size = 400) {
         } else {
             cleanUrl = cleanUrl.replace(/(\.(?:jpg|jpeg|png|webp))$/i, `._AC_SL${size}_$1`);
         }
-    }
-    // 3. eBay
-    else if (cleanUrl.includes('ebayimg.com')) {
+    } else if (cleanUrl.includes('ebayimg.com')) {
         cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, `/s-l${size}.$1`);
-    }
-    // 4. Shopify / Govee / Allegra-K / Admitad (Hacoo, Redmagic, Openhagen)
-    else if (cleanUrl.includes('shopify') || cleanUrl.includes('govee') || cleanUrl.includes('allegra-k.com') || cleanUrl.includes('cdn.shopify')) {
+    } else if (cleanUrl.includes('shopify') || cleanUrl.includes('govee') || cleanUrl.includes('allegra-k.com') || cleanUrl.includes('cdn.shopify')) {
         cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
         cleanUrl = cleanUrl.replace(/[?&]width=\d+/g, '');
         const sep = cleanUrl.includes('?') ? '&' : '?';
         cleanUrl = cleanUrl + sep + `width=${size}`;
-    }
-    // 5. Generic fallback (Other affiliate sites)
-    else {
+    } else {
         cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
         cleanUrl = cleanUrl.replace(/_\d+x(?=\.(jpg|jpeg|png|webp|avif))/i, '');
     }
@@ -98,9 +89,11 @@ function renderDynamicCategories(allProducts) {
     const dbCats = [...new Set(allProducts.map(p => p.category_slug).filter(Boolean))];
     const activeCats = masterCats.filter(c => c.slug === 'all' || dbCats.includes(c.slug));
     const catContainer = document.getElementById('categoryScrollContainer');
+    
     if (catContainer) {
+        // ⭐ SEO FIX: javascript:void(0) ko real URL se replace kiya + CLICK par preventDefault lagaya taake page refresh na ho ⭐
         catContainer.innerHTML = activeCats.map(c => `
-            <a href="javascript:void(0)" onclick="selectCategory('${c.slug}', this)" class="category-item ${c.slug === 'all' ? 'active' : ''}" data-cat="${c.slug}">
+            <a href="/category/${c.slug}" onclick="event.preventDefault(); selectCategory('${c.slug}', this)" class="category-item ${c.slug === 'all' ? 'active' : ''}" data-cat="${c.slug}">
                 <div class="cat-icon" ${c.slug === 'all' ? 'style="color: #EF4444;"' : ''}>${c.icon}</div>
                 <span>${c.name}</span>
             </a>
@@ -145,8 +138,11 @@ function renderProductCard(product, isFirst = false) {
     if (primaryOffer) {
         const storeKey = primaryOffer.store_name.toLowerCase();
         const cfg = networks[storeKey] ?? networks[primaryOffer.store_name] ?? { name: primaryOffer.store_name, brandColor: '#2563eb', textColor: '#ffffff' };
-        const bg = safeColor(cfg.brandColor, '#2563eb');
+        // ⭐ CONTRAST FIX: Store ka color agar boht bright hai (jaise AliExpress ka #FF4747) to usko dark red kar diya ⭐
+        let bg = safeColor(cfg.brandColor, '#2563eb');
+        if (bg === '#FF4747') bg = '#DC2626'; 
         const fg = safeColor(cfg.textColor, '#ffffff');
+        
         const storeName = escapeHTML(cfg.name || primaryOffer.store_name);
         const affUrl = escapeHTML(primaryOffer.affiliate_url);
         const pid = escapeHTML(String(product.id ?? ''));
@@ -167,10 +163,11 @@ function renderProductCard(product, isFirst = false) {
 
         let priceDisplay = '';
         if (salePrice > 0) {
+            // ⭐ CONTRAST FIX: #FF5A3C ko #DC2626 kiya ⭐
             priceDisplay = `
                 <div style="margin-bottom:5px; display:flex; align-items:center; gap:8px;">
                     <span style="text-decoration:line-through; color:#64748B; font-size:0.9rem;">${offerSymbol}${finalBasePrice.toFixed(2)}</span>
-                    <span style="font-weight:bold; color:#FF5A3C; font-size:1.2rem;">${offerSymbol}${finalSalePrice.toFixed(2)}</span>
+                    <span style="font-weight:bold; color:#DC2626; font-size:1.2rem;">${offerSymbol}${finalSalePrice.toFixed(2)}</span>
                 </div>`;
         } else {
             priceDisplay = `<div style="font-weight:bold; color:#1E1B4B; margin-bottom:5px;">${offerSymbol}${finalBasePrice.toFixed(2)}</div>`;
@@ -229,7 +226,7 @@ function renderFlashCard(product, section = 1, isFirst = false) {
             <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; width: 100%;">
                 <div style="display:flex; align-items:center; gap:4px;">
                     <span style="text-decoration:line-through; color:#64748B; font-size:0.75rem;">${sym}${finalBasePrice.toFixed(2)}</span>
-                    <span style="font-weight:bold; color:#FF5A3C; font-size:0.95rem;">${sym}${finalSalePrice.toFixed(2)}</span>
+                    <span style="font-weight:bold; color:#DC2626; font-size:0.95rem;">${sym}${finalSalePrice.toFixed(2)}</span>
                 </div>
             </div>`;
     } else {
@@ -389,7 +386,7 @@ function renderAdFallback(products) {
                     </div>
                     <div class="card-body">
                         <a href="${productUrl}" class="card-title">${title}</a>
-                        <div style="font-weight:bold; color:#FF5A3C; font-size:0.85rem; margin-bottom:4px;">${sym}${price.toFixed(2)}</div>
+                        <div style="font-weight:bold; color:#DC2626; font-size:0.85rem; margin-bottom:4px;">${sym}${price.toFixed(2)}</div>
                         <button class="btn-check-price" style="background:#2563eb; pointer-events:none;">View</button>
                     </div>
                 </div>
@@ -423,7 +420,10 @@ async function loadLatestBlog() {
         document.getElementById('latestBlogImg').src = getHighQualityImage(blog.image_url, 300) || 'assets/icon-192.png?v=4';
         document.getElementById('latestBlogTitle').innerText = blog.title;
         document.getElementById('latestBlogDate').innerText = `Published on: ${new Date(blog.created_at).toLocaleDateString()}`;
-        section.style.display = 'block';
+        
+        // ⭐ CLS FIX: display none hata kar visibility visible kar diya hai taake space pehle se reserve rahe ⭐
+        section.style.visibility = 'visible';
+        section.style.opacity = '1';
     } catch (err) {
         console.warn('Error loading latest blog:', err);
     }
