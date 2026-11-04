@@ -283,6 +283,37 @@ document.addEventListener('DOMContentLoaded', async () => {
             btn.disabled = false;
         }
     });
+
+    // ⭐ SETUP SCROLL BUTTONS (Yahan Blogs ka scroll bhi add kar diya hai) ⭐
+    function setupScrollButtons(upBtnId, downBtnId, wrapperId) {
+        const upBtn = document.getElementById(upBtnId);
+        const downBtn = document.getElementById(downBtnId);
+        const wrapper = document.getElementById(wrapperId);
+
+        if (!upBtn || !downBtn || !wrapper) return;
+
+        let scrollInterval;
+        const startScroll = (direction) => {
+            scrollInterval = setInterval(() => {
+                if (direction === 'up') wrapper.scrollTop -= 10;
+                else wrapper.scrollTop += 10;
+            }, 20);
+        };
+        const stopScroll = () => clearInterval(scrollInterval);
+
+        upBtn.addEventListener('mousedown', () => startScroll('up'));
+        upBtn.addEventListener('mouseup', stopScroll);
+        upBtn.addEventListener('mouseleave', stopScroll);
+        
+        downBtn.addEventListener('mousedown', () => startScroll('down'));
+        downBtn.addEventListener('mouseup', stopScroll);
+        downBtn.addEventListener('mouseleave', stopScroll);
+    }
+
+    setupScrollButtons('scrollUpBtnAI', 'scrollDownBtnAI', 'tableScrollWrapperAI');
+    setupScrollButtons('scrollUpBtnProducts', 'scrollDownBtnProducts', 'tableScrollWrapperProducts');
+    setupScrollButtons('scrollUpBtnBlogs', 'scrollDownBtnBlogs', 'tableScrollWrapperBlogs'); // <--- NAYA
+
 });
 
 function setupToggleAddProduct() {
