@@ -1,6 +1,3 @@
-/**
- * PrimePickHub API Layer
- */
 const API = {
     async signIn(email, password) {
         const { data, error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
@@ -46,16 +43,21 @@ const API = {
     },
     recordClick(productId, store, subId) {
         if (!window.supabaseClient || !productId) return;
-        // Location get karein localStorage se (app.js se aati hai)
-        let geo = JSON.parse(localStorage.getItem('geo_data') || '{"country":"Unknown","city":"Unknown"}');
         
+        // Location localStorage se uthayen (app.js ne save ki hoti hai)
+        let geo = { country: 'Unknown', city: 'Unknown' };
+        try {
+            const storedGeo = localStorage.getItem('geo_data');
+            if (storedGeo) geo = JSON.parse(storedGeo);
+        } catch (e) {}
+
         window.supabaseClient.from('clicks').insert([{
             product_id: productId,
             store: String(store || '').slice(0, 50),
             sub_id: String(subId || '').slice(0, 100),
             referrer: String(document.referrer || '').slice(0, 200),
-            country: geo.country,
-            city: geo.city
+            country: geo.country || 'Unknown',
+            city: geo.city || 'Unknown'
         }]).then(({ error }) => { if (error) console.warn('Track error:', error); }).catch(() => {});
     }
 };
