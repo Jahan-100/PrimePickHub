@@ -850,7 +850,6 @@ async function setupRealtime() {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'affiliate_offers' }, triggerRealtimeUpdate)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'site_settings' }, triggerRealtimeUpdate)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'blogs' }, (payload) => {
-            // Trigger update for blogs too
             triggerRealtimeUpdate(payload);
         })
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'app_notifications' }, (payload) => {
@@ -905,7 +904,7 @@ document.addEventListener('DOMContentLoaded', () => {
     trackActiveApp();
 
     loadHomepageProducts();
-    loadLatestBlog(); // Yahan call kiya hai
+    loadLatestBlog();
     setupRealtime();
     loadNotifications();
 
@@ -920,7 +919,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const popup = document.getElementById('appDownloadPopup');
         if (document.getElementById('productGrid') && (!popup || popup.style.display !== 'block')) {
             loadHomepageProducts();
-            // Refresh latest blog too periodically
             loadLatestBlog();
         }
     }, 15000);
