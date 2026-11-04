@@ -237,15 +237,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     galleryImages = galleryImages.map(getHighQualityImage);
 
     const mainImage = galleryImages[0] || '/assets/icon-192.png';
-    const thumbnailsHtml = galleryImages.length > 1 ? galleryImages.map((url, i) => `<img src="${escapeHTML(url)}" alt="View ${i + 1}" class="gallery-thumb" data-src="${escapeHTML(url)}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid ${i === 0 ? '#FF5A3C' : '#E2E8F0'};transition:border-color 0.2s;">`).join('') : '';
+    const thumbnailsHtml = galleryImages.length > 1 ? galleryImages.map((url, i) => `<img src="${escapeHTML(url)}" alt="View ${i + 1}" width="70" height="70" class="gallery-thumb" data-src="${escapeHTML(url)}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid ${i === 0 ? '#FF5A3C' : '#E2E8F0'};transition:border-color 0.2s;">`).join('') : '';
     const videoHtml = product.video_url ? `<div style="background:#fff; padding:30px; border-radius:12px; border:1px solid #E2E8F0; margin-bottom:20px;"><h2 style="margin-bottom:15px; border-bottom:2px solid #FF5A3C; padding-bottom:10px; display:inline-block;">Product Video</h2>${getVideoHtml(product.video_url)}</div>` : '';
     const shareUrl = encodeURIComponent(window.location.href); const shareText = encodeURIComponent(`Check out ${product.title} on PrimePickHub`);
 
     container.innerHTML = `
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:40px;background:#fff;padding:30px;border-radius:12px;border:1px solid #E2E8F0;margin-bottom:20px;">
             <div>
-                <div style="background:#F8FAFC;border-radius:12px;padding:15px;margin-bottom:15px;">
-                    <img id="mainImage" src="${escapeHTML(mainImage)}" alt="${escapeHTML(product.title)}" style="width:100%;max-height:400px;object-fit:contain;border-radius:8px; cursor: pointer;" onclick="openFullScreenImage(0)" onerror="this.src='/assets/icon-192.png';">
+                <div style="background:#F8FAFC;border-radius:12px;padding:15px;margin-bottom:15px;aspect-ratio: 1/1; display:flex; align-items:center; justify-content:center;">
+                    <img id="mainImage" src="${escapeHTML(mainImage)}" alt="${escapeHTML(product.title)}" width="400" height="400" style="width:100%;max-height:400px;object-fit:contain;border-radius:8px; cursor: pointer;" onclick="openFullScreenImage(0)" onerror="this.src='/assets/icon-192.png';">
                 </div>
                 ${thumbnailsHtml ? `<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">${thumbnailsHtml}</div>` : ''}
             </div>
@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div style="margin-bottom: 20px; background: #F8FAFC; padding: 15px; border-radius: 8px; border: 1px solid #E2E8F0;">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
                         <div id="displayPriceContainer"></div>
-                        <select id="currencySelector" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #CBD5E1; font-weight: bold; color: #1E1B4B; background: #fff; cursor: pointer; font-size: 1rem;">
+                        <select id="currencySelector" aria-label="Select Currency" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #CBD5E1; font-weight: bold; color: #1E1B4B; background: #fff; cursor: pointer; font-size: 1rem;">
                             <option value="${baseCurrency}">${baseCurrency}</option>
                             <optgroup label="South Asia"><option value="PKR">PKR (Rs)</option><option value="INR">INR (₹)</option><option value="BDT">BDT (৳)</option></optgroup>
                             <optgroup label="Middle East"><option value="AED">AED (د.إ)</option><option value="SAR">SAR (ر.س)</option><option value="QAR">QAR (ر.ق)</option><option value="KWD">KWD (د.ك)</option><option value="BHD">BHD (د.ب)</option><option value="OMR">OMR (ر.ع.)</option><option value="TRY">TRY (₺)</option></optgroup>
@@ -295,12 +295,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         <!-- ⭐ FULL SCREEN IMAGE SLIDER MODAL ⭐ -->
         <div id="fullScreenImageModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); z-index:9999999; align-items:center; justify-content:center; flex-direction:column; touch-action: pan-y;">
-            <button onclick="closeFullScreenImage(event)" style="position:absolute; top:20px; right:20px; background:rgba(0,0,0,0.5); border:none; color:white; font-size:2.5rem; cursor:pointer; z-index:10000000; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center;">&times;</button>
+            <button onclick="closeFullScreenImage(event)" aria-label="Close Image Viewer" style="position:absolute; top:20px; right:20px; background:rgba(0,0,0,0.5); border:none; color:white; font-size:2.5rem; cursor:pointer; z-index:10000000; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center;">&times;</button>
             
-            <button id="prevImageBtn" onclick="changeFullScreenImage(-1, event)" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); background:rgba(255,255,255,0.2); color:white; border:none; font-size:2rem; cursor:pointer; border-radius:50%; width:45px; height:45px; display:flex; align-items:center; justify-content:center; z-index:10000000; transition: opacity 0.2s, background 0.2s;">&#10094;</button>
-            <button id="nextImageBtn" onclick="changeFullScreenImage(1, event)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:rgba(255,255,255,0.2); color:white; border:none; font-size:2rem; cursor:pointer; border-radius:50%; width:45px; height:45px; display:flex; align-items:center; justify-content:center; z-index:10000000; transition: opacity 0.2s, background 0.2s;">&#10095;</button>
+            <button id="prevImageBtn" onclick="changeFullScreenImage(-1, event)" aria-label="Previous Image" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); background:rgba(255,255,255,0.2); color:white; border:none; font-size:2rem; cursor:pointer; border-radius:50%; width:45px; height:45px; display:flex; align-items:center; justify-content:center; z-index:10000000; transition: opacity 0.2s, background 0.2s;">&#10094;</button>
+            <button id="nextImageBtn" onclick="changeFullScreenImage(1, event)" aria-label="Next Image" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:rgba(255,255,255,0.2); color:white; border:none; font-size:2rem; cursor:pointer; border-radius:50%; width:45px; height:45px; display:flex; align-items:center; justify-content:center; z-index:10000000; transition: opacity 0.2s, background 0.2s;">&#10095;</button>
             
-            <img id="fullScreenImageSrc" src="" style="max-width:95vw; max-height:85vh; object-fit:contain; user-select:none; border-radius:8px;">
+            <img id="fullScreenImageSrc" src="" alt="Full Screen Product Image" width="800" height="800" style="max-width:95vw; max-height:85vh; object-fit:contain; user-select:none; border-radius:8px;">
             
             <div id="imageCounter" style="position:absolute; bottom:20px; color:white; font-size:1.1rem; font-weight:bold; background:rgba(0,0,0,0.6); padding:5px 15px; border-radius:20px;">1 / 1</div>
         </div>
