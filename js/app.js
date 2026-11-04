@@ -31,6 +31,7 @@ function isValidURL(url) { if (!url || typeof url !== 'string') return false; tr
 function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb; }
 
 // ⭐ UPGRADED HD IMAGE HELPER ⭐
+// Ab ye images ko automatic optimize karega taake page speed barhe.
 function getHighQualityImage(url) {
     if (!url || typeof url !== 'string') return url;
     let cleanUrl = url;
@@ -39,6 +40,7 @@ function getHighQualityImage(url) {
     if (cleanUrl.includes('aliexpress') || cleanUrl.includes('daraz') || cleanUrl.includes('alicdn')) {
         const match = cleanUrl.match(/^(.+?\.(?:jpg|jpeg|png|webp))_.+/i);
         if (match) {
+            // Return HD version but with 500x500 max size to save bandwidth
             cleanUrl = match[1] + '_500x500q80.jpg';
         }
     }
@@ -53,20 +55,23 @@ function getHighQualityImage(url) {
         cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, '/s-l500.$1');
     }
 
-    // 4. Shopify / Govee / Allegra-K / Admitad targets
+    // 4. Shopify / Govee / Allegra-K (THIS FIXES THE LARGE IMAGE ISSUE)
     if (cleanUrl.includes('shopify') || cleanUrl.includes('govee') || cleanUrl.includes('allegra-k.com')) {
+        // Remove existing size params
         cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
-        if (cleanUrl.includes('?')) cleanUrl = cleanUrl.split('?')[0];
+        if (cleanUrl.includes('?')) cleanUrl = cleanUrl.split('?')[0]; 
+        // Add width=400 to reduce size (Google Lighthouse standard)
         cleanUrl += '?width=400';
     }
 
-    // General fallback for common size patterns
+    // General fallback for common size patterns (e.g., _500x500)
     cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
     cleanUrl = cleanUrl.replace(/_\d+x(?=\.(jpg|jpeg|png|webp|avif))/i, '');
 
     return cleanUrl;
 }
 
+// ⭐ SAFE PRODUCT URL HELPER ⭐
 function getProductUrl(product) {
     if (!product) return '#';
     if (product.slug) return `/product/${encodeURIComponent(product.slug)}`;
@@ -118,6 +123,7 @@ function renderProductCard(product, isLCP = false) {
     const disabledAttr = hasLink ? '' : 'aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:0.6;"';
     
     const imageSrc = isValidURL(product.image_url) ? escapeHTML(getHighQualityImage(product.image_url)) : 'assets/icon-192.png?v=4';
+    // LCP Fix: fetchpriority high for first image
     const fetchPriority = isLCP ? 'fetchpriority="high"' : '';
     const loadingAttr = isLCP ? '' : 'loading="lazy"';
 
@@ -256,6 +262,7 @@ function renderProductsGrid(products, grid) {
         showGridMessage(grid, 'No products found in this category.');
         return;
     }
+    // Pass isLCP = true for the first item
     grid.innerHTML = products.map((p, i) => renderProductCard(p, i === 0)).join('');
     grid.querySelectorAll('img.product-thumb').forEach(img => {
         img.addEventListener('error', function () { this.src = 'assets/icon-192.png?v=4'; }, { once: true });
@@ -364,19 +371,21 @@ window.selectCategory = async function(catSlug, element) {
     }
 };
 
+// ⭐ AD FALLBACK LOGIC (Hides Slots if Empty) ⭐
 function renderAdFallback(products) {
     const topSlot = document.getElementById('ad-slot-top');
     const midSlot = document.getElementById('ad-slot-middle');
 
+    // Check if there is actual ad code inside the slot
     const topContent = document.getElementById('ad-fallback-top')?.innerHTML.trim();
     const midContent = document.getElementById('ad-fallback-middle')?.innerHTML.trim();
 
     if (topSlot) {
         if (topContent) {
             topSlot.style.display = 'flex';
-            topSlot.style.minHeight = '120px';
+            topSlot.style.minHeight = '120px'; 
         } else {
-            topSlot.style.display = 'none';
+            topSlot.style.display = 'none'; // Hide if empty
         }
     }
 
@@ -385,11 +394,12 @@ function renderAdFallback(products) {
             midSlot.style.display = 'flex';
             midSlot.style.minHeight = '120px';
         } else {
-            midSlot.style.display = 'none';
+            midSlot.style.display = 'none'; // Hide if empty
         }
     }
 }
 
+// ⭐ LATEST BLOG FETCH & RENDER ⭐
 async function loadLatestBlog() {
     if (!window.supabaseClient) return;
     const section = document.getElementById('latestBlogSection');
@@ -513,7 +523,7 @@ async function loadHomepageProducts() {
         const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false);
 
         renderDynamicCategories(allProducts);
-        renderAdFallback(allProducts);
+        renderAdFallback(allProducts); // Updates ad slots visibility
 
         const now = new Date();
         const flashSaleProducts1 = [];
@@ -537,6 +547,7 @@ async function loadHomepageProducts() {
                 const currentEventName = flashSaleProducts1[0].event_name || (settings && settings.flash_title_text) || 'Sale Section 1';
                 exploreBtn.href = `search.html?flash=true&event=${encodeURIComponent(currentEventName)}`;
             }
+            // Pass isLCP = true for the first item
             flashScroll.innerHTML = flashSaleProducts1.map((p, i) => renderFlashCard(p, 1, i === 0)).join('');
             startFireworks();
         } else {
@@ -598,9 +609,6 @@ async function loadHomepageProducts() {
         }
     } catch (err) {
         console.error('Load failed:', err);
-    } finally {
-        // Hide splash screen after data loads or error
-        setTimeout(hideSplash, 500);
     }
 }
 
@@ -650,6 +658,7 @@ async function loadNotifications() {
         });
 
         currentNotifs = unique.slice(0, 20);
+        
         renderNotifications();
     }
 }
@@ -920,15 +929,6 @@ window.acceptCookies = function() {
     if (banner) banner.style.display = 'none';
 }
 
-function hideSplash() {
-    var splash = document.getElementById('splash-screen');
-    if (splash) {
-        splash.classList.add('hidden');
-        document.body.classList.remove('app-loading');
-        setTimeout(() => { splash.style.display = 'none'; }, 800);
-    }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
     trackVisitor();
     trackActiveApp();
@@ -988,6 +988,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Splash screen ko 2.5 second baad hide karein (agar data load na ho)
-    setTimeout(hideSplash, 2500);
-});
+    function hideSplash() {
+        var splash = document.getElementById('splash-screen');
+        if (splash) {
+            splash.classList.add('hidden');
+            document.body.classList.remove('app-loading');
+            setTimeout(() => { splash.style.display = 'none'; }, 800);
+       
