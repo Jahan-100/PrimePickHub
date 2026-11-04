@@ -218,8 +218,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:40px;background:#fff;padding:30px;border-radius:12px;border:1px solid #E2E8F0;margin-bottom:20px;">
             <div>
                 <div style="background:#F8FAFC;border-radius:12px;padding:15px;margin-bottom:15px;">
-                    <!-- Added onclick for Full Screen -->
-                    <img id="mainImage" src="${escapeHTML(mainImage)}" alt="${escapeHTML(product.title)}" style="width:100%;max-height:400px;object-fit:contain;border-radius:8px; cursor: pointer;" onclick="openFullScreenImage(this.src)" onerror="this.src='/assets/icon-192.png';">
+                    <img id="mainImage" src="${escapeHTML(mainImage)}" alt="${escapeHTML(product.title)}" style="width:100%;max-height:400px;object-fit:contain;border-radius:8px; cursor: pointer;" onclick="openFullScreenImage(0)" onerror="this.src='/assets/icon-192.png';">
                 </div>
                 ${thumbnailsHtml ? `<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">${thumbnailsHtml}</div>` : ''}
             </div>
@@ -267,10 +266,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div style="color:#334155;line-height:1.8;font-size:1.05rem;">${product.review_html || '<p>Detailed review coming soon...</p>'}</div>
         </div>
 
-        <!-- ⭐ FULL SCREEN IMAGE MODAL ⭐ -->
-        <div id="fullScreenImageModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); z-index:9999999; align-items:center; justify-content:center; flex-direction:column;">
-            <button onclick="closeFullScreenImage(event)" style="position:absolute; top:20px; right:30px; background:transparent; border:none; color:white; font-size:3rem; cursor:pointer; z-index:10000000;">&times;</button>
-            <img id="fullScreenImageSrc" src="" style="max-width:95vw; max-height:90vh; object-fit:contain; user-select:none;">
+        <!-- ⭐ FULL SCREEN IMAGE SLIDER MODAL ⭐ -->
+        <div id="fullScreenImageModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); z-index:9999999; align-items:center; justify-content:center; flex-direction:column; touch-action: pan-y;">
+            <!-- Close Button -->
+            <button onclick="closeFullScreenImage(event)" style="position:absolute; top:20px; right:20px; background:rgba(0,0,0,0.5); border:none; color:white; font-size:2.5rem; cursor:pointer; z-index:10000000; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center;">&times;</button>
+            
+            <!-- Arrows (Visible on Mobile too) -->
+            <button id="prevImageBtn" onclick="changeFullScreenImage(-1, event)" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); background:rgba(255,255,255,0.2); color:white; border:none; font-size:2rem; cursor:pointer; border-radius:50%; width:45px; height:45px; display:flex; align-items:center; justify-content:center; z-index:10000000;">&#10094;</button>
+            <button id="nextImageBtn" onclick="changeFullScreenImage(1, event)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:rgba(255,255,255,0.2); color:white; border:none; font-size:2rem; cursor:pointer; border-radius:50%; width:45px; height:45px; display:flex; align-items:center; justify-content:center; z-index:10000000;">&#10095;</button>
+            
+            <!-- Image -->
+            <img id="fullScreenImageSrc" src="" style="max-width:95vw; max-height:85vh; object-fit:contain; user-select:none; border-radius:8px;">
+            
+            <!-- Image Counter -->
+            <div id="imageCounter" style="position:absolute; bottom:20px; color:white; font-size:1.1rem; font-weight:bold; background:rgba(0,0,0,0.6); padding:5px 15px; border-radius:20px;">1 / 1</div>
         </div>
     `;
 
@@ -351,38 +360,100 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateUI(currencySelector.value);
     };
 
-    // Thumbnail click aur Full Screen image function
-    container.querySelectorAll('.gallery-thumb').forEach(thumb => {
+    // ⭐ FULL SCREEN IMAGE LOGIC ⭐
+    let currentFullScreenIndex = 0;
+    const modal = document.getElementById('fullScreenImageModal');
+
+    window.openFullScreenImage = function(index) {
+        currentFullScreenIndex = index;
+        const img = document.getElementById('fullScreenImageSrc');
+        
+        img.src = galleryImages[currentFullScreenIndex];
+        document.getElementById('imageCounter').innerText = `${currentFullScreenIndex + 1} / ${galleryImages.length}`;
+        
+        const prevBtn = document.getElementById('prevImageBtn');
+        const nextBtn = document.getElementById('nextImageBtn');
+        if (galleryImages.length <= 1) {
+            prevBtn.style.display = 'none';
+            nextBtn.style.display = 'none';
+        } else {
+            prevBtn.style.display = 'flex';
+            nextBtn.style.display = 'flex';
+        }
+
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; 
+    };
+
+    window.closeFullScreenImage = function(e) {
+        if (e) e.stopPropagation(); 
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto'; 
+    };
+
+    window.changeFullScreenImage = function(direction, e) {
+        if (e) e.stopPropagation();
+        if (galleryImages.length <= 1) return;
+
+        currentFullScreenIndex += direction;
+        
+        if (currentFullScreenIndex < 0) currentFullScreenIndex = galleryImages.length - 1;
+        if (currentFullScreenIndex >= galleryImages.length) currentFullScreenIndex = 0;
+        
+        const img = document.getElementById('fullScreenImageSrc');
+        img.src = galleryImages[currentFullScreenIndex];
+        document.getElementById('imageCounter').innerText = `${currentFullScreenIndex + 1} / ${galleryImages.length}`;
+    };
+
+    // Keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        if (modal.style.display === 'flex') {
+            if (e.key === 'ArrowLeft') window.changeFullScreenImage(-1);
+            if (e.key === 'ArrowRight') window.changeFullScreenImage(1);
+            if (e.key === 'Escape') window.closeFullScreenImage();
+        }
+    });
+
+    // ⭐ MOBILE TOUCH SWIPE LOGIC ⭐
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    modal.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    modal.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    }, { passive: true });
+
+    function handleSwipe() {
+        const swipeThreshold = 50; // Minimum distance to consider it a swipe
+        if (touchEndX < touchStartX - swipeThreshold) {
+            // Swiped Left -> Next Image
+            window.changeFullScreenImage(1);
+        }
+        if (touchEndX > touchStartX + swipeThreshold) {
+            // Swiped Right -> Prev Image
+            window.changeFullScreenImage(-1);
+        }
+    }
+
+    // Thumbnail click
+    container.querySelectorAll('.gallery-thumb').forEach((thumb, index) => {
         thumb.addEventListener('click', function () {
             const src = this.dataset.src;
             document.getElementById('mainImage').src = src;
             container.querySelectorAll('.gallery-thumb').forEach(t => t.style.borderColor = '#E2E8F0');
             this.style.borderColor = '#FF5A3C';
             
-            // Naya: Thumbnail par click karne se full screen khulega
-            window.openFullScreenImage(src);
+            window.openFullScreenImage(index);
         });
     });
 
-    // Full Screen Functions
-    window.openFullScreenImage = function(src) {
-        const modal = document.getElementById('fullScreenImageModal');
-        const img = document.getElementById('fullScreenImageSrc');
-        img.src = src;
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden'; // Background scrolling band karein
-    };
-
-    window.closeFullScreenImage = function(e) {
-        if (e) e.stopPropagation(); // Event bubbling rok dein
-        const modal = document.getElementById('fullScreenImageModal');
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto'; // Background scrolling wapas chalu karein
-    };
-
-    // Background par click karne se bhi band ho jaye
-    document.getElementById('fullScreenImageModal').addEventListener('click', function(e) {
-        if (e.target === this) {
+    // Background click to close
+    modal.addEventListener('click', function(e) {
+        if (e.target === this || e.target.id === 'fullScreenImageSrc') {
             window.closeFullScreenImage();
         }
     });
