@@ -31,29 +31,40 @@ function isValidURL(url) { if (!url || typeof url !== 'string') return false; tr
 function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb; }
 
 // ⭐ UPGRADED HD IMAGE HELPER ⭐
+// Ab ye images ko automatic optimize karega taake page speed barhe.
 function getHighQualityImage(url) {
     if (!url || typeof url !== 'string') return url;
     let cleanUrl = url;
 
+    // 1. AliExpress & Daraz
     if (cleanUrl.includes('aliexpress') || cleanUrl.includes('daraz') || cleanUrl.includes('alicdn')) {
         const match = cleanUrl.match(/^(.+?\.(?:jpg|jpeg|png|webp))_.+/i);
-        if (match) cleanUrl = match[1];
+        if (match) {
+            // Return HD version but with 500x500 max size to save bandwidth
+            cleanUrl = match[1] + '_500x500q80.jpg';
+        }
     }
 
+    // 2. Amazon
     if (cleanUrl.includes('amazon') || cleanUrl.includes('media-amazon')) {
-        const match = cleanUrl.match(/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i);
-        if (match) cleanUrl = cleanUrl.replace(/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i, '.$1');
+        cleanUrl = cleanUrl.replace(/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i, '._AC_SL500_.$1');
     }
 
+    // 3. eBay
     if (cleanUrl.includes('ebayimg.com')) {
-        cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, '/s-l1600.$1');
+        cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, '/s-l500.$1');
     }
 
-    if (cleanUrl.includes('shopify') || cleanUrl.includes('govee')) {
+    // 4. Shopify / Govee / Allegra-K (THIS FIXES THE LARGE IMAGE ISSUE)
+    if (cleanUrl.includes('shopify') || cleanUrl.includes('govee') || cleanUrl.includes('allegra-k.com')) {
+        // Remove existing size params
         cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
         if (cleanUrl.includes('?')) cleanUrl = cleanUrl.split('?')[0]; 
+        // Add width=400 to reduce size (Google Lighthouse standard)
+        cleanUrl += '?width=400';
     }
 
+    // General fallback for common size patterns (e.g., _500x500)
     cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
     cleanUrl = cleanUrl.replace(/_\d+x(?=\.(jpg|jpeg|png|webp|avif))/i, '');
 
@@ -104,7 +115,7 @@ function renderDynamicCategories(allProducts) {
     }
 }
 
-function renderProductCard(product) {
+function renderProductCard(product, isLCP = false) {
     if (!product || typeof product !== 'object') return '';
     const title = escapeHTML(product.title || 'Untitled');
     const productUrl = getProductUrl(product);
@@ -112,6 +123,9 @@ function renderProductCard(product) {
     const disabledAttr = hasLink ? '' : 'aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:0.6;"';
     
     const imageSrc = isValidURL(product.image_url) ? escapeHTML(getHighQualityImage(product.image_url)) : 'assets/icon-192.png?v=4';
+    // LCP Fix: fetchpriority high for first image
+    const fetchPriority = isLCP ? 'fetchpriority="high"' : '';
+    const loadingAttr = isLCP ? '' : 'loading="lazy"';
 
     const r = Number(product.rating);
     const rating = Number.isFinite(r) && r > 0 && r <= 5 ? r : null;
@@ -158,7 +172,7 @@ function renderProductCard(product) {
         if (salePrice > 0) {
             priceDisplay = `
                 <div style="margin-bottom:5px; display:flex; align-items:center; gap:8px;">
-                    <span style="text-decoration:line-through; color:#94A3B8; font-size:0.9rem;">${offerSymbol}${finalBasePrice.toFixed(2)}</span>
+                    <span style="text-decoration:line-through; color:#64748B; font-size:0.9rem;">${offerSymbol}${finalBasePrice.toFixed(2)}</span>
                     <span style="font-weight:bold; color:#FF5A3C; font-size:1.2rem;">${offerSymbol}${finalSalePrice.toFixed(2)}</span>
                 </div>`;
         } else {
@@ -180,7 +194,7 @@ function renderProductCard(product) {
             ${badge}
             <div class="card-img-wrap">
                 <a href="${productUrl}" ${disabledAttr}>
-                    <img src="${imageSrc}" alt="${title}" width="200" height="200" loading="lazy" class="product-thumb">
+                    <img src="${imageSrc}" alt="${title}" width="200" height="200" ${loadingAttr} ${fetchPriority} class="product-thumb">
                 </a>
             </div>
             <div class="card-body">
@@ -192,7 +206,7 @@ function renderProductCard(product) {
         </div>`;
 }
 
-function renderFlashCard(product, section = 1) {
+function renderFlashCard(product, section = 1, isLCP = false) {
     const title = escapeHTML(product.title || 'Untitled');
     const productUrl = getProductUrl(product);
     const imageSrc = isValidURL(product.image_url) ? escapeHTML(getHighQualityImage(product.image_url)) : 'assets/icon-192.png?v=4';
@@ -216,7 +230,7 @@ function renderFlashCard(product, section = 1) {
         priceDisplay = `
             <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; width: 100%;">
                 <div style="display:flex; align-items:center; gap:4px;">
-                    <span style="text-decoration:line-through; color:#94A3B8; font-size:0.75rem;">${sym}${finalBasePrice.toFixed(2)}</span>
+                    <span style="text-decoration:line-through; color:#64748B; font-size:0.75rem;">${sym}${finalBasePrice.toFixed(2)}</span>
                     <span style="font-weight:bold; color:#FF5A3C; font-size:0.95rem;">${sym}${finalSalePrice.toFixed(2)}</span>
                 </div>
             </div>`;
@@ -225,11 +239,13 @@ function renderFlashCard(product, section = 1) {
     }
 
     const endTime = section === 1 ? product.sale_end_date : product.sale_end_date_2;
+    const fetchPriority = isLCP ? 'fetchpriority="high"' : '';
+    const loadingAttr = isLCP ? '' : 'loading="lazy"';
 
     return `
         <a href="${productUrl}" class="special-deal-card flash-card">
             <div class="img-box">
-                <img src="${imageSrc}" alt="${title}" width="190" height="190" loading="lazy">
+                <img src="${imageSrc}" alt="${title}" width="190" height="190" ${loadingAttr} ${fetchPriority}>
             </div>
             <div class="info-box">
                 ${priceDisplay}
@@ -246,7 +262,8 @@ function renderProductsGrid(products, grid) {
         showGridMessage(grid, 'No products found in this category.');
         return;
     }
-    grid.innerHTML = products.map(renderProductCard).join('');
+    // Pass isLCP = true for the first item
+    grid.innerHTML = products.map((p, i) => renderProductCard(p, i === 0)).join('');
     grid.querySelectorAll('img.product-thumb').forEach(img => {
         img.addEventListener('error', function () { this.src = 'assets/icon-192.png?v=4'; }, { once: true });
     });
@@ -530,7 +547,8 @@ async function loadHomepageProducts() {
                 const currentEventName = flashSaleProducts1[0].event_name || (settings && settings.flash_title_text) || 'Sale Section 1';
                 exploreBtn.href = `search.html?flash=true&event=${encodeURIComponent(currentEventName)}`;
             }
-            flashScroll.innerHTML = flashSaleProducts1.map(p => renderFlashCard(p, 1)).join('');
+            // Pass isLCP = true for the first item
+            flashScroll.innerHTML = flashSaleProducts1.map((p, i) => renderFlashCard(p, 1, i === 0)).join('');
             startFireworks();
         } else {
             flashSection.style.display = 'none';
@@ -544,7 +562,7 @@ async function loadHomepageProducts() {
                 const currentEventName2 = flashSaleProducts2[0].event_name_2 || (settings && settings.sale_section_2_title) || 'Sale Section 2';
                 exploreBtn2.href = `search.html?flash=true&event=${encodeURIComponent(currentEventName2)}`;
             }
-            flashScroll2.innerHTML = flashSaleProducts2.map(p => renderFlashCard(p, 2)).join('');
+            flashScroll2.innerHTML = flashSaleProducts2.map((p, i) => renderFlashCard(p, 2, false)).join('');
         } else {
             flashSection2.style.display = 'none';
         }
@@ -572,7 +590,7 @@ async function loadHomepageProducts() {
                     let priceDisplay = '';
                     if (salePrice > 0) {
                         priceDisplay = `<div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
-                                            <span style="text-decoration:line-through; color:#94A3B8; font-size:0.75rem;">${sym}${finalBasePrice.toFixed(2)}</span>
+                                            <span style="text-decoration:line-through; color:#64748B; font-size:0.75rem;">${sym}${finalBasePrice.toFixed(2)}</span>
                                             <span class="price" style="margin-bottom:0;">${sym}${finalSalePrice.toFixed(2)}</span>
                                         </div>`;
                     } else {
@@ -972,15 +990,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function hideSplash() {
         var splash = document.getElementById('splash-screen');
-        if (splash) {
-            splash.classList.add('hidden');
-            document.body.classList.remove('app-loading');
-            setTimeout(() => { splash.style.display = 'none'; }, 800);
-        }
-    }
-    setTimeout(hideSplash, 1500);
-    setTimeout(() => {
-        var splash = document.getElementById('splash-screen');
-        if (splash && !splash.classList.contains('hidden')) hideSplash();
-    }, 3500);
-});
+        if (splash
