@@ -2,7 +2,6 @@
 const { createClient } = require('@supabase/supabase-js');
 
 module.exports = async function handler(req, res) {
-    // 1. Check for Vercel CRON secret (Optional, for security)
     if (process.env.CRON_SECRET) {
         const auth = req.headers.authorization || '';
         if (auth !== `Bearer ${process.env.CRON_SECRET}` && req.headers['x-vercel-cron'] !== '1') {
@@ -11,13 +10,15 @@ module.exports = async function handler(req, res) {
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY;
-    if (!apiKey) return res.status(500).json({ error: "OPENROUTER_API_KEY missing in Vercel" });
+    if (!apiKey) {
+        console.error("❌ OPENROUTER_API_KEY missing in Vercel env.");
+        return res.status(500).json({ error: "OPENROUTER_API_KEY missing" });
+    }
 
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
     let product = null;
 
     try {
-        // 2. Fetch one pending product
         const { data: pendingProducts, error: fetchError } = await supabase
             .from('products')
             .select('*')
@@ -31,24 +32,28 @@ module.exports = async function handler(req, res) {
         }
 
         product = pendingProducts[0];
+        console.log(`Processing blog for: ${product.title}`);
 
-        // 3. Mark as processing so it doesn't get picked up twice
         await supabase.from('products').update({ blog_status: 'processing' }).eq('id', product.id);
 
-        // 4. Get store details
         const { data: offers } = await supabase
             .from('affiliate_offers').select('*').eq('product_id', product.id).limit(1);
         const offer = offers?.[0] || { store_name: 'Store', affiliate_url: '#' };
 
-        // 5. AI Models (Updated fallback list)
+        // ⭐ MAXIMUM FREE AI MODELS LIST ⭐
         const models = [
-            "google/gemini-2.0-flash-lite-preview-02-05:free",
-            "meta-llama/llama-3-8b-instruct:free",
+            "meta-llama/llama-3.1-8b-instruct:free",
+            "google/gemini-flash-1.5:free",
             "mistralai/mistral-7b-instruct:free",
-            "huggingfaceh4/zephyr-7b-beta:free"
+            "microsoft/phi-3-mini-128k-instruct:free",
+            "qwen/qwen-2-7b-instruct:free",
+            "meta-llama/llama-3-8b-instruct:free",
+            "huggingfaceh4/zephyr-7b-beta:free",
+            "openchat/openchat-7b:free",
+            "gryphe/mythomax-l2-13b:free",
+            "undi95/toppy-m-7b:free"
         ];
 
-        // 6. The Prompt
         const prompt = `You are an expert SEO Copywriter. Write a highly detailed, 600-word review blog post in HTML for the following product.
 Product: ${product.title}
 Description: ${product.description || 'N/A'}
@@ -60,22 +65,24 @@ Instructions:
 - Include the affiliate link at least 2 times with text "Check Price on ${offer.store_name}".
 - Return ONLY HTML, no markdown code blocks, no extra text.`;
 
-        // 7. Generate Content
         let generatedContent = null;
         let usedModel = "";
+        
         for (const model of models) {
             try {
-                console.log(`Trying AI model: ${model}`);
+                console.log(`Trying model: ${model}`);
                 const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                     method: "POST",
                     headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }] })
+                    body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }] }),
+                    signal: AbortSignal.timeout(8000) // 8 second timeout per model to prevent Vercel crash
                 });
+                
                 const aiData = await response.json();
                 
                 if (aiData.error) {
-                    console.warn(`Model ${model} failed: ${aiData.error.message}`);
-                    continue;
+                    console.warn(`❌ Model ${model} error: ${aiData.error.message}`);
+                    continue; 
                 }
 
                 if (aiData.choices && aiData.choices[0].message.content) {
@@ -85,30 +92,32 @@ Instructions:
                     break;
                 }
             } catch (err) { 
-                console.warn("Model failed:", model, err.message); 
+                console.warn(`❌ Model ${model} failed/timed out:`, err.message); 
             }
         }
 
-        if (!generatedContent) throw new Error("All AI models failed to generate content.");
+        if (!generatedContent) {
+            throw new Error("All AI models failed to generate content. Please try again later.");
+        }
 
-        // 8. Save Blog as Draft (is_published: false)
         const slug = `${product.slug}-review-${Math.floor(Math.random() * 1000)}`;
         const { error: insertErr } = await supabase.from('blogs').insert([{
             title: `Review: ${product.title} - Is It Worth Buying?`,
             slug: slug,
             content_html: generatedContent,
             image_url: product.image_url,
-            is_published: false 
+            is_published: false // Draft
         }]);
         
         if (insertErr) throw insertErr;
 
-        // 9. Mark as completed
         await supabase.from('products').update({ blog_status: 'completed' }).eq('id', product.id);
 
-        return res.status(200).json({ success: true, message: "Blog generated for: " + product.title, model: usedModel });
+        console.log(`✅ Blog generated successfully using ${usedModel}`);
+        return res.status(200).json({ success: true, message: "Blog generated", model: usedModel });
 
     } catch (err) {
+        console.error("🚨 Error in process-queue:", err.message);
         if (product) {
             await supabase.from('products').update({ blog_status: 'pending' }).eq('id', product.id);
         }
