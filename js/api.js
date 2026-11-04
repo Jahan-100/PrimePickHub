@@ -18,18 +18,13 @@ const API = {
         const { data: { user } } = await window.supabaseClient.auth.getUser();
         if (!user) return null;
 
-        // .single() ki jagah .maybeSingle() use kiya hai taake error na aaye
         const { data: profile, error } = await window.supabaseClient
             .from('profiles')
             .select('role')
             .eq('id', user.id)
             .maybeSingle(); 
 
-        if (error) {
-            console.error('Profile fetch error:', error);
-        }
-
-        // Agar profile na mile, toh default role 'user' hoga (Security ke liye)
+        if (error) console.error('Profile fetch error:', error);
         return { user, role: profile?.role || 'user' };
     },
     
@@ -37,17 +32,18 @@ const API = {
     async getHomepageProducts() {
         if (!window.supabaseClient) return { featured: [], trending: [], latest: [] };
 
+        // ⭐ LIMIT ADDED (100) — LCP speed fix ⭐
         const { data, error } = await window.supabaseClient
             .from('products')
             .select('*, affiliate_offers(*)')
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .limit(100);
 
         if (error || !data) return { featured: [], trending: [], latest: [] };
 
         return {
             featured: data.filter(p => p.is_featured),
             trending: data.filter(p => p.is_trending),
-            // ⭐ 100+ Products fetch karne ke liye limit barha di hai ⭐
             latest: data.slice(0, 100) 
         };
     },
@@ -64,7 +60,7 @@ const API = {
 
     async searchProducts({ query = '', category = '' }) {
         if (!window.supabaseClient) return [];
-        let req = window.supabaseClient.from('products').select('*, affiliate_offers(*)');
+        let req = window.supabaseClient.from('products').select('*, affiliate_offers(*)').limit(100);
         if (category) req = req.eq('category_slug', category);
         if (query) req = req.ilike('title', `%${query}%`);
         const { data, error } = await req;
