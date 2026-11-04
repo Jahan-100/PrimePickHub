@@ -30,48 +30,47 @@ function isValidExternalURL(url) { if (typeof url !== 'string') return false; tr
 function isValidURL(url) { if (!url || typeof url !== 'string') return false; try { const p = new URL(url, window.location.origin); return p.protocol === 'http:' || p.protocol === 'https:'; } catch { return false; } }
 function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb; }
 
-// ⭐ UPGRADED HD IMAGE HELPER ⭐
-// Ab ye images ko automatic optimize karega taake page speed barhe.
-function getHighQualityImage(url) {
+// ⭐ SMART IMAGE OPTIMIZER (Fixes 852 KiB savings for Shopify, AliExpress, Govee, Amazon) ⭐
+function getHighQualityImage(url, size = 400) {
     if (!url || typeof url !== 'string') return url;
-    let cleanUrl = url;
-
-    // 1. AliExpress & Daraz
-    if (cleanUrl.includes('aliexpress') || cleanUrl.includes('daraz') || cleanUrl.includes('alicdn')) {
-        const match = cleanUrl.match(/^(.+?\.(?:jpg|jpeg|png|webp))_.+/i);
-        if (match) {
-            // Return HD version but with 500x500 max size to save bandwidth
-            cleanUrl = match[1] + '_500x500q80.jpg';
+    let cleanUrl = url.trim();
+    
+    // 1. AliExpress & Daraz & Alibaba
+    if (cleanUrl.includes('aliexpress') || cleanUrl.includes('daraz') || cleanUrl.includes('alicdn') || cleanUrl.includes('alibaba')) {
+        const qIdx = cleanUrl.indexOf('?');
+        if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
+        cleanUrl = cleanUrl.replace(/(\.(?:jpg|jpeg|png|webp))(?:_[^.?]*)?(?:\.(?:jpg|jpeg|png|webp|avif))?$/i, `$1_${size}x${size}q80.jpg`);
+    }
+    // 2. Amazon
+    else if (cleanUrl.includes('amazon') || cleanUrl.includes('media-amazon')) {
+        const qIdx = cleanUrl.indexOf('?');
+        if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
+        if (/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i.test(cleanUrl)) {
+            cleanUrl = cleanUrl.replace(/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i, `._AC_SL${size}_.$1`);
+        } else {
+            cleanUrl = cleanUrl.replace(/(\.(?:jpg|jpeg|png|webp))$/i, `._AC_SL${size}_$1`);
         }
     }
-
-    // 2. Amazon
-    if (cleanUrl.includes('amazon') || cleanUrl.includes('media-amazon')) {
-        cleanUrl = cleanUrl.replace(/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i, '._AC_SL500_.$1');
-    }
-
     // 3. eBay
-    if (cleanUrl.includes('ebayimg.com')) {
-        cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, '/s-l500.$1');
+    else if (cleanUrl.includes('ebayimg.com')) {
+        cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, `/s-l${size}.$1`);
     }
-
-    // 4. Shopify / Govee / Allegra-K (THIS FIXES THE LARGE IMAGE ISSUE)
-    if (cleanUrl.includes('shopify') || cleanUrl.includes('govee') || cleanUrl.includes('allegra-k.com')) {
-        // Remove existing size params
+    // 4. Shopify / Govee / Allegra-K / Admitad (Hacoo, Redmagic, Openhagen)
+    else if (cleanUrl.includes('shopify') || cleanUrl.includes('govee') || cleanUrl.includes('allegra-k.com') || cleanUrl.includes('cdn.shopify')) {
         cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
-        if (cleanUrl.includes('?')) cleanUrl = cleanUrl.split('?')[0]; 
-        // Add width=400 to reduce size (Google Lighthouse standard)
-        cleanUrl += '?width=400';
+        cleanUrl = cleanUrl.replace(/[?&]width=\d+/g, '');
+        const sep = cleanUrl.includes('?') ? '&' : '?';
+        cleanUrl = cleanUrl + sep + `width=${size}`;
     }
-
-    // General fallback for common size patterns (e.g., _500x500)
-    cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
-    cleanUrl = cleanUrl.replace(/_\d+x(?=\.(jpg|jpeg|png|webp|avif))/i, '');
-
+    // 5. Generic fallback (Other affiliate sites)
+    else {
+        cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
+        cleanUrl = cleanUrl.replace(/_\d+x(?=\.(jpg|jpeg|png|webp|avif))/i, '');
+    }
+    
     return cleanUrl;
 }
 
-// ⭐ SAFE PRODUCT URL HELPER ⭐
 function getProductUrl(product) {
     if (!product) return '#';
     if (product.slug) return `/product/${encodeURIComponent(product.slug)}`;
@@ -101,7 +100,7 @@ function renderDynamicCategories(allProducts) {
     const catContainer = document.getElementById('categoryScrollContainer');
     if (catContainer) {
         catContainer.innerHTML = activeCats.map(c => `
-            <a href="/category/${c.slug}" onclick="event.preventDefault(); selectCategory('${c.slug}', this)" class="category-item ${c.slug === 'all' ? 'active' : ''}" data-cat="${c.slug}">
+            <a href="javascript:void(0)" onclick="selectCategory('${c.slug}', this)" class="category-item ${c.slug === 'all' ? 'active' : ''}" data-cat="${c.slug}">
                 <div class="cat-icon" ${c.slug === 'all' ? 'style="color: #EF4444;"' : ''}>${c.icon}</div>
                 <span>${c.name}</span>
             </a>
@@ -115,17 +114,15 @@ function renderDynamicCategories(allProducts) {
     }
 }
 
-function renderProductCard(product, isLCP = false) {
+function renderProductCard(product, isFirst = false) {
     if (!product || typeof product !== 'object') return '';
     const title = escapeHTML(product.title || 'Untitled');
     const productUrl = getProductUrl(product);
     const hasLink = productUrl !== '#';
     const disabledAttr = hasLink ? '' : 'aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:0.6;"';
     
-    const imageSrc = isValidURL(product.image_url) ? escapeHTML(getHighQualityImage(product.image_url)) : 'assets/icon-192.png?v=4';
-    // LCP Fix: fetchpriority high for first image
-    const fetchPriority = isLCP ? 'fetchpriority="high"' : '';
-    const loadingAttr = isLCP ? '' : 'loading="lazy"';
+    const imageSrc = isValidURL(product.image_url) ? escapeHTML(getHighQualityImage(product.image_url, 300)) : 'assets/icon-192.png?v=4';
+    const imgPriority = isFirst ? 'fetchpriority="high"' : 'loading="lazy"';
 
     const r = Number(product.rating);
     const rating = Number.isFinite(r) && r > 0 && r <= 5 ? r : null;
@@ -194,7 +191,7 @@ function renderProductCard(product, isLCP = false) {
             ${badge}
             <div class="card-img-wrap">
                 <a href="${productUrl}" ${disabledAttr}>
-                    <img src="${imageSrc}" alt="${title}" width="200" height="200" ${loadingAttr} ${fetchPriority} class="product-thumb">
+                    <img src="${imageSrc}" alt="${title}" width="200" height="200" ${imgPriority} class="product-thumb">
                 </a>
             </div>
             <div class="card-body">
@@ -206,10 +203,11 @@ function renderProductCard(product, isLCP = false) {
         </div>`;
 }
 
-function renderFlashCard(product, section = 1, isLCP = false) {
+function renderFlashCard(product, section = 1, isFirst = false) {
     const title = escapeHTML(product.title || 'Untitled');
     const productUrl = getProductUrl(product);
-    const imageSrc = isValidURL(product.image_url) ? escapeHTML(getHighQualityImage(product.image_url)) : 'assets/icon-192.png?v=4';
+    const imageSrc = isValidURL(product.image_url) ? escapeHTML(getHighQualityImage(product.image_url, 200)) : 'assets/icon-192.png?v=4';
+    const imgPriority = isFirst ? 'fetchpriority="high"' : 'loading="lazy"';
 
     const primaryOffer = getPrimaryOffer(product) || {};
     const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
@@ -239,13 +237,11 @@ function renderFlashCard(product, section = 1, isLCP = false) {
     }
 
     const endTime = section === 1 ? product.sale_end_date : product.sale_end_date_2;
-    const fetchPriority = isLCP ? 'fetchpriority="high"' : '';
-    const loadingAttr = isLCP ? '' : 'loading="lazy"';
 
     return `
         <a href="${productUrl}" class="special-deal-card flash-card">
             <div class="img-box">
-                <img src="${imageSrc}" alt="${title}" width="190" height="190" ${loadingAttr} ${fetchPriority}>
+                <img src="${imageSrc}" alt="${title}" width="190" height="190" ${imgPriority}>
             </div>
             <div class="info-box">
                 ${priceDisplay}
@@ -262,7 +258,6 @@ function renderProductsGrid(products, grid) {
         showGridMessage(grid, 'No products found in this category.');
         return;
     }
-    // Pass isLCP = true for the first item
     grid.innerHTML = products.map((p, i) => renderProductCard(p, i === 0)).join('');
     grid.querySelectorAll('img.product-thumb').forEach(img => {
         img.addEventListener('error', function () { this.src = 'assets/icon-192.png?v=4'; }, { once: true });
@@ -371,35 +366,41 @@ window.selectCategory = async function(catSlug, element) {
     }
 };
 
-// ⭐ AD FALLBACK LOGIC (Hides Slots if Empty) ⭐
 function renderAdFallback(products) {
-    const topSlot = document.getElementById('ad-slot-top');
-    const midSlot = document.getElementById('ad-slot-middle');
+    const topSlot = document.getElementById('ad-fallback-top');
+    const midSlot = document.getElementById('ad-fallback-middle');
 
-    // Check if there is actual ad code inside the slot
-    const topContent = document.getElementById('ad-fallback-top')?.innerHTML.trim();
-    const midContent = document.getElementById('ad-fallback-middle')?.innerHTML.trim();
+    if (products && products.length > 0) {
+        const shuffled = [...products].sort(() => 0.5 - Math.random());
+        const selected = shuffled.slice(0, 12);
 
-    if (topSlot) {
-        if (topContent) {
-            topSlot.style.display = 'flex';
-            topSlot.style.minHeight = '120px'; 
-        } else {
-            topSlot.style.display = 'none'; // Hide if empty
-        }
-    }
+        const html = selected.map(p => {
+            const title = escapeHTML(p.title || 'Product');
+            const productUrl = getProductUrl(p);
+            const imageSrc = isValidURL(p.image_url) ? escapeHTML(getHighQualityImage(p.image_url, 200)) : 'assets/icon-192.png?v=4';
+            const primaryOffer = getPrimaryOffer(p) || {};
+            const sym = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' }[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
+            const price = parseFloat(primaryOffer.sale_price) || parseFloat(primaryOffer.price) || 0;
 
-    if (midSlot) {
-        if (midContent) {
-            midSlot.style.display = 'flex';
-            midSlot.style.minHeight = '120px';
-        } else {
-            midSlot.style.display = 'none'; // Hide if empty
-        }
+            return `
+                <div class="product-card" style="cursor:pointer;" onclick="window.location.href='${productUrl}'">
+                    <div class="card-img-wrap">
+                        <img src="${imageSrc}" alt="${title}" width="200" height="200" loading="lazy">
+                    </div>
+                    <div class="card-body">
+                        <a href="${productUrl}" class="card-title">${title}</a>
+                        <div style="font-weight:bold; color:#FF5A3C; font-size:0.85rem; margin-bottom:4px;">${sym}${price.toFixed(2)}</div>
+                        <button class="btn-check-price" style="background:#2563eb; pointer-events:none;">View</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        if (topSlot) topSlot.innerHTML = html;
+        if (midSlot) midSlot.innerHTML = html;
     }
 }
 
-// ⭐ LATEST BLOG FETCH & RENDER ⭐
 async function loadLatestBlog() {
     if (!window.supabaseClient) return;
     const section = document.getElementById('latestBlogSection');
@@ -419,7 +420,7 @@ async function loadLatestBlog() {
             return;
         }
 
-        document.getElementById('latestBlogImg').src = getHighQualityImage(blog.image_url) || 'assets/icon-192.png';
+        document.getElementById('latestBlogImg').src = getHighQualityImage(blog.image_url, 300) || 'assets/icon-192.png?v=4';
         document.getElementById('latestBlogTitle').innerText = blog.title;
         document.getElementById('latestBlogDate').innerText = `Published on: ${new Date(blog.created_at).toLocaleDateString()}`;
         section.style.display = 'block';
@@ -523,7 +524,7 @@ async function loadHomepageProducts() {
         const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false);
 
         renderDynamicCategories(allProducts);
-        renderAdFallback(allProducts); // Updates ad slots visibility
+        renderAdFallback(allProducts);
 
         const now = new Date();
         const flashSaleProducts1 = [];
@@ -547,7 +548,6 @@ async function loadHomepageProducts() {
                 const currentEventName = flashSaleProducts1[0].event_name || (settings && settings.flash_title_text) || 'Sale Section 1';
                 exploreBtn.href = `search.html?flash=true&event=${encodeURIComponent(currentEventName)}`;
             }
-            // Pass isLCP = true for the first item
             flashScroll.innerHTML = flashSaleProducts1.map((p, i) => renderFlashCard(p, 1, i === 0)).join('');
             startFireworks();
         } else {
@@ -596,9 +596,10 @@ async function loadHomepageProducts() {
                     } else {
                         priceDisplay = `<div class="price">${sym}${finalBasePrice.toFixed(2)}</div>`;
                     }
+                    const specialImg = getHighQualityImage(p.image_url, 200) || '/assets/icon-192.png?v=4';
                     return `
                         <a href="${getProductUrl(p)}" class="special-deal-card">
-                            <div class="img-box"><img src="${getHighQualityImage(p.image_url) || '/assets/icon-192.png?v=4'}" alt="${escapeHTML(p.title)}" width="190" height="190" loading="lazy"></div>
+                            <div class="img-box"><img src="${escapeHTML(specialImg)}" alt="${escapeHTML(p.title)}" width="190" height="190" loading="lazy"></div>
                             <div class="info-box">
                                 ${priceDisplay}
                                 <div class="title">${escapeHTML(p.title)}</div>
@@ -658,7 +659,6 @@ async function loadNotifications() {
         });
 
         currentNotifs = unique.slice(0, 20);
-        
         renderNotifications();
     }
 }
@@ -669,7 +669,7 @@ function renderNotifications() {
     if (!list) return;
 
     if (currentNotifs.length === 0) {
-        list.innerHTML = '<div style="padding: 20px; text-align: center; color: #94A3B8; font-size: 0.85rem;">No new notifications</div>';
+        list.innerHTML = '<div style="padding: 20px; text-align: center; color: #64748B; font-size: 0.85rem;">No new notifications</div>';
         if(badge) badge.style.display = 'none';
         return;
     }
@@ -696,7 +696,7 @@ function renderNotifications() {
             <div style="flex: 1;">
                 <h4 style="color: ${isRead ? '#64748B' : '#1E1B4B'};">${escapeHTML(n.title)}</h4>
                 <p>${escapeHTML(n.message)}</p>
-                <span style="font-size: 0.65rem; color: #94A3B8;">${new Date(n.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                <span style="font-size: 0.65rem; color: #64748B;">${new Date(n.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
             </div>
             <button class="notif-del" onclick="event.stopPropagation(); deleteNotif('${n.id}')" title="Delete Notification"><i class="fa-solid fa-xmark"></i></button>
         </div>
@@ -719,12 +719,10 @@ window.deleteNotif = async function(id) {
             .eq('id', id);
             
         if (error) throw error;
-        
         currentNotifs = currentNotifs.filter(n => n.id !== id);
         renderNotifications();
     } catch (err) {
         console.error("Error deleting notification:", err);
-        alert("Notification delete nahi ho saki. Please try again.");
     }
 }
 
@@ -774,19 +772,14 @@ window.clearAllNotifs = async function(e) {
                 .from('app_notifications')
                 .update({ is_deleted: true })
                 .in('id', ids);
-                
             if (error) throw error;
         }
-        
         currentNotifs = [];
         renderNotifications();
     } catch (err) {
         console.error("Error clearing notifications:", err);
-        alert("Notifications clear nahi ho saken. Please try again.");
     }
 }
-
-// NOTIFICATION LOGIC ENDS HERE
 
 function showBrowserNotification(title, body) {
     if (!("Notification" in window)) return;
@@ -883,7 +876,6 @@ async function setupRealtime() {
             triggerRealtimeUpdate(payload);
         })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'app_notifications' }, (payload) => {
-            console.log("🔔 Notification Update Realtime!");
             loadNotifications();
             if (payload.eventType === 'INSERT' && payload.new) {
                 showBrowserNotification(payload.new.title, payload.new.message);
@@ -994,4 +986,11 @@ document.addEventListener('DOMContentLoaded', () => {
             splash.classList.add('hidden');
             document.body.classList.remove('app-loading');
             setTimeout(() => { splash.style.display = 'none'; }, 800);
-       
+        }
+    }
+    setTimeout(hideSplash, 1500);
+    setTimeout(() => {
+        var splash = document.getElementById('splash-screen');
+        if (splash && !splash.classList.contains('hidden')) hideSplash();
+    }, 3500);
+});
