@@ -6,33 +6,35 @@ function escapeHTML(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-// ⭐ UPGRADED HD IMAGE HELPER ⭐
-function getHighQualityImage(url) {
+// ⭐ SMART IMAGE OPTIMIZER ⭐
+function getHighQualityImage(url, size = 400) {
     if (!url || typeof url !== 'string') return url;
-    let cleanUrl = url;
-
-    if (cleanUrl.includes('aliexpress') || cleanUrl.includes('daraz') || cleanUrl.includes('alicdn')) {
-        const match = cleanUrl.match(/^(.+?\.(?:jpg|jpeg|png|webp))_.+/i);
-        if (match) cleanUrl = match[1];
-    }
-
-    if (cleanUrl.includes('amazon') || cleanUrl.includes('media-amazon')) {
-        const match = cleanUrl.match(/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i);
-        if (match) cleanUrl = cleanUrl.replace(/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i, '.$1');
-    }
-
-    if (cleanUrl.includes('ebayimg.com')) {
-        cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, '/s-l1600.$1');
-    }
-
-    if (cleanUrl.includes('shopify') || cleanUrl.includes('govee')) {
+    let cleanUrl = url.trim();
+    
+    if (cleanUrl.includes('aliexpress') || cleanUrl.includes('daraz') || cleanUrl.includes('alicdn') || cleanUrl.includes('alibaba')) {
+        const qIdx = cleanUrl.indexOf('?');
+        if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
+        cleanUrl = cleanUrl.replace(/(\.(?:jpg|jpeg|png|webp))(?:_[^.?]*)?(?:\.(?:jpg|jpeg|png|webp|avif))?$/i, `$1_${size}x${size}q80.jpg`);
+    } else if (cleanUrl.includes('amazon') || cleanUrl.includes('media-amazon')) {
+        const qIdx = cleanUrl.indexOf('?');
+        if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
+        if (/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i.test(cleanUrl)) {
+            cleanUrl = cleanUrl.replace(/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i, `._AC_SL${size}_.$1`);
+        } else {
+            cleanUrl = cleanUrl.replace(/(\.(?:jpg|jpeg|png|webp))$/i, `._AC_SL${size}_$1`);
+        }
+    } else if (cleanUrl.includes('ebayimg.com')) {
+        cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, `/s-l${size}.$1`);
+    } else if (cleanUrl.includes('shopify') || cleanUrl.includes('govee') || cleanUrl.includes('allegra-k.com') || cleanUrl.includes('cdn.shopify')) {
         cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
-        if (cleanUrl.includes('?')) cleanUrl = cleanUrl.split('?')[0]; 
+        cleanUrl = cleanUrl.replace(/[?&]width=\d+/g, '');
+        const sep = cleanUrl.includes('?') ? '&' : '?';
+        cleanUrl = cleanUrl + sep + `width=${size}`;
+    } else {
+        cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
+        cleanUrl = cleanUrl.replace(/_\d+x(?=\.(jpg|jpeg|png|webp|avif))/i, '');
     }
-
-    cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
-    cleanUrl = cleanUrl.replace(/_\d+x(?=\.(jpg|jpeg|png|webp|avif))/i, '');
-
+    
     return cleanUrl;
 }
 
@@ -103,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.title = `${product.title} - Best Price | PrimePickHub`;
     document.querySelector('meta[property="og:title"]')?.setAttribute('content', product.title);
-    document.querySelector('meta[property="og:image"]')?.setAttribute('content', getHighQualityImage(product.image_url) || '');
+    document.querySelector('meta[property="og:image"]')?.setAttribute('content', getHighQualityImage(product.image_url, 800) || '');
     document.querySelector('meta[property="og:description"]')?.setAttribute('content', product.description || '');
 
     const allOffers = product.affiliate_offers || [];
@@ -122,7 +124,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (!uniqueColors.find(c => c.value === val)) {
                     uniqueColors.push({
                         value: val,
-                        hdValue: getHighQualityImage(val),
+                        hdValue: getHighQualityImage(val, 400),
                         name: colorNames[idx] || val
                     });
                 }
@@ -154,7 +156,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const baseCurrency = (mainOffer.currency || 'USD').toUpperCase();
 
     const renderBuyButton = (offer) => {
-        const cfg = CONFIG.networks[offer.store_name?.toLowerCase()] || CONFIG.networks.amazon;
+        const cfg = CONFIG.networks[offer.store_name?.toLowerCase()] || CONFIG.networks[offer.store_name] || CONFIG.networks.amazon;
         const bg = /^#[0-9a-fA-F]{6}$/.test(cfg.brandColor) ? cfg.brandColor : '#2563eb';
         const fg = /^#[0-9a-fA-F]{6}$/.test(cfg.textColor) ? cfg.textColor : '#ffffff';
         return `<a href="${escapeHTML(offer.affiliate_url || '#')}" target="_blank" rel="noopener noreferrer sponsored"
@@ -234,10 +236,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     let galleryImages = (product.gallery_images && product.gallery_images.length > 0) ? product.gallery_images.filter(Boolean) : (product.image_url ? [product.image_url] : []);
-    galleryImages = galleryImages.map(getHighQualityImage);
+    galleryImages = galleryImages.map(url => getHighQualityImage(url, 800));
 
     const mainImage = galleryImages[0] || '/assets/icon-192.png';
-    const thumbnailsHtml = galleryImages.length > 1 ? galleryImages.map((url, i) => `<img src="${escapeHTML(url)}" alt="View ${i + 1}" width="70" height="70" class="gallery-thumb" data-src="${escapeHTML(url)}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid ${i === 0 ? '#FF5A3C' : '#E2E8F0'};transition:border-color 0.2s;">`).join('') : '';
+    const thumbnailsHtml = galleryImages.length > 1 ? galleryImages.map((url, i) => `<img src="${escapeHTML(getHighQualityImage(url, 150))}" alt="View ${i + 1}" width="70" height="70" class="gallery-thumb" data-src="${escapeHTML(url)}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid ${i === 0 ? '#FF5A3C' : '#E2E8F0'};transition:border-color 0.2s;">`).join('') : '';
     const videoHtml = product.video_url ? `<div style="background:#fff; padding:30px; border-radius:12px; border:1px solid #E2E8F0; margin-bottom:20px;"><h2 style="margin-bottom:15px; border-bottom:2px solid #FF5A3C; padding-bottom:10px; display:inline-block;">Product Video</h2>${getVideoHtml(product.video_url)}</div>` : '';
     const shareUrl = encodeURIComponent(window.location.href); const shareText = encodeURIComponent(`Check out ${product.title} on PrimePickHub`);
 
@@ -245,7 +247,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:40px;background:#fff;padding:30px;border-radius:12px;border:1px solid #E2E8F0;margin-bottom:20px;">
             <div>
                 <div style="background:#F8FAFC;border-radius:12px;padding:15px;margin-bottom:15px;aspect-ratio: 1/1; display:flex; align-items:center; justify-content:center;">
-                    <img id="mainImage" src="${escapeHTML(mainImage)}" alt="${escapeHTML(product.title)}" width="400" height="400" style="width:100%;max-height:400px;object-fit:contain;border-radius:8px; cursor: pointer;" onclick="openFullScreenImage(0)" onerror="this.src='/assets/icon-192.png';">
+                    <img id="mainImage" src="${escapeHTML(mainImage)}" alt="${escapeHTML(product.title)}" width="400" height="400" style="width:100%;max-height:400px;object-fit:contain;border-radius:8px; cursor: pointer;" onclick="openFullScreenImage(0)">
                 </div>
                 ${thumbnailsHtml ? `<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">${thumbnailsHtml}</div>` : ''}
             </div>
@@ -293,18 +295,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div style="color:#334155;line-height:1.8;font-size:1.05rem;">${product.review_html || '<p>Detailed review coming soon...</p>'}</div>
         </div>
 
-        <!-- ⭐ FULL SCREEN IMAGE SLIDER MODAL ⭐ -->
         <div id="fullScreenImageModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); z-index:9999999; align-items:center; justify-content:center; flex-direction:column; touch-action: pan-y;">
             <button onclick="closeFullScreenImage(event)" aria-label="Close Image Viewer" style="position:absolute; top:20px; right:20px; background:rgba(0,0,0,0.5); border:none; color:white; font-size:2.5rem; cursor:pointer; z-index:10000000; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center;">&times;</button>
             
-            <button id="prevImageBtn" onclick="changeFullScreenImage(-1, event)" aria-label="Previous Image" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); background:rgba(255,255,255,0.2); color:white; border:none; font-size:2rem; cursor:pointer; border-radius:50%; width:45px; height:45px; display:flex; align-items:center; justify-content:center; z-index:10000000; transition: opacity 0.2s, background 0.2s;">&#10094;</button>
-            <button id="nextImageBtn" onclick="changeFullScreenImage(1, event)" aria-label="Next Image" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:rgba(255,255,255,0.2); color:white; border:none; font-size:2rem; cursor:pointer; border-radius:50%; width:45px; height:45px; display:flex; align-items:center; justify-content:center; z-index:10000000; transition: opacity 0.2s, background 0.2s;">&#10095;</button>
+            <button id="prevImageBtn" onclick="changeFullScreenImage(-1, event)" aria-label="Previous Image" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); background:rgba(255,255,255,0.2); color:white; border:none; font-size:2rem; cursor:pointer; border-radius:50%; width:45px; height:45px; display:flex; align-items:center; justify-content:center; z-index:10000000;">&#10094;</button>
+            <button id="nextImageBtn" onclick="changeFullScreenImage(1, event)" aria-label="Next Image" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:rgba(255,255,255,0.2); color:white; border:none; font-size:2rem; cursor:pointer; border-radius:50%; width:45px; height:45px; display:flex; align-items:center; justify-content:center; z-index:10000000;">&#10095;</button>
             
             <img id="fullScreenImageSrc" src="" alt="Full Screen Product Image" width="800" height="800" style="max-width:95vw; max-height:85vh; object-fit:contain; user-select:none; border-radius:8px;">
             
             <div id="imageCounter" style="position:absolute; bottom:20px; color:white; font-size:1.1rem; font-weight:bold; background:rgba(0,0,0,0.6); padding:5px 15px; border-radius:20px;">1 / 1</div>
         </div>
     `;
+
+    const mainImgEl = document.getElementById('mainImage');
+    if (mainImgEl) {
+        mainImgEl.addEventListener('error', function () { this.src = '/assets/icon-192.png'; }, { once: true });
+    }
 
     const currencySelector = document.getElementById('currencySelector');
     const displayPriceContainer = document.getElementById('displayPriceContainer');
@@ -348,7 +354,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             priceHtml = `
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <span style="text-decoration:line-through; color:#94A3B8; font-size:1.2rem;">${symbol}${convertedOrig.toFixed(2)}</span>
+                    <span style="text-decoration:line-through; color:#64748B; font-size:1.2rem;">${symbol}${convertedOrig.toFixed(2)}</span>
                     <span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${convertedSale.toFixed(2)}</span>
                 </div>`;
         } else {
@@ -369,12 +375,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.selectColor = function(colorValue) {
         activeColor = colorValue;
 
-        // ⭐ NAYA: Update Main Image if color is an Image URL ⭐
         if (colorValue.startsWith('http')) {
             const mainImgElement = document.getElementById('mainImage');
-            if (mainImgElement) {
-                mainImgElement.src = getHighQualityImage(colorValue);
-            }
+            if (mainImgElement) mainImgElement.src = getHighQualityImage(colorValue, 800);
         }
 
         const offersForColor = allVariations.filter(v => v.product_color && v.product_color.includes(colorValue));
@@ -388,12 +391,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         if (availableSizes.length > 0) {
-            if (!availableSizes.includes(activeSize)) {
-                activeSize = availableSizes[0];
-            }
-        } else {
-            activeSize = null;
-        }
+            if (!availableSizes.includes(activeSize)) activeSize = availableSizes[0];
+        } else { activeSize = null; }
 
         let idxExact = allVariations.findIndex(v => 
             v.product_color && v.product_color.includes(colorValue) &&
@@ -434,7 +433,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateUI(currencySelector.value);
     };
 
-    // ⭐ FULL SCREEN IMAGE LOGIC ⭐
     let currentFullScreenIndex = 0;
     const modal = document.getElementById('fullScreenImageModal');
     const prevBtn = document.getElementById('prevImageBtn');
@@ -446,35 +444,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             nextBtn.style.display = 'none';
             return;
         }
-
         if (currentFullScreenIndex === 0) {
-            prevBtn.style.opacity = '0.2';
-            prevBtn.style.cursor = 'default';
-            prevBtn.style.pointerEvents = 'none';
+            prevBtn.style.opacity = '0.2'; prevBtn.style.cursor = 'default'; prevBtn.style.pointerEvents = 'none';
         } else {
-            prevBtn.style.opacity = '1';
-            prevBtn.style.cursor = 'pointer';
-            prevBtn.style.pointerEvents = 'auto';
+            prevBtn.style.opacity = '1'; prevBtn.style.cursor = 'pointer'; prevBtn.style.pointerEvents = 'auto';
         }
-
         if (currentFullScreenIndex === galleryImages.length - 1) {
-            nextBtn.style.opacity = '0.2';
-            nextBtn.style.cursor = 'default';
-            nextBtn.style.pointerEvents = 'none';
+            nextBtn.style.opacity = '0.2'; nextBtn.style.cursor = 'default'; nextBtn.style.pointerEvents = 'none';
         } else {
-            nextBtn.style.opacity = '1';
-            nextBtn.style.cursor = 'pointer';
-            nextBtn.style.pointerEvents = 'auto';
+            nextBtn.style.opacity = '1'; nextBtn.style.cursor = 'pointer'; nextBtn.style.pointerEvents = 'auto';
         }
     }
 
     window.openFullScreenImage = function(index) {
         currentFullScreenIndex = index;
         const img = document.getElementById('fullScreenImageSrc');
-        
         img.src = galleryImages[currentFullScreenIndex];
         document.getElementById('imageCounter').innerText = `${currentFullScreenIndex + 1} / ${galleryImages.length}`;
-        
         updateArrowStates();
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; 
@@ -489,20 +475,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.changeFullScreenImage = function(direction, e) {
         if (e) e.stopPropagation();
         if (galleryImages.length <= 1) return;
-
         let newIndex = currentFullScreenIndex + direction;
-        
         if (newIndex < 0) newIndex = 0;
         if (newIndex >= galleryImages.length) newIndex = galleryImages.length - 1;
-        
         if (newIndex === currentFullScreenIndex) return; 
 
         currentFullScreenIndex = newIndex;
-        
         const img = document.getElementById('fullScreenImageSrc');
         img.src = galleryImages[currentFullScreenIndex];
         document.getElementById('imageCounter').innerText = `${currentFullScreenIndex + 1} / ${galleryImages.length}`;
-        
         updateArrowStates();
     };
 
@@ -516,24 +497,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let touchStartX = 0;
     let touchEndX = 0;
-
-    modal.addEventListener('touchstart', e => {
-        touchStartX = e.changedTouches[0].screenX;
-    }, { passive: true });
-
-    modal.addEventListener('touchend', e => {
-        touchEndX = e.changedTouches[0].screenX;
-        handleSwipe();
-    }, { passive: true });
+    modal.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+    modal.addEventListener('touchend', e => { touchEndX = e.changedTouches[0].screenX; handleSwipe(); }, { passive: true });
 
     function handleSwipe() {
         const swipeThreshold = 50;
-        if (touchEndX < touchStartX - swipeThreshold) {
-            window.changeFullScreenImage(1);
-        }
-        if (touchEndX > touchStartX + swipeThreshold) {
-            window.changeFullScreenImage(-1);
-        }
+        if (touchEndX < touchStartX - swipeThreshold) window.changeFullScreenImage(1);
+        if (touchEndX > touchStartX + swipeThreshold) window.changeFullScreenImage(-1);
     }
 
     container.querySelectorAll('.gallery-thumb').forEach((thumb, index) => {
@@ -542,27 +512,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('mainImage').src = src;
             container.querySelectorAll('.gallery-thumb').forEach(t => t.style.borderColor = '#E2E8F0');
             this.style.borderColor = '#FF5A3C';
-            
             window.openFullScreenImage(index);
         });
     });
 
-    // NOTE: Background click to close REMOVED as per user request. 
-
     const jsonLd = {
         "@context": "https://schema.org/", "@type": "Product", "name": product.title,
-        "image": [getHighQualityImage(product.image_url)].concat((product.gallery_images || []).map(getHighQualityImage)).filter(Boolean),
+        "image": [getHighQualityImage(product.image_url, 800)].concat((product.gallery_images || []).map(u => getHighQualityImage(u, 800))).filter(Boolean),
         "description": product.description || product.title,
         "offers": allOffers.map(o => {
             const p = parseFloat(o.price) || 0; 
             const sp = parseFloat(o.sale_price) || 0;
             const c = parseFloat(o.commission_rate) || 0;
-
             let finalP = sp > 0 ? sp : p;
-            if (c > 0) {
-                finalP = finalP + (finalP * (c / 100));
-            }
-            
+            if (c > 0) finalP = finalP + (finalP * (c / 100));
             return { "@type": "Offer", "url": o.affiliate_url, "priceCurrency": o.currency || "USD", "price": finalP.toFixed(2), "availability": "https://schema.org/InStock", "seller": { "@type": "Organization", "name": o.store_name } };
         })
     };
