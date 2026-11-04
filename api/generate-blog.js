@@ -1,3 +1,4 @@
+// api/generate-blog.js
 const { createClient } = require('@supabase/supabase-js');
 
 module.exports = async function handler(req, res) {
@@ -10,13 +11,21 @@ module.exports = async function handler(req, res) {
 
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
+    // ⭐ LATEST FREE MODELS (Updated list) ⭐
     const models = [
-        "google/gemini-2.0-flash-lite-preview-02-05:free",
-        "meta-llama/llama-3-8b-instruct:free",
-        "mistralai/mistral-7b-instruct:free"
+        "openrouter/free",                          // Smart router: automatically picks a free model
+        "openai/gpt-oss-120b:free",
+        "google/gemini-2.0-flash-exp:free",
+        "meta-llama/llama-3.3-70b-instruct:free",
+        "deepseek/deepseek-r1:free",
+        "mistralai/mistral-7b-instruct:free",
+        "google/gemma-2-9b-it:free",
+        "meta-llama/llama-3.1-8b-instruct:free",
+        "qwen/qwen3-235b-a22b:free",
+        "meta-llama/llama-4-scout:free"
     ];
 
-    const prompt = `You are an expert SEO Copywriter. Write a highly detailed, 600-word review blog post for the following product to help it rank on Google.
+    const prompt = `You are an expert SEO Copywriter. Write a highly detailed, 600-word review blog post in HTML for the following product to help it rank on Google.
     
     Product Details:
     - Title: ${title}
@@ -37,7 +46,7 @@ module.exports = async function handler(req, res) {
 
     for (const model of models) {
         try {
-            console.log(`Trying AI Model: ${model}`);
+            console.log(`Trying model: ${model}`);
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
                 headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -49,17 +58,17 @@ module.exports = async function handler(req, res) {
 
             const aiData = await response.json();
             if (aiData.error) {
-                console.warn(`Model ${model} failed: ${aiData.error.message}`);
+                console.warn(`❌ Model ${model} failed: ${aiData.error.message}`);
                 continue;
             }
 
-            if (aiData.choices && aiData.choices[0].message.content) {
+            if (aiData.choices && aiData.choices[0]?.message?.content) {
                 generatedContent = aiData.choices[0].message.content;
                 usedModel = model;
                 break;
             }
         } catch (err) {
-            console.warn(`Model ${model} failed, trying next...`);
+            console.warn(`❌ Model ${model} crashed:`, err.message);
         }
     }
 
@@ -77,7 +86,7 @@ module.exports = async function handler(req, res) {
             slug: slug,
             content_html: cleanContent,
             image_url: imageUrl,
-            is_published: false // Draft Mode
+            is_published: false
         }]);
 
         if (error) throw error;
