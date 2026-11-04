@@ -616,7 +616,6 @@ function handleSearch() {
 }
 
 // NOTIFICATION LOGIC
-let userDeletedNotifs = JSON.parse(getCookie('deleted_notifs') || '[]');
 let userReadNotifs = JSON.parse(getCookie('read_notifs') || '[]');
 let currentNotifs = [];
 
@@ -629,18 +628,19 @@ window.toggleNotifPanel = function(e) {
 async function loadNotifications() {
     if (!window.supabaseClient) return;
     
+    // Fetch only non-deleted notifications directly from DB
     const { data, error } = await window.supabaseClient
         .from('app_notifications')
         .select('*')
+        .eq('is_deleted', false) // <--- NAYA: Filter deleted
         .order('created_at', { ascending: false })
         .limit(100);
 
     if (!error && data) {
-        let filtered = data.filter(n => !userDeletedNotifs.includes(n.id));
-        
+        // Remove duplicates
         const seen = new Set();
         const unique = [];
-        filtered.forEach(n => {
+        data.forEach(n => {
             const key = `${n.title}|${n.message}|${n.product_slug || ''}`;
             if (!seen.has(key)) {
                 seen.add(key);
@@ -702,13 +702,24 @@ window.markAsRead = function(id) {
     }
 }
 
-window.deleteNotif = function(id) {
-    if(!userDeletedNotifs.includes(id)) {
-        userDeletedNotifs.push(id);
-        setCookie('deleted_notifs', JSON.stringify(userDeletedNotifs), 30);
+// ⭐ NAYA: Database mein is_deleted = true karein ⭐
+window.deleteNotif = async function(id) {
+    try {
+        // Database mein soft delete
+        const { error } = await window.supabaseClient
+            .from('app_notifications')
+            .update({ is_deleted: true })
+            .eq('id', id);
+            
+        if (error) throw error;
+        
+        // Local UI update
+        currentNotifs = currentNotifs.filter(n => n.id !== id);
+        renderNotifications();
+    } catch (err) {
+        console.error("Error deleting notification:", err);
+        alert("Notification delete nahi ho saki. Please try again.");
     }
-    currentNotifs = currentNotifs.filter(n => n.id !== id);
-    renderNotifications();
 }
 
 window.handleNotifClick = async function(id, slug, type) {
@@ -748,12 +759,26 @@ window.handleNotifClick = async function(id, slug, type) {
     window.location.href = `/product/${slug}`;
 }
 
-window.clearAllNotifs = function(e) {
+// ⭐ NAYA: Clear All Database se hide karein ⭐
+window.clearAllNotifs = async function(e) {
     if(e) e.stopPropagation();
-    currentNotifs.forEach(n => { if(!userDeletedNotifs.includes(n.id)) userDeletedNotifs.push(n.id); });
-    setCookie('deleted_notifs', JSON.stringify(userDeletedNotifs), 30);
-    currentNotifs = [];
-    renderNotifications();
+    try {
+        const ids = currentNotifs.map(n => n.id);
+        if (ids.length > 0) {
+            const { error } = await window.supabaseClient
+                .from('app_notifications')
+                .update({ is_deleted: true })
+                .in('id', ids);
+                
+            if (error) throw error;
+        }
+        
+        currentNotifs = [];
+        renderNotifications();
+    } catch (err) {
+        console.error("Error clearing notifications:", err);
+        alert("Notifications clear nahi ho saken. Please try again.");
+    }
 }
 
 // NOTIFICATION LOGIC ENDS HERE
@@ -833,7 +858,7 @@ function triggerRealtimeUpdate(payload) {
     clearTimeout(realtimeTimeout);
     realtimeTimeout = setTimeout(() => { 
         loadHomepageProducts(); 
-        loadLatestBlog(); // Update blog on realtime if published
+        loadLatestBlog(); 
     }, 500);
 }
 
@@ -852,10 +877,10 @@ async function setupRealtime() {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'blogs' }, (payload) => {
             triggerRealtimeUpdate(payload);
         })
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'app_notifications' }, (payload) => {
-            console.log("🔔 New Notification Received Realtime!");
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'app_notifications' }, (payload) => {
+            console.log("🔔 Notification Update Realtime!");
             loadNotifications();
-            if (payload.new) {
+            if (payload.eventType === 'INSERT' && payload.new) {
                 showBrowserNotification(payload.new.title, payload.new.message);
             }
         })
