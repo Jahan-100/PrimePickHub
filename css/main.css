@@ -4,7 +4,7 @@
     --bg-light: #f8fafc;
     --card-bg: #FFFFFF;
     --text-dark: #0F172A;
-    --text-muted: #64748B;
+    --text-muted: #475569; /* Darker for contrast */
     --border: #E2E8F0;
     --radius: 12px;
     --shadow: 0 4px 20px -2px rgba(0,0,0,0.05);
@@ -233,8 +233,8 @@ body {
 .product-card { background: var(--card-bg); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow); transition: transform 0.2s; display: flex; flex-direction: column; }
 .product-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
 
-/* ⭐ IMAGE FIX: Shrink to fit (contain) & padding added ⭐ */
-.card-img-wrap { height: 150px; position: relative; overflow: hidden; background: #fff; display: flex; align-items: center; justify-content: center; padding: 5px; }
+/* ⭐ IMAGE FIX: CLS Prevented with Aspect Ratio ⭐ */
+.card-img-wrap { aspect-ratio: 1 / 1; position: relative; overflow: hidden; background: #fff; display: flex; align-items: center; justify-content: center; padding: 5px; }
 .card-img-wrap img { width: 100%; height: 100%; object-fit: contain; padding: 0; transition: transform 0.3s; }
 .product-card:hover .card-img-wrap img { transform: scale(1.05); }
 
@@ -363,7 +363,7 @@ body {
 .special-deal-card { min-width: 190px; max-width: 190px; height: 250px; background: #fff; border-radius: 10px; text-decoration: none; display: flex; flex-direction: column; position: relative; overflow: hidden; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.06); border: 1px solid #f1f5f9; }
 
 /* ⭐ IMAGE FIX: Shrink to fit (contain) for Special Deals ⭐ */
-.special-deal-card .img-box { flex: 8.5; width: 100%; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 5px; }
+.special-deal-card .img-box { aspect-ratio: 1 / 1; width: 100%; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 5px; flex: 8.5; }
 .special-deal-card .img-box img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s; }
 .special-deal-card:hover .img-box img { transform: scale(1.05); }
 
@@ -432,10 +432,11 @@ body {
     align-items: center;
     justify-content: center;
     padding: 10px;
+    aspect-ratio: 16 / 9; /* CLS Fix */
 }
 .latest-blog-img-wrap img {
     width: 100%;
-    height: 180px;
+    height: 100%;
     object-fit: cover;
     border-radius: 8px;
 }
@@ -456,7 +457,7 @@ body {
 }
 .latest-blog-content p {
     font-size: 0.85rem;
-    color: #64748B;
+    color: var(--text-muted);
     margin-bottom: 15px;
 }
 .latest-blog-btn {
@@ -640,8 +641,8 @@ body {
         display: flex !important;
     }
     .header .nav-main, .container, .newsletter-wrapper, .footer {
-        padding-left: 145px !important; /* 10px left pos + 120px width + 15px gap */
-        padding-right: 45px !important; /* Right floating button width + 5px gap */
+        padding-left: 145px !important;
+        padding-right: 45px !important;
         max-width: 100% !important;
     }
 }
@@ -673,7 +674,7 @@ body {
     border-radius: 6px;
     height: 100%;
 }
-.ad-fallback-container .product-card .card-img-wrap { height: 100px; }
+.ad-fallback-container .product-card .card-img-wrap { aspect-ratio: 1/1; }
 .ad-fallback-container .product-card .card-img-wrap img { object-fit: contain; padding: 5px; }
 .ad-fallback-container .product-card .card-body { padding: 8px; gap: 4px; }
 .ad-fallback-container .product-card .card-title { font-size: 0.75rem; margin-bottom: 2px; -webkit-line-clamp: 2; }
@@ -681,7 +682,7 @@ body {
 
 /* ⭐ NEWSLETTER SECTION STYLES ⭐ */
 .newsletter-wrapper {
-    padding: 15px 30px; /* Space reduced */
+    padding: 15px 30px;
     max-width: 100%;
     margin: 0 auto;
 }
@@ -824,45 +825,19 @@ body {
         gap: 8px;
         padding: 10px;
     }
-    .ad-fallback-container .product-card .card-img-wrap { height: 90px; }
-    .ad-fallback-container .product-card .card-img-wrap img { object-fit: contain; padding: 2px; }
     .ad-fallback-container .product-card .card-title { font-size: 0.65rem; }
     
-    .newsletter-form {
-        flex-direction: column;
-    }
-    .newsletter-form input {
-        width: 100%;
-    }
-    .newsletter-form button {
-        width: 100%;
-    }
-    .newsletter-box h2 {
-        font-size: 1.5rem;
-    }
+    .newsletter-form { flex-direction: column; }
+    .newsletter-form input { width: 100%; }
+    .newsletter-form button { width: 100%; }
+    .newsletter-box h2 { font-size: 1.5rem; }
     
-    .cookie-banner {
-        bottom: 80px;
-        flex-direction: column;
-        text-align: center;
-        padding: 15px;
-    }
-    .cookie-buttons {
-        width: 100%;
-        justify-content: center;
-    }
-    .btn-accept {
-        width: 100%;
-    }
+    .cookie-banner { bottom: 80px; flex-direction: column; text-align: center; padding: 15px; }
+    .cookie-buttons { width: 100%; justify-content: center; }
+    .btn-accept { width: 100%; }
     
-    .contact-form-panel {
-        width: 85vw;
-        right: -90vw;
-        border-radius: 12px 0 0 12px;
-    }
-    .contact-form-panel.open {
-        right: 0;
-    }
+    .contact-form-panel { width: 85vw; right: -90vw; border-radius: 12px 0 0 12px; }
+    .contact-form-panel.open { right: 0; }
     
     .nav-main { flex-wrap: wrap; padding: 10px 15px; gap: 10px; align-items: center; justify-content: space-between; }
     .nav-main > div { display: contents !important; }
@@ -907,7 +882,6 @@ body {
 
     .product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 15px; }
     .product-card { border-radius: 8px; }
-    .card-img-wrap { height: 140px; padding: 3px; }
     .card-badge { font-size: 0.65rem; padding: 2px 6px; }
     .card-body { padding: 8px; gap: 3px; }
     .card-title { font-size: 0.75rem; }
