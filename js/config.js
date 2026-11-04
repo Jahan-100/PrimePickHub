@@ -15,7 +15,6 @@ const CONFIG = {
         walmart:    { name: 'Walmart',    brandColor: '#0071CE', textColor: '#FFFFFF' }
     },
 
-    // ⭐ Duniya Bhar Ki Categories (Master List) ⭐
     categories: [
         { slug: 'all', name: 'For you', icon: '❤️' },
         { slug: 'electronics', name: 'Electronics', icon: '📱' },
@@ -40,6 +39,10 @@ const CONFIG = {
     ]
 };
 
+// ⭐ SAFE INITIALIZATION ⭐
 if (typeof supabase !== 'undefined' && CONFIG.supabaseUrl) {
     window.supabaseClient = supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
+    console.log("✅ Supabase Client Initialized Successfully.");
+} else {
+    console.error("❌ Supabase SDK not found. Check if script is loaded before config.js");
 }
