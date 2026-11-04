@@ -40,18 +40,18 @@ module.exports = async function handler(req, res) {
             .from('affiliate_offers').select('*').eq('product_id', product.id).limit(1);
         const offer = offers?.[0] || { store_name: 'Store', affiliate_url: '#' };
 
-        // ⭐ MAXIMUM FREE AI MODELS LIST ⭐
+        // ⭐ LATEST FREE MODELS (Updated list) ⭐
         const models = [
-            "meta-llama/llama-3.1-8b-instruct:free",
-            "google/gemini-flash-1.5:free",
+            "openrouter/free",
+            "openai/gpt-oss-120b:free",
+            "google/gemini-2.0-flash-exp:free",
+            "meta-llama/llama-3.3-70b-instruct:free",
+            "deepseek/deepseek-r1:free",
             "mistralai/mistral-7b-instruct:free",
-            "microsoft/phi-3-mini-128k-instruct:free",
-            "qwen/qwen-2-7b-instruct:free",
-            "meta-llama/llama-3-8b-instruct:free",
-            "huggingfaceh4/zephyr-7b-beta:free",
-            "openchat/openchat-7b:free",
-            "gryphe/mythomax-l2-13b:free",
-            "undi95/toppy-m-7b:free"
+            "google/gemma-2-9b-it:free",
+            "meta-llama/llama-3.1-8b-instruct:free",
+            "qwen/qwen3-235b-a22b:free",
+            "meta-llama/llama-4-scout:free"
         ];
 
         const prompt = `You are an expert SEO Copywriter. Write a highly detailed, 600-word review blog post in HTML for the following product.
@@ -75,7 +75,7 @@ Instructions:
                     method: "POST",
                     headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
                     body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }] }),
-                    signal: AbortSignal.timeout(8000) // 8 second timeout per model to prevent Vercel crash
+                    signal: AbortSignal.timeout(8000)
                 });
                 
                 const aiData = await response.json();
@@ -85,7 +85,7 @@ Instructions:
                     continue; 
                 }
 
-                if (aiData.choices && aiData.choices[0].message.content) {
+                if (aiData.choices && aiData.choices[0]?.message?.content) {
                     generatedContent = aiData.choices[0].message.content
                         .replace(/```html/g, '').replace(/```/g, '').trim();
                     usedModel = model;
@@ -106,7 +106,7 @@ Instructions:
             slug: slug,
             content_html: generatedContent,
             image_url: product.image_url,
-            is_published: false // Draft
+            is_published: false
         }]);
         
         if (insertErr) throw insertErr;
