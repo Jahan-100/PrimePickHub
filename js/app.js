@@ -390,21 +390,19 @@ async function setupRealtime() {
         .subscribe((status) => { if (status === 'SUBSCRIBED') console.log('✅ Realtime connected! Live updates are ON.'); });
 }
 
-// ⭐ NEW: Fetch Geo Location ⭐
+// ⭐ UPDATED: Fetch Location via Vercel API ⭐
 async function getGeoData() {
-    let geo = JSON.parse(localStorage.getItem('geo_data') || '{}');
-    if (!geo.country) {
-        try {
-            const res = await fetch('https://ipapi.co/json/');
+    let geo = { country: 'Unknown', city: 'Unknown' };
+    try {
+        const res = await fetch('/api/geo');
+        if (res.ok) {
             const data = await res.json();
-            geo = { country: data.country_name || 'Unknown', city: data.city || 'Unknown' };
-            localStorage.setItem('geo_data', JSON.stringify(geo));
-        } catch { geo = { country: 'Unknown', city: 'Unknown' }; }
-    }
+            geo = { country: data.country || 'Unknown', city: data.city || 'Unknown' };
+        }
+    } catch (e) { console.warn("Geo fetch failed", e); }
     return geo;
 }
 
-// ⭐ UPDATED: Track Visitor with Location ⭐
 async function trackVisitor() {
     if (!window.supabaseClient) return;
     let visitorId = getCookie('visitor_id');
@@ -417,7 +415,6 @@ async function trackVisitor() {
     await window.supabaseClient.from('website_visitors').upsert({ visitor_id: visitorId, last_seen: new Date().toISOString(), referrer: source, device_type: deviceType, country: geo.country, city: geo.city }, { onConflict: 'visitor_id' });
 }
 
-// ⭐ UPDATED: Track Active App with Location ⭐
 async function trackActiveApp() {
     if (!window.supabaseClient) return;
     const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
