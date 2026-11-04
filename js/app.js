@@ -354,38 +354,31 @@ window.selectCategory = async function(catSlug, element) {
     }
 };
 
+// ⭐ AD FALLBACK LOGIC (Hides Slots if Empty) ⭐
 function renderAdFallback(products) {
-    const topSlot = document.getElementById('ad-fallback-top');
-    const midSlot = document.getElementById('ad-fallback-middle');
+    const topSlot = document.getElementById('ad-slot-top');
+    const midSlot = document.getElementById('ad-slot-middle');
 
-    if (products && products.length > 0) {
-        const shuffled = [...products].sort(() => 0.5 - Math.random());
-        const selected = shuffled.slice(0, 12);
+    // Check if there is actual ad code inside the slot
+    const topContent = document.getElementById('ad-fallback-top')?.innerHTML.trim();
+    const midContent = document.getElementById('ad-fallback-middle')?.innerHTML.trim();
 
-        const html = selected.map(p => {
-            const title = escapeHTML(p.title || 'Product');
-            const productUrl = getProductUrl(p);
-            const imageSrc = isValidURL(p.image_url) ? escapeHTML(getHighQualityImage(p.image_url)) : 'assets/icon-192.png?v=4';
-            const primaryOffer = getPrimaryOffer(p) || {};
-            const sym = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' }[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
-            const price = parseFloat(primaryOffer.sale_price) || parseFloat(primaryOffer.price) || 0;
+    if (topSlot) {
+        if (topContent) {
+            topSlot.style.display = 'flex';
+            topSlot.style.minHeight = '120px'; 
+        } else {
+            topSlot.style.display = 'none'; // Hide if empty
+        }
+    }
 
-            return `
-                <div class="product-card" style="cursor:pointer;" onclick="window.location.href='${productUrl}'">
-                    <div class="card-img-wrap">
-                        <img src="${imageSrc}" alt="${title}">
-                    </div>
-                    <div class="card-body">
-                        <a href="${productUrl}" class="card-title">${title}</a>
-                        <div style="font-weight:bold; color:#FF5A3C; font-size:0.85rem; margin-bottom:4px;">${sym}${price.toFixed(2)}</div>
-                        <button class="btn-check-price" style="background:#2563eb; pointer-events:none;">View</button>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        if (topSlot) topSlot.innerHTML = html;
-        if (midSlot) midSlot.innerHTML = html;
+    if (midSlot) {
+        if (midContent) {
+            midSlot.style.display = 'flex';
+            midSlot.style.minHeight = '120px';
+        } else {
+            midSlot.style.display = 'none'; // Hide if empty
+        }
     }
 }
 
@@ -513,7 +506,7 @@ async function loadHomepageProducts() {
         const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false);
 
         renderDynamicCategories(allProducts);
-        renderAdFallback(allProducts);
+        renderAdFallback(allProducts); // Updates ad slots visibility
 
         const now = new Date();
         const flashSaleProducts1 = [];
@@ -628,16 +621,14 @@ window.toggleNotifPanel = function(e) {
 async function loadNotifications() {
     if (!window.supabaseClient) return;
     
-    // Fetch only non-deleted notifications directly from DB
     const { data, error } = await window.supabaseClient
         .from('app_notifications')
         .select('*')
-        .eq('is_deleted', false) // <--- NAYA: Filter deleted
+        .eq('is_deleted', false) 
         .order('created_at', { ascending: false })
         .limit(100);
 
     if (!error && data) {
-        // Remove duplicates
         const seen = new Set();
         const unique = [];
         data.forEach(n => {
@@ -702,10 +693,8 @@ window.markAsRead = function(id) {
     }
 }
 
-// ⭐ NAYA: Database mein is_deleted = true karein ⭐
 window.deleteNotif = async function(id) {
     try {
-        // Database mein soft delete
         const { error } = await window.supabaseClient
             .from('app_notifications')
             .update({ is_deleted: true })
@@ -713,7 +702,6 @@ window.deleteNotif = async function(id) {
             
         if (error) throw error;
         
-        // Local UI update
         currentNotifs = currentNotifs.filter(n => n.id !== id);
         renderNotifications();
     } catch (err) {
@@ -759,7 +747,6 @@ window.handleNotifClick = async function(id, slug, type) {
     window.location.href = `/product/${slug}`;
 }
 
-// ⭐ NAYA: Clear All Database se hide karein ⭐
 window.clearAllNotifs = async function(e) {
     if(e) e.stopPropagation();
     try {
