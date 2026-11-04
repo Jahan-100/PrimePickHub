@@ -21,16 +21,22 @@ async function uploadFileToSupabase(file) {
 window.loadBlogList = async function() {
     const tbody = document.getElementById('blogListBody');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading...</td></tr>';
 
     const { data: blogs, error } = await window.supabaseClient.from('blogs').select('*').order('created_at', { ascending: false });
     
     if (error || !blogs || blogs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No blog posts found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No blog posts found.</td></tr>';
+        const countEl = document.getElementById('totalBlogsCount');
+        if (countEl) countEl.innerText = 0;
         return;
     }
 
-    tbody.innerHTML = blogs.map(b => {
+    // ⭐ Update Total Blogs Count
+    const countEl = document.getElementById('totalBlogsCount');
+    if (countEl) countEl.innerText = blogs.length;
+
+    tbody.innerHTML = blogs.map((b, index) => {
         const isPublished = b.is_published !== false;
         const statusBadge = isPublished ? '' : `<span style="background:#F59E0B; color:white; padding:2px 6px; border-radius:4px; font-size:0.65rem; margin-left:5px;">🤖 AI DRAFT</span>`;
         
@@ -43,6 +49,7 @@ window.loadBlogList = async function() {
 
         return `
             <tr>
+                <td style="text-align: center; font-weight: bold;">${index + 1}</td> <!-- Sr. No. -->
                 <td style="text-align: center;"><img src="${b.image_url || '/assets/icon-192.png?v=4'}" class="table-img"></td>
                 <td style="text-align: left; font-weight: 500;">${b.title} ${statusBadge}</td>
                 <td style="text-align:center;">${new Date(b.created_at).toLocaleDateString()}</td>
@@ -217,7 +224,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const urlInput = document.getElementById('quickBlogUrlInput').value.trim();
         if (!urlInput) return alert('Please paste a product URL.');
 
-        // Extract slug
         let slug = '';
         try {
             if (urlInput.includes('/product/')) {
@@ -226,7 +232,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const urlParams = new URLSearchParams(urlInput.split('?')[1]);
                 slug = urlParams.get('slug');
             } else {
-                slug = urlInput; // Assume they pasted just the slug
+                slug = urlInput; 
             }
         } catch (e) { return alert('Invalid URL format. Make sure it is a valid product link.'); }
 
@@ -238,7 +244,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.disabled = true;
 
         try {
-            // 1. Fetch product from DB
             const { data: product, error: pErr } = await window.supabaseClient
                 .from('products')
                 .select('*, affiliate_offers(*)')
@@ -249,7 +254,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const offer = product.affiliate_offers?.[0] || { store_name: 'Store', affiliate_url: '#' };
 
-            // 2. Call API to generate blog
             const res = await fetch('/api/generate-blog', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -269,7 +273,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert("✅ Blog generated successfully! It is now in the list below as an 'AI DRAFT'. Please review and publish.");
             document.getElementById('quickBlogUrlInput').value = '';
             
-            // Reload list
             document.getElementById('blogListContainer').style.display = 'block';
             window.loadBlogList();
 
@@ -486,7 +489,7 @@ async function loadProductsList() {
         renderTable();
     } catch (err) { 
         console.error('List Load Error:', err); 
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:red;">Failed to load products.</td></tr>'; 
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:red;">Failed to load products.</td></tr>'; 
     }
 }
 
@@ -510,12 +513,16 @@ function renderTable() {
         return aIsAvailable ? 1 : -1;
     });
 
+    // ⭐ Update Total Products Count
+    const countEl = document.getElementById('totalProductsCount');
+    if (countEl) countEl.innerText = filteredProducts.length; 
+
     if (filteredProducts.length === 0) { 
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No products found.</td></tr>'; 
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No products found.</td></tr>'; 
         return; 
     }
 
-    tbody.innerHTML = filteredProducts.map(p => {
+    tbody.innerHTML = filteredProducts.map((p, index) => {
         const defaultOffer = p.affiliate_offers?.[0] || {};
         
         const basePrice = parseFloat(defaultOffer.price) || 0;
@@ -556,6 +563,7 @@ function renderTable() {
 
         return `
             <tr class="${rowClass}">
+                <td style="text-align: center; font-weight: bold;">${index + 1}</td> <!-- Sr. No. -->
                 <td style="text-align: center;">
                     <span style="background:#e2e8f0; color:#1e293b; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:600; white-space:nowrap; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis;">${catName}</span>
                 </td>
