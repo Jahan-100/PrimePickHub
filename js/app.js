@@ -90,7 +90,7 @@ function renderDynamicCategories(allProducts) {
     const catContainer = document.getElementById('categoryScrollContainer');
     if (catContainer) {
         catContainer.innerHTML = activeCats.map(c => `
-            <a href="javascript:void(0)" onclick="selectCategory('${c.slug}', this)" class="category-item ${c.slug === 'all' ? 'active' : ''}" data-cat="${c.slug}">
+            <a href="/category/${c.slug}" onclick="event.preventDefault(); selectCategory('${c.slug}', this)" class="category-item ${c.slug === 'all' ? 'active' : ''}" data-cat="${c.slug}">
                 <div class="cat-icon" ${c.slug === 'all' ? 'style="color: #EF4444;"' : ''}>${c.icon}</div>
                 <span>${c.name}</span>
             </a>
@@ -180,7 +180,7 @@ function renderProductCard(product) {
             ${badge}
             <div class="card-img-wrap">
                 <a href="${productUrl}" ${disabledAttr}>
-                    <img src="${imageSrc}" alt="${title}" loading="lazy" class="product-thumb">
+                    <img src="${imageSrc}" alt="${title}" width="200" height="200" loading="lazy" class="product-thumb">
                 </a>
             </div>
             <div class="card-body">
@@ -229,7 +229,7 @@ function renderFlashCard(product, section = 1) {
     return `
         <a href="${productUrl}" class="special-deal-card flash-card">
             <div class="img-box">
-                <img src="${imageSrc}" alt="${title}">
+                <img src="${imageSrc}" alt="${title}" width="190" height="190" loading="lazy">
             </div>
             <div class="info-box">
                 ${priceDisplay}
@@ -580,7 +580,7 @@ async function loadHomepageProducts() {
                     }
                     return `
                         <a href="${getProductUrl(p)}" class="special-deal-card">
-                            <div class="img-box"><img src="${getHighQualityImage(p.image_url) || '/assets/icon-192.png?v=4'}" alt="${escapeHTML(p.title)}"></div>
+                            <div class="img-box"><img src="${getHighQualityImage(p.image_url) || '/assets/icon-192.png?v=4'}" alt="${escapeHTML(p.title)}" width="190" height="190" loading="lazy"></div>
                             <div class="info-box">
                                 ${priceDisplay}
                                 <div class="title">${escapeHTML(p.title)}</div>
