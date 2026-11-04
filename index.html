@@ -164,7 +164,6 @@
         </div>
     </div>
 
-    <!-- Space fix: margin-top and padding-bottom kam kiya hai -->
     <div class="container" style="margin-top: 10px; padding-bottom: 0;">
         <div class="ad-slot" id="ad-slot-top" style="margin-bottom: 0;">
             <div class="ad-fallback-container" id="ad-fallback-top"></div>
@@ -266,6 +265,25 @@
         <div class="ad-slot" id="ad-slot-middle" style="margin-bottom: 10px;">
             <div class="ad-fallback-container" id="ad-fallback-middle"></div>
         </div>
+
+        <!-- ⭐ LATEST BLOG SECTION (Naya Add Kiya Gaya Hai) ⭐ -->
+        <div class="container" id="latestBlogSection" style="display: none; margin-bottom: 20px; padding: 0;">
+            <h2 style="margin-bottom: 15px; font-family: 'Poppins', sans-serif; font-weight: 800; color: var(--text-dark);">Latest From Our Blog</h2>
+            <a href="blog.html" id="latestBlogLink" style="text-decoration: none; display: block;">
+                <div class="latest-blog-card">
+                    <div class="latest-blog-img-wrap">
+                        <img id="latestBlogImg" src="" alt="Latest Blog">
+                    </div>
+                    <div class="latest-blog-content">
+                        <h3 id="latestBlogTitle">Loading...</h3>
+                        <p id="latestBlogDate"></p>
+                        <span class="latest-blog-btn">Read More &rarr;</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <!-- ⭐ LATEST BLOG SECTION END ⭐ -->
+
     </main>
 
     <div class="newsletter-wrapper">
@@ -355,7 +373,7 @@
 
     <script src="js/config.js?v=6"></script>
     <script src="js/api.js?v=7"></script>
-    <script src="js/app.js?v=20"></script>
+    <script src="js/app.js?v=21"></script> <!-- Version updated to 21 -->
     <script src="js/affiliate.js?v=6"></script>
     <script>
         function toggleCatDropdown(event) {
