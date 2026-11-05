@@ -26,16 +26,22 @@
         .clickable-row:hover { background: #E2E8F0; }
         .clickable-row td { color: #1E1B4B; }
         .highlight { color: #DC2626; font-weight: bold; }
-        .breadcrumb { display: flex; gap: 5px; align-items: center; font-size: 0.9rem; margin-bottom: 15px; color: #64748B; }
+        .breadcrumb { display: flex; gap: 8px; align-items: center; font-size: 0.95rem; margin-bottom: 15px; color: #64748B; background: #f1f5f9; padding: 10px 15px; border-radius: 8px; }
         .breadcrumb a { color: #2563eb; text-decoration: none; font-weight: bold; cursor: pointer; }
+        .breadcrumb a:hover { text-decoration: underline; }
         .breadcrumb span { font-weight: bold; color: #1E1B4B; }
         .table-wrapper { max-height: 65vh; overflow-y: auto; border: 1px solid #E2E8F0; border-radius: 8px; }
+        .back-step-btn { background: #E2E8F0; color: #1E1B4B; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; display: none; margin-right: 10px; }
+        .back-step-btn:hover { background: #CBD5E1; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1 id="pageTitle">Loading Details...</h1>
+            <div style="display:flex; align-items:center;">
+                <button id="stepBackBtn" class="back-step-btn" onclick="stepBack()">← Back Step</button>
+                <h1 id="pageTitle">Loading Details...</h1>
+            </div>
             <a href="/admin.html" class="btn-back">← Back to Dashboard</a>
         </div>
         <div class="filters">
@@ -64,7 +70,7 @@
         let selectedCity = null;
         let currentType = 'clicks';
 
-        // ⭐ NAYA: Country Codes ko Pooray Naam mein badalne ka function ⭐
+        // ⭐ UPDATED: Saare Countries ki mukammal list ⭐
         function formatCountryName(code) {
             if (!code || code === 'Unknown') return 'Unknown';
             const countryMap = {
@@ -72,7 +78,13 @@
                 'IN': 'India', 'AE': 'United Arab Emirates', 'SA': 'Saudi Arabia', 'CA': 'Canada',
                 'AU': 'Australia', 'DE': 'Germany', 'FR': 'France', 'CN': 'China', 'JP': 'Japan',
                 'BR': 'Brazil', 'RU': 'Russia', 'ZA': 'South Africa', 'NG': 'Nigeria', 'EG': 'Egypt',
-                'TR': 'Turkey', 'MY': 'Malaysia', 'ID': 'Indonesia', 'BD': 'Bangladesh', 'LK': 'Sri Lanka'
+                'TR': 'Turkey', 'MY': 'Malaysia', 'ID': 'Indonesia', 'BD': 'Bangladesh', 'LK': 'Sri Lanka',
+                'BE': 'Belgium', 'FI': 'Finland', 'NL': 'Netherlands', 'ES': 'Spain', 'IT': 'Italy', 
+                'SE': 'Sweden', 'PL': 'Poland', 'CH': 'Switzerland', 'AT': 'Austria', 'IE': 'Ireland', 
+                'DK': 'Denmark', 'NO': 'Norway', 'PT': 'Portugal', 'GR': 'Greece', 'CZ': 'Czech Republic', 
+                'RO': 'Romania', 'HU': 'Hungary', 'NZ': 'New Zealand', 'SG': 'Singapore', 'PH': 'Philippines', 
+                'TH': 'Thailand', 'VN': 'Vietnam', 'KR': 'South Korea', 'MX': 'Mexico', 'AR': 'Argentina', 
+                'CL': 'Chile', 'CO': 'Colombia', 'PE': 'Peru', 'UA': 'Ukraine', 'IL': 'Israel'
             };
             return countryMap[code.toUpperCase()] || code;
         }
@@ -114,6 +126,11 @@
             const breadcrumb = document.getElementById('breadcrumb');
             const searchVal = document.getElementById('searchInput').value.toLowerCase();
             const filterVal = document.getElementById('filterSelect').value;
+            const stepBackBtn = document.getElementById('stepBackBtn');
+
+            // Breadcrumb UI update
+            if (currentView === 'country') stepBackBtn.style.display = 'none';
+            else stepBackBtn.style.display = 'inline-block';
 
             let filteredData = rawData.filter(item => {
                 const matchSearch = JSON.stringify(item).toLowerCase().includes(searchVal);
@@ -133,13 +150,10 @@
             if (currentView === 'country') {
                 thead.innerHTML = `<tr><th>Sr. No.</th><th>Country</th><th>Total Records</th><th>Details</th></tr>`;
                 const grouped = {};
-                
-                // Yahan hum formatCountryName use kar rahe hain
                 filteredData.forEach(d => { 
                     const c = formatCountryName(d.country); 
                     grouped[c] = (grouped[c] || 0) + 1; 
                 });
-                
                 tbody.innerHTML = Object.entries(grouped).map(([country, count], idx) => `
                     <tr class="clickable-row" onclick="drillDown('city', '${country}')">
                         <td>${idx + 1}</td><td>${country}</td><td>${count}</td><td style="color:#2563eb;">View Cities →</td>
@@ -147,7 +161,6 @@
                 `).join('');
             } else if (currentView === 'city') {
                 thead.innerHTML = `<tr><th>Sr. No.</th><th>City</th><th>Total Records</th><th>Details</th></tr>`;
-                // Yahan filtering bhi formatCountryName se match kar ke ki ja rahi hai
                 const countryData = filteredData.filter(d => formatCountryName(d.country) === selectedCountry);
                 const grouped = {};
                 countryData.forEach(d => { const c = d.city || 'Unknown'; grouped[c] = (grouped[c] || 0) + 1; });
@@ -179,8 +192,28 @@
             }
             if (tbody.innerHTML === '') tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 30px;">No data found for this selection.</td></tr>`;
         }
-        window.drillDown = function(level, name) { if (level === 'city') { selectedCountry = name; currentView = 'city'; } if (level === 'details') { selectedCity = name; currentView = 'details'; } renderView(); };
-        window.goBack = function(level) { if (level === 'country') { selectedCountry = null; selectedCity = null; currentView = 'country'; } if (level === 'city') { selectedCity = null; currentView = 'city'; } renderView(); };
+        
+        window.drillDown = function(level, name) { 
+            if (level === 'city') { selectedCountry = name; currentView = 'city'; } 
+            if (level === 'details') { selectedCity = name; currentView = 'details'; } 
+            renderView(); 
+        };
+        
+        window.goBack = function(level) { 
+            if (level === 'country') { selectedCountry = null; selectedCity = null; currentView = 'country'; } 
+            if (level === 'city') { selectedCity = null; currentView = 'city'; } 
+            renderView(); 
+        };
+        
+        // Naya function: Step-by-step wapas jane ke liye
+        window.stepBack = function() {
+            if (currentView === 'details') {
+                selectedCity = null; currentView = 'city';
+            } else if (currentView === 'city') {
+                selectedCountry = null; currentView = 'country';
+            }
+            renderView();
+        };
     </script>
 </body>
 </html>
