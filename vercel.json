@@ -5,7 +5,6 @@
     { "source": "/api/geo", "destination": "/api/geo.js" }
   ],
   "crons": [
-    { "path": "/api/process-queue", "schedule": "*/5 * * * *" },
     { "path": "/api/check-status", "schedule": "0 3 * * *" }
   ]
 }
