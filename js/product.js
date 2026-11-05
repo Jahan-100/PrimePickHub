@@ -1,12 +1,12 @@
 /**
- * Product Detail Page with Real-Time Currency Conversion
+ * Product Detail Page with Real-Time Currency Conversion & Color/Size Selection
  */
 function escapeHTML(s) {
     if (s === null || s === undefined) return '';
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-// ⭐ SMART IMAGE OPTIMIZER (Fixed Shopify logic — matches app.js) ⭐
+// ⭐ SMART IMAGE OPTIMIZER (Fixed Shopify logic) ⭐
 function getHighQualityImage(url, size = 400) {
     if (!url || typeof url !== 'string') return url;
     let cleanUrl = url.trim();
@@ -26,7 +26,7 @@ function getHighQualityImage(url, size = 400) {
     } else if (cleanUrl.includes('ebayimg.com')) {
         cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, `/s-l${size}.$1`);
     } else if (cleanUrl.includes('shopify') || cleanUrl.includes('govee') || cleanUrl.includes('allegra-k.com') || cleanUrl.includes('cdn.shopify')) {
-        // ⭐ SHOPIFY FIX: Strip '?v=...' first (it was blocking resizer), then force WebP
+        // SHOPIFY FIX: Strip '?v=...' first, then force WebP
         const qIdx = cleanUrl.indexOf('?');
         if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
         cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
@@ -332,11 +332,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     await fetchRates(); updateUI(baseCurrency);
     currencySelector.addEventListener('change', (e) => updateUI(e.target.value));
 
-    // ⭐ FIXED: Handles both direct URL and "Name | URL" format
     window.selectColor = function(colorValue) {
         activeColor = colorValue;
-        
-        // Extract image URL if color includes it (either as URL or "Name | URL")
         let imageUrl = null;
         if (colorValue.includes('|')) {
             const parts = colorValue.split('|');
@@ -344,12 +341,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else if (colorValue.startsWith('http')) {
             imageUrl = colorValue;
         }
-        
         if (imageUrl && imageUrl.startsWith('http')) {
             const mainImgElement = document.getElementById('mainImage');
             if (mainImgElement) mainImgElement.src = getHighQualityImage(imageUrl, 800);
         }
-
         const offersForColor = allVariations.filter(v => v.product_color && v.product_color.includes(colorValue));
         let availableSizes = [];
         offersForColor.forEach(o => {
@@ -361,13 +356,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         if (availableSizes.length > 0) { if (!availableSizes.includes(activeSize)) activeSize = availableSizes[0]; }
         else { activeSize = null; }
-
         let idxExact = allVariations.findIndex(v => v.product_color && v.product_color.includes(colorValue) && (activeSize ? v.variation_name && v.variation_name.trim() === activeSize : true));
         let idxPartial = allVariations.findIndex(v => v.product_color && v.product_color.includes(colorValue) && (activeSize ? v.variation_name && v.variation_name.split(',').map(s=>s.trim()).includes(activeSize) : true));
         if (idxExact !== -1) activeOfferIndex = idxExact;
         else if (idxPartial !== -1) activeOfferIndex = idxPartial;
         else if (offersForColor.length > 0) activeOfferIndex = allVariations.indexOf(offersForColor[0]);
-        
         activeOffer = allVariations[activeOfferIndex];
         document.getElementById('variationContainer').innerHTML = generateVariationUI();
         updateUI(currencySelector.value);
