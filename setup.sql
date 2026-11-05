@@ -1,5 +1,5 @@
 -- ============================================================
--- PrimePickHub — Complete Database Setup (SAFE VERSION v3)
+-- PrimePickHub — Complete Database Setup (SAFE VERSION v3.1)
 -- Bar bar chala sakte hain, kuch delete nahi hoga.
 -- ============================================================
 
@@ -23,6 +23,8 @@ CREATE POLICY "admins read all profiles" ON public.profiles
   FOR SELECT TO authenticated
   USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
+-- ⭐ DROP FIRST to avoid return type error
+DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 BEGIN
@@ -280,6 +282,7 @@ CREATE POLICY "anon upsert installs" ON public.active_app_installs FOR ALL TO an
 -- ==================== NOTIFICATION TRIGGERS ====================
 
 -- 1. Special Deal trigger
+DROP FUNCTION IF EXISTS public.notify_special_deal() CASCADE;
 CREATE OR REPLACE FUNCTION public.notify_special_deal()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -297,6 +300,7 @@ CREATE TRIGGER on_product_special_deal
   FOR EACH ROW EXECUTE FUNCTION public.notify_special_deal();
 
 -- 2. Flash Sale trigger
+DROP FUNCTION IF EXISTS public.notify_product_flash_sale() CASCADE;
 CREATE OR REPLACE FUNCTION public.notify_product_flash_sale()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -314,6 +318,7 @@ CREATE TRIGGER on_product_flash_sale
   FOR EACH ROW EXECUTE FUNCTION public.notify_product_flash_sale();
 
 -- 3. Price Drop trigger
+DROP FUNCTION IF EXISTS public.notify_offer_update() CASCADE;
 CREATE OR REPLACE FUNCTION public.notify_offer_update()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -337,11 +342,14 @@ CREATE TRIGGER on_offer_updated
   FOR EACH ROW EXECUTE FUNCTION public.notify_offer_update();
 
 -- ==================== RPC FUNCTIONS ====================
+-- ⭐ YAHAN DROP LAGAYA GAYA HAI ERROR FIX KARNE KE LIYE ⭐
+DROP FUNCTION IF EXISTS public.get_total_visitors();
 CREATE OR REPLACE FUNCTION public.get_total_visitors()
 RETURNS INTEGER LANGUAGE sql SECURITY DEFINER AS $$
   SELECT COUNT(*)::INTEGER FROM public.website_visitors;
 $$;
 
+DROP FUNCTION IF EXISTS public.get_active_app_installs();
 CREATE OR REPLACE FUNCTION public.get_active_app_installs()
 RETURNS INTEGER LANGUAGE sql SECURITY DEFINER AS $$
   SELECT COUNT(*)::INTEGER FROM public.active_app_installs WHERE last_active > (NOW() - INTERVAL '30 days');
