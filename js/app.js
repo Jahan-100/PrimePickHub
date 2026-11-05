@@ -349,11 +349,10 @@ window.clearAllNotifs = async function(e) {
     try { const ids = currentNotifs.map(n => n.id); if (ids.length > 0) { const { error } = await window.supabaseClient.from('app_notifications').update({ is_deleted: true }).in('id', ids); if (error) throw error; } currentNotifs = []; renderNotifications(); } catch (err) { console.error("Error clearing notifications:", err); }
 }
 
-// ⭐ UPDATED: Smart Notification System ⭐
+// ⭐ UPDATED: Smart Notification System (Save on Device) ⭐
 function showBrowserNotification(title, body) {
     if (!("Notification" in window)) return;
     
-    // Check if user already allowed notifications on this device
     const hasAllowed = localStorage.getItem('notifications_allowed');
     if (hasAllowed === 'true') return; 
 
