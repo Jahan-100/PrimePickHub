@@ -44,7 +44,6 @@ const API = {
     recordClick(productId, store, subId) {
         if (!window.supabaseClient || !productId) return;
         
-        // Location localStorage se uthayen (app.js ne save ki hoti hai)
         let geo = { country: 'Unknown', city: 'Unknown' };
         try {
             const storedGeo = localStorage.getItem('geo_data');
