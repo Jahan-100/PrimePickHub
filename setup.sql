@@ -123,7 +123,6 @@ CREATE TABLE IF NOT EXISTS public.clicks (
   city TEXT DEFAULT 'Unknown',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
--- ⭐ Critical: add geo columns (were missing)
 ALTER TABLE public.clicks ADD COLUMN IF NOT EXISTS country TEXT DEFAULT 'Unknown';
 ALTER TABLE public.clicks ADD COLUMN IF NOT EXISTS city TEXT DEFAULT 'Unknown';
 ALTER TABLE public.clicks ENABLE ROW LEVEL SECURITY;
@@ -214,7 +213,6 @@ CREATE TABLE IF NOT EXISTS public.app_notifications (
   is_deleted BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
--- ⭐ Critical: add is_deleted (was missing)
 ALTER TABLE public.app_notifications ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT false;
 ALTER TABLE public.app_notifications ADD COLUMN IF NOT EXISTS product_slug TEXT;
 ALTER TABLE public.app_notifications ENABLE ROW LEVEL SECURITY;
@@ -251,7 +249,6 @@ CREATE TABLE IF NOT EXISTS public.website_visitors (
   country TEXT DEFAULT 'Unknown',
   city TEXT DEFAULT 'Unknown'
 );
--- ⭐ Critical: add tracking columns (were missing)
 ALTER TABLE public.website_visitors ADD COLUMN IF NOT EXISTS referrer TEXT DEFAULT 'Direct';
 ALTER TABLE public.website_visitors ADD COLUMN IF NOT EXISTS device_type TEXT DEFAULT 'Unknown';
 ALTER TABLE public.website_visitors ADD COLUMN IF NOT EXISTS country TEXT DEFAULT 'Unknown';
@@ -262,24 +259,25 @@ DROP POLICY IF EXISTS "anon upsert visitors" ON public.website_visitors;
 CREATE POLICY "anon upsert visitors" ON public.website_visitors FOR ALL TO anon, authenticated
   USING (true) WITH CHECK (true);
 
--- ==================== APP INSTALLS (with geo) ====================
+-- ==================== APP INSTALLS (with geo + device_type) ====================
 CREATE TABLE IF NOT EXISTS public.active_app_installs (
   device_id TEXT PRIMARY KEY,
   first_active TIMESTAMPTZ DEFAULT NOW(),
   last_active TIMESTAMPTZ DEFAULT NOW(),
   country TEXT DEFAULT 'Unknown',
-  city TEXT DEFAULT 'Unknown'
+  city TEXT DEFAULT 'Unknown',
+  device_type TEXT DEFAULT 'Mobile'
 );
--- ⭐ Critical: add geo columns (were missing)
 ALTER TABLE public.active_app_installs ADD COLUMN IF NOT EXISTS country TEXT DEFAULT 'Unknown';
 ALTER TABLE public.active_app_installs ADD COLUMN IF NOT EXISTS city TEXT DEFAULT 'Unknown';
+ALTER TABLE public.active_app_installs ADD COLUMN IF NOT EXISTS device_type TEXT DEFAULT 'Mobile';
 ALTER TABLE public.active_app_installs ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "anon upsert installs" ON public.active_app_installs;
 CREATE POLICY "anon upsert installs" ON public.active_app_installs FOR ALL TO anon, authenticated
   USING (true) WITH CHECK (true);
 
--- ==================== NOTIFICATION TRIGGERS (were missing from setup.sql) ====================
+-- ==================== NOTIFICATION TRIGGERS ====================
 
 -- 1. Special Deal trigger
 CREATE OR REPLACE FUNCTION public.notify_special_deal()
@@ -383,3 +381,5 @@ CREATE POLICY "Admin delete product images" ON storage.objects
   FOR DELETE TO authenticated
   USING (bucket_id = 'product-images'
     AND EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+
+-- ==================== DONE ====================
