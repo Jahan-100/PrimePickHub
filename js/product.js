@@ -1,5 +1,5 @@
 /**
- * Product Detail Page with Real-Time Currency Conversion & Color/Size Selection
+ * Product Detail Page with Real-Time Currency Conversion
  */
 function escapeHTML(s) {
     if (s === null || s === undefined) return '';
@@ -26,7 +26,6 @@ function getHighQualityImage(url, size = 400) {
     } else if (cleanUrl.includes('ebayimg.com')) {
         cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, `/s-l${size}.$1`);
     } else if (cleanUrl.includes('shopify') || cleanUrl.includes('govee') || cleanUrl.includes('allegra-k.com') || cleanUrl.includes('cdn.shopify')) {
-        // SHOPIFY FIX: Strip '?v=...' first, then force WebP
         const qIdx = cleanUrl.indexOf('?');
         if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
         cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
@@ -84,6 +83,30 @@ function getVideoHtml(url) {
     const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
     if (vimeoMatch && !url.includes('/video/')) embedUrl = `https://player.vimeo.com/video/${vimeoMatch[1]}`;
     return `<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;"><iframe src="${escapeHTML(embedUrl)}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen></iframe></div>`;
+}
+
+// ⭐ NAYA: Image se exact center color nikalne ka function ⭐
+async function extractImageColor(imageUrl) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "Anonymous"; // CORS bypass (mostly works for standard CDN images)
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            try {
+                // Product ka center pixel uthata hai
+                const pData = ctx.getImageData(img.width / 2, img.height / 2, 1, 1).data;
+                resolve(`rgb(${pData[0]}, ${pData[1]}, ${pData[2]})`);
+            } catch (e) {
+                resolve('#e2e8f0'); // Fallback
+            }
+        };
+        img.onerror = () => resolve('#e2e8f0');
+        img.src = imageUrl;
+    });
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -166,7 +189,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </a>`;
     };
 
-    function generateVariationUI() {
+    // ⭐ ASYNC VARIATION UI (Image to Color Extract) ⭐
+    async function generateVariationUI() {
         let html = '';
         if (uniqueColors.length > 0) {
             const activeObj = uniqueColors.find(c => c.value === activeColor);
@@ -175,22 +199,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                     Color: <span style="color: #64748B; font-weight: 500;">${activeObj ? activeObj.name : (activeColor || '')}</span>
                 </p>
                 <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">`;
-            uniqueColors.forEach(colorObj => {
+            
+            for (const colorObj of uniqueColors) {
                 const isActive = colorObj.value === activeColor;
                 const isImageUrl = colorObj.value.startsWith('http');
                 let boxStyle = '';
+
                 if (isImageUrl) {
-                    boxStyle = `background-image: url('${colorObj.hdValue}'); background-size: cover; background-position: center;`;
+                    // Yahan image ka exact center color nikal rahe hain
+                    const centerColor = await extractImageColor(colorObj.hdValue);
+                    boxStyle = `background-color: ${centerColor};`;
                 } else {
                     const bgColor = getHexFromColorString(colorObj.value);
                     boxStyle = `background-color: ${bgColor};`;
                 }
+
                 html += `
                 <div style="cursor:pointer;" onclick="selectColor('${colorObj.value}')">
-                    <div style="width:50px; height:50px; border-radius:6px; ${boxStyle} border:3px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; box-shadow:${isActive ? '0 0 0 3px rgba(255,90,60,0.3)' : 'none'}; transition:all 0.2s; box-sizing:border-box;">
+                    <div style="width:50px; height:50px; border-radius:50%; ${boxStyle} border:3px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; box-shadow:${isActive ? '0 0 0 3px rgba(255,90,60,0.3)' : 'none'}; transition:all 0.2s; box-sizing:border-box;">
                     </div>
                 </div>`;
-            });
+            }
             html += `</div></div>`;
         }
 
@@ -262,7 +291,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         Important: You will be redirected to the official store to confirm live price, stock, and delivery.
                     </p>
                 </div>
-                <div id="variationContainer">${generateVariationUI()}</div>
+                <div id="variationContainer"></div>
                 <div style="margin-bottom:25px;padding:15px;background:#F8FAFC;border-radius:8px;" id="buyButtonContainer"></div>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;">
                     <a href="https://wa.me/?text=${shareText}%20${shareUrl}" target="_blank" rel="noopener" style="padding:8px 16px;background:#25D366;color:#fff;border-radius:6px;text-decoration:none;font-size:0.9rem;">Share on WhatsApp</a>
@@ -284,6 +313,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div id="imageCounter" style="position:absolute; bottom:20px; color:white; font-size:1.1rem; font-weight:bold; background:rgba(0,0,0,0.6); padding:5px 15px; border-radius:20px;">1 / 1</div>
         </div>
     `;
+
+    // Asynchronous UI Generation
+    document.getElementById('variationContainer').innerHTML = await generateVariationUI();
+    updateUI(currencySelector.value);
 
     const mainImgEl = document.getElementById('mainImage');
     if (mainImgEl) {
@@ -316,8 +349,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             finalBasePrice = basePrice + (basePrice * (commissionRate / 100));
             if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100));
         }
+
         let priceHtml = '';
-        if (salePrice > 0) {
+        
+        // ⭐ PRICE LOGIC: Agar price 0 hai toh "Check Price" show hoga ⭐
+        if (basePrice === 0) {
+            const storeName = activeOffer.store_name || 'Store';
+            priceHtml = `<div style="font-size: 1.2rem; font-weight: bold; color: #FF5A3C;">Check Price on ${escapeHTML(storeName)}</div>`;
+        } else if (salePrice > 0) {
             const convertedSale = finalSalePrice * rate; const convertedOrig = finalBasePrice * rate;
             const symbol = currencySymbols[currency] || currency + ' ';
             priceHtml = `<div style="display:flex; align-items:center; gap:10px;"><span style="text-decoration:line-through; color:#64748B; font-size:1.2rem;">${symbol}${convertedOrig.toFixed(2)}</span><span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${convertedSale.toFixed(2)}</span></div>`;
@@ -325,6 +364,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const converted = finalBasePrice * rate; const symbol = currencySymbols[currency] || currency + ' ';
             priceHtml = `<div style="display:flex; align-items:center; gap:10px;"><span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${converted.toFixed(2)}</span></div>`;
         }
+        
         displayPriceContainer.innerHTML = priceHtml;
         buyButtonContainer.innerHTML = renderBuyButton(activeOffer);
     }
@@ -332,7 +372,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     await fetchRates(); updateUI(baseCurrency);
     currencySelector.addEventListener('change', (e) => updateUI(e.target.value));
 
-    window.selectColor = function(colorValue) {
+    // ⭐ YAHAN BHI ASYNC LAGAYA HAI ⭐
+    window.selectColor = async function(colorValue) {
         activeColor = colorValue;
         let imageUrl = null;
         if (colorValue.includes('|')) {
@@ -362,18 +403,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         else if (idxPartial !== -1) activeOfferIndex = idxPartial;
         else if (offersForColor.length > 0) activeOfferIndex = allVariations.indexOf(offersForColor[0]);
         activeOffer = allVariations[activeOfferIndex];
-        document.getElementById('variationContainer').innerHTML = generateVariationUI();
+        document.getElementById('variationContainer').innerHTML = await generateVariationUI();
         updateUI(currencySelector.value);
     };
 
-    window.selectSize = function(size) {
+    // ⭐ YAHAN BHI ASYNC LAGAYA HAI ⭐
+    window.selectSize = async function(size) {
         activeSize = size;
         let idxExact = allVariations.findIndex(v => v.variation_name && v.variation_name.trim() === size && (!activeColor || (v.product_color && v.product_color.includes(activeColor))));
         let idxPartial = allVariations.findIndex(v => v.variation_name && v.variation_name.split(',').map(s=>s.trim()).includes(size) && (!activeColor || (v.product_color && v.product_color.includes(activeColor))));
         if (idxExact !== -1) activeOfferIndex = idxExact;
         else if (idxPartial !== -1) activeOfferIndex = idxPartial;
         activeOffer = allVariations[activeOfferIndex];
-        document.getElementById('variationContainer').innerHTML = generateVariationUI();
+        document.getElementById('variationContainer').innerHTML = await generateVariationUI();
         updateUI(currencySelector.value);
     };
 
