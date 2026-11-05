@@ -18,7 +18,6 @@ function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.
 
 // ⭐ GLOBAL IMAGE LOAD HANDLER (Glitch Fix) ⭐
 window.handleImageLoad = function(imgElement) {
-    // Image ko 100% decode karke phir show karta hai (No glitch)
     if (imgElement.decode) {
         imgElement.decode().then(() => {
             imgElement.style.opacity = 1;
@@ -30,7 +29,7 @@ window.handleImageLoad = function(imgElement) {
     }
 };
 
-// ⭐ SMART IMAGE OPTIMIZER (Shopify WebP) ⭐
+// ⭐ SMART IMAGE OPTIMIZER (Shopify CDN Fix) ⭐
 function getHighQualityImage(url, size = 400) {
     if (!url || typeof url !== 'string') return url;
     let cleanUrl = url.trim();
@@ -45,11 +44,15 @@ function getHighQualityImage(url, size = 400) {
     } else if (cleanUrl.includes('ebayimg.com')) {
         cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, `/s-l${size}.$1`);
     } else if (cleanUrl.includes('shopify') || cleanUrl.includes('govee') || cleanUrl.includes('allegra-k.com') || cleanUrl.includes('cdn.shopify')) {
+        // ⭐ SHOPIFY FIX: Remove existing '?v=...' completely so it doesn't block resizing
+        const qIdx = cleanUrl.indexOf('?');
+        if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
+
+        // Remove existing size modifiers in filename
         cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
-        cleanUrl = cleanUrl.replace(/[?&](width|height|format|quality|crop)=\w+/g, '');
-        const sep = cleanUrl.includes('?') ? '&' : '?';
-        // WebP format force kiya hai taake fast load ho
-        cleanUrl = cleanUrl + sep + `width=${size}&height=${size}&crop=center&format=webp`;
+        
+        // Force exact size and WebP format
+        cleanUrl = cleanUrl + `?width=${size}&height=${size}&crop=center&format=webp`;
     } else {
         cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
         cleanUrl = cleanUrl.replace(/_\d+x(?=\.(jpg|jpeg|png|webp|avif))/i, '');
@@ -146,7 +149,6 @@ function renderProductCard(product, isPriority = false) {
     } else { cta = `<a href="${productUrl}" ${disabledAttr} class="btn-check-price" style="background:#64748B;">View Details</a>`; }
     const badge = product.badge ? `<span class="card-badge">${escapeHTML(product.badge)}</span>` : '';
 
-    // ⭐ Yahan handleImageLoad(this) use kiya hai ⭐
     return `<div class="product-card">${badge}<div class="card-img-wrap"><a href="${productUrl}" ${disabledAttr}><img src="${imageSrc}" alt="${title}" width="200" height="200" ${loadingAttr} ${imgPriority} decoding="async" class="product-thumb" style="opacity: 0; transition: opacity 0.4s ease-in-out;" onload="handleImageLoad(this)"></a></div><div class="card-body"><a href="${productUrl}" ${disabledAttr} class="card-title">${title}</a><div class="card-rating">${escapeHTML(ratingText)}</div>${timerHtml}${cta}</div></div>`;
 }
 
