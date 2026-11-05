@@ -145,9 +145,17 @@ function renderProductCard(product, isPriority = false) {
         const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
         let finalBasePrice = basePrice; let finalSalePrice = salePrice;
         if (commissionRate > 0) { finalBasePrice = basePrice + (basePrice * (commissionRate / 100)); if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100)); }
+        
         let priceDisplay = '';
-        if (salePrice > 0) priceDisplay = `<div style="margin-bottom:5px; display:flex; align-items:center; gap:8px;"><span style="text-decoration:line-through; color:#64748B; font-size:0.9rem;">${offerSymbol}${finalBasePrice.toFixed(2)}</span><span style="font-weight:bold; color:#DC2626; font-size:1.2rem;">${offerSymbol}${finalSalePrice.toFixed(2)}</span></div>`;
-        else priceDisplay = `<div style="font-weight:bold; color:#1E1B4B; margin-bottom:5px;">${offerSymbol}${finalBasePrice.toFixed(2)}</div>`;
+        // ⭐ HOMEPAGE CARD PRICE FIX: Agar price 0 hai toh "Check Price" show hoga ⭐
+        if (basePrice === 0 && salePrice === 0) {
+            priceDisplay = `<div style="font-weight:bold; color:#FF5A3C; margin-bottom:5px; font-size:1.05rem;">Check Price on ${storeName}</div>`;
+        } else if (salePrice > 0) {
+            priceDisplay = `<div style="margin-bottom:5px; display:flex; align-items:center; gap:8px;"><span style="text-decoration:line-through; color:#64748B; font-size:0.9rem;">${offerSymbol}${finalBasePrice.toFixed(2)}</span><span style="font-weight:bold; color:#DC2626; font-size:1.2rem;">${offerSymbol}${finalSalePrice.toFixed(2)}</span></div>`;
+        } else {
+            priceDisplay = `<div style="font-weight:bold; color:#1E1B4B; margin-bottom:5px;">${offerSymbol}${finalBasePrice.toFixed(2)}</div>`;
+        }
+
         cta = `${priceDisplay}<a href="${affUrl}" target="_blank" rel="noopener noreferrer sponsored" class="btn-check-price js-affiliate-link" style="background-color:${bg};color:${fg};" data-store="${storeName}" data-product-id="${pid}" data-url="${affUrl}">Check Price on ${storeName}</a>`;
     } else { cta = `<a href="${productUrl}" ${disabledAttr} class="btn-check-price" style="background:#64748B;">View Details</a>`; }
     const badge = product.badge ? `<span class="card-badge">${escapeHTML(product.badge)}</span>` : '';
@@ -165,9 +173,16 @@ function renderFlashCard(product, section = 1) {
     const basePrice = parseFloat(primaryOffer.price) || 0; const salePrice = parseFloat(primaryOffer.sale_price) || 0; const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
     let finalBasePrice = basePrice; let finalSalePrice = salePrice;
     if (commissionRate > 0) { finalBasePrice = basePrice + (basePrice * (commissionRate / 100)); if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100)); }
+    
     let priceDisplay = '';
-    if (salePrice > 0) priceDisplay = `<div style="display:flex; flex-direction:column; justify-content:center; align-items:center; width: 100%;"><div style="display:flex; align-items:center; gap:4px;"><span style="text-decoration:line-through; color:#64748B; font-size:0.75rem;">${sym}${finalBasePrice.toFixed(2)}</span><span style="font-weight:bold; color:#DC2626; font-size:0.95rem;">${sym}${finalSalePrice.toFixed(2)}</span></div></div>`;
-    else priceDisplay = `<div class="price" style="font-size:0.95rem;">${sym}${finalBasePrice.toFixed(2)}</div>`;
+    if (basePrice === 0 && salePrice === 0) {
+        priceDisplay = `<div style="font-weight:bold; color:#FF5A3C; font-size:0.95rem;">Check Price</div>`;
+    } else if (salePrice > 0) {
+        priceDisplay = `<div style="display:flex; flex-direction:column; justify-content:center; align-items:center; width: 100%;"><div style="display:flex; align-items:center; gap:4px;"><span style="text-decoration:line-through; color:#64748B; font-size:0.75rem;">${sym}${finalBasePrice.toFixed(2)}</span><span style="font-weight:bold; color:#DC2626; font-size:0.95rem;">${sym}${finalSalePrice.toFixed(2)}</span></div></div>`;
+    } else {
+        priceDisplay = `<div class="price" style="font-size:0.95rem;">${sym}${finalBasePrice.toFixed(2)}</div>`;
+    }
+    
     const endTime = section === 1 ? product.sale_end_date : product.sale_end_date_2;
     
     return `<a href="${productUrl}" class="special-deal-card flash-card"><div class="img-box"><img src="${imageSrc}" alt="${title}" width="190" height="190" loading="lazy" decoding="async" style="opacity: 0; transition: opacity 0.4s ease-in-out;" onload="handleImageLoad(this)"></div><div class="info-box">${priceDisplay}<div class="title">${title}</div><div class="card-timer" data-endtime="${endTime}">⏳ Calculating...</div></div></a>`;
@@ -320,8 +335,13 @@ async function loadHomepageProducts() {
                     let finalBasePrice = basePrice; let finalSalePrice = salePrice;
                     if (commissionRate > 0) { finalBasePrice = basePrice + (basePrice * (commissionRate / 100)); if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100)); }
                     let priceDisplay = '';
-                    if (salePrice > 0) priceDisplay = `<div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;"><span style="text-decoration:line-through; color:#64748B; font-size:0.75rem;">${sym}${finalBasePrice.toFixed(2)}</span><span class="price" style="margin-bottom:0;">${sym}${finalSalePrice.toFixed(2)}</span></div>`;
-                    else priceDisplay = `<div class="price">${sym}${finalBasePrice.toFixed(2)}</div>`;
+                    if (basePrice === 0 && salePrice === 0) {
+                        priceDisplay = `<div style="font-weight:bold; color:#FF5A3C; font-size:0.85rem;">Check Price</div>`;
+                    } else if (salePrice > 0) {
+                        priceDisplay = `<div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;"><span style="text-decoration:line-through; color:#64748B; font-size:0.75rem;">${sym}${finalBasePrice.toFixed(2)}</span><span class="price" style="margin-bottom:0;">${sym}${finalSalePrice.toFixed(2)}</span></div>`;
+                    } else {
+                        priceDisplay = `<div class="price">${sym}${finalBasePrice.toFixed(2)}</div>`;
+                    }
                     const specialImg = getHighQualityImage(p.image_url, 200) || '/assets/icon-192.png?v=4';
                     return `<a href="${getProductUrl(p)}" class="special-deal-card"><div class="img-box"><img src="${escapeHTML(specialImg)}" alt="${escapeHTML(p.title)}" width="190" height="190" loading="lazy" decoding="async" style="opacity: 0; transition: opacity 0.4s;" onload="handleImageLoad(this)"></div><div class="info-box">${priceDisplay}<div class="title">${escapeHTML(p.title)}</div></div></a>`;
                 }).join('');
@@ -431,7 +451,6 @@ async function setupRealtime() {
         .subscribe((status) => { if (status === 'SUBSCRIBED') console.log('✅ Realtime connected! Live updates are ON.'); });
 }
 
-// ⭐ getGeoData with localStorage cache (fixes click analytics) ⭐
 async function getGeoData() {
     let geo = { country: 'Unknown', city: 'Unknown' };
     try {
@@ -457,7 +476,6 @@ async function trackVisitor() {
     await window.supabaseClient.from('website_visitors').upsert({ visitor_id: visitorId, last_seen: new Date().toISOString(), referrer: source, device_type: deviceType, country: geo.country, city: geo.city }, { onConflict: 'visitor_id' });
 }
 
-// ⭐ trackActiveApp with device_type (fixes install analytics) ⭐
 async function trackActiveApp() {
     if (!window.supabaseClient) return;
     const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
