@@ -1,12 +1,12 @@
 /**
- * Product Detail Page with Real-Time Currency Conversion & Color/Size Selection
+ * Product Detail Page with Real-Time Currency Conversion
  */
 function escapeHTML(s) {
     if (s === null || s === undefined) return '';
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-// ⭐ SMART IMAGE OPTIMIZER ⭐
+// ⭐ SMART IMAGE OPTIMIZER (Fixed Shopify logic — matches app.js) ⭐
 function getHighQualityImage(url, size = 400) {
     if (!url || typeof url !== 'string') return url;
     let cleanUrl = url.trim();
@@ -26,15 +26,15 @@ function getHighQualityImage(url, size = 400) {
     } else if (cleanUrl.includes('ebayimg.com')) {
         cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, `/s-l${size}.$1`);
     } else if (cleanUrl.includes('shopify') || cleanUrl.includes('govee') || cleanUrl.includes('allegra-k.com') || cleanUrl.includes('cdn.shopify')) {
+        // ⭐ SHOPIFY FIX: Strip '?v=...' first (it was blocking resizer), then force WebP
+        const qIdx = cleanUrl.indexOf('?');
+        if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
         cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
-        cleanUrl = cleanUrl.replace(/[?&]width=\d+/g, '');
-        const sep = cleanUrl.includes('?') ? '&' : '?';
-        cleanUrl = cleanUrl + sep + `width=${size}`;
+        cleanUrl = cleanUrl + `?width=${size}&height=${size}&crop=center&format=webp`;
     } else {
         cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
         cleanUrl = cleanUrl.replace(/_\d+x(?=\.(jpg|jpeg|png|webp|avif))/i, '');
     }
-    
     return cleanUrl;
 }
 
@@ -119,7 +119,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (v.product_color) {
             const colorValues = v.product_color.split(',').map(c => c.trim()).filter(Boolean);
             const colorNames = (v.color_name || '').split(',').map(n => n.trim());
-            
             colorValues.forEach((val, idx) => {
                 if (!uniqueColors.find(c => c.value === val)) {
                     uniqueColors.push({
@@ -145,14 +144,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     let initialAvailableSizes = [];
     initialOffersForColor.forEach(o => {
         if (o.variation_name) {
-            const sizes = o.variation_name.split(',').map(s => s.trim()).filter(Boolean);
-            sizes.forEach(s => { if (!initialAvailableSizes.includes(s)) initialAvailableSizes.push(s); });
+            o.variation_name.split(',').map(s => s.trim()).filter(Boolean).forEach(s => {
+                if (!initialAvailableSizes.includes(s)) initialAvailableSizes.push(s);
+            });
         }
     });
     if (initialAvailableSizes.length > 0) activeSize = initialAvailableSizes[0];
 
     let activeOffer = allVariations[activeOfferIndex];
-
     const baseCurrency = (mainOffer.currency || 'USD').toUpperCase();
 
     const renderBuyButton = (offer) => {
@@ -169,27 +168,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function generateVariationUI() {
         let html = '';
-        
         if (uniqueColors.length > 0) {
             const activeObj = uniqueColors.find(c => c.value === activeColor);
             html += `<div style="margin-bottom: 20px;">
                 <p style="font-weight:bold; margin-bottom:12px; color:#1E1B4B; font-size:1.05rem;">
-                    Color: <span style="color: #64748B; font-weight: 500;">${activeObj ? activeObj.name : activeColor || ''}</span>
+                    Color: <span style="color: #64748B; font-weight: 500;">${activeObj ? activeObj.name : (activeColor || '')}</span>
                 </p>
                 <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">`;
-            
             uniqueColors.forEach(colorObj => {
                 const isActive = colorObj.value === activeColor;
                 const isImageUrl = colorObj.value.startsWith('http');
                 let boxStyle = '';
-                
                 if (isImageUrl) {
                     boxStyle = `background-image: url('${colorObj.hdValue}'); background-size: cover; background-position: center;`;
                 } else {
                     const bgColor = getHexFromColorString(colorObj.value);
                     boxStyle = `background-color: ${bgColor};`;
                 }
-
                 html += `
                 <div style="cursor:pointer;" onclick="selectColor('${colorObj.value}')">
                     <div style="width:50px; height:50px; border-radius:6px; ${boxStyle} border:3px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; box-shadow:${isActive ? '0 0 0 3px rgba(255,90,60,0.3)' : 'none'}; transition:all 0.2s; box-sizing:border-box;">
@@ -200,29 +195,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const offersForColor = activeColor ? allVariations.filter(v => v.product_color && v.product_color.includes(activeColor)) : allVariations;
-        
         let availableSizes = [];
         offersForColor.forEach(o => {
             if (o.variation_name) {
-                const sizes = o.variation_name.split(',').map(s => s.trim()).filter(Boolean);
-                sizes.forEach(s => {
+                o.variation_name.split(',').map(s => s.trim()).filter(Boolean).forEach(s => {
                     if (!availableSizes.includes(s)) availableSizes.push(s);
                 });
             }
         });
 
         if (availableSizes.length > 0) {
-            if (!activeSize || !availableSizes.includes(activeSize)) {
-                activeSize = availableSizes[0];
-            }
-
+            if (!activeSize || !availableSizes.includes(activeSize)) activeSize = availableSizes[0];
             html += `<div style="margin-bottom: 15px;">
                 <p style="font-weight:bold; margin-bottom:8px;">Size:</p>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">`;
-
             availableSizes.forEach((size) => {
                 const isActive = size === activeSize;
-                
                 html += `<button onclick="selectSize('${size}')" style="padding:10px 16px; border:2px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; background:#fff; border-radius:8px; cursor:pointer; font-weight:bold; color:${isActive ? '#FF5A3C' : '#1E1B4B'}; transition: all 0.2s;">
                     ${size}
                 </button>`;
@@ -231,7 +219,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
             activeSize = null;
         }
-        
         return html;
     }
 
@@ -253,7 +240,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
             <div>
                 <h1 style="font-size:1.8rem;margin-bottom:10px;">${escapeHTML(product.title)}</h1>
-                
                 <div style="margin-bottom: 20px; background: #F8FAFC; padding: 15px; border-radius: 8px; border: 1px solid #E2E8F0;">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
                         <div id="displayPriceContainer"></div>
@@ -269,20 +255,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                     <p style="font-size: 0.75rem; color: #64748B; margin: 0;"><i>Real-time rates powered by open.er-api.com</i></p>
                 </div>
-
                 <p style="color:#64748B;margin-bottom:20px;">${escapeHTML(product.description || '')}</p>
-                
                 <div style="background-color:#FEF3C7; border-left:4px solid #F59E0B; padding:12px 15px; margin-bottom:15px; border-radius:6px; display:flex; align-items:flex-start; gap:10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
                     <i class="fa-solid fa-circle-info" style="color:#D97706; font-size:1.2rem; margin-top:2px;"></i>
                     <p style="font-size:0.95rem; color:#92400E; margin:0; font-weight:600; line-height:1.5;">
                         Important: You will be redirected to the official store to confirm live price, stock, and delivery.
                     </p>
                 </div>
-
                 <div id="variationContainer">${generateVariationUI()}</div>
-
                 <div style="margin-bottom:25px;padding:15px;background:#F8FAFC;border-radius:8px;" id="buyButtonContainer"></div>
-                
                 <div style="display:flex;gap:10px;flex-wrap:wrap;">
                     <a href="https://wa.me/?text=${shareText}%20${shareUrl}" target="_blank" rel="noopener" style="padding:8px 16px;background:#25D366;color:#fff;border-radius:6px;text-decoration:none;font-size:0.9rem;">Share on WhatsApp</a>
                     <a href="https://www.facebook.com/sharer/sharer.php?u=${shareUrl}" target="_blank" rel="noopener" style="padding:8px 16px;background:#1877F2;color:#fff;border-radius:6px;text-decoration:none;font-size:0.9rem;">Share on Facebook</a>
@@ -297,12 +278,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         <div id="fullScreenImageModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); z-index:9999999; align-items:center; justify-content:center; flex-direction:column; touch-action: pan-y;">
             <button onclick="closeFullScreenImage(event)" aria-label="Close Image Viewer" style="position:absolute; top:20px; right:20px; background:rgba(0,0,0,0.5); border:none; color:white; font-size:2.5rem; cursor:pointer; z-index:10000000; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center;">&times;</button>
-            
             <button id="prevImageBtn" onclick="changeFullScreenImage(-1, event)" aria-label="Previous Image" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); background:rgba(255,255,255,0.2); color:white; border:none; font-size:2rem; cursor:pointer; border-radius:50%; width:45px; height:45px; display:flex; align-items:center; justify-content:center; z-index:10000000;">&#10094;</button>
             <button id="nextImageBtn" onclick="changeFullScreenImage(1, event)" aria-label="Next Image" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:rgba(255,255,255,0.2); color:white; border:none; font-size:2rem; cursor:pointer; border-radius:50%; width:45px; height:45px; display:flex; align-items:center; justify-content:center; z-index:10000000;">&#10095;</button>
-            
             <img id="fullScreenImageSrc" src="" alt="Full Screen Product Image" width="800" height="800" style="max-width:95vw; max-height:85vh; object-fit:contain; user-select:none; border-radius:8px;">
-            
             <div id="imageCounter" style="position:absolute; bottom:20px; color:white; font-size:1.1rem; font-weight:bold; background:rgba(0,0,0,0.6); padding:5px 15px; border-radius:20px;">1 / 1</div>
         </div>
     `;
@@ -330,41 +308,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     function updateUI(currency) {
         const rate = exchangeRates[currency] || 1;
         activeOffer = allVariations[activeOfferIndex]; 
-        
         const basePrice = parseFloat(activeOffer.price) || 0;
         const salePrice = parseFloat(activeOffer.sale_price) || 0;
         const commissionRate = parseFloat(activeOffer.commission_rate) || 0;
-        
-        let finalBasePrice = basePrice;
-        let finalSalePrice = salePrice;
-
+        let finalBasePrice = basePrice; let finalSalePrice = salePrice;
         if (commissionRate > 0) {
             finalBasePrice = basePrice + (basePrice * (commissionRate / 100));
-            if (salePrice > 0) {
-                finalSalePrice = salePrice + (salePrice * (commissionRate / 100));
-            }
+            if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100));
         }
-        
         let priceHtml = '';
-
         if (salePrice > 0) {
-            const convertedSale = finalSalePrice * rate;
-            const convertedOrig = finalBasePrice * rate;
+            const convertedSale = finalSalePrice * rate; const convertedOrig = finalBasePrice * rate;
             const symbol = currencySymbols[currency] || currency + ' ';
-
-            priceHtml = `
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <span style="text-decoration:line-through; color:#64748B; font-size:1.2rem;">${symbol}${convertedOrig.toFixed(2)}</span>
-                    <span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${convertedSale.toFixed(2)}</span>
-                </div>`;
+            priceHtml = `<div style="display:flex; align-items:center; gap:10px;"><span style="text-decoration:line-through; color:#64748B; font-size:1.2rem;">${symbol}${convertedOrig.toFixed(2)}</span><span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${convertedSale.toFixed(2)}</span></div>`;
         } else {
-            const converted = finalBasePrice * rate;
-            const symbol = currencySymbols[currency] || currency + ' ';
-            priceHtml = `<div style="display:flex; align-items:center; gap:10px;">
-                            <span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${converted.toFixed(2)}</span>
-                        </div>`;
+            const converted = finalBasePrice * rate; const symbol = currencySymbols[currency] || currency + ' ';
+            priceHtml = `<div style="display:flex; align-items:center; gap:10px;"><span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${converted.toFixed(2)}</span></div>`;
         }
-
         displayPriceContainer.innerHTML = priceHtml;
         buyButtonContainer.innerHTML = renderBuyButton(activeOffer);
     }
@@ -372,12 +332,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     await fetchRates(); updateUI(baseCurrency);
     currencySelector.addEventListener('change', (e) => updateUI(e.target.value));
 
+    // ⭐ FIXED: Handles both direct URL and "Name | URL" format
     window.selectColor = function(colorValue) {
         activeColor = colorValue;
-
-        if (colorValue.startsWith('http')) {
+        
+        // Extract image URL if color includes it (either as URL or "Name | URL")
+        let imageUrl = null;
+        if (colorValue.includes('|')) {
+            const parts = colorValue.split('|');
+            if (parts.length > 1) imageUrl = parts[1].trim();
+        } else if (colorValue.startsWith('http')) {
+            imageUrl = colorValue;
+        }
+        
+        if (imageUrl && imageUrl.startsWith('http')) {
             const mainImgElement = document.getElementById('mainImage');
-            if (mainImgElement) mainImgElement.src = getHighQualityImage(colorValue, 800);
+            if (mainImgElement) mainImgElement.src = getHighQualityImage(imageUrl, 800);
         }
 
         const offersForColor = allVariations.filter(v => v.product_color && v.product_color.includes(colorValue));
@@ -389,20 +359,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             }
         });
+        if (availableSizes.length > 0) { if (!availableSizes.includes(activeSize)) activeSize = availableSizes[0]; }
+        else { activeSize = null; }
 
-        if (availableSizes.length > 0) {
-            if (!availableSizes.includes(activeSize)) activeSize = availableSizes[0];
-        } else { activeSize = null; }
-
-        let idxExact = allVariations.findIndex(v => 
-            v.product_color && v.product_color.includes(colorValue) &&
-            (activeSize ? v.variation_name && v.variation_name.trim() === activeSize : true)
-        );
-        let idxPartial = allVariations.findIndex(v => 
-            v.product_color && v.product_color.includes(colorValue) &&
-            (activeSize ? v.variation_name && v.variation_name.split(',').map(s=>s.trim()).includes(activeSize) : true)
-        );
-        
+        let idxExact = allVariations.findIndex(v => v.product_color && v.product_color.includes(colorValue) && (activeSize ? v.variation_name && v.variation_name.trim() === activeSize : true));
+        let idxPartial = allVariations.findIndex(v => v.product_color && v.product_color.includes(colorValue) && (activeSize ? v.variation_name && v.variation_name.split(',').map(s=>s.trim()).includes(activeSize) : true));
         if (idxExact !== -1) activeOfferIndex = idxExact;
         else if (idxPartial !== -1) activeOfferIndex = idxPartial;
         else if (offersForColor.length > 0) activeOfferIndex = allVariations.indexOf(offersForColor[0]);
@@ -414,20 +375,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.selectSize = function(size) {
         activeSize = size;
-        
-        let idxExact = allVariations.findIndex(v => 
-            v.variation_name && v.variation_name.trim() === size &&
-            (!activeColor || (v.product_color && v.product_color.includes(activeColor)))
-        );
-        
-        let idxPartial = allVariations.findIndex(v => 
-            v.variation_name && v.variation_name.split(',').map(s=>s.trim()).includes(size) &&
-            (!activeColor || (v.product_color && v.product_color.includes(activeColor)))
-        );
-
+        let idxExact = allVariations.findIndex(v => v.variation_name && v.variation_name.trim() === size && (!activeColor || (v.product_color && v.product_color.includes(activeColor))));
+        let idxPartial = allVariations.findIndex(v => v.variation_name && v.variation_name.split(',').map(s=>s.trim()).includes(size) && (!activeColor || (v.product_color && v.product_color.includes(activeColor))));
         if (idxExact !== -1) activeOfferIndex = idxExact;
         else if (idxPartial !== -1) activeOfferIndex = idxPartial;
-        
         activeOffer = allVariations[activeOfferIndex];
         document.getElementById('variationContainer').innerHTML = generateVariationUI();
         updateUI(currencySelector.value);
@@ -439,21 +390,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const nextBtn = document.getElementById('nextImageBtn');
 
     function updateArrowStates() {
-        if (galleryImages.length <= 1) {
-            prevBtn.style.display = 'none';
-            nextBtn.style.display = 'none';
-            return;
-        }
-        if (currentFullScreenIndex === 0) {
-            prevBtn.style.opacity = '0.2'; prevBtn.style.cursor = 'default'; prevBtn.style.pointerEvents = 'none';
-        } else {
-            prevBtn.style.opacity = '1'; prevBtn.style.cursor = 'pointer'; prevBtn.style.pointerEvents = 'auto';
-        }
-        if (currentFullScreenIndex === galleryImages.length - 1) {
-            nextBtn.style.opacity = '0.2'; nextBtn.style.cursor = 'default'; nextBtn.style.pointerEvents = 'none';
-        } else {
-            nextBtn.style.opacity = '1'; nextBtn.style.cursor = 'pointer'; nextBtn.style.pointerEvents = 'auto';
-        }
+        if (galleryImages.length <= 1) { prevBtn.style.display = 'none'; nextBtn.style.display = 'none'; return; }
+        if (currentFullScreenIndex === 0) { prevBtn.style.opacity = '0.2'; prevBtn.style.cursor = 'default'; prevBtn.style.pointerEvents = 'none'; }
+        else { prevBtn.style.opacity = '1'; prevBtn.style.cursor = 'pointer'; prevBtn.style.pointerEvents = 'auto'; }
+        if (currentFullScreenIndex === galleryImages.length - 1) { nextBtn.style.opacity = '0.2'; nextBtn.style.cursor = 'default'; nextBtn.style.pointerEvents = 'none'; }
+        else { nextBtn.style.opacity = '1'; nextBtn.style.cursor = 'pointer'; nextBtn.style.pointerEvents = 'auto'; }
     }
 
     window.openFullScreenImage = function(index) {
@@ -479,7 +420,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (newIndex < 0) newIndex = 0;
         if (newIndex >= galleryImages.length) newIndex = galleryImages.length - 1;
         if (newIndex === currentFullScreenIndex) return; 
-
         currentFullScreenIndex = newIndex;
         const img = document.getElementById('fullScreenImageSrc');
         img.src = galleryImages[currentFullScreenIndex];
@@ -495,11 +435,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    let touchStartX = 0;
-    let touchEndX = 0;
+    let touchStartX = 0; let touchEndX = 0;
     modal.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
     modal.addEventListener('touchend', e => { touchEndX = e.changedTouches[0].screenX; handleSwipe(); }, { passive: true });
-
     function handleSwipe() {
         const swipeThreshold = 50;
         if (touchEndX < touchStartX - swipeThreshold) window.changeFullScreenImage(1);
