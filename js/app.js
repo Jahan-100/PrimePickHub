@@ -435,6 +435,8 @@ async function getGeoData() {
         if (res.ok) {
             const data = await res.json();
             geo = { country: data.country || 'Unknown', city: data.city || 'Unknown' };
+            // ⭐ Cache in localStorage so api.js recordClick() can use it
+            try { localStorage.setItem('geo_data', JSON.stringify(geo)); } catch (e) {}
         }
     } catch (e) { console.warn("Geo fetch failed", e); }
     return geo;
