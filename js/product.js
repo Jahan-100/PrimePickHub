@@ -85,31 +85,6 @@ function getVideoHtml(url) {
     return `<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;"><iframe src="${escapeHTML(embedUrl)}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen></iframe></div>`;
 }
 
-// ⭐ Image se center pixel ka color nikalne ka function ⭐
-function extractImageColor(imageUrl) {
-    return new Promise((resolve) => {
-        const img = new Image();
-        img.crossOrigin = "Anonymous";
-        img.onload = () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0);
-            try {
-                // Exact center pixel
-                const pData = ctx.getImageData(img.width / 2, img.height / 2, 1, 1).data;
-                resolve(`rgb(${pData[0]}, ${pData[1]}, ${pData[2]})`);
-            } catch (e) {
-                // CORS error fallback
-                resolve('#e2e8f0');
-            }
-        };
-        img.onerror = () => resolve('#e2e8f0');
-        img.src = imageUrl;
-    });
-}
-
 document.addEventListener('DOMContentLoaded', async () => {
     const path = window.location.pathname;
     const params = new URLSearchParams(window.location.search);
@@ -190,8 +165,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </a>`;
     };
 
-    // ⭐ ASYNC VARIATION UI (Image to Color Extract) ⭐
-    async function generateVariationUI() {
+    function generateVariationUI() {
         let html = '';
         if (uniqueColors.length > 0) {
             const activeObj = uniqueColors.find(c => c.value === activeColor);
@@ -201,15 +175,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </p>
                 <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">`;
             
-            for (const colorObj of uniqueColors) {
+            uniqueColors.forEach(colorObj => {
                 const isActive = colorObj.value === activeColor;
                 const isImageUrl = colorObj.value.startsWith('http');
                 let boxStyle = '';
 
                 if (isImageUrl) {
-                    // Yahan image ka exact center color nikal rahe hain (fallback color first)
-                    const centerColor = await extractImageColor(colorObj.hdValue);
-                    boxStyle = `background-color: ${centerColor};`;
+                    // Show image as background to perfectly represent patterns (like Leopard)
+                    boxStyle = `background-image: url('${colorObj.hdValue}'); background-size: cover; background-position: center;`;
                 } else {
                     const bgColor = getHexFromColorString(colorObj.value);
                     boxStyle = `background-color: ${bgColor};`;
@@ -220,7 +193,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div style="width:50px; height:50px; border-radius:50%; ${boxStyle} border:3px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; box-shadow:${isActive ? '0 0 0 3px rgba(255,90,60,0.3)' : 'none'}; transition:all 0.2s; box-sizing:border-box;">
                     </div>
                 </div>`;
-            }
+            });
             html += `</div></div>`;
         }
 
@@ -292,7 +265,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         Important: You will be redirected to the official store to confirm live price, stock, and delivery.
                     </p>
                 </div>
-                <div id="variationContainer"></div>
+                <div id="variationContainer">${generateVariationUI()}</div>
                 <div style="margin-bottom:25px;padding:15px;background:#F8FAFC;border-radius:8px;" id="buyButtonContainer"></div>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;">
                     <a href="https://wa.me/?text=${shareText}%20${shareUrl}" target="_blank" rel="noopener" style="padding:8px 16px;background:#25D366;color:#fff;border-radius:6px;text-decoration:none;font-size:0.9rem;">Share on WhatsApp</a>
@@ -318,15 +291,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const currencySelector = document.getElementById('currencySelector');
     const displayPriceContainer = document.getElementById('displayPriceContainer');
     const buyButtonContainer = document.getElementById('buyButtonContainer');
-    
-    // Asynchronous UI Generation (Wait for colors to extract)
-    document.getElementById('variationContainer').innerHTML = await generateVariationUI();
-
-    const mainImgEl = document.getElementById('mainImage');
-    if (mainImgEl) {
-        mainImgEl.addEventListener('error', function () { this.src = '/assets/icon-192.png'; }, { once: true });
-    }
-
     let exchangeRates = {};
 
     async function fetchRates() {
@@ -370,12 +334,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         buyButtonContainer.innerHTML = renderBuyButton(activeOffer);
     }
 
-    await fetchRates(); 
-    updateUI(baseCurrency); // Call initial price update
+    await fetchRates(); updateUI(baseCurrency);
     currencySelector.addEventListener('change', (e) => updateUI(e.target.value));
 
-    // ⭐ YAHAN BHI ASYNC LAGAYA HAI ⭐
-    window.selectColor = async function(colorValue) {
+    window.selectColor = function(colorValue) {
         activeColor = colorValue;
         let imageUrl = null;
         if (colorValue.includes('|')) {
@@ -405,19 +367,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         else if (idxPartial !== -1) activeOfferIndex = idxPartial;
         else if (offersForColor.length > 0) activeOfferIndex = allVariations.indexOf(offersForColor[0]);
         activeOffer = allVariations[activeOfferIndex];
-        document.getElementById('variationContainer').innerHTML = await generateVariationUI();
+        document.getElementById('variationContainer').innerHTML = generateVariationUI();
         updateUI(currencySelector.value);
     };
 
-    // ⭐ YAHAN BHI ASYNC LAGAYA HAI ⭐
-    window.selectSize = async function(size) {
+    window.selectSize = function(size) {
         activeSize = size;
         let idxExact = allVariations.findIndex(v => v.variation_name && v.variation_name.trim() === size && (!activeColor || (v.product_color && v.product_color.includes(activeColor))));
         let idxPartial = allVariations.findIndex(v => v.variation_name && v.variation_name.split(',').map(s=>s.trim()).includes(size) && (!activeColor || (v.product_color && v.product_color.includes(activeColor))));
         if (idxExact !== -1) activeOfferIndex = idxExact;
         else if (idxPartial !== -1) activeOfferIndex = idxPartial;
         activeOffer = allVariations[activeOfferIndex];
-        document.getElementById('variationContainer').innerHTML = await generateVariationUI();
+        document.getElementById('variationContainer').innerHTML = generateVariationUI();
         updateUI(currencySelector.value);
     };
 
