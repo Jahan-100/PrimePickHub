@@ -1,3 +1,7 @@
+/**
+ * PrimePickHub Homepage Renderer + Realtime + Notifications + PWA + Tracking
+ */
+
 function setCookie(name, value, days) {
     let expires = "";
     if (days) { let date = new Date(); date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000)); expires = "; expires=" + date.toUTCString(); }
@@ -44,14 +48,10 @@ function getHighQualityImage(url, size = 400) {
     } else if (cleanUrl.includes('ebayimg.com')) {
         cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, `/s-l${size}.$1`);
     } else if (cleanUrl.includes('shopify') || cleanUrl.includes('govee') || cleanUrl.includes('allegra-k.com') || cleanUrl.includes('cdn.shopify')) {
-        // ⭐ SHOPIFY FIX: Remove existing '?v=...' completely so it doesn't block resizing
+        // SHOPIFY FIX: Strip '?v=...' first, then force WebP
         const qIdx = cleanUrl.indexOf('?');
         if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
-
-        // Remove existing size modifiers in filename
         cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
-        
-        // Force exact size and WebP format
         cleanUrl = cleanUrl + `?width=${size}&height=${size}&crop=center&format=webp`;
     } else {
         cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
@@ -60,18 +60,21 @@ function getHighQualityImage(url, size = 400) {
     return cleanUrl;
 }
 
+// ⭐ SAFE PRODUCT URL HELPER ⭐
 function getProductUrl(product) {
     if (!product) return '#';
     if (product.slug) return `/product/${encodeURIComponent(product.slug)}`;
     if (product.id != null) return `/product.html?id=${encodeURIComponent(product.id)}`;
     return '#';
 }
+
 function getPrimaryOffer(product) {
     if (!product || !Array.isArray(product.affiliate_offers)) return null;
     const offers = product.affiliate_offers.filter(o => o && isValidExternalURL(o.affiliate_url));
     const defaultOffer = offers.find(o => !o.variation_name);
     return defaultOffer || offers[0] || null;
 }
+
 function deduplicateProducts(list) {
     if (!Array.isArray(list)) return [];
     const map = new Map();
@@ -428,6 +431,7 @@ async function setupRealtime() {
         .subscribe((status) => { if (status === 'SUBSCRIBED') console.log('✅ Realtime connected! Live updates are ON.'); });
 }
 
+// ⭐ getGeoData with localStorage cache (fixes click analytics) ⭐
 async function getGeoData() {
     let geo = { country: 'Unknown', city: 'Unknown' };
     try {
@@ -435,7 +439,6 @@ async function getGeoData() {
         if (res.ok) {
             const data = await res.json();
             geo = { country: data.country || 'Unknown', city: data.city || 'Unknown' };
-            // ⭐ Cache in localStorage so api.js recordClick() can use it
             try { localStorage.setItem('geo_data', JSON.stringify(geo)); } catch (e) {}
         }
     } catch (e) { console.warn("Geo fetch failed", e); }
@@ -454,6 +457,7 @@ async function trackVisitor() {
     await window.supabaseClient.from('website_visitors').upsert({ visitor_id: visitorId, last_seen: new Date().toISOString(), referrer: source, device_type: deviceType, country: geo.country, city: geo.city }, { onConflict: 'visitor_id' });
 }
 
+// ⭐ trackActiveApp with device_type (fixes install analytics) ⭐
 async function trackActiveApp() {
     if (!window.supabaseClient) return;
     const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
@@ -461,7 +465,9 @@ async function trackActiveApp() {
     let deviceId = getCookie('device_id');
     if (!deviceId) { deviceId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2); setCookie('device_id', deviceId, 365); }
     const geo = await getGeoData();
-    await window.supabaseClient.from('active_app_installs').upsert({ device_id: deviceId, last_active: new Date().toISOString(), country: geo.country, city: geo.city }, { onConflict: 'device_id' });
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const deviceType = isMobile ? 'Mobile' : 'Desktop';
+    await window.supabaseClient.from('active_app_installs').upsert({ device_id: deviceId, last_active: new Date().toISOString(), country: geo.country, city: geo.city, device_type: deviceType }, { onConflict: 'device_id' });
 }
 
 window.acceptCookies = function() { setCookie('cookie_consent', 'accepted', 365); const banner = document.getElementById('cookie-consent-banner'); if (banner) banner.style.display = 'none'; }
