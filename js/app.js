@@ -16,7 +16,7 @@ function isValidExternalURL(url) { if (typeof url !== 'string') return false; tr
 function isValidURL(url) { if (!url || typeof url !== 'string') return false; try { const p = new URL(url, window.location.origin); return p.protocol === 'http:' || p.protocol === 'https:'; } catch { return false; } }
 function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb; }
 
-// ⭐ SMART IMAGE OPTIMIZER (Shopify Fix) ⭐
+// ⭐ SMART IMAGE OPTIMIZER (Forces exact size for Shopify) ⭐
 function getHighQualityImage(url, size = 400) {
     if (!url || typeof url !== 'string') return url;
     let cleanUrl = url.trim();
@@ -31,11 +31,11 @@ function getHighQualityImage(url, size = 400) {
     } else if (cleanUrl.includes('ebayimg.com')) {
         cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, `/s-l${size}.$1`);
     } else if (cleanUrl.includes('shopify') || cleanUrl.includes('govee') || cleanUrl.includes('allegra-k.com') || cleanUrl.includes('cdn.shopify')) {
-        // Simplifies URL to let Shopify handle format automatically based on browser
         cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
         cleanUrl = cleanUrl.replace(/[?&](width|height|format|quality|crop)=\w+/g, '');
         const sep = cleanUrl.includes('?') ? '&' : '?';
-        cleanUrl = cleanUrl + sep + `width=${size}`;
+        // Forces exact sizing and cropping to prevent huge downloads
+        cleanUrl = cleanUrl + sep + `width=${size}&height=${size}&crop=center`;
     } else {
         cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
         cleanUrl = cleanUrl.replace(/_\d+x(?=\.(jpg|jpeg|png|webp|avif))/i, '');
@@ -84,7 +84,6 @@ function renderDynamicCategories(allProducts) {
     }
 }
 
-// ⭐ UPDATED: isPriority handle karta hai eager loading ⭐
 function renderProductCard(product, isPriority = false) {
     if (!product || typeof product !== 'object') return '';
     const title = escapeHTML(product.title || 'Untitled');
@@ -133,7 +132,8 @@ function renderProductCard(product, isPriority = false) {
     } else { cta = `<a href="${productUrl}" ${disabledAttr} class="btn-check-price" style="background:#64748B;">View Details</a>`; }
     const badge = product.badge ? `<span class="card-badge">${escapeHTML(product.badge)}</span>` : '';
 
-    return `<div class="product-card">${badge}<div class="card-img-wrap"><a href="${productUrl}" ${disabledAttr}><img src="${imageSrc}" alt="${title}" width="200" height="200" ${loadingAttr} ${imgPriority} decoding="async" class="product-thumb"></a></div><div class="card-body"><a href="${productUrl}" ${disabledAttr} class="card-title">${title}</a><div class="card-rating">${escapeHTML(ratingText)}</div>${timerHtml}${cta}</div></div>`;
+    // ⭐ Yahan onload aur opacity style add ki gayi hai ⭐
+    return `<div class="product-card">${badge}<div class="card-img-wrap"><a href="${productUrl}" ${disabledAttr}><img src="${imageSrc}" alt="${title}" width="200" height="200" ${loadingAttr} ${imgPriority} decoding="async" class="product-thumb" style="opacity: 0; transition: opacity 0.4s ease-in-out;" onload="this.style.opacity=1;"></a></div><div class="card-body"><a href="${productUrl}" ${disabledAttr} class="card-title">${title}</a><div class="card-rating">${escapeHTML(ratingText)}</div>${timerHtml}${cta}</div></div>`;
 }
 
 function renderFlashCard(product, section = 1) {
@@ -151,17 +151,16 @@ function renderFlashCard(product, section = 1) {
     else priceDisplay = `<div class="price" style="font-size:0.95rem;">${sym}${finalBasePrice.toFixed(2)}</div>`;
     const endTime = section === 1 ? product.sale_end_date : product.sale_end_date_2;
     
-    return `<a href="${productUrl}" class="special-deal-card flash-card"><div class="img-box"><img src="${imageSrc}" alt="${title}" width="190" height="190" loading="lazy" decoding="async"></div><div class="info-box">${priceDisplay}<div class="title">${title}</div><div class="card-timer" data-endtime="${endTime}">⏳ Calculating...</div></div></a>`;
+    // ⭐ Yahan bhi onload aur opacity style add ki gayi hai ⭐
+    return `<a href="${productUrl}" class="special-deal-card flash-card"><div class="img-box"><img src="${imageSrc}" alt="${title}" width="190" height="190" loading="lazy" decoding="async" style="opacity: 0; transition: opacity 0.4s ease-in-out;" onload="this.style.opacity=1;"></div><div class="info-box">${priceDisplay}<div class="title">${title}</div><div class="card-timer" data-endtime="${endTime}">⏳ Calculating...</div></div></a>`;
 }
 
-// ⭐ UPDATED: First 4 images eager load ⭐
 function renderProductsGrid(products, grid) {
     if (!grid) return;
     if (!products || products.length === 0) { showGridMessage(grid, 'No products found in this category.'); return; }
     
-    // Pass true for the first 4 products to load them eagerly
     grid.innerHTML = products.map((p, i) => renderProductCard(p, i < 4)).join('');
-    grid.querySelectorAll('img.product-thumb').forEach(img => { img.addEventListener('error', function () { this.src = 'assets/icon-192.png?v=4'; }, { once: true }); });
+    grid.querySelectorAll('img.product-thumb').forEach(img => { img.addEventListener('error', function () { this.src = 'assets/icon-192.png?v=4'; this.style.opacity = 1; }, { once: true }); });
 }
 
 setInterval(() => {
@@ -220,7 +219,7 @@ function renderAdFallback(products) {
             const imageSrc = isValidURL(p.image_url) ? escapeHTML(getHighQualityImage(p.image_url, 200)) : 'assets/icon-192.png?v=4';
             const primaryOffer = getPrimaryOffer(p) || {}; const sym = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' }[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
             const price = parseFloat(primaryOffer.sale_price) || parseFloat(primaryOffer.price) || 0;
-            return `<div class="product-card" style="cursor:pointer;" onclick="window.location.href='${productUrl}'"><div class="card-img-wrap"><img src="${imageSrc}" alt="${title}" width="200" height="200" loading="lazy" decoding="async"></div><div class="card-body"><a href="${productUrl}" class="card-title">${title}</a><div style="font-weight:bold; color:#DC2626; font-size:0.85rem; margin-bottom:4px;">${sym}${price.toFixed(2)}</div><button class="btn-check-price" style="background:#2563eb; pointer-events:none;">View</button></div></div>`;
+            return `<div class="product-card" style="cursor:pointer;" onclick="window.location.href='${productUrl}'"><div class="card-img-wrap"><img src="${imageSrc}" alt="${title}" width="200" height="200" loading="lazy" decoding="async" style="opacity: 0; transition: opacity 0.4s;" onload="this.style.opacity=1;"></div><div class="card-body"><a href="${productUrl}" class="card-title">${title}</a><div style="font-weight:bold; color:#DC2626; font-size:0.85rem; margin-bottom:4px;">${sym}${price.toFixed(2)}</div><button class="btn-check-price" style="background:#2563eb; pointer-events:none;">View</button></div></div>`;
         }).join('');
         if (topSlot) topSlot.innerHTML = html; if (midSlot) midSlot.innerHTML = html;
     }
@@ -306,7 +305,7 @@ async function loadHomepageProducts() {
                     if (salePrice > 0) priceDisplay = `<div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;"><span style="text-decoration:line-through; color:#64748B; font-size:0.75rem;">${sym}${finalBasePrice.toFixed(2)}</span><span class="price" style="margin-bottom:0;">${sym}${finalSalePrice.toFixed(2)}</span></div>`;
                     else priceDisplay = `<div class="price">${sym}${finalBasePrice.toFixed(2)}</div>`;
                     const specialImg = getHighQualityImage(p.image_url, 200) || '/assets/icon-192.png?v=4';
-                    return `<a href="${getProductUrl(p)}" class="special-deal-card"><div class="img-box"><img src="${escapeHTML(specialImg)}" alt="${escapeHTML(p.title)}" width="190" height="190" loading="lazy" decoding="async"></div><div class="info-box">${priceDisplay}<div class="title">${escapeHTML(p.title)}</div></div></a>`;
+                    return `<a href="${getProductUrl(p)}" class="special-deal-card"><div class="img-box"><img src="${escapeHTML(specialImg)}" alt="${escapeHTML(p.title)}" width="190" height="190" loading="lazy" decoding="async" style="opacity: 0; transition: opacity 0.4s;" onload="this.style.opacity=1;"></div><div class="info-box">${priceDisplay}<div class="title">${escapeHTML(p.title)}</div></div></a>`;
                 }).join('');
             } else { section.style.display = 'none'; }
         }
@@ -360,7 +359,6 @@ window.clearAllNotifs = async function(e) {
     try { const ids = currentNotifs.map(n => n.id); if (ids.length > 0) { const { error } = await window.supabaseClient.from('app_notifications').update({ is_deleted: true }).in('id', ids); if (error) throw error; } currentNotifs = []; renderNotifications(); } catch (err) { console.error("Error clearing notifications:", err); }
 }
 
-// ⭐ UPDATED: Smart Notification System (Save on Device) ⭐
 function showBrowserNotification(title, body) {
     if (!("Notification" in window)) return;
     
@@ -415,7 +413,6 @@ async function setupRealtime() {
         .subscribe((status) => { if (status === 'SUBSCRIBED') console.log('✅ Realtime connected! Live updates are ON.'); });
 }
 
-// ⭐ UPDATED: Fetch Location via Vercel API ⭐
 async function getGeoData() {
     let geo = { country: 'Unknown', city: 'Unknown' };
     try {
