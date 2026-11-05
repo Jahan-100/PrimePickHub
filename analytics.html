@@ -64,6 +64,19 @@
         let selectedCity = null;
         let currentType = 'clicks';
 
+        // ⭐ NAYA: Country Codes ko Pooray Naam mein badalne ka function ⭐
+        function formatCountryName(code) {
+            if (!code || code === 'Unknown') return 'Unknown';
+            const countryMap = {
+                'US': 'United States', 'PK': 'Pakistan', 'GB': 'United Kingdom', 'UK': 'United Kingdom',
+                'IN': 'India', 'AE': 'United Arab Emirates', 'SA': 'Saudi Arabia', 'CA': 'Canada',
+                'AU': 'Australia', 'DE': 'Germany', 'FR': 'France', 'CN': 'China', 'JP': 'Japan',
+                'BR': 'Brazil', 'RU': 'Russia', 'ZA': 'South Africa', 'NG': 'Nigeria', 'EG': 'Egypt',
+                'TR': 'Turkey', 'MY': 'Malaysia', 'ID': 'Indonesia', 'BD': 'Bangladesh', 'LK': 'Sri Lanka'
+            };
+            return countryMap[code.toUpperCase()] || code;
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             if (!window.supabaseClient) { alert("Supabase not loaded!"); return; }
             const urlParams = new URLSearchParams(window.location.search);
@@ -120,7 +133,13 @@
             if (currentView === 'country') {
                 thead.innerHTML = `<tr><th>Sr. No.</th><th>Country</th><th>Total Records</th><th>Details</th></tr>`;
                 const grouped = {};
-                filteredData.forEach(d => { const c = d.country || 'Unknown'; grouped[c] = (grouped[c] || 0) + 1; });
+                
+                // Yahan hum formatCountryName use kar rahe hain
+                filteredData.forEach(d => { 
+                    const c = formatCountryName(d.country); 
+                    grouped[c] = (grouped[c] || 0) + 1; 
+                });
+                
                 tbody.innerHTML = Object.entries(grouped).map(([country, count], idx) => `
                     <tr class="clickable-row" onclick="drillDown('city', '${country}')">
                         <td>${idx + 1}</td><td>${country}</td><td>${count}</td><td style="color:#2563eb;">View Cities →</td>
@@ -128,7 +147,8 @@
                 `).join('');
             } else if (currentView === 'city') {
                 thead.innerHTML = `<tr><th>Sr. No.</th><th>City</th><th>Total Records</th><th>Details</th></tr>`;
-                const countryData = filteredData.filter(d => (d.country || 'Unknown') === selectedCountry);
+                // Yahan filtering bhi formatCountryName se match kar ke ki ja rahi hai
+                const countryData = filteredData.filter(d => formatCountryName(d.country) === selectedCountry);
                 const grouped = {};
                 countryData.forEach(d => { const c = d.city || 'Unknown'; grouped[c] = (grouped[c] || 0) + 1; });
                 tbody.innerHTML = Object.entries(grouped).map(([city, count], idx) => `
@@ -139,19 +159,19 @@
             } else if (currentView === 'details') {
                 if (currentType === 'clicks') {
                     thead.innerHTML = `<tr><th>Sr. No.</th><th>Store</th><th>Product ID</th><th>Source</th><th>Date</th></tr>`;
-                    const cityData = filteredData.filter(d => (d.country || 'Unknown') === selectedCountry && (d.city || 'Unknown') === selectedCity);
+                    const cityData = filteredData.filter(d => formatCountryName(d.country) === selectedCountry && (d.city || 'Unknown') === selectedCity);
                     tbody.innerHTML = cityData.map((d, idx) => `
                         <tr><td>${idx + 1}</td><td class="highlight">${d.store}</td><td style="font-size:0.8rem;">${d.product_id || 'N/A'}</td><td>${d.referrer || 'Direct'}</td><td>${new Date(d.created_at).toLocaleString()}</td></tr>
                     `).join('');
                 } else if (currentType === 'visitors') {
                     thead.innerHTML = `<tr><th>Sr. No.</th><th>Source / Referrer</th><th>Device Type</th><th>Last Active</th></tr>`;
-                    const cityData = filteredData.filter(d => (d.country || 'Unknown') === selectedCountry && (d.city || 'Unknown') === selectedCity);
+                    const cityData = filteredData.filter(d => formatCountryName(d.country) === selectedCountry && (d.city || 'Unknown') === selectedCity);
                     tbody.innerHTML = cityData.map((d, idx) => `
                         <tr><td>${idx + 1}</td><td class="highlight">${d.referrer || 'Direct'}</td><td>${d.device_type || 'Unknown'}</td><td>${new Date(d.last_seen).toLocaleString()}</td></tr>
                     `).join('');
                 } else if (currentType === 'installs') {
                     thead.innerHTML = `<tr><th>Sr. No.</th><th>Device ID</th><th>Device Type</th><th>Last Active</th></tr>`;
-                    const cityData = filteredData.filter(d => (d.country || 'Unknown') === selectedCountry && (d.city || 'Unknown') === selectedCity);
+                    const cityData = filteredData.filter(d => formatCountryName(d.country) === selectedCountry && (d.city || 'Unknown') === selectedCity);
                     tbody.innerHTML = cityData.map((d, idx) => `
                         <tr><td>${idx + 1}</td><td style="font-family:monospace;">${d.device_id}</td><td>${d.device_type || 'Unknown'}</td><td>${new Date(d.last_active).toLocaleString()}</td></tr>
                     `).join('');
