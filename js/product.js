@@ -6,7 +6,7 @@ function escapeHTML(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-// ⭐ SMART IMAGE OPTIMIZER (Fixed Shopify logic) ⭐
+// ⭐ SMART IMAGE OPTIMIZER ⭐
 function getHighQualityImage(url, size = 400) {
     if (!url || typeof url !== 'string') return url;
     let cleanUrl = url.trim();
@@ -85,11 +85,11 @@ function getVideoHtml(url) {
     return `<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;"><iframe src="${escapeHTML(embedUrl)}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen></iframe></div>`;
 }
 
-// ⭐ NAYA: Image se exact center color nikalne ka function ⭐
-async function extractImageColor(imageUrl) {
+// ⭐ Image se center pixel ka color nikalne ka function ⭐
+function extractImageColor(imageUrl) {
     return new Promise((resolve) => {
         const img = new Image();
-        img.crossOrigin = "Anonymous"; // CORS bypass (mostly works for standard CDN images)
+        img.crossOrigin = "Anonymous";
         img.onload = () => {
             const canvas = document.createElement('canvas');
             canvas.width = img.width;
@@ -97,11 +97,12 @@ async function extractImageColor(imageUrl) {
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0);
             try {
-                // Product ka center pixel uthata hai
+                // Exact center pixel
                 const pData = ctx.getImageData(img.width / 2, img.height / 2, 1, 1).data;
                 resolve(`rgb(${pData[0]}, ${pData[1]}, ${pData[2]})`);
             } catch (e) {
-                resolve('#e2e8f0'); // Fallback
+                // CORS error fallback
+                resolve('#e2e8f0');
             }
         };
         img.onerror = () => resolve('#e2e8f0');
@@ -206,7 +207,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 let boxStyle = '';
 
                 if (isImageUrl) {
-                    // Yahan image ka exact center color nikal rahe hain
+                    // Yahan image ka exact center color nikal rahe hain (fallback color first)
                     const centerColor = await extractImageColor(colorObj.hdValue);
                     boxStyle = `background-color: ${centerColor};`;
                 } else {
@@ -314,18 +315,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
     `;
 
-    // Asynchronous UI Generation
+    const currencySelector = document.getElementById('currencySelector');
+    const displayPriceContainer = document.getElementById('displayPriceContainer');
+    const buyButtonContainer = document.getElementById('buyButtonContainer');
+    
+    // Asynchronous UI Generation (Wait for colors to extract)
     document.getElementById('variationContainer').innerHTML = await generateVariationUI();
-    updateUI(currencySelector.value);
 
     const mainImgEl = document.getElementById('mainImage');
     if (mainImgEl) {
         mainImgEl.addEventListener('error', function () { this.src = '/assets/icon-192.png'; }, { once: true });
     }
 
-    const currencySelector = document.getElementById('currencySelector');
-    const displayPriceContainer = document.getElementById('displayPriceContainer');
-    const buyButtonContainer = document.getElementById('buyButtonContainer');
     let exchangeRates = {};
 
     async function fetchRates() {
@@ -369,7 +370,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         buyButtonContainer.innerHTML = renderBuyButton(activeOffer);
     }
 
-    await fetchRates(); updateUI(baseCurrency);
+    await fetchRates(); 
+    updateUI(baseCurrency); // Call initial price update
     currencySelector.addEventListener('change', (e) => updateUI(e.target.value));
 
     // ⭐ YAHAN BHI ASYNC LAGAYA HAI ⭐
