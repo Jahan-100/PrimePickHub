@@ -20,7 +20,6 @@ function isValidExternalURL(url) { if (typeof url !== 'string') return false; tr
 function isValidURL(url) { if (!url || typeof url !== 'string') return false; try { const p = new URL(url, window.location.origin); return p.protocol === 'http:' || p.protocol === 'https:'; } catch { return false; } }
 function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb; }
 
-// ⭐ GLOBAL IMAGE LOAD HANDLER (Glitch Fix) ⭐
 window.handleImageLoad = function(imgElement) {
     if (imgElement.decode) {
         imgElement.decode().then(() => {
@@ -33,7 +32,6 @@ window.handleImageLoad = function(imgElement) {
     }
 };
 
-// ⭐ SMART IMAGE OPTIMIZER (Shopify CDN Fix) ⭐
 function getHighQualityImage(url, size = 400) {
     if (!url || typeof url !== 'string') return url;
     let cleanUrl = url.trim();
@@ -51,7 +49,7 @@ function getHighQualityImage(url, size = 400) {
         const qIdx = cleanUrl.indexOf('?');
         if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
         cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
-        cleanUrl = cleanUrl + `?width=${size}&height=${size}&crop=center&format=webp`;
+        cleanUrl = cleanUrl + `?width=${size}`; // Format=webp hata diya taake error na aaye
     } else {
         cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
         cleanUrl = cleanUrl.replace(/_\d+x(?=\.(jpg|jpeg|png|webp|avif))/i, '');
@@ -59,7 +57,6 @@ function getHighQualityImage(url, size = 400) {
     return cleanUrl;
 }
 
-// ⭐ SAFE PRODUCT URL HELPER ⭐
 function getProductUrl(product) {
     if (!product) return '#';
     if (product.slug) return `/product/${encodeURIComponent(product.slug)}`;
@@ -146,7 +143,6 @@ function renderProductCard(product, isPriority = false) {
         if (commissionRate > 0) { finalBasePrice = basePrice + (basePrice * (commissionRate / 100)); if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100)); }
         
         let priceDisplay = '';
-        // ⭐ HOMEPAGE CARD PRICE FIX: Agar price 0 hai toh "Check Price" show hoga ⭐
         if (basePrice === 0 && salePrice === 0) {
             priceDisplay = `<div style="font-weight:bold; color:#FF5A3C; margin-bottom:5px; font-size:1.05rem;">Check Price on ${storeName}</div>`;
         } else if (salePrice > 0) {
@@ -492,23 +488,33 @@ window.acceptCookies = function() { setCookie('cookie_consent', 'accepted', 365)
 document.addEventListener('DOMContentLoaded', () => {
     trackVisitor(); trackActiveApp(); loadHomepageProducts(); loadLatestBlog(); setupRealtime(); loadNotifications();
     if (!getCookie('cookie_consent')) { setTimeout(() => { const banner = document.getElementById('cookie-consent-banner'); if (banner) banner.style.display = 'flex'; }, 2000); }
-    setInterval(() => { const popup = document.getElementById('appDownloadPopup'); if (document.getElementById('productGrid') && (!popup || popup.style.display !== 'block')) { loadHomepageProducts(); loadLatestBlog(); } }, 15000);
+    
+    // ⭐ FIX: Interval changed so it doesn't reset the category ⭐
+    setInterval(() => { 
+        const popup = document.getElementById('appDownloadPopup'); 
+        if (document.getElementById('productGrid') && (!popup || popup.style.display !== 'block')) { 
+            const activeCat = document.querySelector('.category-item.active');
+            // Only refresh products if user is on "All" (For You) category
+            if (!activeCat || activeCat.dataset.cat === 'all') {
+                loadHomepageProducts(); 
+            }
+            loadLatestBlog(); 
+        } 
+    }, 60000); // Increased to 1 minute
+
     if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('/service-worker.js').then(registration => console.log('✅ Service Worker registered! PWA is ready.')).catch(err => console.log('❌ Service Worker failed:', err)); }); }
     const btn = document.getElementById('searchBtn'); const input = document.getElementById('searchInput'); if (btn) btn.addEventListener('click', handleSearch); if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') handleSearch(); });
     const catBtn = document.getElementById('categoryDropdownBtn'); const catMenu = document.getElementById('categoryDropdownMenu'); if (catBtn && catMenu && typeof toggleCatDropdown === 'undefined') { catBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); catMenu.style.display = catMenu.style.display === 'block' ? 'none' : 'block'; }); }
     setTimeout(() => { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); }, 5000);
     document.addEventListener('click', function(e) { if (!e.target.closest('.notif-wrapper')) { const panel = document.getElementById('notifPanel'); if(panel) panel.style.display = 'none'; } });
     
-    // ⭐ SPLASH SCREEN FIX (Session Storage) ⭐
     function hideSplash() {
         var splash = document.getElementById('splash-screen');
         if (splash) {
             if (sessionStorage.getItem('splashShown') === 'true') {
-                // If already shown in this session, hide instantly without animation
                 splash.style.display = 'none';
                 document.body.classList.remove('app-loading');
             } else {
-                // Show normally for first time
                 splash.classList.add('hidden');
                 document.body.classList.remove('app-loading');
                 setTimeout(() => { splash.style.display = 'none'; }, 800);
