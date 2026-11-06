@@ -29,7 +29,7 @@ function getHighQualityImage(url, size = 400) {
         const qIdx = cleanUrl.indexOf('?');
         if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
         cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
-        cleanUrl = cleanUrl + `?width=${size}&height=${size}&crop=center&format=webp`;
+        cleanUrl = cleanUrl + `?width=${size}`; // Sirf width use ki hai taake error na aaye
     } else {
         cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
         cleanUrl = cleanUrl.replace(/_\d+x(?=\.(jpg|jpeg|png|webp|avif))/i, '');
@@ -250,9 +250,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             <!-- Middle: Main Image (Large) -->
             <div class="product-image-section">
-                <div style="background:#F8FAFC;border-radius:12px;padding:15px;display:flex;align-items:center;justify-content:center;position:relative;">
+                <div style="background:#F8FAFC;border-radius:12px;padding:15px;display:flex;align-items:center;justify-content:center;position:relative; height: 100%;">
                     <img id="mainImage" src="${escapeHTML(mainImage)}" alt="${escapeHTML(product.title)}" 
-                         style="width:100%;height:auto;max-height:750px;object-fit:contain;border-radius:8px;cursor:pointer;" 
+                         style="width:100%;height:auto;max-height:800px;object-fit:contain;border-radius:8px;cursor:pointer;" 
                          onclick="openFullScreenImage(0)">
                 </div>
             </div>
@@ -304,13 +304,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         <!-- ⭐ FULLSCREEN MODAL (Zoom & Pan) ⭐ -->
         <div id="fullScreenImageModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.95); z-index:9999999; align-items:center; justify-content:center; overflow:hidden;">
-            <!-- Image container (draggable) -->
             <div id="zoomPanContainer" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; cursor:zoom-in; overflow:hidden;">
                 <img id="fullScreenImageSrc" src="" alt="Full Screen Product Image" 
                      style="max-width:95vw; max-height:85vh; object-fit:contain; user-select:none; -webkit-user-drag:none; transition: transform 0.1s ease-out;">
             </div>
             
-            <!-- Bottom Controls (Arrows & Close) -->
             <div style="position:absolute; bottom:30px; left:0; width:100%; display:flex; justify-content:center; align-items:center; gap:20px; pointer-events:none;">
                 <button onclick="changeFullScreenImage(-1, event)" aria-label="Previous Image" 
                         style="pointer-events:auto; background:rgba(255,255,255,0.9); color:#000; border:none; width:50px; height:50px; border-radius:50%; cursor:pointer; font-size:1.5rem; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(0,0,0,0.3);">&#10094;</button>
@@ -322,25 +320,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
     `;
 
-    // ⭐ CSS for New Layout (Injected dynamically) ⭐
+    // ⭐ CSS for Full-Width Layout ⭐
     const style = document.createElement('style');
     style.textContent = `
-        .product-layout { display: grid; grid-template-columns: 1fr; gap: 20px; background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #E2E8F0; margin-bottom: 20px; width: 100%; max-width: 100%; }
-        @media (min-width: 768px) {
+        .product-layout { display: grid; grid-template-columns: 1fr; gap: 20px; background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #E2E8F0; margin-bottom: 20px; width: 100%; max-width: 100%; box-sizing: border-box; }
+        @media (min-width: 1024px) {
             .product-layout { 
-                /* Thumbnails | Main Image (Large) | Info */
-                grid-template-columns: 80px 2fr 1.2fr; 
+                grid-template-columns: 100px minmax(500px, 2.5fr) 1.2fr; /* Full width layout */
                 align-items: start;
             }
             .product-thumbnails-section { order: 1; position: sticky; top: 100px; height: 600px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
-            .product-image-section { order: 2; position: sticky; top: 100px; width: 100%; }
-            .product-info-section { order: 3; }
+            .product-image-section { order: 2; position: sticky; top: 100px; width: 100%; height: 100%; }
+            .product-info-section { order: 3; width: 100%; }
         }
         
         .thumbnail-scroll-wrapper {
             display: flex; flex-direction: column; overflow-y: auto; 
-            flex-grow: 1; /* Takes up space between arrows */
-            scroll-behavior: smooth; padding: 5px; gap: 10px;
+            flex-grow: 1; 
+            scroll-behavior: smooth; padding: 10px 5px; gap: 10px;
             scrollbar-width: none;
             width: 100%;
             align-items: center;
@@ -360,7 +357,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             transition: border-color 0.2s; flex-shrink: 0; 
         }
         
-        @media (max-width: 767px) {
+        @media (max-width: 1023px) {
             .product-layout { grid-template-columns: 1fr; }
             .product-image-section { order: 1; }
             .product-thumbnails-section { order: 2; flex-direction: row; height: auto; width: 100%; margin-bottom: 20px; }
@@ -463,7 +460,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateUI(currencySelector.value);
     };
 
-    // ⭐ THUMBNAIL SCROLL LOGIC ⭐
     window.scrollThumbnails = function(direction) {
         const container = document.getElementById('thumbnailContainer');
         const scrollAmount = 150;
@@ -471,7 +467,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         else container.scrollBy({ top: scrollAmount, behavior: 'smooth' });
     };
 
-    // ⭐ FULLSCREEN MODAL (Zoom & Pan) ⭐
     let currentFullScreenIndex = 0;
     const modal = document.getElementById('fullScreenImageModal');
     const zoomPanContainer = document.getElementById('zoomPanContainer');
@@ -484,11 +479,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function updateTransform() {
         imgElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-        if (scale > 1) {
-            zoomPanContainer.style.cursor = isDragging ? 'grabbing' : 'grab';
-        } else {
-            zoomPanContainer.style.cursor = 'zoom-in';
-        }
+        if (scale > 1) zoomPanContainer.style.cursor = isDragging ? 'grabbing' : 'grab';
+        else zoomPanContainer.style.cursor = 'zoom-in';
     }
 
     function resetZoomPan() {
@@ -523,15 +515,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         resetZoomPan();
     };
 
-    // Click to zoom in/out
     zoomPanContainer.addEventListener('click', (e) => {
         if (wasDragged) { wasDragged = false; return; } 
-        if (scale === 1) {
-            scale = 2.5; 
-            updateTransform();
-        } else {
-            resetZoomPan(); 
-        }
+        if (scale === 1) { scale = 2.5; updateTransform(); } else { resetZoomPan(); }
     });
 
     zoomPanContainer.addEventListener('mousedown', (e) => {
@@ -557,19 +543,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateTransform();
     });
 
-    // Wheel zoom (Optional enhancement)
     zoomPanContainer.addEventListener('wheel', (e) => {
         e.preventDefault();
         if (e.deltaY < 0) scale = Math.min(scale + 0.5, 5);
         else scale = Math.max(scale - 0.5, 1);
         
-        if (scale === 1) {
-            translateX = 0; translateY = 0;
-        }
+        if (scale === 1) { translateX = 0; translateY = 0; }
         updateTransform();
     }, { passive: false });
 
-    // Touch Support (Mobile)
     let initialDistance = 0, initialScale = 1;
     let touchStartX = 0, touchStartY = 0;
 
@@ -616,7 +598,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // Gallery Thumb Click
     container.querySelectorAll('.gallery-thumb').forEach((thumb, index) => {
         thumb.addEventListener('click', function () {
             const src = this.dataset.src;
