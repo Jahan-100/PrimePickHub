@@ -358,11 +358,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             align-items: center;
         }
         
-        /* Thumbnails Arrows - Strictly Top and Bottom */
-        .scroll-arrow {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
+        /* Thumbnails Arrows - Strictly Top and Bottom Override */
+        .product-thumbnails-section .scroll-arrow {
+            position: absolute !important;
+            top: auto !important;
+            bottom: auto !important;
+            transform: none !important;
+            left: 50% !important;
+            margin-left: -16px !important; /* Center horizontally */
             width: 32px;
             height: 32px;
             background: #fff;
@@ -377,22 +380,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             color: #1E1B4B;
             font-size: 0.8rem;
         }
-        .scroll-arrow.up-arrow { top: 0; }
-        .scroll-arrow.down-arrow { bottom: 0; }
+        .product-thumbnails-section .scroll-arrow.up-arrow { 
+            top: 0 !important; 
+        }
+        .product-thumbnails-section .scroll-arrow.down-arrow { 
+            bottom: 0 !important; 
+        }
         
         /* Scroll List - Leaves space for absolute arrows */
         .thumbnail-scroll-wrapper {
-            position: absolute;
-            top: 40px;
-            bottom: 40px;
-            left: 0;
-            right: 0;
+            position: absolute !important;
+            top: 40px !important;
+            bottom: 40px !important;
+            left: 0 !important;
+            right: 0 !important;
             overflow-y: auto;
             display: flex; 
             flex-direction: column; 
             gap: 10px;
             scrollbar-width: none;
             align-items: center;
+            padding: 0 !important;
         }
         .thumbnail-scroll-wrapper::-webkit-scrollbar { display: none; }
         
@@ -450,29 +458,41 @@ document.addEventListener('DOMContentLoaded', async () => {
             .product-thumbnails-section { 
                 width: 100%; height: 90px; flex-direction: row; 
                 position: relative; top: 0; margin-bottom: 10px; 
+                padding: 0 10px;
             }
             
             /* Mobile Thumbnails Arrows (Left and Right) */
-            .scroll-arrow {
-                top: 50%;
-                transform: translateY(-50%);
+            .product-thumbnails-section .scroll-arrow {
+                top: 50% !important;
+                transform: translateY(-50%) !important;
+                left: auto !important;
+                margin-left: 0 !important;
                 width: 30px; height: 30px;
             }
-            .scroll-arrow.up-arrow { left: 0; right: auto; }
-            .scroll-arrow.down-arrow { left: auto; right: 0; bottom: auto; }
-            .scroll-arrow i { transform: rotate(-90deg); }
+            .product-thumbnails-section .scroll-arrow.up-arrow { 
+                left: 0 !important; 
+                top: 50% !important;
+                transform: translateY(-50%) rotate(-90deg) !important; 
+            }
+            .product-thumbnails-section .scroll-arrow.down-arrow { 
+                right: 0 !important; 
+                left: auto !important; 
+                top: 50% !important;
+                transform: translateY(-50%) rotate(-90deg) !important;
+                bottom: auto !important; 
+            }
             
             /* Mobile Scroll List */
             .thumbnail-scroll-wrapper {
-                flex-direction: row; 
-                position: absolute;
-                top: 0;
-                bottom: 0;
-                left: 35px; /* Space for left arrow */
-                right: 35px; /* Space for right arrow */
-                overflow-x: auto; 
-                overflow-y: hidden; 
-                padding: 0;
+                flex-direction: row !important; 
+                position: absolute !important;
+                top: 0 !important;
+                bottom: 0 !important;
+                left: 35px !important;
+                right: 35px !important;
+                overflow-x: auto !important; 
+                overflow-y: hidden !important; 
+                padding: 0 10px !important;
             }
 
             /* Hide main arrows on mobile since we have swipe */
@@ -624,7 +644,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (mainTouchEnd > mainTouchStart + 50) changeMainImage(-1); // Swipe Right (Prev)
     }, { passive: true });
 
-    // ⭐ Main Image Click to Open Fullscreen (Fixed Scoping) ⭐
+    // ⭐ Main Image Click to Open Fullscreen ⭐
     mainWrapper.addEventListener('click', function(e) {
         // Don't open fullscreen if user clicked an arrow
         if (e.target.closest('.main-arrow')) return;
@@ -638,7 +658,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // ⭐ FULLSCREEN MODAL LOGIC (Unchanged as requested) ⭐
+    // ⭐ FULLSCREEN MODAL LOGIC ⭐
     const modal = document.getElementById('fullScreenImageModal');
     const zoomPanContainer = document.getElementById('zoomPanContainer');
     const imgElement = document.getElementById('fullScreenImageSrc');
