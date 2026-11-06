@@ -29,7 +29,7 @@ function getHighQualityImage(url, size = 400) {
         const qIdx = cleanUrl.indexOf('?');
         if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
         cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
-        cleanUrl = cleanUrl + `?width=${size}`; // Safe image loading
+        cleanUrl = cleanUrl + `?width=${size}`; 
     } else {
         cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
         cleanUrl = cleanUrl.replace(/_\d+x(?=\.(jpg|jpeg|png|webp|avif))/i, '');
@@ -320,14 +320,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
     `;
 
-    // ⭐ CSS for Full-Width Layout (Fixes Empty Sides & Arrows) ⭐
+    // ⭐ CSS for True Full-Width Layout ⭐
     const style = document.createElement('style');
     style.textContent = `
         .product-layout { 
             display: flex; 
-            flex-wrap: wrap; 
+            flex-direction: row; 
             width: 100%; 
-            max-width: 100%; /* Force full width */
+            max-width: 100%; 
             margin: 0 auto; 
             gap: 20px; 
             background: #fff; 
@@ -335,67 +335,55 @@ document.addEventListener('DOMContentLoaded', async () => {
             border-radius: 12px; 
             border: 1px solid #E2E8F0; 
             box-sizing: border-box; 
+            align-items: flex-start;
         }
         
-        @media (min-width: 1024px) {
-            .product-layout { 
-                display: grid; 
-                /* 80px Thumb | Flexible Main Image | 380px Info */
-                grid-template-columns: 80px minmax(500px, 1fr) 380px; 
-                align-items: start;
-            }
-            
-            /* Thumbnails Section */
-            .product-thumbnails-section { 
-                position: sticky; 
-                top: 100px; 
-                height: 600px; 
-                display: flex; 
-                flex-direction: column; 
-                position: relative; 
-            }
-            
-            /* Arrows - Absolute positioning to force top and bottom */
-            .scroll-arrow {
-                position: absolute;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 30px;
-                height: 30px;
-                background: #fff;
-                border: 1px solid #CBD5E1;
-                border-radius: 50%;
-                display: flex; align-items: center; justify-content: center;
-                cursor: pointer;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                z-index: 10;
-                color: #1E1B4B;
-                font-size: 0.8rem;
-            }
-            .scroll-arrow.up-arrow { top: 0; }
-            .scroll-arrow.down-arrow { bottom: 0; }
-            
-            .thumbnail-scroll-wrapper {
-                display: flex; flex-direction: column; overflow-y: auto; 
-                height: 100%; /* Take full height between arrows */
-                scroll-behavior: smooth; 
-                padding: 40px 0; /* Space so images don't hide under arrows */
-                scrollbar-width: none;
-                align-items: center;
-                gap: 10px;
-            }
-            .thumbnail-scroll-wrapper::-webkit-scrollbar { display: none; }
-            
-            .product-image-section { 
-                position: sticky; 
-                top: 100px; 
-                width: 100%; 
-                height: 100%;
-            }
-            .product-info-section { 
-                width: 100%; 
-                padding-right: 15px;
-            }
+        /* Thumbnails Container - Fixed Width */
+        .product-thumbnails-section { 
+            display: flex; 
+            flex-direction: column; 
+            width: 80px; 
+            flex-shrink: 0; 
+            height: 600px; 
+            position: sticky;
+            top: 100px;
+            align-items: center;
+            justify-content: space-between; /* Pushes arrows to top and bottom */
+        }
+
+        /* Arrows styling */
+        .scroll-arrow {
+            background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 50%;
+            width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: #1E1B4B; font-size: 0.8rem; z-index: 10; flex-shrink: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .scroll-arrow:hover { background: #E2E8F0; }
+        
+        /* The actual scrollable list */
+        .thumbnail-scroll-wrapper {
+            display: flex; flex-direction: column; overflow-y: auto; 
+            flex-grow: 1; /* Takes up remaining space between arrows */
+            scroll-behavior: smooth; padding: 10px 0; gap: 10px;
+            scrollbar-width: none;
+            width: 100%;
+            align-items: center;
+        }
+        .thumbnail-scroll-wrapper::-webkit-scrollbar { display: none; }
+        
+        /* Main Image - Takes all remaining space */
+        .product-image-section { 
+            flex: 1; 
+            min-width: 0; /* Prevents overflow */
+            position: sticky; 
+            top: 100px; 
+            height: 100%;
+        }
+        
+        /* Info Section - Fixed Width */
+        .product-info-section { 
+            width: 400px; 
+            flex-shrink: 0; 
         }
 
         .gallery-thumb { 
@@ -403,18 +391,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             transition: border-color 0.2s; flex-shrink: 0; 
         }
         
+        /* Mobile View */
         @media (max-width: 1023px) {
-            .product-layout { flex-direction: column; }
-            .product-image-section { order: 1; width: 100%; }
-            .product-info-section { order: 2; width: 100%; }
-            .product-thumbnails-section { order: 3; width: 100%; height: 90px; flex-direction: row; position: relative; margin-bottom: 20px; }
+            .product-layout { flex-direction: column; padding: 10px; }
+            .product-image-section { width: 100%; position: relative; top: 0; }
+            .product-info-section { width: 100%; }
             
-            .thumbnail-scroll-wrapper { flex-direction: row; overflow-x: auto; overflow-y: hidden; height: 100%; padding: 0 40px; gap: 10px; }
-            .scroll-arrow { top: 50%; transform: translateY(-50%); }
-            .scroll-arrow.up-arrow { left: 0; top: 50%; }
-            .scroll-arrow.down-arrow { right: 0; left: auto; top: 50%; transform: translateY(-50%) rotate(-90deg); }
-            .scroll-arrow.up-arrow { left: 0; right: auto; top: 50%; transform: translateY(-50%) rotate(-90deg); }
-            .scroll-arrow.down-arrow { right: 0; left: auto; top: 50%; transform: translateY(-50%) rotate(-90deg); }
+            .product-thumbnails-section { 
+                width: 100%; height: 90px; flex-direction: row; 
+                position: relative; top: 0; margin-bottom: 20px; 
+            }
+            .thumbnail-scroll-wrapper { 
+                flex-direction: row; overflow-x: auto; overflow-y: hidden; 
+                padding: 0 10px; gap: 10px; 
+            }
+            .scroll-arrow.up-arrow { transform: rotate(-90deg); margin-right: 5px; }
+            .scroll-arrow.down-arrow { transform: rotate(-90deg); margin-left: 5px; }
         }
     `;
     document.head.appendChild(style);
