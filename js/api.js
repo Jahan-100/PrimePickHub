@@ -25,7 +25,16 @@ const API = {
     async searchProducts({ query = '', category = '' }) {
         if (!window.supabaseClient) return [];
         let req = window.supabaseClient.from('products').select('*, affiliate_offers(*)').limit(100);
-        if (category) req = req.eq('category_slug', category);
+        
+        // ⭐ UPDATED: Handle array of categories ⭐
+        if (category) {
+            if (Array.isArray(category)) {
+                req = req.in('category_slug', category);
+            } else {
+                req = req.eq('category_slug', category);
+            }
+        }
+        
         if (query) req = req.ilike('title', `%${query}%`);
         const { data, error } = await req;
         return error ? [] : (data || []);
