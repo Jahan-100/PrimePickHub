@@ -16,28 +16,34 @@ const CONFIG = {
     },
 
     categories: [
-        { slug: 'all', name: 'For you', icon: '❤️' },
-        { slug: 'electronics', name: 'Electronics', icon: '📱' },
-        { slug: 'mens-fashion', name: 'Men\'s Fashion', icon: '👔' },
-        { slug: 'womens-fashion', name: 'Women\'s Fashion', icon: '👗' },
-        { slug: 'accessories', name: 'Accessories', icon: '💍' },
-        { slug: 'shoes', name: 'Shoes', icon: '👟' },
-        { slug: 'bags-luggage', name: 'Bags & Luggage', icon: '👜' },
-        { slug: 'home-kitchen', name: 'Home & Kitchen', icon: '🛋️' },
-        { slug: 'beauty-personal-care', name: 'Beauty & Personal Care', icon: '💄' },
-        { slug: 'health-household', name: 'Health & Household', icon: '💊' },
-        { slug: 'sports-outdoors', name: 'Sports & Outdoors', icon: '🏋️' },
-        { slug: 'toys-games', name: 'Toys & Games', icon: '🧸' },
-        { slug: 'automotive', name: 'Automotive', icon: '🚗' },
-        { slug: 'books-media', name: 'Books & Media', icon: '📚' },
-        { slug: 'pets-supplies', name: 'Pet Supplies', icon: '🐾' },
-        { slug: 'baby-kids', name: 'Baby & Kids', icon: '👶' },
-        { slug: 'office-products', name: 'Office Products', icon: '💼' },
-        { slug: 'garden-outdoor', name: 'Garden & Outdoor', icon: '🌻' },
-        { slug: 'tools-home-improvement', name: 'Tools & Home Improvement', icon: '🔧' },
-        { slug: 'grocery', name: 'Grocery', icon: '🍎' },
-        { slug: 'jewelry-watches', name: 'Jewelry & Watches', icon: '⌚' },
-        { slug: 'watches', name: 'Watches', icon: '⌚' }
+        { slug: 'all', name: 'For you', icon: '❤️', parent: null },
+        
+        // Main Categories
+        { slug: 'electronics', name: 'Electronics', icon: '📱', parent: null },
+        { slug: 'fashion', name: 'Fashion', icon: '👗', parent: null },
+        { slug: 'home-kitchen', name: 'Home & Kitchen', icon: '🛋️', parent: null },
+        { slug: 'beauty', name: 'Beauty', icon: '💄', parent: null },
+        { slug: 'sports', name: 'Sports', icon: '🏋️', parent: null },
+        { slug: 'toys', name: 'Toys', icon: '🧸', parent: null },
+        { slug: 'automotive', name: 'Automotive', icon: '🚗', parent: null },
+        { slug: 'accessories', name: 'Accessories', icon: '💍', parent: null },
+
+        // Fashion Sub Categories
+        { slug: 'womens-fashion', name: 'Women\'s Fashion', parent: 'fashion' },
+        { slug: 'mens-fashion', name: 'Men\'s Fashion', parent: 'fashion' },
+        { slug: 'shoes', name: 'Shoes', parent: 'fashion' },
+        { slug: 'bags-luggage', name: 'Bags & Luggage', parent: 'fashion' },
+
+        // Accessories Sub Categories
+        { slug: 'scarves', name: 'Scarves', parent: 'accessories' },
+        { slug: 'jewelry-watches', name: 'Jewelry & Watches', parent: 'accessories' },
+        { slug: 'sunglasses', name: 'Sunglasses', parent: 'accessories' },
+        { slug: 'belts', name: 'Belts', parent: 'accessories' },
+        
+        // Shoes Mini Sub Categories
+        { slug: 'womens-shoes', name: 'Women\'s Shoes', parent: 'shoes' },
+        { slug: 'mens-shoes', name: 'Men\'s Shoes', parent: 'shoes' },
+        { slug: 'kids-shoes', name: 'Kids Shoes', parent: 'shoes' }
     ]
 };
 
