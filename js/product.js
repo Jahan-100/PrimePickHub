@@ -250,7 +250,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             <!-- Middle: Main Image (Large & Swipeable) -->
             <div class="product-image-section">
-                <div id="mainImageWrapper" style="background:#F8FAFC;border-radius:12px;padding:15px;display:flex;align-items:center;justify-content:center;position:relative; height: 100%; overflow: hidden;" onclick="openFullScreenImage(currentMainImageIndex)">
+                <div id="mainImageWrapper" style="background:#F8FAFC;border-radius:12px;padding:15px;display:flex;align-items:center;justify-content:center;position:relative; height: 100%; overflow: hidden;">
                     <img id="mainImage" src="${escapeHTML(mainImage)}" alt="${escapeHTML(product.title)}" 
                          style="width:100%;height:auto;max-height:800px;object-fit:contain;border-radius:8px;cursor:zoom-in;">
                     
@@ -539,16 +539,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             imageUrl = colorValue;
         }
         if (imageUrl && imageUrl.startsWith('http')) {
-            // Find if the image exists in gallery
             const existingIndex = galleryImages.findIndex(img => img === getHighQualityImage(imageUrl, 800));
             if (existingIndex !== -1) {
-                changeMainImage(existingIndex, false); // Update main image state without fullscreen
+                changeMainImage(existingIndex, false); 
             } else {
-                // If not in gallery, just change the src (might happen if color image is different)
                 document.getElementById('mainImage').src = getHighQualityImage(imageUrl, 800);
-                // Update gallery array so arrows work correctly if user swipes
                 galleryImages[0] = getHighQualityImage(imageUrl, 800);
-                currentMainImageIndex = 0;
+                window.currentMainImageIndex = 0;
             }
         }
         const offersForColor = allVariations.filter(v => v.product_color && v.product_color.includes(colorValue));
@@ -596,24 +593,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     // ⭐ Main Image Navigation Logic ⭐
-    let currentMainImageIndex = 0;
+    window.currentMainImageIndex = 0;
 
     window.changeMainImage = function(indexOrDirection, isDirection = true) {
         if (isDirection) {
-            let newIndex = currentMainImageIndex + indexOrDirection;
+            let newIndex = window.currentMainImageIndex + indexOrDirection;
             if (newIndex < 0) newIndex = galleryImages.length - 1;
             if (newIndex >= galleryImages.length) newIndex = 0;
-            currentMainImageIndex = newIndex;
+            window.currentMainImageIndex = newIndex;
         } else {
-            currentMainImageIndex = indexOrDirection;
+            window.currentMainImageIndex = indexOrDirection;
         }
         
         // Update main image
-        document.getElementById('mainImage').src = galleryImages[currentMainImageIndex];
+        document.getElementById('mainImage').src = galleryImages[window.currentMainImageIndex];
         
         // Update thumbnails border
         container.querySelectorAll('.gallery-thumb').forEach((t, i) => {
-            t.style.borderColor = (i === currentMainImageIndex) ? '#FF5A3C' : '#E2E8F0';
+            t.style.borderColor = (i === window.currentMainImageIndex) ? '#FF5A3C' : '#E2E8F0';
         });
     };
 
@@ -626,6 +623,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (mainTouchEnd < mainTouchStart - 50) changeMainImage(1); // Swipe Left (Next)
         if (mainTouchEnd > mainTouchStart + 50) changeMainImage(-1); // Swipe Right (Prev)
     }, { passive: true });
+
+    // ⭐ Main Image Click to Open Fullscreen (Fixed Scoping) ⭐
+    mainWrapper.addEventListener('click', function(e) {
+        // Don't open fullscreen if user clicked an arrow
+        if (e.target.closest('.main-arrow')) return;
+        window.openFullScreenImage(window.currentMainImageIndex);
+    });
 
     // Thumbnail Click: ONLY change main image, don't open fullscreen
     container.querySelectorAll('.gallery-thumb').forEach((thumb, index) => {
@@ -656,8 +660,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     window.openFullScreenImage = function(index) {
-        currentMainImageIndex = index; // Keep index synced
-        imgElement.src = galleryImages[currentMainImageIndex];
+        window.currentMainImageIndex = index; 
+        imgElement.src = galleryImages[window.currentMainImageIndex];
         resetZoomPan();
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; 
@@ -672,18 +676,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.changeFullScreenImage = function(direction, e) {
         if (e) e.stopPropagation();
         if (galleryImages.length <= 1) return;
-        let newIndex = currentMainImageIndex + direction;
+        let newIndex = window.currentMainImageIndex + direction;
         if (newIndex < 0) newIndex = galleryImages.length - 1;
         if (newIndex >= galleryImages.length) newIndex = 0;
         
-        currentMainImageIndex = newIndex;
-        imgElement.src = galleryImages[currentMainImageIndex];
+        window.currentMainImageIndex = newIndex;
+        imgElement.src = galleryImages[window.currentMainImageIndex];
         resetZoomPan();
         
         // Also update main image in background
-        document.getElementById('mainImage').src = galleryImages[currentMainImageIndex];
+        document.getElementById('mainImage').src = galleryImages[window.currentMainImageIndex];
         container.querySelectorAll('.gallery-thumb').forEach((t, i) => {
-            t.style.borderColor = (i === currentMainImageIndex) ? '#FF5A3C' : '#E2E8F0';
+            t.style.borderColor = (i === window.currentMainImageIndex) ? '#FF5A3C' : '#E2E8F0';
         });
     };
 
