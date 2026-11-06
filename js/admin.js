@@ -38,6 +38,54 @@ window.loadBlogList = async function() {
     }).join('');
 }
 
+// ⭐ NAYA: Function to load categories into the form dropdown with Hierarchy ⭐
+function loadCategoriesToDropdown(selectedSlug = null) {
+    const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
+    const customCats = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]');
+    
+    const allCats = [...masterCats];
+    customCats.forEach(c => {
+        if(!allCats.find(m => m.slug === c.slug)) allCats.push(c);
+    });
+
+    const addCategorySelect = document.getElementById('pCategory');
+    if (addCategorySelect) {
+        let sortedCats = [];
+        const addWithIndent = (parent, level) => {
+            allCats.filter(c => c.parent === parent).forEach(c => {
+                const indent = '&nbsp;&nbsp;&nbsp;&nbsp;'.repeat(level);
+                sortedCats.push({ ...c, display: indent + (level > 0 ? '↳ ' : '') + c.name });
+                addWithIndent(c.slug, level + 1);
+            });
+        };
+        
+        allCats.filter(c => !c.parent || c.parent === 'all').forEach(c => {
+            if(c.slug === 'all') return;
+            sortedCats.push({ ...c, display: c.name });
+            addWithIndent(c.slug, 1);
+        });
+
+        addCategorySelect.innerHTML = sortedCats.map(c => `<option value="${c.slug}">${c.display}</option>`).join('');
+        
+        if(selectedSlug) {
+            addCategorySelect.value = selectedSlug;
+        }
+    }
+}
+
+// ⭐ NAYA: Update Parent Dropdown in Add Category Form ⭐
+function updateParentDropdown() {
+    const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
+    const customCats = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]');
+    const allCats = [...masterCats, ...customCats];
+    
+    const parentSelect = document.getElementById('newCatParent');
+    if (parentSelect) {
+        parentSelect.innerHTML = `<option value="none">Main Category (No Parent)</option>` + 
+            allCats.filter(c => c.slug !== 'all').map(c => `<option value="${c.slug}">${c.name}</option>`).join('');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     if (typeof API === 'undefined' || !API.getCurrentUser) { alert('API not loaded. Refresh the page.'); return; }
     const auth = await API.getCurrentUser();
@@ -126,6 +174,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupScrollButtons('scrollUpBtnBlogs', 'scrollDownBtnBlogs', 'tableScrollWrapperBlogs'); 
 
     // ⭐ NAYA: DYNAMIC CATEGORY LOGIC ⭐
+    updateParentDropdown();
+
     document.getElementById('showAddCatBtn')?.addEventListener('click', () => {
         const container = document.getElementById('addCatContainer');
         container.style.display = container.style.display === 'none' ? 'flex' : 'none';
@@ -133,49 +183,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('saveNewCatBtn')?.addEventListener('click', () => {
         const newName = document.getElementById('newCatName').value.trim();
+        const parentSlug = document.getElementById('newCatParent').value;
         if(!newName) return alert("Please enter a category name.");
         
-        // Create slug from name
         const newSlug = newName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
         
-        // Save to localStorage
         let customCats = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]');
         if(!customCats.find(c => c.slug === newSlug)) {
-            customCats.push({ slug: newSlug, name: newName });
+            customCats.push({ slug: newSlug, name: newName, parent: parentSlug === 'none' ? null : parentSlug });
             localStorage.setItem('admin_custom_categories', JSON.stringify(customCats));
         }
 
-        // Reload category dropdown
         loadCategoriesToDropdown(newSlug);
+        updateParentDropdown(); 
         
-        // Clear input and hide
         document.getElementById('newCatName').value = '';
         document.getElementById('addCatContainer').style.display = 'none';
         alert("New category added and selected successfully!");
     });
 });
-
-// ⭐ NAYA: Function to load categories into the form dropdown ⭐
-function loadCategoriesToDropdown(selectedSlug = null) {
-    const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
-    const customCats = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]');
-    
-    // Merge and remove duplicates
-    const allCats = [...masterCats];
-    customCats.forEach(c => {
-        if(!allCats.find(m => m.slug === c.slug)) allCats.push(c);
-    });
-
-    const addCategorySelect = document.getElementById('pCategory');
-    if (addCategorySelect) {
-        const defaultCats = allCats.filter(c => c.slug !== 'all');
-        addCategorySelect.innerHTML = defaultCats.map(c => `<option value="${c.slug}">${c.name}</option>`).join('');
-        
-        if(selectedSlug) {
-            addCategorySelect.value = selectedSlug;
-        }
-    }
-}
 
 function setupToggleAddProduct() { const toggleBtn = document.getElementById('toggleAddProductBtn'); const formContainer = document.getElementById('addProductContainer'); if (toggleBtn && formContainer) { toggleBtn.addEventListener('click', () => { if (formContainer.style.display === 'none') { formContainer.style.display = 'block'; toggleBtn.textContent = 'Hide Product Form'; toggleBtn.style.background = '#EF4444'; } else { formContainer.style.display = 'none'; toggleBtn.textContent = 'Show Product Form'; toggleBtn.style.background = '#16a34a'; } }); } }
 function setupToggleSpecialDeal() { const toggleBtn = document.getElementById('toggleSpecialDealBtn'); const container = document.getElementById('specialDealContainer'); if (toggleBtn && container) { toggleBtn.addEventListener('click', () => { if (container.style.display === 'none') { container.style.display = 'block'; toggleBtn.textContent = 'Hide Settings'; toggleBtn.style.background = '#EF4444'; } else { container.style.display = 'none'; toggleBtn.textContent = 'Show Settings'; toggleBtn.style.background = '#d946ef'; } }); } }
@@ -221,7 +247,6 @@ async function loadProductsList() {
         const { data: products, error } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').order('created_at', { ascending: false });
         if (error) throw error; allProducts = products || [];
         
-        // ⭐ NAYA: Load custom categories for the filter ⭐
         const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : []; 
         const customCats = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]');
         const allMasterCats = [...masterCats, ...customCats.map(c => ({ slug: c.slug, name: c.name, icon: '📦' }))];
@@ -238,9 +263,7 @@ async function loadProductsList() {
             categoryFilter.innerHTML = filterHtml; 
         }
         
-        // ⭐ NAYA: Load categories into form dropdown ⭐
         loadCategoriesToDropdown();
-
         renderTable();
     } catch (err) { console.error('List Load Error:', err); tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:red;">Failed to load products.</td></tr>'; }
 }
