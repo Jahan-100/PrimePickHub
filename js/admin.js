@@ -38,32 +38,41 @@ window.loadBlogList = async function() {
     }).join('');
 }
 
-// ⭐ NAYA: Function to load categories into the form dropdown with Hierarchy ⭐
-function loadCategoriesToDropdown(selectedSlug = null) {
+// ⭐ HELPER: Get ALL categories (including overrides and excluding deleted) ⭐
+function getAllCategories() {
     const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
     const customCats = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]');
-    
-    const allCats = [...masterCats];
+    const deletedCats = JSON.parse(localStorage.getItem('admin_deleted_categories') || '[]');
+
+    // Merge (custom overrides master)
+    let merged = [...masterCats];
     customCats.forEach(c => {
-        if(!allCats.find(m => m.slug === c.slug)) allCats.push(c);
+        const idx = merged.findIndex(m => m.slug === c.slug);
+        if (idx > -1) merged[idx] = c; // Override
+        else merged.push(c); // Add new
     });
+
+    // Filter out deleted
+    return merged.filter(c => !deletedCats.includes(c.slug));
+}
+
+// ⭐ NAYA: Function to load categories into the form dropdown with Hierarchy ⭐
+function loadCategoriesToDropdown(selectedSlug = null) {
+    const allCats = getAllCategories();
 
     const addCategorySelect = document.getElementById('pCategory');
     if (addCategorySelect) {
         let sortedCats = [];
         const addWithIndent = (parent, level) => {
-            allCats.filter(c => c.parent === parent).forEach(c => {
+            allCats.filter(c => c.parent === parent || (parent === null && !c.parent)).forEach(c => {
                 const indent = '&nbsp;&nbsp;&nbsp;&nbsp;'.repeat(level);
                 sortedCats.push({ ...c, display: indent + (level > 0 ? '↳ ' : '') + c.name });
                 addWithIndent(c.slug, level + 1);
             });
         };
         
-        allCats.filter(c => !c.parent || c.parent === 'all').forEach(c => {
-            if(c.slug === 'all') return;
-            sortedCats.push({ ...c, display: c.name });
-            addWithIndent(c.slug, 1);
-        });
+        addWithIndent(null, 0);
+        addWithIndent('all', 0);
 
         addCategorySelect.innerHTML = sortedCats.map(c => `<option value="${c.slug}">${c.display}</option>`).join('');
         
@@ -75,15 +84,109 @@ function loadCategoriesToDropdown(selectedSlug = null) {
 
 // ⭐ NAYA: Update Parent Dropdown in Add Category Form ⭐
 function updateParentDropdown() {
-    const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
-    const customCats = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]');
-    const allCats = [...masterCats, ...customCats];
-    
+    const allCats = getAllCategories();
     const parentSelect = document.getElementById('newCatParent');
     if (parentSelect) {
+        let sortedCats = [];
+        const addWithIndent = (parent, level) => {
+            allCats.filter(c => c.parent === parent || (parent === null && !c.parent)).forEach(c => {
+                if(c.slug === 'all') return;
+                const indent = '&nbsp;&nbsp;&nbsp;&nbsp;'.repeat(level);
+                sortedCats.push({ ...c, display: indent + (level > 0 ? '↳ ' : '') + c.name });
+                addWithIndent(c.slug, level + 1);
+            });
+        };
+        addWithIndent(null, 0);
+        addWithIndent('all', 0);
+
         parentSelect.innerHTML = `<option value="none">Main Category (No Parent)</option>` + 
-            allCats.filter(c => c.slug !== 'all').map(c => `<option value="${c.slug}">${c.name}</option>`).join('');
+            sortedCats.map(c => `<option value="${c.slug}">${c.display}</option>`).join('');
     }
+}
+
+// ⭐ NAYA: Render Category Management Table ⭐
+function renderCategoryManagementTable() {
+    const tbody = document.getElementById('categoryManagementBody');
+    if(!tbody) return;
+    const allCats = getAllCategories();
+    
+    let sortedCats = [];
+    const addWithIndent = (parent, level) => {
+        allCats.filter(c => c.parent === parent || (parent === null && !c.parent)).forEach(c => {
+            const indent = '&nbsp;&nbsp;&nbsp;&nbsp;'.repeat(level);
+            sortedCats.push({ ...c, display: indent + (level > 0 ? '↳ ' : '') + c.name });
+            addWithIndent(c.slug, level + 1);
+        });
+    };
+    addWithIndent(null, 0);
+    addWithIndent('all', 0);
+
+    tbody.innerHTML = sortedCats.map(c => `
+        <tr>
+            <td style="text-align:left; font-weight:600;">${c.display}</td>
+            <td>${c.slug}</td>
+            <td>${c.parent || 'None'}</td>
+            <td>
+                <div class="action-btns">
+                    <button class="btn-edit" onclick="editCategory('${c.slug}')">Edit</button>
+                    <button class="btn-delete" onclick="deleteCategory('${c.slug}')">Delete</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// ⭐ NAYA: Edit Category Logic ⭐
+window.editCategory = function(slug) {
+    const allCats = getAllCategories();
+    const cat = allCats.find(c => c.slug === slug);
+    if(!cat) return;
+
+    // Open the Add form and populate
+    document.getElementById('addCatContainer').style.display = 'flex';
+    document.getElementById('newCatName').value = cat.name;
+    document.getElementById('newCatParent').value = cat.parent || 'none';
+    
+    // Change button to update
+    const btn = document.getElementById('saveNewCatBtn');
+    btn.innerText = 'Update';
+    btn.style.background = '#f59e0b'; // Orange for update
+    btn.setAttribute('data-editing', slug);
+}
+
+// ⭐ NAYA: Delete Category Logic (Soft Delete) ⭐
+window.deleteCategory = function(slug) {
+    if(!confirm("Are you sure you want to delete this category? Products in this category will remain but won't be grouped under it. Any sub-categories will also be hidden.")) return;
+    
+    let deletedCats = JSON.parse(localStorage.getItem('admin_deleted_categories') || '[]');
+    const allCats = getAllCategories();
+    
+    // Find all children recursively to delete as well
+    const getChildren = (parent) => {
+        let res = [];
+        allCats.filter(c => c.parent === parent).forEach(c => {
+            res.push(c.slug);
+            res = res.concat(getChildren(c.slug));
+        });
+        return res;
+    };
+    
+    const toDelete = [slug, ...getChildren(slug)];
+    
+    toDelete.forEach(s => {
+        if(!deletedCats.includes(s)) deletedCats.push(s);
+    });
+    
+    localStorage.setItem('admin_deleted_categories', JSON.stringify(deletedCats));
+    
+    // Also remove from custom if it's there
+    let customCats = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]');
+    customCats = customCats.filter(c => !toDelete.includes(c.slug));
+    localStorage.setItem('admin_custom_categories', JSON.stringify(customCats));
+
+    renderCategoryManagementTable();
+    updateParentDropdown();
+    loadCategoriesToDropdown();
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -97,6 +200,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
     document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
     
+    // Manage Categories Toggle
+    document.getElementById('toggleManageCatsBtn')?.addEventListener('click', function() {
+        const container = document.getElementById('manageCatsContainer');
+        if (container.style.display === 'none') {
+            container.style.display = 'block';
+            this.textContent = 'Hide Categories';
+            this.style.background = '#EF4444';
+            renderCategoryManagementTable();
+        } else {
+            container.style.display = 'none';
+            this.textContent = 'Show Categories';
+            this.style.background = '#0284c7';
+        }
+    });
+
     // Save App Download Setting
     document.getElementById('saveAppSettingsBtn')?.addEventListener('click', async function() {
         const isLive = document.getElementById('appDownloadStatusToggle').checked;
@@ -141,7 +259,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('cancelOfferBtn')?.addEventListener('click', () => { document.getElementById('pEventName').value = ''; document.getElementById('pSaleEndDate').value = ''; alert('Offer 1 details cleared. Save product to confirm cancellation.'); });
     document.getElementById('cancelOffer2Btn')?.addEventListener('click', () => { document.getElementById('pEventName2').value = ''; document.getElementById('pSaleEndDate2').value = ''; alert('Offer 2 details cleared. Save product to confirm cancellation.'); });
 
-    // ⭐ NAYA: QUICK AI BLOG GENERATOR BUTTON LOGIC ⭐
+    // QUICK AI BLOG GENERATOR BUTTON LOGIC
     document.getElementById('quickGenerateBlogBtn')?.addEventListener('click', async function() {
         const urlInput = document.getElementById('quickBlogUrlInput').value.trim(); if (!urlInput) return alert('Please paste a product URL.');
         let slug = '';
@@ -159,7 +277,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (err) { alert("Error: " + err.message); } finally { btn.innerText = originalText; btn.disabled = false; }
     });
 
-    // ⭐ SETUP SCROLL BUTTONS ⭐
+    // SETUP SCROLL BUTTONS
     function setupScrollButtons(upBtnId, downBtnId, wrapperId) {
         const upBtn = document.getElementById(upBtnId); const downBtn = document.getElementById(downBtnId); const wrapper = document.getElementById(wrapperId);
         if (!upBtn || !downBtn || !wrapper) return;
@@ -173,33 +291,67 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupScrollButtons('scrollUpBtnProducts', 'scrollDownBtnProducts', 'tableScrollWrapperProducts');
     setupScrollButtons('scrollUpBtnBlogs', 'scrollDownBtnBlogs', 'tableScrollWrapperBlogs'); 
 
-    // ⭐ NAYA: DYNAMIC CATEGORY LOGIC ⭐
+    // DYNAMIC CATEGORY LOGIC
     updateParentDropdown();
+    renderCategoryManagementTable(); // Initial render
 
     document.getElementById('showAddCatBtn')?.addEventListener('click', () => {
         const container = document.getElementById('addCatContainer');
         container.style.display = container.style.display === 'none' ? 'flex' : 'none';
+        // Reset button if it was in edit mode and user just opened it
+        if(container.style.display === 'flex' && !document.getElementById('saveNewCatBtn').getAttribute('data-editing')) {
+            document.getElementById('newCatName').value = '';
+            document.getElementById('newCatParent').value = 'none';
+        }
     });
 
     document.getElementById('saveNewCatBtn')?.addEventListener('click', () => {
         const newName = document.getElementById('newCatName').value.trim();
         const parentSlug = document.getElementById('newCatParent').value;
+        const editingSlug = document.getElementById('saveNewCatBtn').getAttribute('data-editing');
         if(!newName) return alert("Please enter a category name.");
         
-        const newSlug = newName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-        
         let customCats = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]');
-        if(!customCats.find(c => c.slug === newSlug)) {
-            customCats.push({ slug: newSlug, name: newName, parent: parentSlug === 'none' ? null : parentSlug });
-            localStorage.setItem('admin_custom_categories', JSON.stringify(customCats));
+        const newSlug = editingSlug || newName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+        const newCatObj = { 
+            slug: newSlug, 
+            name: newName, 
+            parent: parentSlug === 'none' ? null : parentSlug 
+        };
+
+        if (editingSlug) {
+            // Update existing
+            const idx = customCats.findIndex(c => c.slug === editingSlug);
+            if (idx > -1) customCats[idx] = newCatObj;
+            else customCats.push(newCatObj);
+        } else {
+            // Add new
+            if(!customCats.find(c => c.slug === newSlug)) {
+                customCats.push(newCatObj);
+            }
         }
+
+        localStorage.setItem('admin_custom_categories', JSON.stringify(customCats));
+        
+        // If we were editing, remove from deleted list just in case
+        let deletedCats = JSON.parse(localStorage.getItem('admin_deleted_categories') || '[]');
+        deletedCats = deletedCats.filter(s => s !== newSlug);
+        localStorage.setItem('admin_deleted_categories', JSON.stringify(deletedCats));
 
         loadCategoriesToDropdown(newSlug);
         updateParentDropdown(); 
+        renderCategoryManagementTable();
         
         document.getElementById('newCatName').value = '';
         document.getElementById('addCatContainer').style.display = 'none';
-        alert("New category added and selected successfully!");
+        
+        const btn = document.getElementById('saveNewCatBtn');
+        btn.innerText = 'Add';
+        btn.style.background = '#10b981';
+        btn.removeAttribute('data-editing');
+        
+        alert(editingSlug ? "Category updated successfully!" : "New category added successfully!");
     });
 });
 
@@ -247,16 +399,14 @@ async function loadProductsList() {
         const { data: products, error } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').order('created_at', { ascending: false });
         if (error) throw error; allProducts = products || [];
         
-        const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : []; 
-        const customCats = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]');
-        const allMasterCats = [...masterCats, ...customCats.map(c => ({ slug: c.slug, name: c.name, icon: '📦' }))];
+        const allCats = getAllCategories();
 
         const dbCats = [...new Set(allProducts.map(p => p.category_slug).filter(Boolean))];
         const categoryFilter = document.getElementById('adminCategoryFilter');
         if (categoryFilter) { 
             let filterHtml = `<option value="all">All Categories</option>`; 
             dbCats.forEach(slug => { 
-                const catObj = allMasterCats.find(c => c.slug === slug); 
+                const catObj = allCats.find(c => c.slug === slug); 
                 const catName = catObj ? catObj.name : slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()); 
                 filterHtml += `<option value="${slug}">${catName}</option>`; 
             }); 
@@ -283,11 +433,8 @@ function renderTable() {
         if (defaultOffer.price) { if (salePrice > 0) { priceStr = `<div style="text-decoration:line-through; color:#94A3B8; font-size:0.8rem;">${finalBasePrice.toFixed(2)} ${currency}</div><div style="font-weight:bold; color:#FF5A3C; font-size:1rem;">${finalSalePrice.toFixed(2)} ${currency}</div>`; } else { priceStr = `<strong style="color:#1E1B4B;">${finalBasePrice.toFixed(2)} ${currency}</strong>`; } } else { priceStr = 'N/A'; }
         const isAvailable = p.is_available !== false; const rowClass = isAvailable ? '' : 'unavailable-row'; const statusBadge = isAvailable ? '' : `<span class="badge-unavailable">UNAVAILABLE</span>`;
         
-        const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : []; 
-        const customCats = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]');
-        const allMasterCats = [...masterCats, ...customCats.map(c => ({ slug: c.slug, name: c.name, icon: '📦' }))];
-        
-        const catObj = allMasterCats.find(c => c.slug === p.category_slug); 
+        const allCats = getAllCategories();
+        const catObj = allCats.find(c => c.slug === p.category_slug); 
         const catName = catObj ? catObj.name : (p.category_slug ? p.category_slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Uncategorized');
         return `<tr class="${rowClass}"><td style="text-align: center; font-weight: bold;">${index + 1}</td><td style="text-align: center;"><span style="background:#e2e8f0; color:#1e293b; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:600; white-space:nowrap; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis;">${catName}</span></td><td style="text-align: center;"><img src="${p.image_url}" class="table-img" onerror="this.src='/assets/icon-192.png?v=4'"></td><td style="text-align: left; font-weight: 500;">${p.title} ${statusBadge}</td><td style="text-align: center;">${priceStr}</td><td><div class="action-btns"><button class="btn-edit" onclick="editProduct('${p.id}')">Edit</button><button class="btn-delete" onclick="deleteProduct('${p.id}')">Delete</button></div></td></tr>`;
     }).join('');
