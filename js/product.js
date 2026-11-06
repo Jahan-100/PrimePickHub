@@ -320,15 +320,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
     `;
 
-    // ⭐ CSS for True Full-Width Layout ⭐
+    // ⭐ CSS for True Full-Width Layout & Absolute Arrows ⭐
     const style = document.createElement('style');
     style.textContent = `
+        /* Force container to shrink to full width ignoring main.css padding */
+        #productContainer {
+            padding: 10px 15px !important;
+            max-width: 100% !important;
+        }
+        
         .product-layout { 
             display: flex; 
             flex-direction: row; 
             width: 100%; 
             max-width: 100%; 
-            margin: 0 auto; 
             gap: 20px; 
             background: #fff; 
             padding: 20px; 
@@ -338,35 +343,52 @@ document.addEventListener('DOMContentLoaded', async () => {
             align-items: flex-start;
         }
         
-        /* Thumbnails Container - Fixed Width */
+        /* Thumbnails Container - Absolute positioning for arrows */
         .product-thumbnails-section { 
-            display: flex; 
-            flex-direction: column; 
             width: 80px; 
+            height: 600px; /* Fixed height for scrolling */
             flex-shrink: 0; 
-            height: 600px; 
             position: sticky;
             top: 100px;
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: space-between; /* Pushes arrows to top and bottom */
         }
-
-        /* Arrows styling */
-        .scroll-arrow {
-            background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 50%;
-            width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; color: #1E1B4B; font-size: 0.8rem; z-index: 10; flex-shrink: 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .scroll-arrow:hover { background: #E2E8F0; }
         
-        /* The actual scrollable list */
+        /* Arrows - Strictly Top and Bottom */
+        .scroll-arrow {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 32px;
+            height: 32px;
+            background: #fff;
+            border: 1px solid #CBD5E1;
+            border-radius: 50%;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            color: #1E1B4B;
+            font-size: 0.8rem;
+        }
+        .scroll-arrow.up-arrow { top: 0; }
+        .scroll-arrow.down-arrow { bottom: 0; }
+        
+        /* Scroll List - Leaves space for absolute arrows */
         .thumbnail-scroll-wrapper {
-            display: flex; flex-direction: column; overflow-y: auto; 
-            flex-grow: 1; /* Takes up remaining space between arrows */
-            scroll-behavior: smooth; padding: 10px 0; gap: 10px;
+            position: absolute;
+            top: 40px;
+            bottom: 40px;
+            left: 0;
+            right: 0;
+            overflow-y: auto;
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px;
             scrollbar-width: none;
-            width: 100%;
             align-items: center;
         }
         .thumbnail-scroll-wrapper::-webkit-scrollbar { display: none; }
@@ -374,15 +396,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         /* Main Image - Takes all remaining space */
         .product-image-section { 
             flex: 1; 
-            min-width: 0; /* Prevents overflow */
+            min-width: 0; /* Prevents blowout */
             position: sticky; 
             top: 100px; 
-            height: 100%;
+            height: auto;
         }
         
-        /* Info Section - Fixed Width */
+        /* Info Section - Fixed width */
         .product-info-section { 
-            width: 400px; 
+            width: 420px; 
             flex-shrink: 0; 
         }
 
@@ -391,22 +413,40 @@ document.addEventListener('DOMContentLoaded', async () => {
             transition: border-color 0.2s; flex-shrink: 0; 
         }
         
-        /* Mobile View */
+        /* Mobile Layout */
         @media (max-width: 1023px) {
-            .product-layout { flex-direction: column; padding: 10px; }
+            .product-layout { flex-direction: column; padding: 10px; gap: 15px; }
             .product-image-section { width: 100%; position: relative; top: 0; }
             .product-info-section { width: 100%; }
             
+            /* Thumbnails Container Mobile */
             .product-thumbnails-section { 
                 width: 100%; height: 90px; flex-direction: row; 
-                position: relative; top: 0; margin-bottom: 20px; 
+                position: relative; top: 0; margin-bottom: 10px; 
             }
-            .thumbnail-scroll-wrapper { 
-                flex-direction: row; overflow-x: auto; overflow-y: hidden; 
-                padding: 0 10px; gap: 10px; 
+            
+            /* Mobile Arrows (Left and Right) */
+            .scroll-arrow {
+                top: 50%;
+                transform: translateY(-50%);
+                width: 30px; height: 30px;
             }
-            .scroll-arrow.up-arrow { transform: rotate(-90deg); margin-right: 5px; }
-            .scroll-arrow.down-arrow { transform: rotate(-90deg); margin-left: 5px; }
+            .scroll-arrow.up-arrow { left: 0; right: auto; }
+            .scroll-arrow.down-arrow { left: auto; right: 0; bottom: auto; }
+            .scroll-arrow i { transform: rotate(-90deg); } /* Rotate arrows for horizontal scroll */
+            
+            /* Mobile Scroll List */
+            .thumbnail-scroll-wrapper {
+                flex-direction: row; 
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 35px; /* Space for left arrow */
+                right: 35px; /* Space for right arrow */
+                overflow-x: auto; 
+                overflow-y: hidden; 
+                padding: 0;
+            }
         }
     `;
     document.head.appendChild(style);
