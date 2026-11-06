@@ -208,16 +208,21 @@
                             <div class="form-group"><label>Video URL (YouTube - Optional)</label><input type="url" id="pVideo" placeholder="https://www.youtube.com/watch?v=..." style="background:#fff; width: 100%;"></div>
 
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <!-- ⭐ NAYA: Dynamic Category Add Feature ⭐ -->
+                                <!-- ⭐ NAYA: Dynamic Category Add Feature with Parent Selection ⭐ -->
                                 <div class="form-group" style="flex: 1.5; min-width: 180px;">
                                     <label>Category</label>
                                     <div style="display:flex; gap:5px;">
                                         <select id="pCategory" style="flex:1; padding:10px; border:1px solid #cbd5e1; border-radius:6px; background:#fff;"></select>
                                         <button type="button" id="showAddCatBtn" style="padding:0 12px; background:#3b82f6; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold; font-size:1.2rem;" title="Add New Category">+</button>
                                     </div>
-                                    <div id="addCatContainer" style="display:none; margin-top:8px; gap:5px;">
-                                        <input type="text" id="newCatName" placeholder="New Category Name" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:4px; font-size:0.85rem;">
-                                        <button type="button" id="saveNewCatBtn" style="padding:8px 12px; background:#10b981; color:#fff; border:none; border-radius:4px; font-weight:bold;">Add</button>
+                                    <div id="addCatContainer" style="display:none; margin-top:8px; flex-direction:column; gap:5px; background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
+                                        <select id="newCatParent" style="padding:8px; border:1px solid #cbd5e1; border-radius:4px; font-size:0.85rem;">
+                                            <option value="none">Main Category (No Parent)</option>
+                                        </select>
+                                        <div style="display:flex; gap:5px;">
+                                            <input type="text" id="newCatName" placeholder="New Category Name" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:4px; font-size:0.85rem;">
+                                            <button type="button" id="saveNewCatBtn" style="padding:8px 12px; background:#10b981; color:#fff; border:none; border-radius:4px; font-weight:bold;">Add</button>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="form-group" style="flex: 1; min-width: 120px;">
