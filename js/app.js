@@ -20,7 +20,6 @@ function isValidExternalURL(url) { if (typeof url !== 'string') return false; tr
 function isValidURL(url) { if (!url || typeof url !== 'string') return false; try { const p = new URL(url, window.location.origin); return p.protocol === 'http:' || p.protocol === 'https:'; } catch { return false; } }
 function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb; }
 
-// ⭐ GLOBAL IMAGE LOAD HANDLER (Glitch Fix) ⭐
 window.handleImageLoad = function(imgElement) {
     if (imgElement.decode) {
         imgElement.decode().then(() => {
@@ -33,7 +32,6 @@ window.handleImageLoad = function(imgElement) {
     }
 };
 
-// ⭐ SMART IMAGE OPTIMIZER (Shopify CDN Fix) ⭐
 function getHighQualityImage(url, size = 400) {
     if (!url || typeof url !== 'string') return url;
     let cleanUrl = url.trim();
@@ -59,7 +57,6 @@ function getHighQualityImage(url, size = 400) {
     return cleanUrl;
 }
 
-// ⭐ SAFE PRODUCT URL HELPER ⭐
 function getProductUrl(product) {
     if (!product) return '#';
     if (product.slug) return `/product/${encodeURIComponent(product.slug)}`;
@@ -82,26 +79,31 @@ function deduplicateProducts(list) {
 }
 function showGridMessage(grid, msg) { if (!grid) return; grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;"><p>${escapeHTML(msg)}</p></div>`; }
 
-// ⭐ UPDATED: Dynamic Categories Loader (Fixes missing categories in icons) ⭐
-function renderDynamicCategories(allProducts) {
+// ⭐ Helper to get all categories merged ⭐
+function getAllCategories() {
     const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
-    const dbCats = [...new Set(allProducts.map(p => p.category_slug).filter(Boolean))];
-    
-    // Include DB cats even if they are not in the master CONFIG
-    const activeCats = [...masterCats];
-    dbCats.forEach(cat => {
-        if (!activeCats.find(c => c.slug === cat)) {
-            activeCats.push({ 
-                slug: cat, 
-                name: cat.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), 
-                icon: '📦' 
-            });
-        }
-    });
+    const customCats = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]');
+    return [...masterCats, ...customCats];
+}
 
+// ⭐ Helper to get all child slugs recursively ⭐
+function getAllDescendantSlugs(parentSlug, allCats) {
+    let slugs = [parentSlug];
+    const children = allCats.filter(c => c.parent === parentSlug);
+    children.forEach(child => {
+        slugs = slugs.concat(getAllDescendantSlugs(child.slug, allCats));
+    });
+    return slugs;
+}
+
+function renderDynamicCategories(allProducts) {
+    const allCats = getAllCategories();
+    // Only show top-level categories
+    const topCats = allCats.filter(c => !c.parent || c.parent === 'all');
+    
     const catContainer = document.getElementById('categoryScrollContainer');
     if (catContainer) {
-        catContainer.innerHTML = activeCats.map(c => `
+        catContainer.innerHTML = topCats.map(c => `
             <a href="/category/${c.slug}" onclick="event.preventDefault(); selectCategory('${c.slug}', this)" class="category-item ${c.slug === 'all' ? 'active' : ''}" data-cat="${c.slug}">
                 <div class="cat-icon" ${c.slug === 'all' ? 'style="color: #EF4444;"' : ''}>${c.icon || '📦'}</div>
                 <span>${c.name}</span>
@@ -110,7 +112,7 @@ function renderDynamicCategories(allProducts) {
     }
     const dropdownMenu = document.getElementById('categoryDropdownMenu');
     if (dropdownMenu) {
-        dropdownMenu.innerHTML = activeCats.map(c => `
+        dropdownMenu.innerHTML = topCats.map(c => `
             <li data-value="${c.slug}" class="${c.slug === 'all' ? 'active' : ''}" onclick="selectCatDropdown('${c.slug}', '${c.name}', this)">${c.name}</li>
         `).join('');
     }
@@ -159,7 +161,6 @@ function renderProductCard(product, isPriority = false) {
         if (commissionRate > 0) { finalBasePrice = basePrice + (basePrice * (commissionRate / 100)); if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100)); }
         
         let priceDisplay = '';
-        // ⭐ HOMEPAGE CARD PRICE FIX: Agar price 0 hai toh "Check Price" show hoga ⭐
         if (basePrice === 0 && salePrice === 0) {
             priceDisplay = `<div style="font-weight:bold; color:#FF5A3C; margin-bottom:5px; font-size:1.05rem;">Check Price on ${storeName}</div>`;
         } else if (salePrice > 0) {
@@ -240,23 +241,114 @@ window.scrollFlash = function(direction) { const container = document.getElement
 window.scrollFlash2 = function(direction) { const container = document.getElementById('flashSaleScroll2'); const scrollAmount = 300; if (direction === 'left') container.scrollLeft -= scrollAmount; else container.scrollLeft += scrollAmount; };
 window.scrollSpecial = function(direction) { const container = document.getElementById('specialDealScroll'); const scrollAmount = 300; if (direction === 'left') container.scrollLeft -= scrollAmount; else container.scrollLeft += scrollAmount; };
 
-window.selectCategory = async function(catSlug, element) {
-    document.querySelectorAll('.category-item').forEach(el => el.classList.remove('active')); if (element) element.classList.add('active');
-    const titleEl = document.getElementById('productSectionTitle'); const grid = document.getElementById('productGrid');
-    if (titleEl) { 
-        const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
-        const customCat = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]').find(c => c.slug === catSlug);
-        const catName = customCat ? customCat.name : (masterCats.find(c => c.slug === catSlug)?.name || catSlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
-        titleEl.innerHTML = (catSlug === 'all') ? 'For You' : catName; 
+// ⭐ UPDATED: Sub Category Click Logic ⭐
+window.selectSubCategory = async function(subSlug, parentSlug, element) {
+    const subContainer = document.getElementById('subCategoryScrollContainer');
+    if (subContainer) {
+        subContainer.querySelectorAll('.category-item').forEach(el => el.classList.remove('active')); 
+        if (element) element.classList.add('active');
     }
+    
+    const miniSubContainer = document.getElementById('miniSubCategoryScrollContainer');
+    if (miniSubContainer) miniSubContainer.style.display = 'none';
+
+    const titleEl = document.getElementById('productSectionTitle'); 
+    const grid = document.getElementById('productGrid');
+    
+    const allCats = getAllCategories();
+    const currentCat = allCats.find(c => c.slug === subSlug);
+    if (titleEl) titleEl.innerHTML = currentCat ? currentCat.name : subSlug;
+
+    const miniSubs = allCats.filter(c => c.parent === subSlug);
+    if (miniSubs.length > 0 && miniSubContainer) {
+        miniSubContainer.style.display = 'flex';
+        miniSubContainer.innerHTML = miniSubs.map(c => `
+            <a href="javascript:void(0)" onclick="event.preventDefault(); selectMiniSubCategory('${c.slug}', '${subSlug}', this)" class="category-item" style="min-width: 80px;" data-cat="${c.slug}">
+                <div class="cat-icon" style="width: 40px; height: 40px; font-size: 1rem; background: #fff; border: 1px solid #E2E8F0;">${c.icon || '📦'}</div>
+                <span style="font-size: 0.7rem;">${c.name}</span>
+            </a>
+        `).join('');
+    }
+
+    showGridMessage(grid, 'Loading products...');
+    try {
+        let fetchSlugs = getAllDescendantSlugs(subSlug, allCats);
+        const products = await API.searchProducts({ category: fetchSlugs }); 
+        renderProductsGrid(products.filter(p => p.is_available !== false), grid); 
+    } catch (err) { showGridMessage(grid, 'Failed to load products.'); }
+};
+
+// ⭐ UPDATED: Mini Sub Category Click Logic ⭐
+window.selectMiniSubCategory = async function(miniSlug, parentSlug, element) {
+    const miniSubContainer = document.getElementById('miniSubCategoryScrollContainer');
+    if (miniSubContainer) {
+        miniSubContainer.querySelectorAll('.category-item').forEach(el => el.classList.remove('active')); 
+        if (element) element.classList.add('active');
+    }
+
+    const titleEl = document.getElementById('productSectionTitle'); 
+    const grid = document.getElementById('productGrid');
+    
+    const allCats = getAllCategories();
+    const currentCat = allCats.find(c => c.slug === miniSlug);
+    if (titleEl) titleEl.innerHTML = currentCat ? currentCat.name : miniSlug;
+
+    showGridMessage(grid, 'Loading products...');
+    try {
+        let fetchSlugs = getAllDescendantSlugs(miniSlug, allCats);
+        const products = await API.searchProducts({ category: fetchSlugs }); 
+        renderProductsGrid(products.filter(p => p.is_available !== false), grid); 
+    } catch (err) { showGridMessage(grid, 'Failed to load products.'); }
+};
+
+// ⭐ UPDATED: Main Category Click Logic ⭐
+window.selectCategory = async function(catSlug, element) {
+    document.querySelectorAll('#categoryScrollContainer .category-item').forEach(el => el.classList.remove('active')); 
+    if (element) element.classList.add('active');
+    
+    const titleEl = document.getElementById('productSectionTitle'); 
+    const grid = document.getElementById('productGrid');
+    const subContainer = document.getElementById('subCategoryScrollContainer');
+    const miniSubContainer = document.getElementById('miniSubCategoryScrollContainer');
+    
+    if (subContainer) subContainer.style.display = 'none';
+    if (miniSubContainer) miniSubContainer.style.display = 'none';
+
+    const allCats = getAllCategories();
+    const currentCat = allCats.find(c => c.slug === catSlug);
+    if (titleEl) titleEl.innerHTML = (catSlug === 'all') ? 'For You' : (currentCat ? currentCat.name : catSlug);
+
+    const subCats = allCats.filter(c => c.parent === catSlug);
+    if (subCats.length > 0 && subContainer) {
+        subContainer.style.display = 'flex';
+        subContainer.innerHTML = subCats.map(c => `
+            <a href="javascript:void(0)" onclick="event.preventDefault(); selectSubCategory('${c.slug}', '${catSlug}', this)" class="category-item" style="min-width: 80px;" data-cat="${c.slug}">
+                <div class="cat-icon" style="width: 45px; height: 45px; font-size: 1.2rem; background: #fff; border: 1px solid #E2E8F0;">${c.icon || '📦'}</div>
+                <span style="font-size: 0.75rem;">${c.name}</span>
+            </a>
+        `).join('');
+    }
+
     showGridMessage(grid, 'Loading products...');
     try {
         if (catSlug === 'all') {
-            const data = await API.getHomepageProducts(); const raw = [...(data.featured ?? []), ...(data.trending ?? []), ...(data.latest ?? [])];
-            const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false); const now = new Date();
-            const normalProducts = allProducts.filter(p => { const endDate1 = p.sale_end_date ? new Date(p.sale_end_date) : null; const endDate2 = p.sale_end_date_2 ? new Date(p.sale_end_date_2) : null; const inSec1 = (endDate1 && endDate1 > now); const inSec2 = (endDate2 && endDate2 > now); return !inSec1 && !inSec2; });
+            const data = await API.getHomepageProducts(); 
+            const raw = [...(data.featured ?? []), ...(data.trending ?? []), ...(data.latest ?? [])];
+            const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false); 
+            const now = new Date();
+            const normalProducts = allProducts.filter(p => { 
+                const endDate1 = p.sale_end_date ? new Date(p.sale_end_date) : null; 
+                const endDate2 = p.sale_end_date_2 ? new Date(p.sale_end_date_2) : null; 
+                const inSec1 = (endDate1 && endDate1 > now); 
+                const inSec2 = (endDate2 && endDate2 > now); 
+                return !inSec1 && !inSec2; 
+            });
             renderProductsGrid(normalProducts, grid);
-        } else { const products = await API.searchProducts({ category: catSlug }); renderProductsGrid(products.filter(p => p.is_available !== false), grid); }
+        } else { 
+            let fetchSlugs = getAllDescendantSlugs(catSlug, allCats);
+            const products = await API.searchProducts({ category: fetchSlugs }); 
+            renderProductsGrid(products.filter(p => p.is_available !== false), grid); 
+        }
     } catch (err) { showGridMessage(grid, 'Failed to load products.'); }
 };
 
@@ -511,11 +603,10 @@ document.addEventListener('DOMContentLoaded', () => {
     trackVisitor(); trackActiveApp(); loadHomepageProducts(); loadLatestBlog(); setupRealtime(); loadNotifications();
     if (!getCookie('cookie_consent')) { setTimeout(() => { const banner = document.getElementById('cookie-consent-banner'); if (banner) banner.style.display = 'flex'; }, 2000); }
     
-    // ⭐ FIX: Interval changed so it doesn't reset the category ⭐
     setInterval(() => { 
         const popup = document.getElementById('appDownloadPopup'); 
         if (document.getElementById('productGrid') && (!popup || popup.style.display !== 'block')) { 
-            const activeCat = document.querySelector('.category-item.active');
+            const activeCat = document.querySelector('#categoryScrollContainer .category-item.active');
             if (!activeCat || activeCat.dataset.cat === 'all') {
                 loadHomepageProducts(); 
             }
