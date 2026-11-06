@@ -85,7 +85,6 @@ function getAllCategories() {
     const customCats = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]');
     const deletedCats = JSON.parse(localStorage.getItem('admin_deleted_categories') || '[]');
 
-    // Merge (custom overrides master)
     let merged = [...masterCats];
     customCats.forEach(c => {
         const idx = merged.findIndex(m => m.slug === c.slug);
@@ -93,7 +92,6 @@ function getAllCategories() {
         else merged.push(c);
     });
 
-    // Filter out deleted
     return merged.filter(c => !deletedCats.includes(c.slug));
 }
 
