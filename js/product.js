@@ -325,15 +325,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ⭐ CSS for New Layout (Injected dynamically) ⭐
     const style = document.createElement('style');
     style.textContent = `
-        .product-layout { display: grid; grid-template-columns: 1fr; gap: 20px; background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #E2E8F0; margin-bottom: 20px; }
+        .product-layout { display: grid; grid-template-columns: 1fr; gap: 20px; background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #E2E8F0; margin-bottom: 20px; width: 100%; max-width: 100%; }
         @media (min-width: 768px) {
             .product-layout { 
                 /* Thumbnails | Main Image (Large) | Info */
-                grid-template-columns: 80px minmax(400px, 2.5fr) 1.2fr; 
+                grid-template-columns: 80px 2fr 1.2fr; 
                 align-items: start;
             }
-            .product-thumbnails-section { order: 1; position: sticky; top: 100px; height: 600px; display: flex; flex-direction: column; align-items: center; }
-            .product-image-section { order: 2; position: sticky; top: 100px; }
+            .product-thumbnails-section { order: 1; position: sticky; top: 100px; height: 600px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
+            .product-image-section { order: 2; position: sticky; top: 100px; width: 100%; }
             .product-info-section { order: 3; }
         }
         
@@ -344,6 +344,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             scrollbar-width: none;
             width: 100%;
             align-items: center;
+            justify-content: flex-start;
         }
         .thumbnail-scroll-wrapper::-webkit-scrollbar { display: none; }
         
