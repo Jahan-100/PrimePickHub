@@ -48,7 +48,6 @@ function getHighQualityImage(url, size = 400) {
     } else if (cleanUrl.includes('ebayimg.com')) {
         cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, `/s-l${size}.$1`);
     } else if (cleanUrl.includes('shopify') || cleanUrl.includes('govee') || cleanUrl.includes('allegra-k.com') || cleanUrl.includes('cdn.shopify')) {
-        // SHOPIFY FIX: Strip '?v=...' first, then force WebP
         const qIdx = cleanUrl.indexOf('?');
         if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
         cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
@@ -499,6 +498,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const catBtn = document.getElementById('categoryDropdownBtn'); const catMenu = document.getElementById('categoryDropdownMenu'); if (catBtn && catMenu && typeof toggleCatDropdown === 'undefined') { catBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); catMenu.style.display = catMenu.style.display === 'block' ? 'none' : 'block'; }); }
     setTimeout(() => { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); }, 5000);
     document.addEventListener('click', function(e) { if (!e.target.closest('.notif-wrapper')) { const panel = document.getElementById('notifPanel'); if(panel) panel.style.display = 'none'; } });
-    function hideSplash() { var splash = document.getElementById('splash-screen'); if (splash) { splash.classList.add('hidden'); document.body.classList.remove('app-loading'); setTimeout(() => { splash.style.display = 'none'; }, 800); } }
-    setTimeout(hideSplash, 1500); setTimeout(() => { var splash = document.getElementById('splash-screen'); if (splash && !splash.classList.contains('hidden')) hideSplash(); }, 3500);
+    
+    // ⭐ SPLASH SCREEN FIX (Session Storage) ⭐
+    function hideSplash() {
+        var splash = document.getElementById('splash-screen');
+        if (splash) {
+            if (sessionStorage.getItem('splashShown') === 'true') {
+                // If already shown in this session, hide instantly without animation
+                splash.style.display = 'none';
+                document.body.classList.remove('app-loading');
+            } else {
+                // Show normally for first time
+                splash.classList.add('hidden');
+                document.body.classList.remove('app-loading');
+                setTimeout(() => { splash.style.display = 'none'; }, 800);
+                sessionStorage.setItem('splashShown', 'true');
+            }
+        }
+    }
+    setTimeout(hideSplash, 1500); 
+    setTimeout(() => { 
+        var splash = document.getElementById('splash-screen');
+        if (splash && !splash.classList.contains('hidden') && splash.style.display !== 'none') hideSplash(); 
+    }, 3500);
 });
