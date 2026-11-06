@@ -20,6 +20,7 @@ function isValidExternalURL(url) { if (typeof url !== 'string') return false; tr
 function isValidURL(url) { if (!url || typeof url !== 'string') return false; try { const p = new URL(url, window.location.origin); return p.protocol === 'http:' || p.protocol === 'https:'; } catch { return false; } }
 function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb; }
 
+// ⭐ GLOBAL IMAGE LOAD HANDLER (Glitch Fix) ⭐
 window.handleImageLoad = function(imgElement) {
     if (imgElement.decode) {
         imgElement.decode().then(() => {
@@ -32,6 +33,7 @@ window.handleImageLoad = function(imgElement) {
     }
 };
 
+// ⭐ SMART IMAGE OPTIMIZER (Shopify CDN Fix) ⭐
 function getHighQualityImage(url, size = 400) {
     if (!url || typeof url !== 'string') return url;
     let cleanUrl = url.trim();
@@ -49,7 +51,7 @@ function getHighQualityImage(url, size = 400) {
         const qIdx = cleanUrl.indexOf('?');
         if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
         cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
-        cleanUrl = cleanUrl + `?width=${size}`; // Format=webp hata diya taake error na aaye
+        cleanUrl = cleanUrl + `?width=${size}`; 
     } else {
         cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
         cleanUrl = cleanUrl.replace(/_\d+x(?=\.(jpg|jpeg|png|webp|avif))/i, '');
@@ -57,6 +59,7 @@ function getHighQualityImage(url, size = 400) {
     return cleanUrl;
 }
 
+// ⭐ SAFE PRODUCT URL HELPER ⭐
 function getProductUrl(product) {
     if (!product) return '#';
     if (product.slug) return `/product/${encodeURIComponent(product.slug)}`;
@@ -79,15 +82,28 @@ function deduplicateProducts(list) {
 }
 function showGridMessage(grid, msg) { if (!grid) return; grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;"><p>${escapeHTML(msg)}</p></div>`; }
 
+// ⭐ UPDATED: Dynamic Categories Loader (Fixes missing categories in icons) ⭐
 function renderDynamicCategories(allProducts) {
     const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
     const dbCats = [...new Set(allProducts.map(p => p.category_slug).filter(Boolean))];
-    const activeCats = masterCats.filter(c => c.slug === 'all' || dbCats.includes(c.slug));
+    
+    // Include DB cats even if they are not in the master CONFIG
+    const activeCats = [...masterCats];
+    dbCats.forEach(cat => {
+        if (!activeCats.find(c => c.slug === cat)) {
+            activeCats.push({ 
+                slug: cat, 
+                name: cat.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), 
+                icon: '📦' 
+            });
+        }
+    });
+
     const catContainer = document.getElementById('categoryScrollContainer');
     if (catContainer) {
         catContainer.innerHTML = activeCats.map(c => `
             <a href="/category/${c.slug}" onclick="event.preventDefault(); selectCategory('${c.slug}', this)" class="category-item ${c.slug === 'all' ? 'active' : ''}" data-cat="${c.slug}">
-                <div class="cat-icon" ${c.slug === 'all' ? 'style="color: #EF4444;"' : ''}>${c.icon}</div>
+                <div class="cat-icon" ${c.slug === 'all' ? 'style="color: #EF4444;"' : ''}>${c.icon || '📦'}</div>
                 <span>${c.name}</span>
             </a>
         `).join('');
@@ -143,6 +159,7 @@ function renderProductCard(product, isPriority = false) {
         if (commissionRate > 0) { finalBasePrice = basePrice + (basePrice * (commissionRate / 100)); if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100)); }
         
         let priceDisplay = '';
+        // ⭐ HOMEPAGE CARD PRICE FIX: Agar price 0 hai toh "Check Price" show hoga ⭐
         if (basePrice === 0 && salePrice === 0) {
             priceDisplay = `<div style="font-weight:bold; color:#FF5A3C; margin-bottom:5px; font-size:1.05rem;">Check Price on ${storeName}</div>`;
         } else if (salePrice > 0) {
@@ -226,7 +243,12 @@ window.scrollSpecial = function(direction) { const container = document.getEleme
 window.selectCategory = async function(catSlug, element) {
     document.querySelectorAll('.category-item').forEach(el => el.classList.remove('active')); if (element) element.classList.add('active');
     const titleEl = document.getElementById('productSectionTitle'); const grid = document.getElementById('productGrid');
-    if (titleEl) { const catName = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? (CONFIG.categories.find(c => c.slug === catSlug)?.name || catSlug) : catSlug; titleEl.innerHTML = (catSlug === 'all') ? 'For You' : catName; }
+    if (titleEl) { 
+        const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
+        const customCat = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]').find(c => c.slug === catSlug);
+        const catName = customCat ? customCat.name : (masterCats.find(c => c.slug === catSlug)?.name || catSlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
+        titleEl.innerHTML = (catSlug === 'all') ? 'For You' : catName; 
+    }
     showGridMessage(grid, 'Loading products...');
     try {
         if (catSlug === 'all') {
@@ -494,13 +516,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const popup = document.getElementById('appDownloadPopup'); 
         if (document.getElementById('productGrid') && (!popup || popup.style.display !== 'block')) { 
             const activeCat = document.querySelector('.category-item.active');
-            // Only refresh products if user is on "All" (For You) category
             if (!activeCat || activeCat.dataset.cat === 'all') {
                 loadHomepageProducts(); 
             }
             loadLatestBlog(); 
         } 
-    }, 60000); // Increased to 1 minute
+    }, 60000); 
 
     if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('/service-worker.js').then(registration => console.log('✅ Service Worker registered! PWA is ready.')).catch(err => console.log('❌ Service Worker failed:', err)); }); }
     const btn = document.getElementById('searchBtn'); const input = document.getElementById('searchInput'); if (btn) btn.addEventListener('click', handleSearch); if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') handleSearch(); });
