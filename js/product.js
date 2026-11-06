@@ -29,7 +29,7 @@ function getHighQualityImage(url, size = 400) {
         const qIdx = cleanUrl.indexOf('?');
         if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
         cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
-        cleanUrl = cleanUrl + `?width=${size}`; // Sirf width use ki hai taake error na aaye
+        cleanUrl = cleanUrl + `?width=${size}`; // Safe image loading
     } else {
         cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
         cleanUrl = cleanUrl.replace(/_\d+x(?=\.(jpg|jpeg|png|webp|avif))/i, '');
@@ -320,37 +320,83 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
     `;
 
-    // ⭐ CSS for Full-Width Layout ⭐
+    // ⭐ CSS for Full-Width Layout (Fixes Empty Sides & Arrows) ⭐
     const style = document.createElement('style');
     style.textContent = `
-        .product-layout { display: grid; grid-template-columns: 1fr; gap: 20px; background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #E2E8F0; margin-bottom: 20px; width: 100%; max-width: 100%; box-sizing: border-box; }
+        .product-layout { 
+            display: flex; 
+            flex-wrap: wrap; 
+            width: 100%; 
+            max-width: 100%; /* Force full width */
+            margin: 0 auto; 
+            gap: 20px; 
+            background: #fff; 
+            padding: 20px; 
+            border-radius: 12px; 
+            border: 1px solid #E2E8F0; 
+            box-sizing: border-box; 
+        }
+        
         @media (min-width: 1024px) {
             .product-layout { 
-                grid-template-columns: 100px minmax(500px, 2.5fr) 1.2fr; /* Full width layout */
+                display: grid; 
+                /* 80px Thumb | Flexible Main Image | 380px Info */
+                grid-template-columns: 80px minmax(500px, 1fr) 380px; 
                 align-items: start;
             }
-            .product-thumbnails-section { order: 1; position: sticky; top: 100px; height: 600px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
-            .product-image-section { order: 2; position: sticky; top: 100px; width: 100%; height: 100%; }
-            .product-info-section { order: 3; width: 100%; }
+            
+            /* Thumbnails Section */
+            .product-thumbnails-section { 
+                position: sticky; 
+                top: 100px; 
+                height: 600px; 
+                display: flex; 
+                flex-direction: column; 
+                position: relative; 
+            }
+            
+            /* Arrows - Absolute positioning to force top and bottom */
+            .scroll-arrow {
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 30px;
+                height: 30px;
+                background: #fff;
+                border: 1px solid #CBD5E1;
+                border-radius: 50%;
+                display: flex; align-items: center; justify-content: center;
+                cursor: pointer;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                z-index: 10;
+                color: #1E1B4B;
+                font-size: 0.8rem;
+            }
+            .scroll-arrow.up-arrow { top: 0; }
+            .scroll-arrow.down-arrow { bottom: 0; }
+            
+            .thumbnail-scroll-wrapper {
+                display: flex; flex-direction: column; overflow-y: auto; 
+                height: 100%; /* Take full height between arrows */
+                scroll-behavior: smooth; 
+                padding: 40px 0; /* Space so images don't hide under arrows */
+                scrollbar-width: none;
+                align-items: center;
+                gap: 10px;
+            }
+            .thumbnail-scroll-wrapper::-webkit-scrollbar { display: none; }
+            
+            .product-image-section { 
+                position: sticky; 
+                top: 100px; 
+                width: 100%; 
+                height: 100%;
+            }
+            .product-info-section { 
+                width: 100%; 
+                padding-right: 15px;
+            }
         }
-        
-        .thumbnail-scroll-wrapper {
-            display: flex; flex-direction: column; overflow-y: auto; 
-            flex-grow: 1; 
-            scroll-behavior: smooth; padding: 10px 5px; gap: 10px;
-            scrollbar-width: none;
-            width: 100%;
-            align-items: center;
-            justify-content: flex-start;
-        }
-        .thumbnail-scroll-wrapper::-webkit-scrollbar { display: none; }
-        
-        .scroll-arrow {
-            background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 50%;
-            width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; color: #1E1B4B; font-size: 0.8rem; z-index: 10; flex-shrink: 0;
-        }
-        .scroll-arrow:hover { background: #E2E8F0; }
 
         .gallery-thumb { 
             width: 70px; height: 70px; object-fit: cover; border-radius: 8px; cursor: pointer; 
@@ -358,11 +404,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         @media (max-width: 1023px) {
-            .product-layout { grid-template-columns: 1fr; }
-            .product-image-section { order: 1; }
-            .product-thumbnails-section { order: 2; flex-direction: row; height: auto; width: 100%; margin-bottom: 20px; }
-            .thumbnail-scroll-wrapper { flex-direction: row; overflow-x: auto; overflow-y: hidden; height: 80px; gap: 10px; }
-            .scroll-arrow { transform: rotate(-90deg); margin: 0 5px; }
+            .product-layout { flex-direction: column; }
+            .product-image-section { order: 1; width: 100%; }
+            .product-info-section { order: 2; width: 100%; }
+            .product-thumbnails-section { order: 3; width: 100%; height: 90px; flex-direction: row; position: relative; margin-bottom: 20px; }
+            
+            .thumbnail-scroll-wrapper { flex-direction: row; overflow-x: auto; overflow-y: hidden; height: 100%; padding: 0 40px; gap: 10px; }
+            .scroll-arrow { top: 50%; transform: translateY(-50%); }
+            .scroll-arrow.up-arrow { left: 0; top: 50%; }
+            .scroll-arrow.down-arrow { right: 0; left: auto; top: 50%; transform: translateY(-50%) rotate(-90deg); }
+            .scroll-arrow.up-arrow { left: 0; right: auto; top: 50%; transform: translateY(-50%) rotate(-90deg); }
+            .scroll-arrow.down-arrow { right: 0; left: auto; top: 50%; transform: translateY(-50%) rotate(-90deg); }
         }
     `;
     document.head.appendChild(style);
@@ -463,8 +515,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.scrollThumbnails = function(direction) {
         const container = document.getElementById('thumbnailContainer');
         const scrollAmount = 150;
-        if (direction === 'up') container.scrollBy({ top: -scrollAmount, behavior: 'smooth' });
-        else container.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+        if (window.innerWidth > 1023) {
+            if (direction === 'up') container.scrollBy({ top: -scrollAmount, behavior: 'smooth' });
+            else container.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+        } else {
+            if (direction === 'up') container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+            else container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        }
     };
 
     let currentFullScreenIndex = 0;
