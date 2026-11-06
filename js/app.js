@@ -79,11 +79,22 @@ function deduplicateProducts(list) {
 }
 function showGridMessage(grid, msg) { if (!grid) return; grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;"><p>${escapeHTML(msg)}</p></div>`; }
 
-// ⭐ Helper to get all categories merged ⭐
+// ⭐ Helper to get all categories merged (Fixes deleted categories) ⭐
 function getAllCategories() {
     const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
     const customCats = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]');
-    return [...masterCats, ...customCats];
+    const deletedCats = JSON.parse(localStorage.getItem('admin_deleted_categories') || '[]');
+
+    // Merge (custom overrides master)
+    let merged = [...masterCats];
+    customCats.forEach(c => {
+        const idx = merged.findIndex(m => m.slug === c.slug);
+        if (idx > -1) merged[idx] = c;
+        else merged.push(c);
+    });
+
+    // Filter out deleted
+    return merged.filter(c => !deletedCats.includes(c.slug));
 }
 
 // ⭐ Helper to get all child slugs recursively ⭐
