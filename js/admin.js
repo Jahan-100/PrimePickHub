@@ -9,13 +9,29 @@ async function uploadFileToSupabase(file) {
     return publicUrlData.publicUrl;
 }
 
-// ⭐ NAYA: BLOG LIST LOAD FUNCTION (Global) ⭐
+// ⭐ NAYA: BLOG LIST LOAD FUNCTION (Global) - UPDATED COUNT LOGIC ⭐
 window.loadBlogList = async function() {
     const tbody = document.getElementById('blogListBody'); if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading...</td></tr>';
     const { data: blogs, error } = await window.supabaseClient.from('blogs').select('*').order('created_at', { ascending: false });
-    if (error || !blogs || blogs.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No blog posts found.</td></tr>'; const countEl = document.getElementById('totalBlogsCount'); if (countEl) countEl.innerText = 0; return; }
-    const countEl = document.getElementById('totalBlogsCount'); if (countEl) countEl.innerText = blogs.length;
+    
+    if (error || !blogs || blogs.length === 0) { 
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No blog posts found.</td></tr>'; 
+        const countEl = document.getElementById('totalBlogsCount'); if (countEl) countEl.innerText = 0; 
+        const draftCountEl = document.getElementById('totalDraftsCount'); if (draftCountEl) draftCountEl.innerText = 0;
+        return; 
+    }
+    
+    // ⭐ Count Published vs Drafts ⭐
+    const publishedBlogs = blogs.filter(b => b.is_published === true);
+    const draftBlogs = blogs.filter(b => b.is_published !== true); // false ya null/undefined
+
+    const countEl = document.getElementById('totalBlogsCount'); 
+    if (countEl) countEl.innerText = publishedBlogs.length;
+    
+    const draftCountEl = document.getElementById('totalDraftsCount'); 
+    if (draftCountEl) draftCountEl.innerText = draftBlogs.length;
+
     tbody.innerHTML = blogs.map((b, index) => {
         const isPublished = b.is_published !== false; const statusBadge = isPublished ? '' : `<span style="background:#F59E0B; color:white; padding:2px 6px; border-radius:4px; font-size:0.65rem; margin-left:5px;">🤖 AI DRAFT</span>`;
         let actionBtns = `<button class="btn-edit" onclick="editBlog('${b.id}', '${b.title.replace(/'/g, "\\'")}', '${b.slug}', '${b.image_url || ''}')">Edit</button><button class="btn-delete" onclick="deleteBlog('${b.id}')">Delete</button>`;
@@ -198,6 +214,16 @@ window.editProduct = async function(id) {
         document.getElementById('pEventName').value = p.event_name || ''; if(p.sale_end_date) { const d = new Date(p.sale_end_date); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); document.getElementById('pSaleEndDate').value = d.toISOString().slice(0,16); } else { document.getElementById('pSaleEndDate').value = ''; }
         document.getElementById('pEventName2').value = p.event_name_2 || ''; if(p.sale_end_date_2) { const d = new Date(p.sale_end_date_2); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); document.getElementById('pSaleEndDate2').value = d.toISOString().slice(0,16); } else { document.getElementById('pSaleEndDate2').value = ''; }
         document.getElementById('pStore').value = defaultOffer.store_name || ''; document.getElementById('pMainColor').value = defaultOffer.product_color || ''; document.getElementById('pMainColorName').value = defaultOffer.color_name || ''; document.getElementById('pMainVarName').value = defaultOffer.variation_name || ''; document.getElementById('pPrice').value = defaultOffer.price || ''; document.getElementById('pSalePrice').value = defaultOffer.sale_price || ''; document.getElementById('pCommission').value = (defaultOffer.commission_rate && defaultOffer.commission_rate > 0) ? defaultOffer.commission_rate : ''; document.getElementById('pCurrency').value = defaultOffer.currency || 'USD'; document.getElementById('pAffUrl').value = defaultOffer.affiliate_url || '';
+        
+        // Handle Hide Price Checkbox on Edit
+        if (document.getElementById('pPrice').value == '0') {
+            document.getElementById('pHidePrice').checked = true;
+            document.getElementById('pPrice').readOnly = true;
+        } else {
+            document.getElementById('pHidePrice').checked = false;
+            document.getElementById('pPrice').readOnly = false;
+        }
+
         document.getElementById('pDesc').value = p.description || ''; document.getElementById('pReview').value = p.review_html || ''; document.getElementById('pFeatured').checked = p.is_featured || false; document.getElementById('pTrending').checked = p.is_trending || false; document.getElementById('pSpecialDeal').checked = p.is_special_deal || false;
         document.getElementById('pSendNotification').checked = false; document.getElementById('pWriteBlog').checked = false;
         const varContainer = document.getElementById('variationsContainer'); varContainer.innerHTML = ''; const variations = p.affiliate_offers?.slice(1) || []; variations.forEach(v => addVariationRow(v.product_color, v.color_name, v.variation_name, v.price, v.sale_price, (v.commission_rate > 0 ? v.commission_rate : ''), v.affiliate_url));
@@ -218,11 +244,13 @@ function setupProductForm() {
     form.querySelectorAll('input, textarea, select').forEach(el => { el.addEventListener('input', function() { if (this.classList.contains('error-input')) { if (this.id === 'pImg') { const fileInput = document.getElementById('pImgFile'); if (this.value.trim() || fileInput.files.length > 0) this.classList.remove('error-input'); } else if (this.value.trim()) { this.classList.remove('error-input'); } } }); });
     cancelBtn.addEventListener('click', () => {
         form.reset(); document.getElementById('variationsContainer').innerHTML = ''; document.getElementById('pId').value = ''; document.getElementById('pOfferId').value = ''; document.getElementById('pImgFile').value = ''; document.getElementById('pGalleryFile').value = ''; document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen'; document.getElementById('formTitle').innerText = "Add / Update Product"; document.getElementById('saveBtn').innerText = "Save Product"; cancelBtn.style.display = "none"; document.querySelectorAll('.error-input').forEach(el => el.classList.remove('error-input')); document.getElementById('addProductContainer').style.display = 'none'; const toggleBtn = document.getElementById('toggleAddProductBtn'); toggleBtn.textContent = 'Show Product Form'; toggleBtn.style.background = '#16a34a';
+        document.getElementById('pHidePrice').checked = false;
+        document.getElementById('pPrice').readOnly = false;
     });
     form.addEventListener('submit', async (e) => {
         e.preventDefault(); if (window.isSavingProduct) return; window.isSavingProduct = true;
         let hasError = false; let firstErrorElement = null; const requiredInputs = form.querySelectorAll('[required]');
-        requiredInputs.forEach(input => { input.classList.remove('error-input'); if (!input.value.trim()) { input.classList.add('error-input'); hasError = true; if (!firstErrorElement) firstErrorElement = input; } });
+        requiredInputs.forEach(input => { input.classList.remove('error-input'); if (!input.value.trim() && input.id !== 'pPrice') { input.classList.add('error-input'); hasError = true; if (!firstErrorElement) firstErrorElement = input; } });
         const imgUrl = document.getElementById('pImg'); const imgFile = document.getElementById('pImgFile'); if (!imgUrl.value.trim() && imgFile.files.length === 0) { imgUrl.classList.add('error-input'); hasError = true; if (!firstErrorElement) firstErrorElement = imgUrl; }
         if (hasError) { alert('Please fill all the required fields marked with a red star (*).'); if (firstErrorElement) { firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => { firstErrorElement.focus(); }, 500); } window.isSavingProduct = false; return; }
         const saveBtn = document.getElementById('saveBtn'); const originalBtnText = saveBtn.innerText; saveBtn.innerText = "Saving... Please wait"; saveBtn.disabled = true;
