@@ -1,4 +1,5 @@
 let allProducts = [];
+let builderState = { main: null, subs: [], minis: [] };
 
 async function uploadFileToSupabase(file) {
     const fileExt = file.name.split('.').pop();
@@ -44,22 +45,19 @@ function getAllCategories() {
     const customCats = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]');
     const deletedCats = JSON.parse(localStorage.getItem('admin_deleted_categories') || '[]');
 
-    // Merge (custom overrides master)
     let merged = [...masterCats];
     customCats.forEach(c => {
         const idx = merged.findIndex(m => m.slug === c.slug);
-        if (idx > -1) merged[idx] = c; // Override
-        else merged.push(c); // Add new
+        if (idx > -1) merged[idx] = c; 
+        else merged.push(c); 
     });
 
-    // Filter out deleted
     return merged.filter(c => !deletedCats.includes(c.slug));
 }
 
-// ⭐ NAYA: Function to load categories into the form dropdown with Hierarchy ⭐
+// ⭐ BUILD CATEGORY DROPDOWN FOR PRODUCT FORM ⭐
 function loadCategoriesToDropdown(selectedSlug = null) {
     const allCats = getAllCategories();
-
     const addCategorySelect = document.getElementById('pCategory');
     if (addCategorySelect) {
         let sortedCats = [];
@@ -70,41 +68,15 @@ function loadCategoriesToDropdown(selectedSlug = null) {
                 addWithIndent(c.slug, level + 1);
             });
         };
-        
         addWithIndent(null, 0);
         addWithIndent('all', 0);
 
         addCategorySelect.innerHTML = sortedCats.map(c => `<option value="${c.slug}">${c.display}</option>`).join('');
-        
-        if(selectedSlug) {
-            addCategorySelect.value = selectedSlug;
-        }
+        if(selectedSlug) addCategorySelect.value = selectedSlug;
     }
 }
 
-// ⭐ NAYA: Update Parent Dropdown in Add Category Form ⭐
-function updateParentDropdown() {
-    const allCats = getAllCategories();
-    const parentSelect = document.getElementById('newCatParent');
-    if (parentSelect) {
-        let sortedCats = [];
-        const addWithIndent = (parent, level) => {
-            allCats.filter(c => c.parent === parent || (parent === null && !c.parent)).forEach(c => {
-                if(c.slug === 'all') return;
-                const indent = '&nbsp;&nbsp;&nbsp;&nbsp;'.repeat(level);
-                sortedCats.push({ ...c, display: indent + (level > 0 ? '↳ ' : '') + c.name });
-                addWithIndent(c.slug, level + 1);
-            });
-        };
-        addWithIndent(null, 0);
-        addWithIndent('all', 0);
-
-        parentSelect.innerHTML = `<option value="none">Main Category (No Parent)</option>` + 
-            sortedCats.map(c => `<option value="${c.slug}">${c.display}</option>`).join('');
-    }
-}
-
-// ⭐ NAYA: Render Category Management Table ⭐
+// ⭐ RENDER CATEGORY MANAGEMENT TABLE ⭐
 function renderCategoryManagementTable() {
     const tbody = document.getElementById('categoryManagementBody');
     if(!tbody) return;
@@ -136,32 +108,38 @@ function renderCategoryManagementTable() {
     `).join('');
 }
 
-// ⭐ NAYA: Edit Category Logic ⭐
+// ⭐ FIXED: EDIT CATEGORY LOGIC ⭐
 window.editCategory = function(slug) {
     const allCats = getAllCategories();
     const cat = allCats.find(c => c.slug === slug);
     if(!cat) return;
 
-    // Open the Add form and populate
-    document.getElementById('addCatContainer').style.display = 'flex';
-    document.getElementById('newCatName').value = cat.name;
-    document.getElementById('newCatParent').value = cat.parent || 'none';
+    const newName = prompt("Edit Category Name:", cat.name);
+    if(!newName || newName.trim() === "") return;
+
+    let customCats = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]');
+    const existingIdx = customCats.findIndex(c => c.slug === slug);
     
-    // Change button to update
-    const btn = document.getElementById('saveNewCatBtn');
-    btn.innerText = 'Update';
-    btn.style.background = '#f59e0b'; // Orange for update
-    btn.setAttribute('data-editing', slug);
+    if (existingIdx > -1) {
+        customCats[existingIdx].name = newName.trim();
+    } else {
+        customCats.push({ slug: slug, name: newName.trim(), parent: cat.parent || null });
+    }
+    
+    localStorage.setItem('admin_custom_categories', JSON.stringify(customCats));
+    
+    renderCategoryManagementTable();
+    loadCategoriesToDropdown();
+    alert("Category name updated successfully!");
 }
 
-// ⭐ NAYA: Delete Category Logic (Soft Delete) ⭐
+// ⭐ DELETE CATEGORY LOGIC (Soft Delete) ⭐
 window.deleteCategory = function(slug) {
-    if(!confirm("Are you sure you want to delete this category? Products in this category will remain but won't be grouped under it. Any sub-categories will also be hidden.")) return;
+    if(!confirm("Are you sure you want to delete this category? Sub-categories will also be hidden.")) return;
     
     let deletedCats = JSON.parse(localStorage.getItem('admin_deleted_categories') || '[]');
     const allCats = getAllCategories();
     
-    // Find all children recursively to delete as well
     const getChildren = (parent) => {
         let res = [];
         allCats.filter(c => c.parent === parent).forEach(c => {
@@ -179,14 +157,181 @@ window.deleteCategory = function(slug) {
     
     localStorage.setItem('admin_deleted_categories', JSON.stringify(deletedCats));
     
-    // Also remove from custom if it's there
     let customCats = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]');
     customCats = customCats.filter(c => !toDelete.includes(c.slug));
     localStorage.setItem('admin_custom_categories', JSON.stringify(customCats));
 
     renderCategoryManagementTable();
-    updateParentDropdown();
     loadCategoriesToDropdown();
+}
+
+// ⭐ BUILDER LOGIC ⭐
+window.setBuilderMain = function() {
+    const sel = document.getElementById('bMainSelect').value;
+    const inp = document.getElementById('bMainInput').value.trim();
+    let mainSlug = sel;
+    let mainName = document.getElementById('bMainSelect').options[document.getElementById('bMainSelect').selectedIndex].text;
+
+    if (inp) {
+        mainSlug = inp.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        mainName = inp;
+    }
+    if (!mainSlug) return alert("Please select or enter a Main Category");
+
+    builderState.main = { slug: mainSlug, name: mainName, parent: null };
+    builderState.subs = []; 
+    builderState.minis = []; 
+    
+    document.getElementById('bActiveMainDisplay').innerHTML = `Active Main: <span style="background:#166534; color:white; padding:2px 6px; border-radius:4px;">${mainName}</span>`;
+    document.getElementById('bMainInput').value = '';
+    updateBuilderUI();
+}
+
+window.addBuilderSub = function() {
+    if (!builderState.main) return alert("Please set a Main Category first.");
+    const sel = document.getElementById('bSubSelect').value;
+    const inp = document.getElementById('bSubInput').value.trim();
+    let subSlug = sel;
+    let subName = document.getElementById('bSubSelect').options[document.getElementById('bSubSelect').selectedIndex].text;
+
+    if (inp) {
+        subSlug = inp.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        subName = inp;
+    }
+    if (!subSlug) return alert("Please select or enter a Sub Category");
+
+    if (!builderState.subs.find(s => s.slug === subSlug)) {
+        builderState.subs.push({ slug: subSlug, name: subName, parent: builderState.main.slug });
+    }
+    document.getElementById('bSubInput').value = '';
+    updateBuilderUI();
+}
+
+window.addBuilderMini = function() {
+    const parentSubSlug = document.getElementById('bMiniParentSelect').value;
+    if (!parentSubSlug) return alert("Please select a parent Sub Category for this Mini-Sub.");
+    
+    const sel = document.getElementById('bMiniSelect').value;
+    const inp = document.getElementById('bMiniInput').value.trim();
+    let miniSlug = sel;
+    let miniName = document.getElementById('bMiniSelect').options[document.getElementById('bMiniSelect').selectedIndex].text;
+
+    if (inp) {
+        miniSlug = inp.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        miniName = inp;
+    }
+    if (!miniSlug) return alert("Please select or enter a Mini-Sub Category");
+
+    if (!builderState.minis.find(m => m.slug === miniSlug && m.parent === parentSubSlug)) {
+        builderState.minis.push({ slug: miniSlug, name: miniName, parent: parentSubSlug });
+    }
+    document.getElementById('bMiniInput').value = '';
+    updateBuilderUI();
+}
+
+function updateBuilderUI() {
+    // Update Preview List
+    const list = document.getElementById('builderPreviewList');
+    let html = '';
+    if (builderState.main) html += `<li style="color:#166534; font-weight:bold; margin-bottom:5px;">📁 Main: ${builderState.main.name}</li>`;
+    
+    builderState.subs.forEach(sub => {
+        html += `<li style="color:#1e3a8a; margin-left: 15px; font-weight:bold;">↳ Sub: ${sub.name}</li>`;
+        const minis = builderState.minis.filter(m => m.parent === sub.slug);
+        minis.forEach(mini => {
+            html += `<li style="color:#991b1b; margin-left: 30px; font-size:0.85rem;">- Mini: ${mini.name}</li>`;
+        });
+    });
+    list.innerHTML = html || '<li style="color:#94A3B8;">No categories added yet. Start with Step 1.</li>';
+
+    // Populate Dropdowns
+    const allCats = getAllCategories();
+    const mainSelect = document.getElementById('bMainSelect');
+    const subSelect = document.getElementById('bSubSelect');
+    const miniSelect = document.getElementById('bMiniSelect');
+    const miniParentSelect = document.getElementById('bMiniParentSelect');
+
+    // Main Dropdown
+    if(mainSelect) {
+        mainSelect.innerHTML = `<option value="">-- Select Existing --</option>` + 
+            allCats.filter(c => !c.parent || c.parent === 'all').map(c => `<option value="${c.slug}">${c.name}</option>`).join('');
+    }
+
+    // Sub Dropdown (Filter by active Main)
+    if(subSelect) {
+        if(builderState.main) {
+            const availableSubs = allCats.filter(c => c.parent === builderState.main.slug);
+            subSelect.innerHTML = `<option value="">-- Select Existing --</option>` + 
+                availableSubs.map(c => `<option value="${c.slug}">${c.name}</option>`).join('');
+        } else {
+            subSelect.innerHTML = `<option value="">-- Set Main First --</option>`;
+        }
+    }
+
+    // Mini Parent Dropdown (The subs we just added)
+    if(miniParentSelect) {
+        miniParentSelect.innerHTML = `<option value="">-- Parent Sub-Cat --</option>` + 
+            builderState.subs.map(c => `<option value="${c.slug}">${c.name}</option>`).join('');
+    }
+
+    // Mini Dropdown (Filter by selected parent)
+    if(miniSelect) {
+        const activeParent = miniParentSelect.value;
+        if(activeParent) {
+            const availableMinis = allCats.filter(c => c.parent === activeParent);
+            miniSelect.innerHTML = `<option value="">-- Select Existing --</option>` + 
+                availableMinis.map(c => `<option value="${c.slug}">${c.name}</option>`).join('');
+        } else {
+            miniSelect.innerHTML = `<option value="">-- Select Parent Sub First --</option>`;
+        }
+    }
+}
+
+window.saveBuilderData = function() {
+    if (!builderState.main) return alert("Please set a Main Category first.");
+    
+    let customCats = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]');
+    const deletedCats = JSON.parse(localStorage.getItem('admin_deleted_categories') || '[]');
+    
+    // Helper to add/update
+    const upsertCat = (catObj) => {
+        const idx = customCats.findIndex(c => c.slug === catObj.slug);
+        if (idx > -1) customCats[idx] = catObj;
+        else customCats.push(catObj);
+    };
+
+    // Save Main
+    upsertCat(builderState.main);
+    
+    // Save Subs
+    builderState.subs.forEach(sub => upsertCat(sub));
+    
+    // Save Minis
+    builderState.minis.forEach(mini => upsertCat(mini));
+
+    localStorage.setItem('admin_custom_categories', JSON.stringify(customCats));
+    
+    // Remove from deleted list just in case
+    let newDeleted = deletedCats.filter(s => s !== builderState.main.slug && !builderState.subs.find(sub=>sub.slug===s) && !builderState.minis.find(m=>m.slug===s));
+    localStorage.setItem('admin_deleted_categories', JSON.stringify(newDeleted));
+
+    alert("✅ All categories added successfully to the system!");
+    
+    // Reset
+    resetBuilder();
+    
+    // Refresh UIs
+    renderCategoryManagementTable();
+    loadCategoriesToDropdown();
+}
+
+window.resetBuilder = function() {
+    builderState = { main: null, subs: [], minis: [] };
+    document.getElementById('bMainInput').value = '';
+    document.getElementById('bSubInput').value = '';
+    document.getElementById('bMiniInput').value = '';
+    document.getElementById('bActiveMainDisplay').innerHTML = '';
+    updateBuilderUI();
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -200,18 +345,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
     document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
     
-    // Manage Categories Toggle
+    // Toggles
     document.getElementById('toggleManageCatsBtn')?.addEventListener('click', function() {
         const container = document.getElementById('manageCatsContainer');
         if (container.style.display === 'none') {
             container.style.display = 'block';
-            this.textContent = 'Hide Categories';
+            this.textContent = 'Hide Categories List';
             this.style.background = '#EF4444';
             renderCategoryManagementTable();
         } else {
             container.style.display = 'none';
-            this.textContent = 'Show Categories';
+            this.textContent = 'Show Categories List';
             this.style.background = '#0284c7';
+        }
+    });
+
+    document.getElementById('toggleBuilderBtn')?.addEventListener('click', function() {
+        const container = document.getElementById('categoryBuilderContainer');
+        if (container.style.display === 'none') {
+            container.style.display = 'block';
+            this.textContent = 'Hide Builder';
+            this.style.background = '#EF4444';
+            updateBuilderUI();
+        } else {
+            container.style.display = 'none';
+            this.textContent = '+ Add New Category Tree';
+            this.style.background = '#10b981';
         }
     });
 
@@ -291,68 +450,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupScrollButtons('scrollUpBtnProducts', 'scrollDownBtnProducts', 'tableScrollWrapperProducts');
     setupScrollButtons('scrollUpBtnBlogs', 'scrollDownBtnBlogs', 'tableScrollWrapperBlogs'); 
 
-    // DYNAMIC CATEGORY LOGIC
-    updateParentDropdown();
-    renderCategoryManagementTable(); // Initial render
-
-    document.getElementById('showAddCatBtn')?.addEventListener('click', () => {
-        const container = document.getElementById('addCatContainer');
-        container.style.display = container.style.display === 'none' ? 'flex' : 'none';
-        // Reset button if it was in edit mode and user just opened it
-        if(container.style.display === 'flex' && !document.getElementById('saveNewCatBtn').getAttribute('data-editing')) {
-            document.getElementById('newCatName').value = '';
-            document.getElementById('newCatParent').value = 'none';
-        }
-    });
-
-    document.getElementById('saveNewCatBtn')?.addEventListener('click', () => {
-        const newName = document.getElementById('newCatName').value.trim();
-        const parentSlug = document.getElementById('newCatParent').value;
-        const editingSlug = document.getElementById('saveNewCatBtn').getAttribute('data-editing');
-        if(!newName) return alert("Please enter a category name.");
-        
-        let customCats = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]');
-        const newSlug = editingSlug || newName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-
-        const newCatObj = { 
-            slug: newSlug, 
-            name: newName, 
-            parent: parentSlug === 'none' ? null : parentSlug 
-        };
-
-        if (editingSlug) {
-            // Update existing
-            const idx = customCats.findIndex(c => c.slug === editingSlug);
-            if (idx > -1) customCats[idx] = newCatObj;
-            else customCats.push(newCatObj);
-        } else {
-            // Add new
-            if(!customCats.find(c => c.slug === newSlug)) {
-                customCats.push(newCatObj);
-            }
-        }
-
-        localStorage.setItem('admin_custom_categories', JSON.stringify(customCats));
-        
-        // If we were editing, remove from deleted list just in case
-        let deletedCats = JSON.parse(localStorage.getItem('admin_deleted_categories') || '[]');
-        deletedCats = deletedCats.filter(s => s !== newSlug);
-        localStorage.setItem('admin_deleted_categories', JSON.stringify(deletedCats));
-
-        loadCategoriesToDropdown(newSlug);
-        updateParentDropdown(); 
-        renderCategoryManagementTable();
-        
-        document.getElementById('newCatName').value = '';
-        document.getElementById('addCatContainer').style.display = 'none';
-        
-        const btn = document.getElementById('saveNewCatBtn');
-        btn.innerText = 'Add';
-        btn.style.background = '#10b981';
-        btn.removeAttribute('data-editing');
-        
-        alert(editingSlug ? "Category updated successfully!" : "New category added successfully!");
-    });
+    // Initial Renders
+    renderCategoryManagementTable();
+    updateBuilderUI();
 });
 
 function setupToggleAddProduct() { const toggleBtn = document.getElementById('toggleAddProductBtn'); const formContainer = document.getElementById('addProductContainer'); if (toggleBtn && formContainer) { toggleBtn.addEventListener('click', () => { if (formContainer.style.display === 'none') { formContainer.style.display = 'block'; toggleBtn.textContent = 'Hide Product Form'; toggleBtn.style.background = '#EF4444'; } else { formContainer.style.display = 'none'; toggleBtn.textContent = 'Show Product Form'; toggleBtn.style.background = '#16a34a'; } }); } }
