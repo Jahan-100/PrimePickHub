@@ -248,12 +248,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <button class="scroll-arrow down-arrow" onclick="scrollThumbnails('down')" aria-label="Scroll Down"><i class="fa-solid fa-chevron-down"></i></button>
             </div>
 
-            <!-- Middle: Main Image (Large) -->
+            <!-- Middle: Main Image (Large & Swipeable) -->
             <div class="product-image-section">
-                <div style="background:#F8FAFC;border-radius:12px;padding:15px;display:flex;align-items:center;justify-content:center;position:relative; height: 100%;">
+                <div id="mainImageWrapper" style="background:#F8FAFC;border-radius:12px;padding:15px;display:flex;align-items:center;justify-content:center;position:relative; height: 100%; overflow: hidden;" onclick="openFullScreenImage(currentMainImageIndex)">
                     <img id="mainImage" src="${escapeHTML(mainImage)}" alt="${escapeHTML(product.title)}" 
-                         style="width:100%;height:auto;max-height:800px;object-fit:contain;border-radius:8px;cursor:pointer;" 
-                         onclick="openFullScreenImage(0)">
+                         style="width:100%;height:auto;max-height:800px;object-fit:contain;border-radius:8px;cursor:zoom-in;">
+                    
+                    <!-- Main Image Arrows -->
+                    <button class="main-arrow left" onclick="event.stopPropagation(); changeMainImage(-1)" aria-label="Previous Image"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button class="main-arrow right" onclick="event.stopPropagation(); changeMainImage(1)" aria-label="Next Image"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
             </div>
 
@@ -320,7 +323,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
     `;
 
-    // ⭐ CSS for True Full-Width Layout & Absolute Arrows ⭐
+    // ⭐ CSS for True Full-Width Layout, Absolute Arrows & Main Image Arrows ⭐
     const style = document.createElement('style');
     style.textContent = `
         /* Force container to shrink to full width ignoring main.css padding */
@@ -355,7 +358,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             align-items: center;
         }
         
-        /* Arrows - Strictly Top and Bottom */
+        /* Thumbnails Arrows - Strictly Top and Bottom */
         .scroll-arrow {
             position: absolute;
             left: 50%;
@@ -402,6 +405,30 @@ document.addEventListener('DOMContentLoaded', async () => {
             height: auto;
         }
         
+        /* Main Image Arrows */
+        .main-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid #E2E8F0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 5;
+            color: #1E1B4B;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+            opacity: 0.8;
+        }
+        .main-arrow:hover { opacity: 1; background: #fff; }
+        .main-arrow.left { left: 10px; }
+        .main-arrow.right { right: 10px; }
+
         /* Info Section - Fixed width */
         .product-info-section { 
             width: 420px; 
@@ -425,7 +452,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 position: relative; top: 0; margin-bottom: 10px; 
             }
             
-            /* Mobile Arrows (Left and Right) */
+            /* Mobile Thumbnails Arrows (Left and Right) */
             .scroll-arrow {
                 top: 50%;
                 transform: translateY(-50%);
@@ -433,7 +460,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             .scroll-arrow.up-arrow { left: 0; right: auto; }
             .scroll-arrow.down-arrow { left: auto; right: 0; bottom: auto; }
-            .scroll-arrow i { transform: rotate(-90deg); } /* Rotate arrows for horizontal scroll */
+            .scroll-arrow i { transform: rotate(-90deg); }
             
             /* Mobile Scroll List */
             .thumbnail-scroll-wrapper {
@@ -447,6 +474,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 overflow-y: hidden; 
                 padding: 0;
             }
+
+            /* Hide main arrows on mobile since we have swipe */
+            .main-arrow { display: none; }
         }
     `;
     document.head.appendChild(style);
@@ -509,8 +539,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             imageUrl = colorValue;
         }
         if (imageUrl && imageUrl.startsWith('http')) {
-            const mainImgElement = document.getElementById('mainImage');
-            if (mainImgElement) mainImgElement.src = getHighQualityImage(imageUrl, 800);
+            // Find if the image exists in gallery
+            const existingIndex = galleryImages.findIndex(img => img === getHighQualityImage(imageUrl, 800));
+            if (existingIndex !== -1) {
+                changeMainImage(existingIndex, false); // Update main image state without fullscreen
+            } else {
+                // If not in gallery, just change the src (might happen if color image is different)
+                document.getElementById('mainImage').src = getHighQualityImage(imageUrl, 800);
+                // Update gallery array so arrows work correctly if user swipes
+                galleryImages[0] = getHighQualityImage(imageUrl, 800);
+                currentMainImageIndex = 0;
+            }
         }
         const offersForColor = allVariations.filter(v => v.product_color && v.product_color.includes(colorValue));
         let availableSizes = [];
@@ -556,7 +595,46 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
-    let currentFullScreenIndex = 0;
+    // ⭐ Main Image Navigation Logic ⭐
+    let currentMainImageIndex = 0;
+
+    window.changeMainImage = function(indexOrDirection, isDirection = true) {
+        if (isDirection) {
+            let newIndex = currentMainImageIndex + indexOrDirection;
+            if (newIndex < 0) newIndex = galleryImages.length - 1;
+            if (newIndex >= galleryImages.length) newIndex = 0;
+            currentMainImageIndex = newIndex;
+        } else {
+            currentMainImageIndex = indexOrDirection;
+        }
+        
+        // Update main image
+        document.getElementById('mainImage').src = galleryImages[currentMainImageIndex];
+        
+        // Update thumbnails border
+        container.querySelectorAll('.gallery-thumb').forEach((t, i) => {
+            t.style.borderColor = (i === currentMainImageIndex) ? '#FF5A3C' : '#E2E8F0';
+        });
+    };
+
+    // Main Image Swipe Support
+    let mainTouchStart = 0;
+    const mainWrapper = document.getElementById('mainImageWrapper');
+    mainWrapper.addEventListener('touchstart', e => { mainTouchStart = e.changedTouches[0].screenX; }, { passive: true });
+    mainWrapper.addEventListener('touchend', e => {
+        let mainTouchEnd = e.changedTouches[0].screenX;
+        if (mainTouchEnd < mainTouchStart - 50) changeMainImage(1); // Swipe Left (Next)
+        if (mainTouchEnd > mainTouchStart + 50) changeMainImage(-1); // Swipe Right (Prev)
+    }, { passive: true });
+
+    // Thumbnail Click: ONLY change main image, don't open fullscreen
+    container.querySelectorAll('.gallery-thumb').forEach((thumb, index) => {
+        thumb.addEventListener('click', function () {
+            changeMainImage(index, false);
+        });
+    });
+
+    // ⭐ FULLSCREEN MODAL LOGIC (Unchanged as requested) ⭐
     const modal = document.getElementById('fullScreenImageModal');
     const zoomPanContainer = document.getElementById('zoomPanContainer');
     const imgElement = document.getElementById('fullScreenImageSrc');
@@ -578,8 +656,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     window.openFullScreenImage = function(index) {
-        currentFullScreenIndex = index;
-        imgElement.src = galleryImages[currentFullScreenIndex];
+        currentMainImageIndex = index; // Keep index synced
+        imgElement.src = galleryImages[currentMainImageIndex];
         resetZoomPan();
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; 
@@ -594,14 +672,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.changeFullScreenImage = function(direction, e) {
         if (e) e.stopPropagation();
         if (galleryImages.length <= 1) return;
-        let newIndex = currentFullScreenIndex + direction;
-        if (newIndex < 0) newIndex = 0;
-        if (newIndex >= galleryImages.length) newIndex = galleryImages.length - 1;
-        if (newIndex === currentFullScreenIndex) return; 
+        let newIndex = currentMainImageIndex + direction;
+        if (newIndex < 0) newIndex = galleryImages.length - 1;
+        if (newIndex >= galleryImages.length) newIndex = 0;
         
-        currentFullScreenIndex = newIndex;
-        imgElement.src = galleryImages[currentFullScreenIndex];
+        currentMainImageIndex = newIndex;
+        imgElement.src = galleryImages[currentMainImageIndex];
         resetZoomPan();
+        
+        // Also update main image in background
+        document.getElementById('mainImage').src = galleryImages[currentMainImageIndex];
+        container.querySelectorAll('.gallery-thumb').forEach((t, i) => {
+            t.style.borderColor = (i === currentMainImageIndex) ? '#FF5A3C' : '#E2E8F0';
+        });
     };
 
     zoomPanContainer.addEventListener('click', (e) => {
@@ -685,16 +768,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else if (!wasDragged && scale > 1) {
             resetZoomPan();
         }
-    });
-
-    container.querySelectorAll('.gallery-thumb').forEach((thumb, index) => {
-        thumb.addEventListener('click', function () {
-            const src = this.dataset.src;
-            document.getElementById('mainImage').src = src;
-            container.querySelectorAll('.gallery-thumb').forEach(t => t.style.borderColor = '#E2E8F0');
-            this.style.borderColor = '#FF5A3C';
-            window.openFullScreenImage(index);
-        });
     });
 
     const jsonLd = {
