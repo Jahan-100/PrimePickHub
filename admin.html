@@ -172,13 +172,16 @@
                     <button type="button" id="saveAppSettingsBtn" style="width: auto; padding: 8px 15px; background: #16a34a; color: white; border: none; border-radius: 4px; font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 8px; box-shadow: 0 2px 4px rgba(22,163,74,0.2); align-self: flex-start;">Update Settings</button>
                 </div>
 
-                <!-- ⭐ MANAGE CATEGORIES SECTION ⭐ -->
                 <div class="admin-card box-manage-categories">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                        <h2 style="margin: 0;">Manage Categories</h2>
-                        <button type="button" id="toggleManageCatsBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#0284c7; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Show Categories</button>
+                        <h2 style="margin: 0;">Manage Categories & Builder</h2>
+                        <div>
+                            <button type="button" id="toggleManageCatsBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#0284c7; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold; margin-right:5px;">Show Categories List</button>
+                            <button type="button" id="toggleBuilderBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#10b981; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">+ Add New Category Tree</button>
+                        </div>
                     </div>
                     
+                    <!-- CATEGORY MANAGEMENT TABLE -->
                     <div id="manageCatsContainer" style="display: none; margin-top: 20px; background: #fff; padding: 15px; border-radius: 8px;">
                         <div class="table-scroll-outer">
                             <div class="table-scroll-wrapper" style="max-height: 400px;">
@@ -191,6 +194,51 @@
                                     </table>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- ⭐ NEW CATEGORY BUILDER (3 STEPS) ⭐ -->
+                    <div id="categoryBuilderContainer" style="display: none; margin-top: 20px; background: #fff; padding: 20px; border-radius: 8px; border: 2px dashed #10b981;">
+                        <h3 style="color: #047857; margin-bottom: 15px;">Step-by-Step Category Builder</h3>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                            <!-- Box 1: Main Category -->
+                            <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0;">
+                                <h4 style="margin-top:0; color:#166534;">1. Main Category</h4>
+                                <select id="bMainSelect" style="width:100%; padding:8px; margin-bottom:8px; border-radius:4px; border:1px solid #ccc;"><option value="">-- Select Existing --</option></select>
+                                <input type="text" id="bMainInput" placeholder="Or Add New Main..." style="width:100%; padding:8px; margin-bottom:8px; border-radius:4px; border:1px solid #ccc;">
+                                <button type="button" onclick="setBuilderMain()" style="width:100%; padding:8px; background:#166534; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Set Main Category</button>
+                                <div id="bActiveMainDisplay" style="margin-top:10px; font-weight:bold; color:#166534; font-size:0.9rem;"></div>
+                            </div>
+
+                            <!-- Box 2: Sub Category -->
+                            <div style="background: #eff6ff; padding: 15px; border-radius: 8px; border: 1px solid #bfdbfe;">
+                                <h4 style="margin-top:0; color:#1e3a8a;">2. Sub Category</h4>
+                                <select id="bSubSelect" style="width:100%; padding:8px; margin-bottom:8px; border-radius:4px; border:1px solid #ccc;"><option value="">-- Select Existing --</option></select>
+                                <input type="text" id="bSubInput" placeholder="Or Add New Sub..." style="width:100%; padding:8px; margin-bottom:8px; border-radius:4px; border:1px solid #ccc;">
+                                <button type="button" onclick="addBuilderSub()" style="width:100%; padding:8px; background:#1e3a8a; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Add Sub Category</button>
+                            </div>
+
+                            <!-- Box 3: Mini-Sub Category -->
+                            <div style="background: #fef2f2; padding: 15px; border-radius: 8px; border: 1px solid #fecaca;">
+                                <h4 style="margin-top:0; color:#991b1b;">3. Mini-Sub Category</h4>
+                                <select id="bMiniParentSelect" style="width:100%; padding:8px; margin-bottom:8px; border-radius:4px; border:1px solid #ccc;"><option value="">-- Parent Sub-Cat --</option></select>
+                                <select id="bMiniSelect" style="width:100%; padding:8px; margin-bottom:8px; border-radius:4px; border:1px solid #ccc;"><option value="">-- Select Existing --</option></select>
+                                <input type="text" id="bMiniInput" placeholder="Or Add New Mini..." style="width:100%; padding:8px; margin-bottom:8px; border-radius:4px; border:1px solid #ccc;">
+                                <button type="button" onclick="addBuilderMini()" style="width:100%; padding:8px; background:#991b1b; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Add Mini-Sub Category</button>
+                            </div>
+                        </div>
+
+                        <!-- Preview Section -->
+                        <div style="margin-top: 20px; border-top: 2px solid #E2E8F0; padding-top: 15px;">
+                            <h4 style="color: #1E1B4B;">Preview of New Categories to be Saved:</h4>
+                            <ul id="builderPreviewList" style="background: #F8FAFC; padding: 15px; border-radius: 8px; font-size: 0.9rem; max-height: 200px; overflow-y: auto; list-style-type: none; margin: 0; border: 1px solid #E2E8F0;"></ul>
+                        </div>
+
+                        <!-- Final Save Button -->
+                        <div style="margin-top: 20px; display: flex; gap: 10px;">
+                            <button type="button" onclick="saveBuilderData()" style="padding:12px 30px; background:#10b981; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold; font-size:1rem;">Final Add & Save All Categories</button>
+                            <button type="button" onclick="resetBuilder()" style="padding:12px 30px; background:#64748B; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold; font-size:1rem;">Reset Builder</button>
                         </div>
                     </div>
                 </div>
@@ -233,22 +281,10 @@
                             <div class="form-group"><label>Video URL (YouTube - Optional)</label><input type="url" id="pVideo" placeholder="https://www.youtube.com/watch?v=..." style="background:#fff; width: 100%;"></div>
 
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <!-- ⭐ NAYA: Dynamic Category Add Feature with Parent Selection ⭐ -->
+                                <!-- Simple Category Select -->
                                 <div class="form-group" style="flex: 1.5; min-width: 180px;">
                                     <label>Category</label>
-                                    <div style="display:flex; gap:5px;">
-                                        <select id="pCategory" style="flex:1; padding:10px; border:1px solid #cbd5e1; border-radius:6px; background:#fff;"></select>
-                                        <button type="button" id="showAddCatBtn" style="padding:0 12px; background:#3b82f6; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold; font-size:1.2rem;" title="Add New Category">+</button>
-                                    </div>
-                                    <div id="addCatContainer" style="display:none; margin-top:8px; flex-direction:column; gap:5px; background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
-                                        <select id="newCatParent" style="padding:8px; border:1px solid #cbd5e1; border-radius:4px; font-size:0.85rem;">
-                                            <option value="none">Main Category (No Parent)</option>
-                                        </select>
-                                        <div style="display:flex; gap:5px;">
-                                            <input type="text" id="newCatName" placeholder="New Category Name" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:4px; font-size:0.85rem;">
-                                            <button type="button" id="saveNewCatBtn" style="padding:8px 12px; background:#10b981; color:#fff; border:none; border-radius:4px; font-weight:bold;">Add</button>
-                                        </div>
-                                    </div>
+                                    <select id="pCategory" style="flex:1; padding:10px; border:1px solid #cbd5e1; border-radius:6px; background:#fff;"></select>
                                 </div>
                                 <div class="form-group" style="flex: 1; min-width: 120px;">
                                     <label>Badge (Optional)</label>
@@ -352,6 +388,9 @@
                         </form>
                     </div>
                 </div>
+
+                <!-- ... (Baqi sections same hain: Special Deal, Sale 1, Sale 2, Blog, AI Hunter, Manage Products) ... -->
+                <!-- Since the response has a length limit, I'm keeping the necessary HTML structure but skipping the repetitive parts. The user has the full file, I just need to provide the updated version. I will include all standard sections. -->
 
                 <div class="admin-card box-special-deal">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
