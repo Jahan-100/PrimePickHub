@@ -181,7 +181,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 let boxStyle = '';
 
                 if (isImageUrl) {
-                    // Show image as background to perfectly represent patterns (like Leopard)
                     boxStyle = `background-image: url('${colorObj.hdValue}'); background-size: cover; background-position: center;`;
                 } else {
                     const bgColor = getHexFromColorString(colorObj.value);
@@ -232,37 +231,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     const videoHtml = product.video_url ? `<div style="background:#fff; padding:30px; border-radius:12px; border:1px solid #E2E8F0; margin-bottom:20px;"><h2 style="margin-bottom:15px; border-bottom:2px solid #FF5A3C; padding-bottom:10px; display:inline-block;">Product Video</h2>${getVideoHtml(product.video_url)}</div>` : '';
     const shareUrl = encodeURIComponent(window.location.href); const shareText = encodeURIComponent(`Check out ${product.title} on PrimePickHub`);
 
-    // ⭐ NAYA LAYOUT: Left side main image, Right side scrollable thumbnails ⭐
     const thumbnailsHtml = galleryImages.map((url, i) => `
         <img src="${escapeHTML(getHighQualityImage(url, 150))}" alt="View ${i + 1}" 
              class="gallery-thumb" data-src="${escapeHTML(url)}" data-index="${i}"
-             style="width:70px;height:70px;object-fit:cover;border-radius:8px;cursor:pointer;
-                    border:2px solid ${i === 0 ? '#FF5A3C' : '#E2E8F0'};transition:border-color 0.2s;
-                    margin-bottom: 10px; flex-shrink: 0;">
+             style="border:2px solid ${i === 0 ? '#FF5A3C' : '#E2E8F0'};">
     `).join('');
 
     container.innerHTML = `
         <div class="product-layout">
-            <!-- Left Column: Main Image (Sticky) -->
+            <!-- Left: Vertical Thumbnails -->
+            <div class="product-thumbnails-section">
+                <button class="scroll-arrow up-arrow" onclick="scrollThumbnails('up')" aria-label="Scroll Up"><i class="fa-solid fa-chevron-up"></i></button>
+                <div id="thumbnailContainer" class="thumbnail-scroll-wrapper">
+                    ${thumbnailsHtml}
+                </div>
+                <button class="scroll-arrow down-arrow" onclick="scrollThumbnails('down')" aria-label="Scroll Down"><i class="fa-solid fa-chevron-down"></i></button>
+            </div>
+
+            <!-- Middle: Main Image (Large) -->
             <div class="product-image-section">
                 <div style="background:#F8FAFC;border-radius:12px;padding:15px;display:flex;align-items:center;justify-content:center;position:relative;">
                     <img id="mainImage" src="${escapeHTML(mainImage)}" alt="${escapeHTML(product.title)}" 
-                         width="400" height="400" 
-                         style="width:100%;height:auto;max-height:500px;object-fit:contain;border-radius:8px;cursor:pointer;" 
+                         style="width:100%;height:auto;max-height:750px;object-fit:contain;border-radius:8px;cursor:pointer;" 
                          onclick="openFullScreenImage(0)">
                 </div>
             </div>
 
-            <!-- Middle Column: Vertical Thumbnails -->
-            <div class="product-thumbnails-section">
-                <button class="scroll-arrow up-arrow" onclick="scrollThumbnails('up')" aria-label="Scroll Up">▲</button>
-                <div id="thumbnailContainer" class="thumbnail-scroll-wrapper">
-                    ${thumbnailsHtml}
-                </div>
-                <button class="scroll-arrow down-arrow" onclick="scrollThumbnails('down')" aria-label="Scroll Down">▼</button>
-            </div>
-
-            <!-- Right Column: Product Info -->
+            <!-- Right: Info -->
             <div class="product-info-section">
                 <h1 style="font-size:1.8rem;margin-bottom:10px;">${escapeHTML(product.title)}</h1>
                 <div style="margin-bottom: 20px; background: #F8FAFC; padding: 15px; border-radius: 8px; border: 1px solid #E2E8F0;">
@@ -310,7 +305,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <!-- ⭐ FULLSCREEN MODAL (Zoom & Pan) ⭐ -->
         <div id="fullScreenImageModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.95); z-index:9999999; align-items:center; justify-content:center; overflow:hidden;">
             <!-- Image container (draggable) -->
-            <div id="zoomPanContainer" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; cursor:grab; overflow:hidden;">
+            <div id="zoomPanContainer" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; cursor:zoom-in; overflow:hidden;">
                 <img id="fullScreenImageSrc" src="" alt="Full Screen Product Image" 
                      style="max-width:95vw; max-height:85vh; object-fit:contain; user-select:none; -webkit-user-drag:none; transition: transform 0.1s ease-out;">
             </div>
@@ -327,40 +322,48 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
     `;
 
-    // ⭐ CSS for New Layout (Injected dynamically to avoid main.css conflict) ⭐
+    // ⭐ CSS for New Layout (Injected dynamically) ⭐
     const style = document.createElement('style');
     style.textContent = `
         .product-layout { display: grid; grid-template-columns: 1fr; gap: 20px; background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #E2E8F0; margin-bottom: 20px; }
         @media (min-width: 768px) {
             .product-layout { 
-                grid-template-columns: minmax(300px, 1.5fr) 100px 1.2fr; 
+                /* Thumbnails | Main Image (Large) | Info */
+                grid-template-columns: 80px minmax(400px, 2.5fr) 1.2fr; 
                 align-items: start;
             }
-            .product-image-section { position: sticky; top: 100px; }
-            .product-thumbnails-section { position: sticky; top: 100px; }
+            .product-thumbnails-section { order: 1; position: sticky; top: 100px; height: 600px; display: flex; flex-direction: column; align-items: center; }
+            .product-image-section { order: 2; position: sticky; top: 100px; }
+            .product-info-section { order: 3; }
         }
+        
         .thumbnail-scroll-wrapper {
             display: flex; flex-direction: column; overflow-y: auto; 
-            max-height: 400px; scroll-behavior: smooth; padding: 5px;
-            scrollbar-width: none; /* Firefox */
+            flex-grow: 1; /* Takes up space between arrows */
+            scroll-behavior: smooth; padding: 5px; gap: 10px;
+            scrollbar-width: none;
+            width: 100%;
+            align-items: center;
         }
-        .thumbnail-scroll-wrapper::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
+        .thumbnail-scroll-wrapper::-webkit-scrollbar { display: none; }
         
-        .product-thumbnails-section {
-            display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;
-        }
         .scroll-arrow {
             background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 50%;
             width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; color: #1E1B4B; margin: 5px 0; font-size: 0.8rem; z-index: 10;
+            cursor: pointer; color: #1E1B4B; font-size: 0.8rem; z-index: 10; flex-shrink: 0;
         }
         .scroll-arrow:hover { background: #E2E8F0; }
+
+        .gallery-thumb { 
+            width: 70px; height: 70px; object-fit: cover; border-radius: 8px; cursor: pointer; 
+            transition: border-color 0.2s; flex-shrink: 0; 
+        }
         
         @media (max-width: 767px) {
             .product-layout { grid-template-columns: 1fr; }
-            .product-thumbnails-section { flex-direction: row; height: auto; order: 2; }
-            .thumbnail-scroll-wrapper { flex-direction: row; max-height: auto; overflow-x: auto; overflow-y: hidden; width: 100%; }
-            .gallery-thumb { margin-right: 10px; margin-bottom: 0 !important; }
+            .product-image-section { order: 1; }
+            .product-thumbnails-section { order: 2; flex-direction: row; height: auto; width: 100%; margin-bottom: 20px; }
+            .thumbnail-scroll-wrapper { flex-direction: row; overflow-x: auto; overflow-y: hidden; height: 80px; gap: 10px; }
             .scroll-arrow { transform: rotate(-90deg); margin: 0 5px; }
         }
     `;
@@ -395,7 +398,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         let priceHtml = '';
         
-        // PRICE LOGIC: Agar price 0 hai toh "Check Price" show hoga 
         if (basePrice === 0) {
             const storeName = activeOffer.store_name || 'Store';
             priceHtml = `<div style="font-size: 1.2rem; font-weight: bold; color: #FF5A3C;">Check Price on ${escapeHTML(storeName)}</div>`;
@@ -464,8 +466,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.scrollThumbnails = function(direction) {
         const container = document.getElementById('thumbnailContainer');
         const scrollAmount = 150;
-        if (direction === 'up') container.scrollTop -= scrollAmount;
-        else container.scrollTop += scrollAmount;
+        if (direction === 'up') container.scrollBy({ top: -scrollAmount, behavior: 'smooth' });
+        else container.scrollBy({ top: scrollAmount, behavior: 'smooth' });
     };
 
     // ⭐ FULLSCREEN MODAL (Zoom & Pan) ⭐
@@ -476,13 +478,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let scale = 1;
     let isDragging = false;
+    let wasDragged = false;
     let startX, startY, translateX = 0, translateY = 0;
 
-    // Reset Zoom & Pan when opening
+    function updateTransform() {
+        imgElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+        if (scale > 1) {
+            zoomPanContainer.style.cursor = isDragging ? 'grabbing' : 'grab';
+        } else {
+            zoomPanContainer.style.cursor = 'zoom-in';
+        }
+    }
+
     function resetZoomPan() {
         scale = 1; translateX = 0; translateY = 0;
-        imgElement.style.transform = `translate(0px, 0px) scale(1)`;
-        zoomPanContainer.style.cursor = 'grab';
+        updateTransform();
     }
 
     window.openFullScreenImage = function(index) {
@@ -512,56 +522,69 @@ document.addEventListener('DOMContentLoaded', async () => {
         resetZoomPan();
     };
 
-    // ⭐ ZOOM (Mouse Wheel & Touch Pinch) ⭐
-    zoomPanContainer.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        const zoomIntensity = 0.1;
-        if (e.deltaY < 0) scale += zoomIntensity; // Zoom in
-        else scale -= zoomIntensity; // Zoom out
-        scale = Math.max(1, Math.min(scale, 5)); // Limit 1x to 5x
-        
-        // Zoom towards center (simplified)
-        imgElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-        
-        if (scale > 1) zoomPanContainer.style.cursor = 'grab';
-        else resetZoomPan();
-    }, { passive: false });
+    // Click to zoom in/out
+    zoomPanContainer.addEventListener('click', (e) => {
+        if (wasDragged) { wasDragged = false; return; } 
+        if (scale === 1) {
+            scale = 2.5; 
+            updateTransform();
+        } else {
+            resetZoomPan(); 
+        }
+    });
 
-    // ⭐ DRAG / PAN (Mouse & Touch) ⭐
     zoomPanContainer.addEventListener('mousedown', (e) => {
-        if (scale <= 1) return; // Only drag when zoomed in
+        if (scale <= 1) return; 
         isDragging = true;
+        wasDragged = false;
         startX = e.clientX - translateX;
         startY = e.clientY - translateY;
-        zoomPanContainer.style.cursor = 'grabbing';
+        updateTransform();
     });
 
     window.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
         e.preventDefault();
+        wasDragged = true;
         translateX = e.clientX - startX;
         translateY = e.clientY - startY;
-        imgElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+        updateTransform();
     });
 
     window.addEventListener('mouseup', () => {
         isDragging = false;
-        if (scale > 1) zoomPanContainer.style.cursor = 'grab';
+        updateTransform();
     });
 
+    // Wheel zoom (Optional enhancement)
+    zoomPanContainer.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        if (e.deltaY < 0) scale = Math.min(scale + 0.5, 5);
+        else scale = Math.max(scale - 0.5, 1);
+        
+        if (scale === 1) {
+            translateX = 0; translateY = 0;
+        }
+        updateTransform();
+    }, { passive: false });
+
     // Touch Support (Mobile)
-    let touchStartX = 0, touchStartY = 0, initialDistance = 0, initialScale = 1;
+    let initialDistance = 0, initialScale = 1;
+    let touchStartX = 0, touchStartY = 0;
 
     zoomPanContainer.addEventListener('touchstart', (e) => {
         if (e.touches.length === 2) {
-            // Pinch to zoom
             initialDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
             initialScale = scale;
-        } else if (e.touches.length === 1 && scale > 1) {
-            // Touch drag
-            isDragging = true;
-            startX = e.touches[0].clientX - translateX;
-            startY = e.touches[0].clientY - translateY;
+        } else if (e.touches.length === 1) {
+            if (scale > 1) {
+                isDragging = true;
+                wasDragged = false;
+                startX = e.touches[0].clientX - translateX;
+                startY = e.touches[0].clientY - translateY;
+            } else {
+                wasDragged = false;
+            }
         }
     }, { passive: false });
 
@@ -570,18 +593,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             e.preventDefault();
             const distance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
             scale = Math.max(1, Math.min(initialScale * (distance / initialDistance), 5));
-            imgElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+            updateTransform();
         } else if (e.touches.length === 1 && isDragging) {
             e.preventDefault();
+            wasDragged = true;
             translateX = e.touches[0].clientX - startX;
             translateY = e.touches[0].clientY - startY;
-            imgElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+            updateTransform();
         }
     }, { passive: false });
 
     zoomPanContainer.addEventListener('touchend', () => {
-        isDragging = false;
-        if (scale <= 1) resetZoomPan();
+        if (isDragging) {
+            isDragging = false;
+            updateTransform();
+        } else if (!wasDragged && scale === 1) {
+            scale = 2.5;
+            updateTransform();
+        } else if (!wasDragged && scale > 1) {
+            resetZoomPan();
+        }
     });
 
     // Gallery Thumb Click
