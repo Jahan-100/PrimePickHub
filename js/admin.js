@@ -185,6 +185,7 @@ window.setBuilderMain = function() {
     document.getElementById('bActiveMainDisplay').innerHTML = `Active Main: <span style="background:#166534; color:white; padding:2px 6px; border-radius:4px;">${mainName}</span>`;
     document.getElementById('bMainInput').value = '';
     updateBuilderUI();
+    alert(`Main Category "${mainName}" set! You can now add Sub-Categories.`);
 }
 
 window.addBuilderSub = function() {
@@ -198,10 +199,13 @@ window.addBuilderSub = function() {
         subSlug = inp.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
         subName = inp;
     }
-    if (!subSlug) return alert("Please select or enter a Sub Category");
+    if (!subSlug || subSlug === "") return alert("Please select or enter a valid Sub Category");
 
     if (!builderState.subs.find(s => s.slug === subSlug)) {
         builderState.subs.push({ slug: subSlug, name: subName, parent: builderState.main.slug });
+        alert(`Sub Category "${subName}" added!`);
+    } else {
+        alert("This Sub Category is already added in this session.");
     }
     document.getElementById('bSubInput').value = '';
     updateBuilderUI();
@@ -209,7 +213,7 @@ window.addBuilderSub = function() {
 
 window.addBuilderMini = function() {
     const parentSubSlug = document.getElementById('bMiniParentSelect').value;
-    if (!parentSubSlug) return alert("Please select a parent Sub Category for this Mini-Sub.");
+    if (!parentSubSlug) return alert("Please select a parent Sub Category from the dropdown in Box 3.");
     
     const sel = document.getElementById('bMiniSelect').value;
     const inp = document.getElementById('bMiniInput').value.trim();
@@ -224,12 +228,31 @@ window.addBuilderMini = function() {
 
     if (!builderState.minis.find(m => m.slug === miniSlug && m.parent === parentSubSlug)) {
         builderState.minis.push({ slug: miniSlug, name: miniName, parent: parentSubSlug });
+        alert(`Mini-Sub Category "${miniName}" added!`);
+    } else {
+        alert("This Mini-Sub Category is already added in this session.");
     }
     document.getElementById('bMiniInput').value = '';
     updateBuilderUI();
 }
 
 function updateBuilderUI() {
+    const subList = document.getElementById('bSubList');
+    const miniList = document.getElementById('bMiniList');
+
+    // Render Sub List
+    if (subList) {
+        subList.innerHTML = builderState.subs.map(s => `<li style="margin-bottom:3px;">- ${s.name}</li>`).join('') || '<li style="color:#94A3B8; list-style:none; font-size:0.75rem;">No subs added yet.</li>';
+    }
+
+    // Render Mini List
+    if (miniList) {
+        miniList.innerHTML = builderState.minis.map(m => {
+            const parentSub = builderState.subs.find(s => s.slug === m.parent);
+            return `<li style="margin-bottom:3px;">- ${m.name} <span style="font-size:0.65rem; color:#64748B;">(in ${parentSub ? parentSub.name : 'Unknown'})</span></li>`;
+        }).join('') || '<li style="color:#94A3B8; list-style:none; font-size:0.75rem;">No minis added yet.</li>';
+    }
+
     // Update Preview List
     const list = document.getElementById('builderPreviewList');
     let html = '';
@@ -268,13 +291,22 @@ function updateBuilderUI() {
         }
     }
 
-    // Mini Parent Dropdown (The subs we just added)
+    // Mini Parent Dropdown
     if(miniParentSelect) {
-        miniParentSelect.innerHTML = `<option value="">-- Parent Sub-Cat --</option>` + 
+        const currentSel = miniParentSelect.value;
+        miniParentSelect.innerHTML = `<option value="">-- Select Parent Sub-Cat --</option>` + 
             builderState.subs.map(c => `<option value="${c.slug}">${c.name}</option>`).join('');
+        
+        if (builderState.subs.length > 0) {
+            if (builderState.subs.find(s => s.slug === currentSel)) {
+                miniParentSelect.value = currentSel;
+            } else {
+                miniParentSelect.value = builderState.subs[0].slug; // Auto-select first
+            }
+        }
     }
 
-    // Mini Dropdown (Filter by selected parent)
+    // Mini Dropdown based on selected parent
     if(miniSelect) {
         const activeParent = miniParentSelect.value;
         if(activeParent) {
@@ -293,34 +325,24 @@ window.saveBuilderData = function() {
     let customCats = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]');
     const deletedCats = JSON.parse(localStorage.getItem('admin_deleted_categories') || '[]');
     
-    // Helper to add/update
     const upsertCat = (catObj) => {
         const idx = customCats.findIndex(c => c.slug === catObj.slug);
         if (idx > -1) customCats[idx] = catObj;
         else customCats.push(catObj);
     };
 
-    // Save Main
     upsertCat(builderState.main);
-    
-    // Save Subs
     builderState.subs.forEach(sub => upsertCat(sub));
-    
-    // Save Minis
     builderState.minis.forEach(mini => upsertCat(mini));
 
     localStorage.setItem('admin_custom_categories', JSON.stringify(customCats));
     
-    // Remove from deleted list just in case
     let newDeleted = deletedCats.filter(s => s !== builderState.main.slug && !builderState.subs.find(sub=>sub.slug===s) && !builderState.minis.find(m=>m.slug===s));
     localStorage.setItem('admin_deleted_categories', JSON.stringify(newDeleted));
 
     alert("✅ All categories added successfully to the system!");
     
-    // Reset
     resetBuilder();
-    
-    // Refresh UIs
     renderCategoryManagementTable();
     loadCategoriesToDropdown();
 }
@@ -371,6 +393,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             container.style.display = 'none';
             this.textContent = '+ Add New Category Tree';
             this.style.background = '#10b981';
+        }
+    });
+
+    document.getElementById('bMiniParentSelect')?.addEventListener('change', function() {
+        const activeParent = this.value;
+        const miniSelect = document.getElementById('bMiniSelect');
+        if (activeParent) {
+            const allCats = getAllCategories();
+            const availableMinis = allCats.filter(c => c.parent === activeParent);
+            miniSelect.innerHTML = `<option value="">-- Select Existing --</option>` + 
+                availableMinis.map(c => `<option value="${c.slug}">${c.name}</option>`).join('');
+        } else {
+            miniSelect.innerHTML = `<option value="">-- Select Parent Sub First --</option>`;
         }
     });
 
