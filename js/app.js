@@ -138,6 +138,7 @@ function getCategoryIcon(cat) {
 
 let allCategoriesGlobal = [];
 let activeCategoriesSet = new Set();
+let hoverTimeout;
 
 async function fetchActiveCategories() {
     if (!window.supabaseClient) return;
@@ -204,10 +205,33 @@ async function renderDynamicCategories() {
         `).join('');
 
         catContainer.querySelectorAll('.category-item').forEach(el => {
-            el.addEventListener('click', function(e) {
-                e.preventDefault();
-                selectCategory(this.dataset.slug, this);
+            el.addEventListener('mouseenter', function(e) {
+                clearTimeout(hoverTimeout);
+                const catSlug = this.dataset.slug;
+                document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
+                this.classList.add('active');
+                
+                if (catSlug === 'all') {
+                    document.getElementById('categoryHoverPanel').style.display = 'none';
+                    loadCategoryProducts('all', 'For You');
+                } else {
+                    renderHoverPanel(catSlug);
+                }
             });
+        });
+
+        // Hide menu when mouse leaves the entire category area
+        document.querySelector('.container').addEventListener('mouseleave', function(e) {
+            hoverTimeout = setTimeout(() => {
+                const panel = document.getElementById('categoryHoverPanel');
+                if (panel) panel.style.display = 'none';
+                document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
+                const defaultCat = document.querySelector('#categoryScrollContainer .category-item[data-slug="all"]');
+                if (defaultCat) {
+                    defaultCat.classList.add('active');
+                    loadCategoryProducts('all', 'For You');
+                }
+            }, 300);
         });
     }
     const dropdownMenu = document.getElementById('categoryDropdownMenu');
@@ -215,6 +239,98 @@ async function renderDynamicCategories() {
         dropdownMenu.innerHTML = topCats.map(c => `
             <li data-value="${c.slug}" class="${c.slug.trim().toLowerCase() === 'all' ? 'active' : ''}" onclick="selectCatDropdown('${c.slug}', '${c.name}', this)">${c.name}</li>
         `).join('');
+    }
+}
+
+function renderHoverPanel(mainSlug) {
+    const panel = document.getElementById('categoryHoverPanel');
+    if (!panel) return;
+    
+    const mainCat = allCategoriesGlobal.find(c => c.slug === mainSlug);
+    const subCats = allCategoriesGlobal.filter(c => c.parent === mainSlug && activeCategoriesSet.has(c.slug.toLowerCase()));
+    
+    if (subCats.length === 0) {
+        panel.style.display = 'none';
+        loadCategoryProducts(mainSlug, mainCat ? mainCat.name : mainSlug);
+        return;
+    }
+
+    panel.style.display = 'flex';
+    
+    let html = '';
+    subCats.forEach(sub => {
+        const minis = allCategoriesGlobal.filter(c => c.parent === sub.slug && activeCategoriesSet.has(c.slug.toLowerCase()));
+        
+        html += `
+            <div class="sub-cat-group" onmouseenter="handleSubHover('${sub.slug}', '${sub.name}')">
+                <div class="sub-cat-title">${sub.name}</div>
+                ${minis.length > 0 ? `
+                    <div class="mini-cat-list">
+                        ${minis.map(mini => `<div class="mini-cat-btn" onclick="handleMiniClick('${mini.slug}', '${mini.name}', event)">${mini.name}</div>`).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    });
+    
+    panel.innerHTML = html;
+    
+    document.getElementById('productSectionTitle').innerHTML = `Select a category under "${mainCat ? mainCat.name : mainSlug}"`;
+    showGridMessage(document.getElementById('productGrid'), 'Hover over a sub-category to see options.');
+}
+
+window.handleSubHover = function(subSlug, subName) {
+    clearTimeout(hoverTimeout);
+    // If sub-category has no minis, load products immediately on hover
+    const minis = allCategoriesGlobal.filter(c => c.parent === subSlug && activeCategoriesSet.has(c.slug.toLowerCase()));
+    
+    document.querySelectorAll('.sub-cat-group').forEach(g => g.style.borderColor = '#E2E8F0');
+    event.currentTarget.style.borderColor = 'var(--accent)';
+    
+    if (minis.length === 0) {
+        loadCategoryProducts(subSlug, subName);
+    } else {
+        document.getElementById('productSectionTitle').innerHTML = `Select a mini-category under "${subName}"`;
+        showGridMessage(document.getElementById('productGrid'), 'Hover over a mini-category to load products.');
+    }
+};
+
+window.handleMiniClick = function(miniSlug, miniName, event) {
+    event.stopPropagation();
+    document.querySelectorAll('.mini-cat-btn').forEach(b => b.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    loadCategoryProducts(miniSlug, miniName);
+};
+
+async function loadCategoryProducts(catSlug, catName) {
+    const titleEl = document.getElementById('productSectionTitle');
+    const grid = document.getElementById('productGrid');
+    
+    if (titleEl) titleEl.innerHTML = catName;
+    showGridMessage(grid, 'Loading products...');
+    
+    try {
+        if (catSlug === 'all') {
+            const data = await API.getHomepageProducts(); 
+            const raw = [...(data.featured ?? []), ...(data.trending ?? []), ...(data.latest ?? [])];
+            const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false); 
+            const now = new Date();
+            const normalProducts = allProducts.filter(p => { 
+                const endDate1 = p.sale_end_date ? new Date(p.sale_end_date) : null; 
+                const endDate2 = p.sale_end_date_2 ? new Date(p.sale_end_date_2) : null; 
+                const inSec1 = (endDate1 && endDate1 > now); 
+                const inSec2 = (endDate2 && endDate2 > now); 
+                return !inSec1 && !inSec2; 
+            });
+            renderProductsGrid(normalProducts, grid);
+        } else { 
+            let fetchSlugs = getAllDescendantSlugs(catSlug, allCategoriesGlobal);
+            const products = await API.searchProducts({ category: fetchSlugs }) || []; 
+            renderProductsGrid(products.filter(p => p.is_available !== false), grid); 
+        }
+    } catch (err) {
+        console.error("Product Load Error:", err);
+        showGridMessage(grid, 'Error loading products.');
     }
 }
 
@@ -347,167 +463,6 @@ function stopFireworks() { clearInterval(fireworksInterval); }
 window.scrollFlash = function(direction) { const container = document.getElementById('flashSaleScroll'); const scrollAmount = 300; if (direction === 'left') container.scrollLeft -= scrollAmount; else container.scrollLeft += scrollAmount; };
 window.scrollFlash2 = function(direction) { const container = document.getElementById('flashSaleScroll2'); const scrollAmount = 300; if (direction === 'left') container.scrollLeft -= scrollAmount; else container.scrollLeft += scrollAmount; };
 window.scrollSpecial = function(direction) { const container = document.getElementById('specialDealScroll'); const scrollAmount = 300; if (direction === 'left') container.scrollLeft -= scrollAmount; else container.scrollLeft += scrollAmount; };
-
-window.selectSubCategory = async function(subSlug, parentSlug, element) {
-    try {
-        const subContainer = document.getElementById('subCategoryScrollContainer');
-        if (subContainer) {
-            subContainer.querySelectorAll('.sub-pill, .mini-pill').forEach(el => el.classList.remove('active')); 
-            if (element) element.classList.add('active');
-        }
-        
-        const miniSubContainer = document.getElementById('miniSubCategoryScrollContainer');
-        if (miniSubContainer) miniSubContainer.style.display = 'none';
-
-        const titleEl = document.getElementById('productSectionTitle'); 
-        const grid = document.getElementById('productGrid');
-        
-        const normSlug = subSlug ? subSlug.trim().toLowerCase() : '';
-        const currentCat = allCategoriesGlobal.find(c => c && c.slug && typeof c.slug === 'string' && c.slug.trim().toLowerCase() === normSlug);
-        if (titleEl) titleEl.innerHTML = currentCat ? currentCat.name : subSlug;
-
-        const minis = allCategoriesGlobal.filter(c => c && c.parent && typeof c.parent === 'string' && c.parent.trim().toLowerCase() === normSlug && activeCategoriesSet.has((c.slug || '').trim().toLowerCase()));
-        if (minis.length > 0 && miniSubContainer) {
-            miniSubContainer.style.display = 'flex';
-            let miniHtml = '';
-            minis.forEach(c => {
-                miniHtml += `<a href="javascript:void(0)" class="mini-pill" data-slug="${c.slug}" data-parent="${subSlug}">${c.name}</a>`;
-            });
-            miniSubContainer.innerHTML = miniHtml;
-
-            miniSubContainer.querySelectorAll('.mini-pill').forEach(el => {
-                el.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    miniSubContainer.querySelectorAll('.mini-pill').forEach(p => p.classList.remove('active'));
-                    this.classList.add('active');
-                    selectMiniSubCategory(this.dataset.slug, this.dataset.parent, this);
-                });
-            });
-
-            showGridMessage(grid, `Please select a category under "${currentCat ? currentCat.name : subSlug}" to view products.`);
-            return;
-        }
-
-        showGridMessage(grid, 'Loading products...');
-        let fetchSlugs = getAllDescendantSlugs(subSlug, allCategoriesGlobal);
-        const products = await API.searchProducts({ category: fetchSlugs }) || []; 
-        renderProductsGrid(products.filter(p => p.is_available !== false), grid); 
-    } catch (err) {
-        console.error("SubCategory Click Error:", err);
-        showGridMessage(document.getElementById('productGrid'), 'Error: ' + (err.message || 'Unknown error'));
-    }
-};
-
-window.selectMiniSubCategory = async function(miniSlug, parentSlug, element) {
-    try {
-        const miniSubContainer = document.getElementById('miniSubCategoryScrollContainer');
-        if (miniSubContainer) {
-            miniSubContainer.querySelectorAll('.mini-pill').forEach(el => el.classList.remove('active')); 
-            if (element) element.classList.add('active');
-        }
-
-        const titleEl = document.getElementById('productSectionTitle'); 
-        const grid = document.getElementById('productGrid');
-        
-        const normSlug = miniSlug ? miniSlug.trim().toLowerCase() : '';
-        const currentCat = allCategoriesGlobal.find(c => c && c.slug && typeof c.slug === 'string' && c.slug.trim().toLowerCase() === normSlug);
-        if (titleEl) titleEl.innerHTML = currentCat ? currentCat.name : miniSlug;
-
-        showGridMessage(grid, 'Loading products...');
-        let fetchSlugs = getAllDescendantSlugs(miniSlug, allCategoriesGlobal);
-        const products = await API.searchProducts({ category: fetchSlugs }) || []; 
-        renderProductsGrid(products.filter(p => p.is_available !== false), grid); 
-    } catch (err) {
-        console.error("MiniSubCategory Click Error:", err);
-        showGridMessage(document.getElementById('productGrid'), 'Error: ' + (err.message || 'Unknown error'));
-    }
-};
-
-window.selectCategory = async function(catSlug, element) {
-    try {
-        document.querySelectorAll('#categoryScrollContainer .category-item').forEach(el => el.classList.remove('active')); 
-        if (element) element.classList.add('active');
-        
-        const titleEl = document.getElementById('productSectionTitle'); 
-        const grid = document.getElementById('productGrid');
-        const subContainer = document.getElementById('subCategoryScrollContainer');
-        const miniSubContainer = document.getElementById('miniSubCategoryScrollContainer');
-        
-        if (subContainer) subContainer.style.display = 'none';
-        if (miniSubContainer) miniSubContainer.style.display = 'none';
-
-        const normSlug = catSlug ? catSlug.trim().toLowerCase() : 'all';
-        const currentCat = allCategoriesGlobal.find(c => c && c.slug && typeof c.slug === 'string' && c.slug.trim().toLowerCase() === normSlug);
-        if (titleEl) titleEl.innerHTML = (normSlug === 'all') ? 'For You' : (currentCat ? currentCat.name : catSlug);
-
-        let subCats = [];
-        if (Array.isArray(allCategoriesGlobal)) {
-            subCats = allCategoriesGlobal.filter(c => 
-                c && c.parent && typeof c.parent === 'string' && 
-                c.parent.trim().toLowerCase() === normSlug && 
-                activeCategoriesSet.has((c.slug || '').trim().toLowerCase())
-            );
-        }
-        
-        if (subCats.length > 0 && normSlug !== 'all') {
-            if (subContainer) {
-                subContainer.style.display = 'flex';
-                let subHtml = '';
-                subCats.forEach(sub => {
-                    const subNorm = (sub.slug || '').trim().toLowerCase();
-                    subHtml += `<a href="javascript:void(0)" class="sub-pill" data-slug="${sub.slug}" data-parent="${catSlug}">${sub.name}</a>`;
-                    
-                    const minis = allCategoriesGlobal.filter(c => c && c.parent && typeof c.parent === 'string' && c.parent.trim().toLowerCase() === subNorm && activeCategoriesSet.has((c.slug || '').trim().toLowerCase()));
-                    minis.forEach(mini => {
-                        subHtml += `<a href="javascript:void(0)" class="mini-pill" data-slug="${mini.slug}" data-parent="${sub.slug}">${mini.name}</a>`;
-                    });
-                });
-                subContainer.innerHTML = subHtml;
-                
-                subContainer.querySelectorAll('.sub-pill, .mini-pill').forEach(el => {
-                    el.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        subContainer.querySelectorAll('.sub-pill, .mini-pill').forEach(p => p.classList.remove('active'));
-                        this.classList.add('active');
-
-                        if (this.classList.contains('sub-pill')) {
-                            selectSubCategory(this.dataset.slug, catSlug, this);
-                        } else {
-                            selectMiniSubCategory(this.dataset.slug, this.dataset.parent, this);
-                        }
-                    });
-                });
-
-                showGridMessage(grid, `Please select a category under "${currentCat ? currentCat.name : catSlug}" to view products.`);
-                return;
-            }
-        }
-
-        showGridMessage(grid, 'Loading products...');
-        
-        if (normSlug === 'all') {
-            const data = await API.getHomepageProducts(); 
-            const raw = [...(data.featured ?? []), ...(data.trending ?? []), ...(data.latest ?? [])];
-            const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false); 
-            const now = new Date();
-            const normalProducts = allProducts.filter(p => { 
-                const endDate1 = p.sale_end_date ? new Date(p.sale_end_date) : null; 
-                const endDate2 = p.sale_end_date_2 ? new Date(p.sale_end_date_2) : null; 
-                const inSec1 = (endDate1 && endDate1 > now); 
-                const inSec2 = (endDate2 && endDate2 > now); 
-                return !inSec1 && !inSec2; 
-            });
-            renderProductsGrid(normalProducts, grid);
-        } else { 
-            let fetchSlugs = getAllDescendantSlugs(catSlug, allCategoriesGlobal);
-            const products = await API.searchProducts({ category: fetchSlugs }) || []; 
-            renderProductsGrid(products.filter(p => p.is_available !== false), grid); 
-        }
-    } catch (err) {
-        console.error("Category Click Error:", err);
-        showGridMessage(document.getElementById('productGrid'), 'Error: ' + (err.message || 'Unknown error'));
-    }
-};
 
 function renderAdFallback(products) {
     const topSlot = document.getElementById('ad-fallback-top'); const midSlot = document.getElementById('ad-fallback-middle');
