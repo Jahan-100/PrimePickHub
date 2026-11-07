@@ -93,22 +93,24 @@ function getAllDescendantSlugs(parentSlug, allCats) {
 }
 
 let allCategoriesGlobal = [];
-let activeCategorySlugs = new Set(); // ⭐ NEW: Track active categories
+let activeCategorySlugs = new Set();
 
-// ⭐ NEW: Function to check which categories actually have products ⭐
+// ⭐ SMART: Check which categories actually have products ⭐
 async function updateActiveCategories() {
     if (!window.supabaseClient) return;
     try {
         const { data, error } = await window.supabaseClient.from('products').select('category_slug');
         if (!error && data) {
             activeCategorySlugs.clear();
-            const productCats = new Set(data.map(p => p.category_slug).filter(Boolean));
+            const productCats = new Set(data.map(p => p.category_slug ? p.category_slug.trim().toLowerCase() : null).filter(Boolean));
             
             const addAncestors = (slug) => {
-                if (!slug || activeCategorySlugs.has(slug)) return;
+                if (!slug) return;
+                if (activeCategorySlugs.has(slug)) return;
                 activeCategorySlugs.add(slug);
-                const cat = allCategoriesGlobal.find(c => c.slug === slug);
-                if (cat && cat.parent) addAncestors(cat.parent);
+                
+                const cat = allCategoriesGlobal.find(c => c.slug.trim().toLowerCase() === slug || c.name.trim().toLowerCase() === slug);
+                if (cat && cat.parent) addAncestors(cat.parent.trim().toLowerCase());
             };
 
             productCats.forEach(slug => addAncestors(slug));
@@ -126,13 +128,23 @@ async function renderDynamicCategories(allProducts) {
         allCategoriesGlobal = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
     }
 
-    await updateActiveCategories(); // ⭐ Check DB for active categories
+    await updateActiveCategories();
+    const hasActive = activeCategorySlugs.size > 0;
 
-    // ⭐ Filter: Sirf wahi categories show hon jisme products hon ⭐
-    const topCats = allCategoriesGlobal.filter(c => 
-        (!c.parent || c.parent === 'all') && 
-        (c.slug === 'all' || activeCategorySlugs.has(c.slug))
-    );
+    const topCats = allCategoriesGlobal.filter(c => {
+        const isTop = !c.parent || c.parent === 'all';
+        if (!isTop) return false;
+        if (c.slug === 'all') return true;
+        if (!hasActive) return true;
+
+        const normSlug = c.slug.trim().toLowerCase();
+        const normName = c.name.trim().toLowerCase();
+        
+        for (let activeSlug of activeCategorySlugs) {
+            if (activeSlug === normSlug || activeSlug === normName) return true;
+        }
+        return false;
+    });
     
     const catContainer = document.getElementById('categoryScrollContainer');
     if (catContainer) {
@@ -290,8 +302,8 @@ window.selectSubCategory = async function(subSlug, parentSlug, element) {
     const currentCat = allCategoriesGlobal.find(c => c.slug === subSlug);
     if (titleEl) titleEl.innerHTML = currentCat ? currentCat.name : subSlug;
 
-    // ⭐ Filter: Sirf wahi mini show karo jisme products hon ⭐
-    const miniSubs = allCategoriesGlobal.filter(c => c.parent === subSlug && activeCategorySlugs.has(c.slug));
+    const normSubSlug = subSlug.trim().toLowerCase();
+    const miniSubs = allCategoriesGlobal.filter(c => c.parent && c.parent.trim().toLowerCase() === normSubSlug && activeCategorySlugs.has(c.slug.trim().toLowerCase()));
     
     if (miniSubs.length > 0 && miniSubContainer) {
         miniSubContainer.style.display = 'flex';
@@ -347,8 +359,8 @@ window.selectCategory = async function(catSlug, element) {
     const currentCat = allCategoriesGlobal.find(c => c.slug === catSlug);
     if (titleEl) titleEl.innerHTML = (catSlug === 'all') ? 'For You' : (currentCat ? currentCat.name : catSlug);
 
-    // ⭐ Filter: Sirf wahi sub show karo jisme products hon ⭐
-    const subCats = allCategoriesGlobal.filter(c => c.parent === catSlug && activeCategorySlugs.has(c.slug));
+    const normCatSlug = catSlug.trim().toLowerCase();
+    const subCats = allCategoriesGlobal.filter(c => c.parent && c.parent.trim().toLowerCase() === normCatSlug && activeCategorySlugs.has(c.slug.trim().toLowerCase()));
     
     if (subCats.length > 0 && subContainer) {
         subContainer.style.display = 'flex';
