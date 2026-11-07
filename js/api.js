@@ -22,21 +22,26 @@ const API = {
         const { data, error } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').eq('slug', slug).single();
         return error ? null : data;
     },
+    // ⭐ UPDATED: Case-Insensitive Category Search ⭐
     async searchProducts({ query = '', category = '' }) {
         if (!window.supabaseClient) return [];
-        let req = window.supabaseClient.from('products').select('*, affiliate_offers(*)').limit(100);
-        
-        if (category) {
-            if (Array.isArray(category)) {
-                req = req.in('category_slug', category);
-            } else {
-                req = req.eq('category_slug', category);
-            }
-        }
+        let req = window.supabaseClient.from('products').select('*, affiliate_offers(*)').limit(500);
         
         if (query) req = req.ilike('title', `%${query}%`);
+        
         const { data, error } = await req;
-        return error ? [] : (data || []);
+        if (error) return [];
+        
+        let results = data || [];
+        
+        if (category) {
+            const cats = Array.isArray(category) ? category : [category];
+            const lowerCats = cats.map(c => c.trim().toLowerCase());
+            // JS mein filter karo taake capital/small letters ka masla khatam ho
+            results = results.filter(p => p.category_slug && lowerCats.includes(p.category_slug.trim().toLowerCase()));
+        }
+        
+        return results;
     },
     async addProduct(data) {
         const { data: result, error } = await window.supabaseClient.from('products').insert([data]).select();
@@ -67,7 +72,6 @@ const API = {
             city: geo.city || 'Unknown'
         }]).then(({ error }) => { if (error) console.warn('Track error:', error); }).catch(() => {});
     },
-    // ⭐ CRASH-PROOF CATEGORIES FETCHER ⭐
     async getCategories() {
         const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
         let customCats = [];
@@ -88,7 +92,7 @@ const API = {
 
         let merged = [...masterCats];
         customCats.forEach(c => {
-            const idx = merged.findIndex(m => m.slug === c.slug);
+            const idx = merged.findIndex(m => m.slug.toLowerCase() === c.slug.toLowerCase());
             if (idx > -1) merged[idx] = c; 
             else merged.push(c); 
         });
