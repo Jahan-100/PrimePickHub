@@ -26,14 +26,8 @@ function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.
 
 window.handleImageLoad = function(imgElement) {
     if (imgElement.decode) {
-        imgElement.decode().then(() => {
-            imgElement.style.opacity = 1;
-        }).catch(() => {
-            imgElement.style.opacity = 1;
-        });
-    } else {
-        imgElement.style.opacity = 1;
-    }
+        imgElement.decode().then(() => { imgElement.style.opacity = 1; }).catch(() => { imgElement.style.opacity = 1; });
+    } else { imgElement.style.opacity = 1; }
 };
 
 function getHighQualityImage(url, size = 400) {
@@ -93,24 +87,25 @@ function getAllDescendantSlugs(parentSlug, allCats) {
     return [...new Set(slugs)];
 }
 
-// ⭐ NAYA: Images wala Icon System ⭐
+// ⭐ SMART ICON SYSTEM (Fixed) ⭐
 function getCategoryIcon(cat) {
     if (!cat) return '📦';
-    
     const name = (cat.name || '').toLowerCase();
     const slug = (cat.slug || '').toLowerCase();
     
-    // Aapki di hui images ke liye custom logic
+    // Images wala logic (object-fit: contain taake blur na ho)
     if (slug.includes('shoe') || name.includes('shoe')) {
-        return `<img src="assets/shoes-icon.jpg" alt="Shoes" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+        return `<img src="assets/shoes-icon.jpg" alt="Shoes" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff;">`;
     }
     if (slug.includes('accessor') || name.includes('accessor')) {
-        return `<img src="assets/accessories-icon.jpg" alt="Accessories" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+        return `<img src="assets/accessories-icon.jpg" alt="Accessories" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff;">`;
+    }
+    if (slug.includes('light') || name.includes('light')) {
+        return `<img src="assets/Lights-icon.jpg" alt="Lights" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff;">`;
     }
 
     if (cat.icon && cat.icon.trim() !== '' && cat.icon !== '📦') return cat.icon;
 
-    if (name.includes('light') || slug.includes('light') || name.includes('lamp') || slug.includes('lamp')) return '💡';
     if (name.includes('bag') || slug.includes('bag') || name.includes('luggage') || slug.includes('luggage')) return '👜';
     if (name.includes('belt') || slug.includes('belt')) return '🩱';
     if (name.includes('glass') || slug.includes('glass') || name.includes('eyewear') || slug.includes('eyewear')) return '🕶️';
@@ -188,7 +183,7 @@ async function renderDynamicCategories() {
         catContainer.innerHTML = topCats.map(c => `
             <a href="/category/${c.slug}" onclick="event.preventDefault(); selectCategory('${c.slug}', this)" class="category-item ${c.slug.trim().toLowerCase() === 'all' ? 'active' : ''}" data-cat="${c.slug}">
                 <div class="cat-icon" style="overflow:hidden;" ${c.slug.trim().toLowerCase() === 'all' ? 'data-is-all="true"' : ''}>
-                    ${c.slug.trim().toLowerCase() === 'all' ? '<span style="color:#EF4444;">❤️</span>' : getCategoryIcon(c)}
+                    ${c.slug.trim().toLowerCase() === 'all' ? '<span style="color:#EF4444; font-size: 2.2rem; display:flex; align-items:center; justify-content:center; height:100%;">❤️</span>' : getCategoryIcon(c)}
                 </div>
                 <span>${c.name}</span>
             </a>
@@ -342,7 +337,6 @@ window.selectSubCategory = async function(subSlug, parentSlug, element) {
     const currentCat = allCategoriesGlobal.find(c => c.slug.trim().toLowerCase() === normSlug);
     if (titleEl) titleEl.innerHTML = currentCat ? currentCat.name : subSlug;
 
-    // ⭐ AGAR MINI-SUB CATEGORIES HAIN TOH PEHLE UNHEIN SHOW KARO ⭐
     const minis = allCategoriesGlobal.filter(c => c.parent && c.parent.trim().toLowerCase() === normSlug && activeCategoriesSet.has(c.slug.trim().toLowerCase()));
     if (minis.length > 0 && miniSubContainer) {
         miniSubContainer.style.display = 'flex';
@@ -353,10 +347,9 @@ window.selectSubCategory = async function(subSlug, parentSlug, element) {
             </a>
         `).join('');
         showGridMessage(grid, `Please select a category under "${currentCat ? currentCat.name : subSlug}" to view products.`);
-        return; // STOP. Don't load products.
+        return;
     }
 
-    // Agar mini-cats nahi hain, toh products load karo
     showGridMessage(grid, 'Loading products...');
     try {
         let fetchSlugs = getAllDescendantSlugs(subSlug, allCategoriesGlobal);
@@ -387,7 +380,7 @@ window.selectMiniSubCategory = async function(miniSlug, parentSlug, element) {
     } catch (err) { showGridMessage(grid, 'Failed to load products.'); }
 };
 
-// ⭐ UPDATED: Main Category Click Logic ⭐
+// ⭐ FIXED: Category Click Logic ⭐
 window.selectCategory = async function(catSlug, element) {
     document.querySelectorAll('#categoryScrollContainer .category-item').forEach(el => el.classList.remove('active')); 
     if (element) element.classList.add('active');
@@ -404,24 +397,18 @@ window.selectCategory = async function(catSlug, element) {
     const currentCat = allCategoriesGlobal.find(c => c.slug.trim().toLowerCase() === normSlug);
     if (titleEl) titleEl.innerHTML = (normSlug === 'all') ? 'For You' : (currentCat ? currentCat.name : catSlug);
 
-    // 1. Get active Sub-Categories
     let subCats = allCategoriesGlobal.filter(c => c.parent && c.parent.trim().toLowerCase() === normSlug && activeCategoriesSet.has(c.slug.trim().toLowerCase()));
     
-    // ⭐ AGAR SUB-CATEGORIES HAIN TOH PEHLE SIRF UNHEIN SHOW KARO, PRODUCTS NAHI ⭐
     if (subCats.length > 0 && normSlug !== 'all') {
         subContainer.style.display = 'flex';
-        
         let subHtml = '';
         subCats.forEach(sub => {
             const subNorm = sub.slug.trim().toLowerCase();
-            // Render Sub-Category
             subHtml += `
             <a href="javascript:void(0)" onclick="event.preventDefault(); selectSubCategory('${sub.slug}', '${catSlug}', this)" class="category-item" style="min-width: 80px;" data-cat="${sub.slug}">
                 <div class="cat-icon" style="width: 45px; height: 45px; font-size: 1.2rem; background: #fff; border: 1px solid #E2E8F0; overflow:hidden;">${getCategoryIcon(sub)}</div>
                 <span style="font-size: 0.75rem;">${sub.name}</span>
             </a>`;
-
-            // Render Mini-Sub Categories inside the same list
             const minis = allCategoriesGlobal.filter(c => c.parent && c.parent.trim().toLowerCase() === subNorm && activeCategoriesSet.has(c.slug.trim().toLowerCase()));
             minis.forEach(mini => {
                 subHtml += `
@@ -431,13 +418,11 @@ window.selectCategory = async function(catSlug, element) {
                 </a>`;
             });
         });
-        
         subContainer.innerHTML = subHtml;
-        showGridMessage(grid, `Please select a category under "${currentCat ? currentCat.name : catSlug}" to view products.`);
-        return; // ⭐ YAHAN RUK JAO. PRODUCTS LOAD MAT KARO ⭐
+        showGridMessage(grid, `Please select a sub-category under "${currentCat ? currentCat.name : catSlug}" to view products.`);
+        return;
     }
 
-    // Agar koi sub-category nahi hai, toh direct products load karo
     showGridMessage(grid, 'Loading products...');
     try {
         if (normSlug === 'all') {
@@ -477,14 +462,20 @@ function renderAdFallback(products) {
 }
 
 async function loadLatestBlog() {
-    if (!window.supabaseClient) return; const section = document.getElementById('latestBlogSection'); if (!section) return;
+    if (!window.supabaseClient) return; 
+    const section = document.getElementById('latestBlogSection'); 
+    if (!section) return;
     try {
         const { data: blog, error } = await window.supabaseClient.from('blogs').select('*').eq('is_published', true).order('created_at', { ascending: false }).limit(1).maybeSingle();
         if (error || !blog) { section.style.display = 'none'; return; }
         document.getElementById('latestBlogImg').src = getHighQualityImage(blog.image_url, 300) || 'assets/icon-192.png?v=4';
         document.getElementById('latestBlogTitle').innerText = blog.title;
         document.getElementById('latestBlogDate').innerText = `Published on: ${new Date(blog.created_at).toLocaleDateString()}`;
-        section.style.visibility = 'visible'; section.style.opacity = '1';
+        
+        // ⭐ FIXED: display: block taake box nazar aaye ⭐
+        section.style.display = 'block'; 
+        section.style.visibility = 'visible'; 
+        section.style.opacity = '1';
     } catch (err) { console.warn('Error loading latest blog:', err); }
 }
 
