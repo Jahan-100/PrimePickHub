@@ -93,32 +93,37 @@ function getAllDescendantSlugs(parentSlug, allCats) {
 }
 
 let allCategoriesGlobal = [];
-let activeCategorySlugs = new Set();
+let activeCategoriesSet = new Set();
 
-// ⭐ SMART: Check which categories actually have products ⭐
-async function updateActiveCategories() {
+// ⭐ SMART: Fetch active categories directly from products ⭐
+async function fetchActiveCategories() {
     if (!window.supabaseClient) return;
     try {
         const { data, error } = await window.supabaseClient.from('products').select('category_slug');
         if (!error && data) {
-            activeCategorySlugs.clear();
-            const productCats = new Set(data.map(p => p.category_slug ? p.category_slug.trim().toLowerCase() : null).filter(Boolean));
+            activeCategoriesSet.clear();
+            activeCategoriesSet.add('all');
+            const productCats = new Set(data.map(p => p.category_slug ? p.category_slug.trim() : null).filter(Boolean));
             
-            const addAncestors = (slug) => {
-                if (!slug) return;
-                if (activeCategorySlugs.has(slug)) return;
-                activeCategorySlugs.add(slug);
-                
-                const cat = allCategoriesGlobal.find(c => c.slug.trim().toLowerCase() === slug || c.name.trim().toLowerCase() === slug);
-                if (cat && cat.parent) addAncestors(cat.parent.trim().toLowerCase());
-            };
-
-            productCats.forEach(slug => addAncestors(slug));
+            productCats.forEach(slug => {
+                activeCategoriesSet.add(slug);
+                let currentSlug = slug;
+                // Find ancestors
+                while (currentSlug) {
+                    const cat = allCategoriesGlobal.find(c => c.slug.trim().toLowerCase() === currentSlug.toLowerCase() || c.name.trim().toLowerCase() === currentSlug.toLowerCase());
+                    if (cat && cat.parent && cat.parent !== 'all') {
+                        activeCategoriesSet.add(cat.parent);
+                        currentSlug = cat.parent;
+                    } else {
+                        break;
+                    }
+                }
+            });
         }
-    } catch (e) { console.warn("Failed to load active categories", e); }
+    } catch (e) { console.warn("Failed to fetch active categories", e); }
 }
 
-async function renderDynamicCategories(allProducts) {
+async function renderDynamicCategories() {
     try {
         allCategoriesGlobal = await API.getCategories();
     } catch(e) {
@@ -128,22 +133,23 @@ async function renderDynamicCategories(allProducts) {
         allCategoriesGlobal = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
     }
 
-    await updateActiveCategories();
-    const hasActive = activeCategorySlugs.size > 0;
+    await fetchActiveCategories();
 
-    const topCats = allCategoriesGlobal.filter(c => {
+    // 1. Get defined top-level categories that are active
+    let topCats = allCategoriesGlobal.filter(c => {
         const isTop = !c.parent || c.parent === 'all';
-        if (!isTop) return false;
-        if (c.slug === 'all') return true;
-        if (!hasActive) return true;
+        return isTop && activeCategoriesSet.has(c.slug);
+    });
 
-        const normSlug = c.slug.trim().toLowerCase();
-        const normName = c.name.trim().toLowerCase();
-        
-        for (let activeSlug of activeCategorySlugs) {
-            if (activeSlug === normSlug || activeSlug === normName) return true;
+    // 2. Add any dynamic top-level categories that exist in products but not in definitions
+    activeCategoriesSet.forEach(slug => {
+        if (slug === 'all') return;
+        if (!allCategoriesGlobal.find(c => c.slug.toLowerCase() === slug.toLowerCase())) {
+            const isSub = allCategoriesGlobal.some(c => c.parent && c.parent.toLowerCase() === slug.toLowerCase());
+            if (!isSub) {
+                topCats.push({ slug: slug, name: slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), icon: '📦', parent: null });
+            }
         }
-        return false;
     });
     
     const catContainer = document.getElementById('categoryScrollContainer');
@@ -302,19 +308,6 @@ window.selectSubCategory = async function(subSlug, parentSlug, element) {
     const currentCat = allCategoriesGlobal.find(c => c.slug === subSlug);
     if (titleEl) titleEl.innerHTML = currentCat ? currentCat.name : subSlug;
 
-    const normSubSlug = subSlug.trim().toLowerCase();
-    const miniSubs = allCategoriesGlobal.filter(c => c.parent && c.parent.trim().toLowerCase() === normSubSlug && activeCategorySlugs.has(c.slug.trim().toLowerCase()));
-    
-    if (miniSubs.length > 0 && miniSubContainer) {
-        miniSubContainer.style.display = 'flex';
-        miniSubContainer.innerHTML = miniSubs.map(c => `
-            <a href="javascript:void(0)" onclick="event.preventDefault(); selectMiniSubCategory('${c.slug}', '${subSlug}', this)" class="category-item" style="min-width: 80px;" data-cat="${c.slug}">
-                <div class="cat-icon" style="width: 40px; height: 40px; font-size: 1rem; background: #fff; border: 1px solid #E2E8F0;">${c.icon || '📦'}</div>
-                <span style="font-size: 0.7rem;">${c.name}</span>
-            </a>
-        `).join('');
-    }
-
     showGridMessage(grid, 'Loading products...');
     try {
         let fetchSlugs = getAllDescendantSlugs(subSlug, allCategoriesGlobal);
@@ -344,6 +337,7 @@ window.selectMiniSubCategory = async function(miniSlug, parentSlug, element) {
     } catch (err) { showGridMessage(grid, 'Failed to load products.'); }
 };
 
+// ⭐ UPDATED: Main Category Click Logic (With Hierarchical Sub-Cats) ⭐
 window.selectCategory = async function(catSlug, element) {
     document.querySelectorAll('#categoryScrollContainer .category-item').forEach(el => el.classList.remove('active')); 
     if (element) element.classList.add('active');
@@ -359,17 +353,41 @@ window.selectCategory = async function(catSlug, element) {
     const currentCat = allCategoriesGlobal.find(c => c.slug === catSlug);
     if (titleEl) titleEl.innerHTML = (catSlug === 'all') ? 'For You' : (currentCat ? currentCat.name : catSlug);
 
-    const normCatSlug = catSlug.trim().toLowerCase();
-    const subCats = allCategoriesGlobal.filter(c => c.parent && c.parent.trim().toLowerCase() === normCatSlug && activeCategorySlugs.has(c.slug.trim().toLowerCase()));
+    // 1. Get active Sub-Categories
+    let subCats = allCategoriesGlobal.filter(c => c.parent === catSlug && activeCategoriesSet.has(c.slug));
     
+    // Add dynamic sub-cats
+    activeCategoriesSet.forEach(slug => {
+        const cat = allCategoriesGlobal.find(c => c.slug.toLowerCase() === slug.toLowerCase());
+        if (cat && cat.parent === catSlug && !subCats.find(s => s.slug === cat.slug)) {
+            subCats.push(cat);
+        }
+    });
+
     if (subCats.length > 0 && subContainer) {
         subContainer.style.display = 'flex';
-        subContainer.innerHTML = subCats.map(c => `
-            <a href="javascript:void(0)" onclick="event.preventDefault(); selectSubCategory('${c.slug}', '${catSlug}', this)" class="category-item" style="min-width: 80px;" data-cat="${c.slug}">
-                <div class="cat-icon" style="width: 45px; height: 45px; font-size: 1.2rem; background: #fff; border: 1px solid #E2E8F0;">${c.icon || '📦'}</div>
-                <span style="font-size: 0.75rem;">${c.name}</span>
-            </a>
-        `).join('');
+        
+        let subHtml = '';
+        subCats.forEach(sub => {
+            // Render Sub-Category
+            subHtml += `
+            <a href="javascript:void(0)" onclick="event.preventDefault(); selectSubCategory('${sub.slug}', '${catSlug}', this)" class="category-item" style="min-width: 80px;" data-cat="${sub.slug}">
+                <div class="cat-icon" style="width: 45px; height: 45px; font-size: 1.2rem; background: #fff; border: 1px solid #E2E8F0;">${sub.icon || '📦'}</div>
+                <span style="font-size: 0.75rem;">${sub.name}</span>
+            </a>`;
+
+            // Render Mini-Sub Categories inside the same list
+            const minis = allCategoriesGlobal.filter(c => c.parent === sub.slug && activeCategoriesSet.has(c.slug));
+            minis.forEach(mini => {
+                subHtml += `
+                <a href="javascript:void(0)" onclick="event.preventDefault(); selectMiniSubCategory('${mini.slug}', '${sub.slug}', this)" class="category-item" style="min-width: 80px; margin-left: 10px; border-left: 2px solid #E2E8F0; padding-left: 10px;" data-cat="${mini.slug}">
+                    <div class="cat-icon" style="width: 35px; height: 35px; font-size: 0.9rem; background: #F8FAFC; border: 1px solid #E2E8F0;">${mini.icon || '📦'}</div>
+                    <span style="font-size: 0.65rem;">${mini.name}</span>
+                </a>`;
+            });
+        });
+        
+        subContainer.innerHTML = subHtml;
     }
 
     showGridMessage(grid, 'Loading products...');
@@ -478,7 +496,7 @@ async function loadHomepageProducts() {
         const raw = [...(data.featured ?? []), ...(data.trending ?? []), ...(data.latest ?? [])]; 
         const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false);
         
-        await renderDynamicCategories(allProducts); 
+        await renderDynamicCategories(); 
         renderAdFallback(allProducts);
         
         const now = new Date(); const flashSaleProducts1 = []; const flashSaleProducts2 = []; const normalProducts = [];
