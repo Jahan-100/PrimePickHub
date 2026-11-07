@@ -115,45 +115,38 @@
         /* ⭐ NEW CENTERED DROPDOWN CSS ⭐ */
         .category-nav-wrapper {
             position: relative;
-            padding-bottom: 10px;
+            /* No padding-bottom to keep it tight */
         }
         
         #categoryHoverPanel {
             display: none;
             position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
+            /* top and left will be set by JS */
             background: #ffffff;
-            border-radius: 16px;
-            padding: 25px;
+            border-radius: 0 16px 16px 16px; /* Flat top left to attach to icon */
+            padding: 15px;
             z-index: 99999;
             box-shadow: 0 15px 40px rgba(0,0,0,0.15);
             border: 1px solid #E2E8F0;
             flex-wrap: wrap;
-            gap: 40px;
-            min-width: 300px;
+            gap: 20px;
+            min-width: max-content;
             max-width: 90vw;
-            animation: fadeInDrop 0.2s ease-out forwards;
-        }
-
-        @keyframes fadeInDrop {
-            from { opacity: 0; transform: translate(-50%, -10px); }
-            to { opacity: 1; transform: translate(-50%, 0); }
+            margin-top: -2px; /* slight overlap to remove gap */
         }
 
         .sub-cat-col {
             display: flex;
             flex-direction: column;
-            min-width: 160px;
+            min-width: 140px;
         }
 
         .sub-cat-title {
-            font-size: 1.05rem;
+            font-size: 0.95rem;
             font-weight: 700;
             color: #1E1B4B;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
             border-bottom: 2px solid #F1F5F9;
             cursor: pointer;
             transition: color 0.2s;
@@ -166,7 +159,7 @@
         .mini-list {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 4px;
         }
 
         .mini-item {
@@ -174,16 +167,24 @@
             color: #475569;
             text-decoration: none;
             cursor: pointer;
-            padding: 8px 12px;
-            border-radius: 8px;
+            padding: 6px 10px;
+            border-radius: 6px;
             transition: all 0.2s;
             display: block;
         }
         .mini-item:hover {
             background: #F8FAFC;
             color: #1E1B4B;
-            padding-left: 18px;
+            padding-left: 14px;
             font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            #categoryHoverPanel {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                max-width: 95vw;
+            }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -453,7 +454,7 @@
 
     <script src="js/config.js?v=6"></script>
     <script src="js/api.js?v=12"></script> 
-    <script src="js/app.js?v=41"></script> <!-- Version updated to 41 -->
+    <script src="js/app.js?v=42"></script> <!-- Version updated to 42 -->
     <script src="js/affiliate.js?v=6"></script>
     <script>
         function toggleCatDropdown(event) {
