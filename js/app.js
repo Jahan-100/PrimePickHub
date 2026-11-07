@@ -93,20 +93,46 @@ function getAllDescendantSlugs(parentSlug, allCats) {
 }
 
 let allCategoriesGlobal = [];
+let activeCategorySlugs = new Set(); // ⭐ NEW: Track active categories
+
+// ⭐ NEW: Function to check which categories actually have products ⭐
+async function updateActiveCategories() {
+    if (!window.supabaseClient) return;
+    try {
+        const { data, error } = await window.supabaseClient.from('products').select('category_slug');
+        if (!error && data) {
+            activeCategorySlugs.clear();
+            const productCats = new Set(data.map(p => p.category_slug).filter(Boolean));
+            
+            const addAncestors = (slug) => {
+                if (!slug || activeCategorySlugs.has(slug)) return;
+                activeCategorySlugs.add(slug);
+                const cat = allCategoriesGlobal.find(c => c.slug === slug);
+                if (cat && cat.parent) addAncestors(cat.parent);
+            };
+
+            productCats.forEach(slug => addAncestors(slug));
+        }
+    } catch (e) { console.warn("Failed to load active categories", e); }
+}
 
 async function renderDynamicCategories(allProducts) {
     try {
         allCategoriesGlobal = await API.getCategories();
     } catch(e) {
-        console.warn("Failed to load categories", e);
         allCategoriesGlobal = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
     }
-    
     if (!allCategoriesGlobal || allCategoriesGlobal.length === 0) {
         allCategoriesGlobal = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
     }
 
-    const topCats = allCategoriesGlobal.filter(c => !c.parent || c.parent === 'all');
+    await updateActiveCategories(); // ⭐ Check DB for active categories
+
+    // ⭐ Filter: Sirf wahi categories show hon jisme products hon ⭐
+    const topCats = allCategoriesGlobal.filter(c => 
+        (!c.parent || c.parent === 'all') && 
+        (c.slug === 'all' || activeCategorySlugs.has(c.slug))
+    );
     
     const catContainer = document.getElementById('categoryScrollContainer');
     if (catContainer) {
@@ -264,7 +290,9 @@ window.selectSubCategory = async function(subSlug, parentSlug, element) {
     const currentCat = allCategoriesGlobal.find(c => c.slug === subSlug);
     if (titleEl) titleEl.innerHTML = currentCat ? currentCat.name : subSlug;
 
-    const miniSubs = allCategoriesGlobal.filter(c => c.parent === subSlug);
+    // ⭐ Filter: Sirf wahi mini show karo jisme products hon ⭐
+    const miniSubs = allCategoriesGlobal.filter(c => c.parent === subSlug && activeCategorySlugs.has(c.slug));
+    
     if (miniSubs.length > 0 && miniSubContainer) {
         miniSubContainer.style.display = 'flex';
         miniSubContainer.innerHTML = miniSubs.map(c => `
@@ -319,7 +347,9 @@ window.selectCategory = async function(catSlug, element) {
     const currentCat = allCategoriesGlobal.find(c => c.slug === catSlug);
     if (titleEl) titleEl.innerHTML = (catSlug === 'all') ? 'For You' : (currentCat ? currentCat.name : catSlug);
 
-    const subCats = allCategoriesGlobal.filter(c => c.parent === catSlug);
+    // ⭐ Filter: Sirf wahi sub show karo jisme products hon ⭐
+    const subCats = allCategoriesGlobal.filter(c => c.parent === catSlug && activeCategorySlugs.has(c.slug));
+    
     if (subCats.length > 0 && subContainer) {
         subContainer.style.display = 'flex';
         subContainer.innerHTML = subCats.map(c => `
@@ -385,7 +415,6 @@ async function loadHomepageProducts() {
     const flashScroll2 = document.getElementById('flashSaleScroll2'); const flashSection2 = document.getElementById('flashSaleSection2'); const floatingAppIcon = document.getElementById('floatingAppIcon');
     if (!grid) return;
     try {
-        // ⭐ SAFETY CHECK: Agar DB connect na ho toh App Button show karo aur yahin ruk jao ⭐
         if (!window.supabaseClient) {
             console.warn("Supabase Client missing!");
             if (floatingAppIcon) floatingAppIcon.style.display = 'flex';
