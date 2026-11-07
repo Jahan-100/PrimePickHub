@@ -36,7 +36,6 @@ window.handleImageLoad = function(imgElement) {
     }
 };
 
-// ⭐ UPGRADED HD IMAGE HELPER (Shopify Fix) ⭐
 function getHighQualityImage(url, size = 400) {
     if (!url || typeof url !== 'string') return url;
     let cleanUrl = url.trim();
@@ -51,15 +50,10 @@ function getHighQualityImage(url, size = 400) {
     } else if (cleanUrl.includes('ebayimg.com')) {
         cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, `/s-l${size}.$1`);
     } else if (cleanUrl.includes('shopify') || cleanUrl.includes('govee') || cleanUrl.includes('allegra-k.com') || cleanUrl.includes('cdn.shopify')) {
-        // ⭐ SHOPIFY FIX: Remove existing '?v=...' completely so it doesn't block resizing
         const qIdx = cleanUrl.indexOf('?');
         if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
-
-        // Remove existing size modifiers in filename
         cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
-        
-        // Force exact size and WebP format
-        cleanUrl = cleanUrl + `?width=${size}&height=${size}&crop=center&format=webp`;
+        cleanUrl = cleanUrl + `?width=${size}`; 
     } else {
         cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
         cleanUrl = cleanUrl.replace(/_\d+x(?=\.(jpg|jpeg|png|webp|avif))/i, '');
@@ -89,7 +83,6 @@ function deduplicateProducts(list) {
 }
 function showGridMessage(grid, msg) { if (!grid) return; grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;"><p>${escapeHTML(msg)}</p></div>`; }
 
-// ⭐ Helper to get all child slugs recursively ⭐
 function getAllDescendantSlugs(parentSlug, allCats) {
     let slugs = [parentSlug];
     const children = allCats.filter(c => c.parent === parentSlug);
@@ -99,13 +92,20 @@ function getAllDescendantSlugs(parentSlug, allCats) {
     return slugs;
 }
 
-// ⭐ Global variable for categories (loaded from API) ⭐
 let allCategoriesGlobal = [];
 
 async function renderDynamicCategories(allProducts) {
-    allCategoriesGlobal = await API.getCategories();
+    try {
+        allCategoriesGlobal = await API.getCategories();
+    } catch(e) {
+        console.warn("Failed to load categories", e);
+        allCategoriesGlobal = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
+    }
     
-    // Only show top-level categories
+    if (!allCategoriesGlobal || allCategoriesGlobal.length === 0) {
+        allCategoriesGlobal = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
+    }
+
     const topCats = allCategoriesGlobal.filter(c => !c.parent || c.parent === 'all');
     
     const catContainer = document.getElementById('categoryScrollContainer');
@@ -248,7 +248,6 @@ window.scrollFlash = function(direction) { const container = document.getElement
 window.scrollFlash2 = function(direction) { const container = document.getElementById('flashSaleScroll2'); const scrollAmount = 300; if (direction === 'left') container.scrollLeft -= scrollAmount; else container.scrollLeft += scrollAmount; };
 window.scrollSpecial = function(direction) { const container = document.getElementById('specialDealScroll'); const scrollAmount = 300; if (direction === 'left') container.scrollLeft -= scrollAmount; else container.scrollLeft += scrollAmount; };
 
-// ⭐ UPDATED: Sub Category Click Logic ⭐
 window.selectSubCategory = async function(subSlug, parentSlug, element) {
     const subContainer = document.getElementById('subCategoryScrollContainer');
     if (subContainer) {
@@ -284,7 +283,6 @@ window.selectSubCategory = async function(subSlug, parentSlug, element) {
     } catch (err) { showGridMessage(grid, 'Failed to load products.'); }
 };
 
-// ⭐ UPDATED: Mini Sub Category Click Logic ⭐
 window.selectMiniSubCategory = async function(miniSlug, parentSlug, element) {
     const miniSubContainer = document.getElementById('miniSubCategoryScrollContainer');
     if (miniSubContainer) {
@@ -306,7 +304,6 @@ window.selectMiniSubCategory = async function(miniSlug, parentSlug, element) {
     } catch (err) { showGridMessage(grid, 'Failed to load products.'); }
 };
 
-// ⭐ UPDATED: Main Category Click Logic ⭐
 window.selectCategory = async function(catSlug, element) {
     document.querySelectorAll('#categoryScrollContainer .category-item').forEach(el => el.classList.remove('active')); 
     if (element) element.classList.add('active');
@@ -389,36 +386,54 @@ async function loadHomepageProducts() {
     if (!grid) return;
     try {
         if (typeof API === 'undefined' || !API.getHomepageProducts) throw new Error('API missing');
-        const { data: settings } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).maybeSingle();
-        if (settings) {
-            const showApp = settings.show_app_download !== false; const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-            if (showApp && !isPWA) {
-                if (floatingAppIcon) floatingAppIcon.style.display = 'flex';
-                if (!sessionStorage.getItem('appPopupShown')) { setTimeout(() => { toggleAppPopup(); sessionStorage.setItem('appPopupShown', 'true'); }, 8000); }
-            } else {
-                if (floatingAppIcon) floatingAppIcon.style.display = 'none'; const popup = document.getElementById('appDownloadPopup'); const overlay = document.getElementById('appPopupOverlay'); if (popup) popup.style.display = 'none'; if (overlay) overlay.style.display = 'none';
+        
+        const { data: settingsData } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).maybeSingle();
+        const settings = settingsData || {};
+        
+        // ⭐ APP BUTTON FIX: Agar database khali bhi ho, toh button show ho ⭐
+        const showApp = settings.show_app_download !== false; 
+        const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        
+        if (showApp && !isPWA) {
+            if (floatingAppIcon) floatingAppIcon.style.display = 'flex';
+            if (!sessionStorage.getItem('appPopupShown')) { 
+                setTimeout(() => { 
+                    if(typeof toggleAppPopup === 'function') toggleAppPopup(); 
+                    sessionStorage.setItem('appPopupShown', 'true'); 
+                }, 8000); 
             }
+        } else {
+            if (floatingAppIcon) floatingAppIcon.style.display = 'none'; 
+            const popup = document.getElementById('appDownloadPopup'); 
+            const overlay = document.getElementById('appPopupOverlay'); 
+            if (popup) popup.style.display = 'none'; 
+            if (overlay) overlay.style.display = 'none';
         }
-        if (settings) {
-            if (document.getElementById('specialDealTitle')) {
-                const spTitle = document.getElementById('specialDealTitle');
-                spTitle.innerText = settings.special_deal_title || 'First order deal'; spTitle.style.fontFamily = settings.title_font_family || 'Poppins, sans-serif'; spTitle.style.fontSize = settings.title_font_size || '2rem'; spTitle.style.fontWeight = settings.title_font_weight || '800'; spTitle.style.fontStyle = settings.title_font_style || 'normal';
-            }
-            if (document.getElementById('flashSaleTitle')) {
-                const flTitle = document.getElementById('flashSaleTitle'); const endingSoonBtn = document.querySelector('#flashSaleSection .blinking-ending-soon');
-                const titleFontFamily = settings.flash_title_font_family || 'Poppins, sans-serif'; const titleBaseSize = settings.flash_title_font_size || '2rem'; const titleFontWeight = settings.flash_title_font_weight || '900'; const titleFontStyle = settings.flash_title_font_style || 'normal';
-                flTitle.innerText = settings.flash_title_text || 'Sale Section 1'; flTitle.style.fontFamily = titleFontFamily; flTitle.style.fontSize = titleBaseSize; flTitle.style.fontWeight = titleFontWeight; flTitle.style.fontStyle = titleFontStyle;
-                if (endingSoonBtn) { endingSoonBtn.style.fontFamily = titleFontFamily; endingSoonBtn.style.fontWeight = titleFontWeight; endingSoonBtn.style.fontStyle = titleFontStyle; endingSoonBtn.style.fontSize = '1.92rem'; endingSoonBtn.style.padding = '7px 24px'; }
-            }
-            if (document.getElementById('flashSaleTitle2')) {
-                const flTitle2 = document.getElementById('flashSaleTitle2'); const endingSoonBtn2 = document.querySelector('#flashSaleSection2 .blinking-ending-soon');
-                const titleFontFamily = settings.sale_section_2_font_family || 'Poppins, sans-serif'; const titleBaseSize = settings.sale_section_2_font_size || '2rem'; const titleFontWeight = settings.sale_section_2_font_weight || '900'; const titleFontStyle = settings.sale_section_2_font_style || 'normal';
-                flTitle2.innerText = settings.sale_section_2_title || 'Sale Section 2'; flTitle2.style.fontFamily = titleFontFamily; flTitle2.style.fontSize = titleBaseSize; flTitle2.style.fontWeight = titleFontWeight; flTitle2.style.fontStyle = titleFontStyle;
-                if (endingSoonBtn2) { endingSoonBtn2.style.fontFamily = titleFontFamily; endingSoonBtn2.style.fontWeight = titleFontWeight; endingSoonBtn2.style.fontStyle = titleFontStyle; endingSoonBtn2.style.fontSize = '1.92rem'; endingSoonBtn2.style.padding = '7px 24px'; }
-            }
+
+        if (document.getElementById('specialDealTitle')) {
+            const spTitle = document.getElementById('specialDealTitle');
+            spTitle.innerText = settings.special_deal_title || 'First order deal'; spTitle.style.fontFamily = settings.title_font_family || 'Poppins, sans-serif'; spTitle.style.fontSize = settings.title_font_size || '2rem'; spTitle.style.fontWeight = settings.title_font_weight || '800'; spTitle.style.fontStyle = settings.title_font_style || 'normal';
         }
-        const data = await API.getHomepageProducts(); const raw = [...(data.featured ?? []), ...(data.trending ?? []), ...(data.latest ?? [])]; const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false);
-        renderDynamicCategories(allProducts); renderAdFallback(allProducts);
+        if (document.getElementById('flashSaleTitle')) {
+            const flTitle = document.getElementById('flashSaleTitle'); const endingSoonBtn = document.querySelector('#flashSaleSection .blinking-ending-soon');
+            const titleFontFamily = settings.flash_title_font_family || 'Poppins, sans-serif'; const titleBaseSize = settings.flash_title_font_size || '2rem'; const titleFontWeight = settings.flash_title_font_weight || '900'; const titleFontStyle = settings.flash_title_font_style || 'normal';
+            flTitle.innerText = settings.flash_title_text || 'Sale Section 1'; flTitle.style.fontFamily = titleFontFamily; flTitle.style.fontSize = titleBaseSize; flTitle.style.fontWeight = titleFontWeight; flTitle.style.fontStyle = titleFontStyle;
+            if (endingSoonBtn) { endingSoonBtn.style.fontFamily = titleFontFamily; endingSoonBtn.style.fontWeight = titleFontWeight; endingSoonBtn.style.fontStyle = titleFontStyle; endingSoonBtn.style.fontSize = '1.92rem'; endingSoonBtn.style.padding = '7px 24px'; }
+        }
+        if (document.getElementById('flashSaleTitle2')) {
+            const flTitle2 = document.getElementById('flashSaleTitle2'); const endingSoonBtn2 = document.querySelector('#flashSaleSection2 .blinking-ending-soon');
+            const titleFontFamily = settings.sale_section_2_font_family || 'Poppins, sans-serif'; const titleBaseSize = settings.sale_section_2_font_size || '2rem'; const titleFontWeight = settings.sale_section_2_font_weight || '900'; const titleFontStyle = settings.sale_section_2_font_style || 'normal';
+            flTitle2.innerText = settings.sale_section_2_title || 'Sale Section 2'; flTitle2.style.fontFamily = titleFontFamily; flTitle2.style.fontSize = titleBaseSize; flTitle2.style.fontWeight = titleFontWeight; flTitle2.style.fontStyle = titleFontStyle;
+            if (endingSoonBtn2) { endingSoonBtn2.style.fontFamily = titleFontFamily; endingSoonBtn2.style.fontWeight = titleFontWeight; endingSoonBtn2.style.fontStyle = titleFontStyle; endingSoonBtn2.style.fontSize = '1.92rem'; endingSoonBtn2.style.padding = '7px 24px'; }
+        }
+
+        const data = await API.getHomepageProducts(); 
+        const raw = [...(data.featured ?? []), ...(data.trending ?? []), ...(data.latest ?? [])]; 
+        const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false);
+        
+        await renderDynamicCategories(allProducts); 
+        renderAdFallback(allProducts);
+        
         const now = new Date(); const flashSaleProducts1 = []; const flashSaleProducts2 = []; const normalProducts = [];
         allProducts.forEach(p => {
             const endDate1 = p.sale_end_date ? new Date(p.sale_end_date) : null; const endDate2 = p.sale_end_date_2 ? new Date(p.sale_end_date_2) : null;
@@ -435,32 +450,35 @@ async function loadHomepageProducts() {
             if (exploreBtn2) { const currentEventName2 = flashSaleProducts2[0].event_name_2 || (settings && settings.sale_section_2_title) || 'Sale Section 2'; exploreBtn2.href = `search.html?flash=true&event=${encodeURIComponent(currentEventName2)}`; }
             flashScroll2.innerHTML = flashSaleProducts2.map((p, i) => renderFlashCard(p, 2)).join('');
         } else { flashSection2.style.display = 'none'; }
+        
         renderProductsGrid(normalProducts, grid);
-        if (settings) {
-            const { data: specialProducts } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').eq('is_special_deal', true).eq('is_available', true);
-            const container = document.getElementById('specialDealScroll'); const section = document.getElementById('specialDealSection');
-            if (specialProducts && specialProducts.length > 0) {
-                section.style.display = 'flex';
-                container.innerHTML = specialProducts.map(p => {
-                    const primaryOffer = getPrimaryOffer(p) || {};
-                    const sym = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' }[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
-                    const basePrice = parseFloat(primaryOffer.price) || 0; const salePrice = parseFloat(primaryOffer.sale_price) || 0; const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
-                    let finalBasePrice = basePrice; let finalSalePrice = salePrice;
-                    if (commissionRate > 0) { finalBasePrice = basePrice + (basePrice * (commissionRate / 100)); if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100)); }
-                    let priceDisplay = '';
-                    if (basePrice === 0 && salePrice === 0) {
-                        priceDisplay = `<div style="font-weight:bold; color:#FF5A3C; font-size:0.85rem;">Check Price</div>`;
-                    } else if (salePrice > 0) {
-                        priceDisplay = `<div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;"><span style="text-decoration:line-through; color:#64748B; font-size:0.75rem;">${sym}${finalBasePrice.toFixed(2)}</span><span class="price" style="margin-bottom:0;">${sym}${finalSalePrice.toFixed(2)}</span></div>`;
-                    } else {
-                        priceDisplay = `<div class="price">${sym}${finalBasePrice.toFixed(2)}</div>`;
-                    }
-                    const specialImg = getHighQualityImage(p.image_url, 200) || '/assets/icon-192.png?v=4';
-                    return `<a href="${getProductUrl(p)}" class="special-deal-card"><div class="img-box"><img src="${escapeHTML(specialImg)}" alt="${escapeHTML(p.title)}" width="190" height="190" loading="lazy" decoding="async" style="opacity: 0; transition: opacity 0.4s;" onload="handleImageLoad(this)"></div><div class="info-box">${priceDisplay}<div class="title">${escapeHTML(p.title)}</div></div></a>`;
-                }).join('');
-            } else { section.style.display = 'none'; }
-        }
-    } catch (err) { console.error('Load failed:', err); }
+
+        const { data: specialProducts } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').eq('is_special_deal', true).eq('is_available', true);
+        const container = document.getElementById('specialDealScroll'); const section = document.getElementById('specialDealSection');
+        if (specialProducts && specialProducts.length > 0) {
+            section.style.display = 'flex';
+            container.innerHTML = specialProducts.map(p => {
+                const primaryOffer = getPrimaryOffer(p) || {};
+                const sym = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' }[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
+                const basePrice = parseFloat(primaryOffer.price) || 0; const salePrice = parseFloat(primaryOffer.sale_price) || 0; const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
+                let finalBasePrice = basePrice; let finalSalePrice = salePrice;
+                if (commissionRate > 0) { finalBasePrice = basePrice + (basePrice * (commissionRate / 100)); if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100)); }
+                let priceDisplay = '';
+                if (basePrice === 0 && salePrice === 0) {
+                    priceDisplay = `<div style="font-weight:bold; color:#FF5A3C; font-size:0.85rem;">Check Price</div>`;
+                } else if (salePrice > 0) {
+                    priceDisplay = `<div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;"><span style="text-decoration:line-through; color:#64748B; font-size:0.75rem;">${sym}${finalBasePrice.toFixed(2)}</span><span class="price" style="margin-bottom:0;">${sym}${finalSalePrice.toFixed(2)}</span></div>`;
+                } else {
+                    priceDisplay = `<div class="price">${sym}${finalBasePrice.toFixed(2)}</div>`;
+                }
+                const specialImg = getHighQualityImage(p.image_url, 200) || '/assets/icon-192.png?v=4';
+                return `<a href="${getProductUrl(p)}" class="special-deal-card"><div class="img-box"><img src="${escapeHTML(specialImg)}" alt="${escapeHTML(p.title)}" width="190" height="190" loading="lazy" decoding="async" style="opacity: 0; transition: opacity 0.4s;" onload="handleImageLoad(this)"></div><div class="info-box">${priceDisplay}<div class="title">${escapeHTML(p.title)}</div></div></a>`;
+            }).join('');
+        } else { section.style.display = 'none'; }
+        
+    } catch (err) { 
+        console.error('Load failed:', err); 
+    }
 }
 
 function handleSearch() {
