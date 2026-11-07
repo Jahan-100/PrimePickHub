@@ -22,7 +22,6 @@ const API = {
         const { data, error } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').eq('slug', slug).single();
         return error ? null : data;
     },
-    // ⭐ UPDATED: Case-Insensitive Category Search ⭐
     async searchProducts({ query = '', category = '' }) {
         if (!window.supabaseClient) return [];
         let req = window.supabaseClient.from('products').select('*, affiliate_offers(*)').limit(500);
@@ -32,13 +31,13 @@ const API = {
         const { data, error } = await req;
         if (error) return [];
         
-        let results = data || [];
+        let results = Array.isArray(data) ? data : [];
         
         if (category) {
             const cats = Array.isArray(category) ? category : [category];
-            const lowerCats = cats.map(c => c.trim().toLowerCase());
-            // JS mein filter karo taake capital/small letters ka masla khatam ho
-            results = results.filter(p => p.category_slug && lowerCats.includes(p.category_slug.trim().toLowerCase()));
+            const lowerCats = cats.map(c => c ? c.trim().toLowerCase() : '').filter(Boolean);
+            // ⭐ FIX: String() lagaya hai taake agar category_slug number ho toh crash na ho
+            results = results.filter(p => p.category_slug && lowerCats.includes(String(p.category_slug).trim().toLowerCase()));
         }
         
         return results;
@@ -92,6 +91,7 @@ const API = {
 
         let merged = [...masterCats];
         customCats.forEach(c => {
+            if (!c || !c.slug) return;
             const idx = merged.findIndex(m => m.slug.toLowerCase() === c.slug.toLowerCase());
             if (idx > -1) merged[idx] = c; 
             else merged.push(c); 
