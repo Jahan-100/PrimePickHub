@@ -64,7 +64,7 @@ function getProductUrl(product) {
 
 function getPrimaryOffer(product) {
     if (!product || !Array.isArray(product.affiliate_offers)) return null;
-    const offers = product.affiliate_offers.filter(o => o && isValidExternalURL(o.affiliate_url));
+    const offers = product.affiliate_offers.filter(o => o && typeof o === 'object' && isValidExternalURL(o.affiliate_url));
     const defaultOffer = offers.find(o => !o.variation_name);
     return defaultOffer || offers[0] || null;
 }
@@ -77,15 +77,31 @@ function deduplicateProducts(list) {
 }
 function showGridMessage(grid, msg) { if (!grid) return; grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;"><p>${escapeHTML(msg)}</p></div>`; }
 
+// ⭐ UPDATED: Infinite Loop Fix ⭐
 function getAllDescendantSlugs(parentSlug, allCats) {
-    if (!parentSlug) return [];
-    let slugs = [parentSlug];
-    const normParent = parentSlug.trim().toLowerCase();
-    const children = allCats.filter(c => c && c.parent && c.parent.trim().toLowerCase() === normParent && c.slug);
-    children.forEach(child => {
-        slugs = slugs.concat(getAllDescendantSlugs(child.slug, allCats));
-    });
-    return [...new Set(slugs)];
+    const slugs = new Set();
+    const visited = new Set();
+    
+    function traverse(slug) {
+        if (!slug || typeof slug !== 'string') return;
+        const norm = slug.trim().toLowerCase();
+        if (visited.has(norm)) return;
+        visited.add(norm);
+        slugs.add(norm);
+        
+        if (!Array.isArray(allCats)) return;
+        
+        allCats.forEach(c => {
+            if (c && typeof c === 'object' && c.parent && typeof c.parent === 'string' && c.slug && typeof c.slug === 'string') {
+                if (c.parent.trim().toLowerCase() === norm) {
+                    traverse(c.slug);
+                }
+            }
+        });
+    }
+    
+    traverse(parentSlug);
+    return Array.from(slugs);
 }
 
 // ⭐ SMART ICON SYSTEM (Priority to Name) ⭐
@@ -132,14 +148,14 @@ async function fetchActiveCategories() {
         if (!error && data) {
             activeCategoriesSet.clear();
             activeCategoriesSet.add('all');
-            const productCats = new Set(data.map(p => p.category_slug ? p.category_slug.trim().toLowerCase() : null).filter(Boolean));
+            const productCats = new Set(data.map(p => p && p.category_slug && typeof p.category_slug === 'string' ? p.category_slug.trim().toLowerCase() : null).filter(Boolean));
             
             productCats.forEach(slug => {
                 activeCategoriesSet.add(slug);
                 let currentSlug = slug;
                 while (currentSlug) {
-                    const cat = allCategoriesGlobal.find(c => c && c.slug && c.slug.trim().toLowerCase() === currentSlug);
-                    if (cat && cat.parent && cat.parent !== 'all') {
+                    const cat = allCategoriesGlobal.find(c => c && c.slug && typeof c.slug === 'string' && c.slug.trim().toLowerCase() === currentSlug);
+                    if (cat && cat.parent && typeof cat.parent === 'string' && cat.parent !== 'all') {
                         activeCategoriesSet.add(cat.parent.trim().toLowerCase());
                         currentSlug = cat.parent.trim().toLowerCase();
                     } else {
@@ -171,7 +187,7 @@ async function renderDynamicCategories() {
     activeCategoriesSet.forEach(slug => {
         if (slug === 'all') return;
         if (!allCategoriesGlobal.find(c => c && c.slug && c.slug.trim().toLowerCase() === slug)) {
-            const isSub = allCategoriesGlobal.some(c => c && c.parent && c.parent.trim().toLowerCase() === slug);
+            const isSub = allCategoriesGlobal.some(c => c && c.parent && typeof c.parent === 'string' && c.parent.trim().toLowerCase() === slug);
             if (!isSub) {
                 topCats.push({ slug: slug, name: slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), icon: null, parent: null });
             }
@@ -230,8 +246,7 @@ function renderProductCard(product, isPriority = false) {
     let cta = '';
 
     if (primaryOffer) {
-        // ⭐ FIX: Safe fallback taake crash na ho
-        const storeKey = (primaryOffer.store_name || 'amazon').toLowerCase();
+        const storeKey = String(primaryOffer.store_name || 'amazon').toLowerCase();
         const cfg = networks[storeKey] ?? networks[primaryOffer.store_name || ''] ?? { name: primaryOffer.store_name || 'Store', brandColor: '#2563eb', textColor: '#ffffff' };
         let bg = safeColor(cfg.brandColor, '#2563eb'); if (bg === '#FF4747') bg = '#DC2626'; 
         const fg = safeColor(cfg.textColor, '#ffffff');
@@ -288,18 +303,13 @@ function renderFlashCard(product, section = 1) {
     return `<a href="${productUrl}" class="special-deal-card flash-card"><div class="img-box"><img src="${imageSrc}" alt="${title}" width="190" height="190" loading="lazy" decoding="async" style="opacity: 0; transition: opacity 0.4s ease-in-out;" onload="handleImageLoad(this)"></div><div class="info-box">${priceDisplay}<div class="title">${title}</div><div class="card-timer" data-endtime="${endTime}">⏳ Calculating...</div></div></a>`;
 }
 
-// ⭐ UPDATED: Safety Shield lagaya hai taake 1 kharab product se poori site crash na ho ⭐
 function renderProductsGrid(products, grid) {
     if (!grid) return;
     if (!products || products.length === 0) { showGridMessage(grid, 'No products found in this category.'); return; }
     
     let html = '';
     products.forEach((p, i) => {
-        try {
-            html += renderProductCard(p, i < 4);
-        } catch (e) {
-            console.warn("Skipping broken product:", p.id, e);
-        }
+        try { html += renderProductCard(p, i < 4); } catch (e) { console.warn("Skipping broken product:", p && p.id, e); }
     });
     
     if (html === '') { showGridMessage(grid, 'Products found, but data is corrupted.'); return; }
@@ -355,10 +365,10 @@ window.selectSubCategory = async function(subSlug, parentSlug, element) {
         const grid = document.getElementById('productGrid');
         
         const normSlug = subSlug ? subSlug.trim().toLowerCase() : '';
-        const currentCat = allCategoriesGlobal.find(c => c && c.slug && c.slug.trim().toLowerCase() === normSlug);
+        const currentCat = allCategoriesGlobal.find(c => c && c.slug && typeof c.slug === 'string' && c.slug.trim().toLowerCase() === normSlug);
         if (titleEl) titleEl.innerHTML = currentCat ? currentCat.name : subSlug;
 
-        const minis = allCategoriesGlobal.filter(c => c && c.parent && c.parent.trim().toLowerCase() === normSlug && activeCategoriesSet.has((c.slug || '').trim().toLowerCase()));
+        const minis = allCategoriesGlobal.filter(c => c && c.parent && typeof c.parent === 'string' && c.parent.trim().toLowerCase() === normSlug && activeCategoriesSet.has((c.slug || '').trim().toLowerCase()));
         if (minis.length > 0 && miniSubContainer) {
             miniSubContainer.style.display = 'flex';
             miniSubContainer.innerHTML = minis.map(c => `
@@ -381,11 +391,11 @@ window.selectSubCategory = async function(subSlug, parentSlug, element) {
 
         showGridMessage(grid, 'Loading products...');
         let fetchSlugs = getAllDescendantSlugs(subSlug, allCategoriesGlobal);
-        const products = await API.searchProducts({ category: fetchSlugs }); 
+        const products = await API.searchProducts({ category: fetchSlugs }) || []; 
         renderProductsGrid(products.filter(p => p.is_available !== false), grid); 
     } catch (err) {
         console.error("SubCategory Click Error:", err);
-        showGridMessage(document.getElementById('productGrid'), 'Error loading sub-category. Please try again.');
+        showGridMessage(document.getElementById('productGrid'), 'Error: ' + (err.message || 'Unknown error'));
     }
 };
 
@@ -401,16 +411,16 @@ window.selectMiniSubCategory = async function(miniSlug, parentSlug, element) {
         const grid = document.getElementById('productGrid');
         
         const normSlug = miniSlug ? miniSlug.trim().toLowerCase() : '';
-        const currentCat = allCategoriesGlobal.find(c => c && c.slug && c.slug.trim().toLowerCase() === normSlug);
+        const currentCat = allCategoriesGlobal.find(c => c && c.slug && typeof c.slug === 'string' && c.slug.trim().toLowerCase() === normSlug);
         if (titleEl) titleEl.innerHTML = currentCat ? currentCat.name : miniSlug;
 
         showGridMessage(grid, 'Loading products...');
         let fetchSlugs = getAllDescendantSlugs(miniSlug, allCategoriesGlobal);
-        const products = await API.searchProducts({ category: fetchSlugs }); 
+        const products = await API.searchProducts({ category: fetchSlugs }) || []; 
         renderProductsGrid(products.filter(p => p.is_available !== false), grid); 
     } catch (err) {
         console.error("MiniSubCategory Click Error:", err);
-        showGridMessage(document.getElementById('productGrid'), 'Error loading mini-category. Please try again.');
+        showGridMessage(document.getElementById('productGrid'), 'Error: ' + (err.message || 'Unknown error'));
     }
 };
 
@@ -428,13 +438,14 @@ window.selectCategory = async function(catSlug, element) {
         if (miniSubContainer) miniSubContainer.style.display = 'none';
 
         const normSlug = catSlug ? catSlug.trim().toLowerCase() : 'all';
-        const currentCat = allCategoriesGlobal.find(c => c && c.slug && c.slug.trim().toLowerCase() === normSlug);
+        const currentCat = allCategoriesGlobal.find(c => c && c.slug && typeof c.slug === 'string' && c.slug.trim().toLowerCase() === normSlug);
         if (titleEl) titleEl.innerHTML = (normSlug === 'all') ? 'For You' : (currentCat ? currentCat.name : catSlug);
 
         let subCats = [];
         if (Array.isArray(allCategoriesGlobal)) {
             subCats = allCategoriesGlobal.filter(c => 
-                c && c.parent && c.parent.trim().toLowerCase() === normSlug && 
+                c && c.parent && typeof c.parent === 'string' && 
+                c.parent.trim().toLowerCase() === normSlug && 
                 activeCategoriesSet.has((c.slug || '').trim().toLowerCase())
             );
         }
@@ -449,7 +460,7 @@ window.selectCategory = async function(catSlug, element) {
                     <div class="cat-icon" style="width: 45px; height: 45px; font-size: 1.2rem; background: #fff; border: 1px solid #E2E8F0; overflow:hidden;">${getCategoryIcon(sub)}</div>
                     <span style="font-size: 0.75rem;">${sub.name}</span>
                 </a>`;
-                const minis = allCategoriesGlobal.filter(c => c && c.parent && c.parent.trim().toLowerCase() === subNorm && activeCategoriesSet.has((c.slug || '').trim().toLowerCase()));
+                const minis = allCategoriesGlobal.filter(c => c && c.parent && typeof c.parent === 'string' && c.parent.trim().toLowerCase() === subNorm && activeCategoriesSet.has((c.slug || '').trim().toLowerCase()));
                 minis.forEach(mini => {
                     subHtml += `
                     <a href="javascript:void(0)" class="category-item" style="min-width: 80px; margin-left: 10px; border-left: 2px solid #E2E8F0; padding-left: 10px;" data-slug="${mini.slug}" data-parent="${sub.slug}">
@@ -492,12 +503,12 @@ window.selectCategory = async function(catSlug, element) {
             renderProductsGrid(normalProducts, grid);
         } else { 
             let fetchSlugs = getAllDescendantSlugs(catSlug, allCategoriesGlobal);
-            const products = await API.searchProducts({ category: fetchSlugs }); 
+            const products = await API.searchProducts({ category: fetchSlugs }) || []; 
             renderProductsGrid(products.filter(p => p.is_available !== false), grid); 
         }
     } catch (err) {
         console.error("Category Click Error:", err);
-        showGridMessage(document.getElementById('productGrid'), 'Error loading category. Please try again.');
+        showGridMessage(document.getElementById('productGrid'), 'Error: ' + (err.message || 'Unknown error'));
     }
 };
 
