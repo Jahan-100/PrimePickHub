@@ -87,21 +87,21 @@ function getAllDescendantSlugs(parentSlug, allCats) {
     return [...new Set(slugs)];
 }
 
-// ⭐ SMART ICON SYSTEM (Fixed) ⭐
+// ⭐ SMART ICON SYSTEM (Priority to Name) ⭐
 function getCategoryIcon(cat) {
     if (!cat) return '📦';
-    const name = (cat.name || '').toLowerCase();
-    const slug = (cat.slug || '').toLowerCase();
-    
-    // Images wala logic (object-fit: contain taake blur na ho)
-    if (slug.includes('shoe') || name.includes('shoe')) {
+    const name = (cat.name || '').toLowerCase().trim();
+    const slug = (cat.slug || '').toLowerCase().trim();
+
+    // Name ko priority do, taake agar slug ghalat bhi ho, icon sahi aaye
+    if (name === 'lights' || slug === 'lights') {
+        return `<img src="assets/Lights-icon.jpg" alt="Lights" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff;">`;
+    }
+    if (name === 'shoes' || slug === 'shoes') {
         return `<img src="assets/shoes-icon.jpg" alt="Shoes" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff;">`;
     }
-    if (slug.includes('accessor') || name.includes('accessor')) {
+    if (name === 'accessories' || slug === 'accessories') {
         return `<img src="assets/accessories-icon.jpg" alt="Accessories" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff;">`;
-    }
-    if (slug.includes('light') || name.includes('light')) {
-        return `<img src="assets/Lights-icon.jpg" alt="Lights" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff;">`;
     }
 
     if (cat.icon && cat.icon.trim() !== '' && cat.icon !== '📦') return cat.icon;
@@ -181,13 +181,21 @@ async function renderDynamicCategories() {
     const catContainer = document.getElementById('categoryScrollContainer');
     if (catContainer) {
         catContainer.innerHTML = topCats.map(c => `
-            <a href="/category/${c.slug}" onclick="event.preventDefault(); selectCategory('${c.slug}', this)" class="category-item ${c.slug.trim().toLowerCase() === 'all' ? 'active' : ''}" data-cat="${c.slug}">
+            <a href="javascript:void(0)" class="category-item ${c.slug.trim().toLowerCase() === 'all' ? 'active' : ''}" data-slug="${c.slug}">
                 <div class="cat-icon" style="overflow:hidden;" ${c.slug.trim().toLowerCase() === 'all' ? 'data-is-all="true"' : ''}>
                     ${c.slug.trim().toLowerCase() === 'all' ? '<span style="color:#EF4444; font-size: 2.2rem; display:flex; align-items:center; justify-content:center; height:100%;">❤️</span>' : getCategoryIcon(c)}
                 </div>
                 <span>${c.name}</span>
             </a>
         `).join('');
+
+        // ⭐ EVENT LISTENERS (No more inline onclick) ⭐
+        catContainer.querySelectorAll('.category-item').forEach(el => {
+            el.addEventListener('click', function(e) {
+                e.preventDefault();
+                selectCategory(this.dataset.slug, this);
+            });
+        });
     }
     const dropdownMenu = document.getElementById('categoryDropdownMenu');
     if (dropdownMenu) {
@@ -341,11 +349,19 @@ window.selectSubCategory = async function(subSlug, parentSlug, element) {
     if (minis.length > 0 && miniSubContainer) {
         miniSubContainer.style.display = 'flex';
         miniSubContainer.innerHTML = minis.map(c => `
-            <a href="javascript:void(0)" onclick="event.preventDefault(); selectMiniSubCategory('${c.slug}', '${subSlug}', this)" class="category-item" style="min-width: 80px;" data-cat="${c.slug}">
+            <a href="javascript:void(0)" class="category-item" style="min-width: 80px;" data-slug="${c.slug}" data-parent="${subSlug}">
                 <div class="cat-icon" style="width: 40px; height: 40px; font-size: 1rem; background: #fff; border: 1px solid #E2E8F0; overflow:hidden;">${getCategoryIcon(c)}</div>
                 <span style="font-size: 0.7rem;">${c.name}</span>
             </a>
         `).join('');
+
+        miniSubContainer.querySelectorAll('.category-item').forEach(el => {
+            el.addEventListener('click', function(e) {
+                e.preventDefault();
+                selectMiniSubCategory(this.dataset.slug, this.dataset.parent, this);
+            });
+        });
+
         showGridMessage(grid, `Please select a category under "${currentCat ? currentCat.name : subSlug}" to view products.`);
         return;
     }
@@ -380,51 +396,64 @@ window.selectMiniSubCategory = async function(miniSlug, parentSlug, element) {
     } catch (err) { showGridMessage(grid, 'Failed to load products.'); }
 };
 
-// ⭐ FIXED: Category Click Logic ⭐
 window.selectCategory = async function(catSlug, element) {
-    document.querySelectorAll('#categoryScrollContainer .category-item').forEach(el => el.classList.remove('active')); 
-    if (element) element.classList.add('active');
-    
-    const titleEl = document.getElementById('productSectionTitle'); 
-    const grid = document.getElementById('productGrid');
-    const subContainer = document.getElementById('subCategoryScrollContainer');
-    const miniSubContainer = document.getElementById('miniSubCategoryScrollContainer');
-    
-    if (subContainer) subContainer.style.display = 'none';
-    if (miniSubContainer) miniSubContainer.style.display = 'none';
-
-    const normSlug = catSlug.trim().toLowerCase();
-    const currentCat = allCategoriesGlobal.find(c => c.slug.trim().toLowerCase() === normSlug);
-    if (titleEl) titleEl.innerHTML = (normSlug === 'all') ? 'For You' : (currentCat ? currentCat.name : catSlug);
-
-    let subCats = allCategoriesGlobal.filter(c => c.parent && c.parent.trim().toLowerCase() === normSlug && activeCategoriesSet.has(c.slug.trim().toLowerCase()));
-    
-    if (subCats.length > 0 && normSlug !== 'all') {
-        subContainer.style.display = 'flex';
-        let subHtml = '';
-        subCats.forEach(sub => {
-            const subNorm = sub.slug.trim().toLowerCase();
-            subHtml += `
-            <a href="javascript:void(0)" onclick="event.preventDefault(); selectSubCategory('${sub.slug}', '${catSlug}', this)" class="category-item" style="min-width: 80px;" data-cat="${sub.slug}">
-                <div class="cat-icon" style="width: 45px; height: 45px; font-size: 1.2rem; background: #fff; border: 1px solid #E2E8F0; overflow:hidden;">${getCategoryIcon(sub)}</div>
-                <span style="font-size: 0.75rem;">${sub.name}</span>
-            </a>`;
-            const minis = allCategoriesGlobal.filter(c => c.parent && c.parent.trim().toLowerCase() === subNorm && activeCategoriesSet.has(c.slug.trim().toLowerCase()));
-            minis.forEach(mini => {
-                subHtml += `
-                <a href="javascript:void(0)" onclick="event.preventDefault(); selectMiniSubCategory('${mini.slug}', '${sub.slug}', this)" class="category-item" style="min-width: 80px; margin-left: 10px; border-left: 2px solid #E2E8F0; padding-left: 10px;" data-cat="${mini.slug}">
-                    <div class="cat-icon" style="width: 35px; height: 35px; font-size: 0.9rem; background: #F8FAFC; border: 1px solid #E2E8F0; overflow:hidden;">${getCategoryIcon(mini)}</div>
-                    <span style="font-size: 0.65rem;">${mini.name}</span>
-                </a>`;
-            });
-        });
-        subContainer.innerHTML = subHtml;
-        showGridMessage(grid, `Please select a sub-category under "${currentCat ? currentCat.name : catSlug}" to view products.`);
-        return;
-    }
-
-    showGridMessage(grid, 'Loading products...');
     try {
+        document.querySelectorAll('#categoryScrollContainer .category-item').forEach(el => el.classList.remove('active')); 
+        if (element) element.classList.add('active');
+        
+        const titleEl = document.getElementById('productSectionTitle'); 
+        const grid = document.getElementById('productGrid');
+        const subContainer = document.getElementById('subCategoryScrollContainer');
+        const miniSubContainer = document.getElementById('miniSubCategoryScrollContainer');
+        
+        if (subContainer) subContainer.style.display = 'none';
+        if (miniSubContainer) miniSubContainer.style.display = 'none';
+
+        const normSlug = catSlug.trim().toLowerCase();
+        const currentCat = allCategoriesGlobal.find(c => c.slug.trim().toLowerCase() === normSlug);
+        if (titleEl) titleEl.innerHTML = (normSlug === 'all') ? 'For You' : (currentCat ? currentCat.name : catSlug);
+
+        let subCats = allCategoriesGlobal.filter(c => c.parent && c.parent.trim().toLowerCase() === normSlug && activeCategoriesSet.has(c.slug.trim().toLowerCase()));
+        
+        if (subCats.length > 0 && normSlug !== 'all') {
+            subContainer.style.display = 'flex';
+            let subHtml = '';
+            subCats.forEach(sub => {
+                const subNorm = sub.slug.trim().toLowerCase();
+                subHtml += `
+                <a href="javascript:void(0)" class="category-item" style="min-width: 80px;" data-slug="${sub.slug}" data-parent="${catSlug}">
+                    <div class="cat-icon" style="width: 45px; height: 45px; font-size: 1.2rem; background: #fff; border: 1px solid #E2E8F0; overflow:hidden;">${getCategoryIcon(sub)}</div>
+                    <span style="font-size: 0.75rem;">${sub.name}</span>
+                </a>`;
+                const minis = allCategoriesGlobal.filter(c => c.parent && c.parent.trim().toLowerCase() === subNorm && activeCategoriesSet.has(c.slug.trim().toLowerCase()));
+                minis.forEach(mini => {
+                    subHtml += `
+                    <a href="javascript:void(0)" class="category-item" style="min-width: 80px; margin-left: 10px; border-left: 2px solid #E2E8F0; padding-left: 10px;" data-slug="${mini.slug}" data-parent="${sub.slug}">
+                        <div class="cat-icon" style="width: 35px; height: 35px; font-size: 0.9rem; background: #F8FAFC; border: 1px solid #E2E8F0; overflow:hidden;">${getCategoryIcon(mini)}</div>
+                        <span style="font-size: 0.65rem;">${mini.name}</span>
+                    </a>`;
+                });
+            });
+            subContainer.innerHTML = subHtml;
+            
+            // ⭐ EVENT LISTENERS FOR SUB-CATEGORIES ⭐
+            subContainer.querySelectorAll('.category-item').forEach(el => {
+                el.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (this.dataset.parent === catSlug) {
+                        selectSubCategory(this.dataset.slug, catSlug, this);
+                    } else {
+                        selectMiniSubCategory(this.dataset.slug, this.dataset.parent, this);
+                    }
+                });
+            });
+
+            showGridMessage(grid, `Please select a sub-category under "${currentCat ? currentCat.name : catSlug}" to view products.`);
+            return;
+        }
+
+        showGridMessage(grid, 'Loading products...');
+        
         if (normSlug === 'all') {
             const data = await API.getHomepageProducts(); 
             const raw = [...(data.featured ?? []), ...(data.trending ?? []), ...(data.latest ?? [])];
@@ -443,7 +472,10 @@ window.selectCategory = async function(catSlug, element) {
             const products = await API.searchProducts({ category: fetchSlugs }); 
             renderProductsGrid(products.filter(p => p.is_available !== false), grid); 
         }
-    } catch (err) { showGridMessage(grid, 'Failed to load products.'); }
+    } catch (err) {
+        console.error("Category Click Error:", err);
+        showGridMessage(document.getElementById('productGrid'), 'Error loading category. Please try again.');
+    }
 };
 
 function renderAdFallback(products) {
@@ -472,7 +504,6 @@ async function loadLatestBlog() {
         document.getElementById('latestBlogTitle').innerText = blog.title;
         document.getElementById('latestBlogDate').innerText = `Published on: ${new Date(blog.created_at).toLocaleDateString()}`;
         
-        // ⭐ FIXED: display: block taake box nazar aaye ⭐
         section.style.display = 'block'; 
         section.style.visibility = 'visible'; 
         section.style.opacity = '1';
@@ -733,7 +764,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const popup = document.getElementById('appDownloadPopup'); 
         if (document.getElementById('productGrid') && (!popup || popup.style.display !== 'block')) { 
             const activeCat = document.querySelector('#categoryScrollContainer .category-item.active');
-            if (!activeCat || activeCat.dataset.cat === 'all') {
+            if (!activeCat || activeCat.dataset.slug === 'all') {
                 loadHomepageProducts(); 
             }
             loadLatestBlog(); 
