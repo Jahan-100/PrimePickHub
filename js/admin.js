@@ -117,7 +117,6 @@ window.editCategory = async function(slug) {
     const newName = prompt("Edit Category Name:", cat.name);
     if(!newName || newName.trim() === "") return;
 
-    // Save directly to DB
     const { data } = await window.supabaseClient.from('site_settings').select('custom_categories').eq('id', 1).maybeSingle();
     let customCats = (data && data.custom_categories) ? (typeof data.custom_categories === 'string' ? JSON.parse(data.custom_categories) : data.custom_categories) : [];
     
@@ -153,13 +152,10 @@ window.deleteCategory = async function(slug) {
     const { data } = await window.supabaseClient.from('site_settings').select('custom_categories').eq('id', 1).maybeSingle();
     let customCats = (data && data.custom_categories) ? (typeof data.custom_categories === 'string' ? JSON.parse(data.custom_categories) : data.custom_categories) : [];
     
-    // Filter out deleted
     customCats = customCats.filter(c => !toDelete.includes(c.slug));
     
-    // Mark master cats as deleted by adding them to custom with a `deleted: true` flag or just removing them if they were custom
     toDelete.forEach(s => {
         if(!customCats.find(c => c.slug === s)) {
-            // It was a master category, so we add a "hidden" version to custom
             customCats.push({ slug: s, name: '__DELETED__', parent: null }); 
         }
     });
@@ -171,7 +167,6 @@ window.deleteCategory = async function(slug) {
     loadCategoriesToDropdown();
 }
 
-// BUILDER LOGIC (Same as before, but saves to DB at the end)
 window.setBuilderMain = function() {
     const sel = document.getElementById('bMainSelect').value;
     const inp = document.getElementById('bMainInput').value.trim();
@@ -324,7 +319,6 @@ window.saveBuilderData = async function() {
     let customCats = (data && data.custom_categories) ? (typeof data.custom_categories === 'string' ? JSON.parse(data.custom_categories) : data.custom_categories) : [];
     
     const upsertCat = (catObj) => {
-        // If it was marked as deleted, un-delete it
         const idx = customCats.findIndex(c => c.slug === catObj.slug);
         if (idx > -1) customCats[idx] = catObj;
         else customCats.push(catObj);
@@ -359,7 +353,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!auth) return showLogin();
     if (auth.role !== 'admin') { alert('Access denied. Admin only.'); await API.signOut(); return showLogin(); }
 
-    await syncCategoriesFromDB(); // Load categories first
+    await syncCategoriesFromDB(); 
     showDashboard(); await loadStats(); await loadSiteSettings(); await loadProductsList(); setupProductForm(); setupToggleList(); setupToggleAddProduct(); setupToggleSpecialDeal(); setupToggleFlashSale(); setupToggleSale2();
     
     document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
@@ -406,14 +400,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // Save App Download Setting
     document.getElementById('saveAppSettingsBtn')?.addEventListener('click', async function() {
         const isLive = document.getElementById('appDownloadStatusToggle').checked;
         const { error } = await window.supabaseClient.from('site_settings').update({ show_app_download: isLive }).eq('id', 1);
         if (error) alert("Error: " + error.message); else alert(`App Download Popup is now ${isLive ? 'LIVE (Visible)' : 'STOPPED (Hidden)'} on website!`);
     });
 
-    // Save Special Deal Settings
     document.getElementById('saveTitleBtn')?.addEventListener('click', async function() {
         const newTitle = document.getElementById('specialDealTitleInput').value.trim(); const fontFamily = document.getElementById('titleFontFamily').value; const fontSize = document.getElementById('titleFontSize').value.trim() || '2.2rem'; const fontWeight = document.getElementById('titleFontWeight').value; const fontStyle = document.getElementById('titleFontStyle').value;
         if(!newTitle) return alert("Title cannot be empty");
@@ -421,7 +413,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (error) alert("Error: " + error.message); else { alert("Special Deal Design updated successfully!"); document.getElementById('specialDealContainer').style.display = 'none'; const btn = document.getElementById('toggleSpecialDealBtn'); btn.textContent = 'Show Settings'; btn.style.background = '#d946ef'; }
     });
 
-    // Save Sale Section 1 Settings
     document.getElementById('saveFlashSettingsBtn')?.addEventListener('click', async function() {
         const newTitle = document.getElementById('flashTitleText').value.trim(); const fontFamily = document.getElementById('flashTitleFontFamily').value; const fontSize = document.getElementById('flashTitleFontSize').value.trim() || '2rem'; const fontWeight = document.getElementById('flashTitleFontWeight').value; const fontStyle = document.getElementById('flashTitleFontStyle').value;
         if(!newTitle) return alert("Sale Section 1 Title cannot be empty");
@@ -429,7 +420,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (error) alert("Error: " + error.message); else { alert("Sale Section 1 Design updated successfully!"); document.getElementById('flashSaleContainer').style.display = 'none'; const btn = document.getElementById('toggleFlashSaleBtn'); btn.textContent = 'Show Settings'; btn.style.background = '#ea580c'; }
     });
 
-    // Save Sale Section 2 Settings
     document.getElementById('saveSale2SettingsBtn')?.addEventListener('click', async function() {
         const newTitle = document.getElementById('sale2TitleText').value.trim(); const fontFamily = document.getElementById('sale2TitleFontFamily').value; const fontSize = document.getElementById('sale2TitleFontSize').value.trim() || '2rem'; const fontWeight = document.getElementById('sale2TitleFontWeight').value; const fontStyle = document.getElementById('sale2TitleFontStyle').value;
         if(!newTitle) return alert("Sale Section 2 Title cannot be empty");
@@ -437,7 +427,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (error) alert("Error: " + error.message); else { alert("Sale Section 2 Design updated successfully!"); document.getElementById('sale2Container').style.display = 'none'; const btn = document.getElementById('toggleSale2Btn'); btn.textContent = 'Show Settings'; btn.style.background = '#10b981'; }
     });
 
-    // Check Availability Button
     document.getElementById('checkAvailabilityBtn')?.addEventListener('click', async function() {
         const btn = this; const originalText = btn.innerText; btn.innerText = "Checking... Please Wait (1-2 mins)"; btn.disabled = true;
         try {
@@ -446,11 +435,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (err) { alert('Failed to check. Make sure Vercel API is deployed.'); } finally { btn.innerText = originalText; btn.disabled = false; }
     });
 
-    // Cancel Offer Buttons
     document.getElementById('cancelOfferBtn')?.addEventListener('click', () => { document.getElementById('pEventName').value = ''; document.getElementById('pSaleEndDate').value = ''; alert('Offer 1 details cleared. Save product to confirm cancellation.'); });
     document.getElementById('cancelOffer2Btn')?.addEventListener('click', () => { document.getElementById('pEventName2').value = ''; document.getElementById('pSaleEndDate2').value = ''; alert('Offer 2 details cleared. Save product to confirm cancellation.'); });
 
-    // QUICK AI BLOG GENERATOR BUTTON LOGIC
     document.getElementById('quickGenerateBlogBtn')?.addEventListener('click', async function() {
         const urlInput = document.getElementById('quickBlogUrlInput').value.trim(); if (!urlInput) return alert('Please paste a product URL.');
         let slug = '';
@@ -468,7 +455,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (err) { alert("Error: " + err.message); } finally { btn.innerText = originalText; btn.disabled = false; }
     });
 
-    // SETUP SCROLL BUTTONS
     function setupScrollButtons(upBtnId, downBtnId, wrapperId) {
         const upBtn = document.getElementById(upBtnId); const downBtn = document.getElementById(downBtnId); const wrapper = document.getElementById(wrapperId);
         if (!upBtn || !downBtn || !wrapper) return;
@@ -482,7 +468,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupScrollButtons('scrollUpBtnProducts', 'scrollDownBtnProducts', 'tableScrollWrapperProducts');
     setupScrollButtons('scrollUpBtnBlogs', 'scrollDownBtnBlogs', 'tableScrollWrapperBlogs'); 
 
-    // Initial Renders
     renderCategoryManagementTable();
     updateBuilderUI();
 });
