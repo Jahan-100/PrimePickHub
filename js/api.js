@@ -23,24 +23,28 @@ const API = {
         return error ? null : data;
     },
     async searchProducts({ query = '', category = '' }) {
-        if (!window.supabaseClient) return [];
-        let req = window.supabaseClient.from('products').select('*, affiliate_offers(*)').limit(500);
-        
-        if (query) req = req.ilike('title', `%${query}%`);
-        
-        const { data, error } = await req;
-        if (error) return [];
-        
-        let results = Array.isArray(data) ? data : [];
-        
-        if (category) {
-            const cats = Array.isArray(category) ? category : [category];
-            const lowerCats = cats.map(c => c ? c.trim().toLowerCase() : '').filter(Boolean);
-            // ⭐ FIX: String() lagaya hai taake agar category_slug number ho toh crash na ho
-            results = results.filter(p => p.category_slug && lowerCats.includes(String(p.category_slug).trim().toLowerCase()));
+        try {
+            if (!window.supabaseClient) return [];
+            let req = window.supabaseClient.from('products').select('*, affiliate_offers(*)').limit(500);
+            
+            if (query) req = req.ilike('title', `%${query}%`);
+            
+            const { data, error } = await req;
+            if (error) return [];
+            
+            let results = Array.isArray(data) ? data : [];
+            
+            if (category) {
+                const cats = Array.isArray(category) ? category : [category];
+                const lowerCats = cats.map(c => c && typeof c === 'string' ? c.trim().toLowerCase() : '').filter(Boolean);
+                results = results.filter(p => p && p.category_slug && typeof p.category_slug === 'string' && lowerCats.includes(p.category_slug.trim().toLowerCase()));
+            }
+            
+            return results;
+        } catch (e) {
+            console.error("Search API Error:", e);
+            return [];
         }
-        
-        return results;
     },
     async addProduct(data) {
         const { data: result, error } = await window.supabaseClient.from('products').insert([data]).select();
@@ -91,8 +95,8 @@ const API = {
 
         let merged = [...masterCats];
         customCats.forEach(c => {
-            if (!c || !c.slug) return;
-            const idx = merged.findIndex(m => m.slug.toLowerCase() === c.slug.toLowerCase());
+            if (!c || !c.slug || typeof c.slug !== 'string') return;
+            const idx = merged.findIndex(m => m && m.slug && typeof m.slug === 'string' && m.slug.toLowerCase() === c.slug.toLowerCase());
             if (idx > -1) merged[idx] = c; 
             else merged.push(c); 
         });
