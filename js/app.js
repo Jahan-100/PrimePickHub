@@ -77,7 +77,6 @@ function deduplicateProducts(list) {
 }
 function showGridMessage(grid, msg) { if (!grid) return; grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;"><p>${escapeHTML(msg)}</p></div>`; }
 
-// ⭐ UPDATED: Infinite Loop Fix ⭐
 function getAllDescendantSlugs(parentSlug, allCats) {
     const slugs = new Set();
     const visited = new Set();
@@ -104,7 +103,6 @@ function getAllDescendantSlugs(parentSlug, allCats) {
     return Array.from(slugs);
 }
 
-// ⭐ SMART ICON SYSTEM (Priority to Name) ⭐
 function getCategoryIcon(cat) {
     if (!cat) return '📦';
     const name = (cat.name || '').toLowerCase().trim();
@@ -451,39 +449,44 @@ window.selectCategory = async function(catSlug, element) {
         }
         
         if (subCats.length > 0 && normSlug !== 'all') {
-            subContainer.style.display = 'flex';
-            let subHtml = '';
-            subCats.forEach(sub => {
-                const subNorm = (sub.slug || '').trim().toLowerCase();
-                subHtml += `
-                <a href="javascript:void(0)" class="category-item" style="min-width: 80px;" data-slug="${sub.slug}" data-parent="${catSlug}">
-                    <div class="cat-icon" style="width: 45px; height: 45px; font-size: 1.2rem; background: #fff; border: 1px solid #E2E8F0; overflow:hidden;">${getCategoryIcon(sub)}</div>
-                    <span style="font-size: 0.75rem;">${sub.name}</span>
-                </a>`;
-                const minis = allCategoriesGlobal.filter(c => c && c.parent && typeof c.parent === 'string' && c.parent.trim().toLowerCase() === subNorm && activeCategoriesSet.has((c.slug || '').trim().toLowerCase()));
-                minis.forEach(mini => {
+            // ⭐ Yahan safety check laga diya hai ke container null na ho ⭐
+            if (subContainer) {
+                subContainer.style.display = 'flex';
+                let subHtml = '';
+                subCats.forEach(sub => {
+                    const subNorm = (sub.slug || '').trim().toLowerCase();
                     subHtml += `
-                    <a href="javascript:void(0)" class="category-item" style="min-width: 80px; margin-left: 10px; border-left: 2px solid #E2E8F0; padding-left: 10px;" data-slug="${mini.slug}" data-parent="${sub.slug}">
-                        <div class="cat-icon" style="width: 35px; height: 35px; font-size: 0.9rem; background: #F8FAFC; border: 1px solid #E2E8F0; overflow:hidden;">${getCategoryIcon(mini)}</div>
-                        <span style="font-size: 0.65rem;">${mini.name}</span>
+                    <a href="javascript:void(0)" class="category-item" style="min-width: 80px;" data-slug="${sub.slug}" data-parent="${catSlug}">
+                        <div class="cat-icon" style="width: 45px; height: 45px; font-size: 1.2rem; background: #fff; border: 1px solid #E2E8F0; overflow:hidden;">${getCategoryIcon(sub)}</div>
+                        <span style="font-size: 0.75rem;">${sub.name}</span>
                     </a>`;
+                    const minis = allCategoriesGlobal.filter(c => c && c.parent && typeof c.parent === 'string' && c.parent.trim().toLowerCase() === subNorm && activeCategoriesSet.has((c.slug || '').trim().toLowerCase()));
+                    minis.forEach(mini => {
+                        subHtml += `
+                        <a href="javascript:void(0)" class="category-item" style="min-width: 80px; margin-left: 10px; border-left: 2px solid #E2E8F0; padding-left: 10px;" data-slug="${mini.slug}" data-parent="${sub.slug}">
+                            <div class="cat-icon" style="width: 35px; height: 35px; font-size: 0.9rem; background: #F8FAFC; border: 1px solid #E2E8F0; overflow:hidden;">${getCategoryIcon(mini)}</div>
+                            <span style="font-size: 0.65rem;">${mini.name}</span>
+                        </a>`;
+                    });
                 });
-            });
-            subContainer.innerHTML = subHtml;
-            
-            subContainer.querySelectorAll('.category-item').forEach(el => {
-                el.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    if (this.dataset.parent === catSlug) {
-                        selectSubCategory(this.dataset.slug, catSlug, this);
-                    } else {
-                        selectMiniSubCategory(this.dataset.slug, this.dataset.parent, this);
-                    }
+                subContainer.innerHTML = subHtml;
+                
+                subContainer.querySelectorAll('.category-item').forEach(el => {
+                    el.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        if (this.dataset.parent === catSlug) {
+                            selectSubCategory(this.dataset.slug, catSlug, this);
+                        } else {
+                            selectMiniSubCategory(this.dataset.slug, this.dataset.parent, this);
+                        }
+                    });
                 });
-            });
 
-            showGridMessage(grid, `Please select a sub-category under "${currentCat ? currentCat.name : catSlug}" to view products.`);
-            return;
+                showGridMessage(grid, `Please select a sub-category under "${currentCat ? currentCat.name : catSlug}" to view products.`);
+                return;
+            } else {
+                console.warn("subCategoryScrollContainer not found in HTML. Skipping sub-categories.");
+            }
         }
 
         showGridMessage(grid, 'Loading products...');
