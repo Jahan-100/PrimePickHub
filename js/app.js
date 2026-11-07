@@ -214,7 +214,7 @@ async function renderDynamicCategories() {
                 if (catSlug === 'all') {
                     document.getElementById('categoryHoverPanel').style.display = 'none';
                 } else {
-                    renderHoverPanel(catSlug);
+                    renderHoverPanel(catSlug, this);
                 }
             });
 
@@ -222,18 +222,11 @@ async function renderDynamicCategories() {
                 e.preventDefault();
                 const catSlug = this.dataset.slug;
                 document.getElementById('categoryHoverPanel').style.display = 'none';
-                if (catSlug === 'all') {
-                    loadCategoryProducts('all', 'For You');
-                } else {
-                    // If a main category has no sub-cats, clicking it loads products. If it has sub-cats, maybe just show the panel again.
-                    const mainCat = allCategoriesGlobal.find(c => c.slug === catSlug);
-                    const subCats = allCategoriesGlobal.filter(c => c.parent === catSlug && activeCategoriesSet.has(c.slug.toLowerCase()));
-                    if (subCats.length === 0) {
-                        loadCategoryProducts(catSlug, mainCat ? mainCat.name : catSlug);
-                    } else {
-                        renderHoverPanel(catSlug);
-                    }
-                }
+                document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
+                this.classList.add('active');
+                
+                const mainCat = allCategoriesGlobal.find(c => c.slug === catSlug);
+                loadCategoryProducts(catSlug, (catSlug === 'all') ? 'For You' : (mainCat ? mainCat.name : catSlug));
             });
         });
 
@@ -256,7 +249,7 @@ async function renderDynamicCategories() {
     }
 }
 
-function renderHoverPanel(mainSlug) {
+function renderHoverPanel(mainSlug, targetElement) {
     const panel = document.getElementById('categoryHoverPanel');
     if (!panel) return;
     
@@ -287,6 +280,25 @@ function renderHoverPanel(mainSlug) {
     });
     
     panel.innerHTML = html;
+
+    // ⭐ Position the panel dynamically centered over the target element ⭐
+    const wrapper = document.querySelector('.category-nav-wrapper');
+    const wrapperRect = wrapper.getBoundingClientRect();
+    const targetRect = targetElement.getBoundingClientRect();
+    
+    // Center of the target category icon/text relative to the wrapper
+    const targetCenter = (targetRect.left - wrapperRect.left) + (targetRect.width / 2);
+    const panelWidth = panel.offsetWidth;
+    
+    let leftPos = targetCenter - (panelWidth / 2);
+    
+    // Keep bounds within the wrapper
+    if (leftPos < 0) leftPos = 0;
+    if (leftPos + panelWidth > wrapperRect.width) leftPos = wrapperRect.width - panelWidth;
+    
+    panel.style.left = `${leftPos}px`;
+    // Attach right below the target element (with slight overlap to avoid gap)
+    panel.style.top = `${targetRect.bottom - wrapperRect.top - 5}px`;
 }
 
 window.handleSubClick = function(subSlug, subName) {
