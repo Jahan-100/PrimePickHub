@@ -1,6 +1,6 @@
 let allProducts = [];
 let builderState = { main: null, subs: [], minis: [] };
-let globalCategories = []; // DB se aane wali categories
+let globalCategories = [];
 
 async function uploadFileToSupabase(file) {
     const fileExt = file.name.split('.').pop();
@@ -11,7 +11,6 @@ async function uploadFileToSupabase(file) {
     return publicUrlData.publicUrl;
 }
 
-// ⭐ Load Categories from DB (Used internally by Admin) ⭐
 async function syncCategoriesFromDB() {
     const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
     const { data, error } = await window.supabaseClient.from('site_settings').select('custom_categories').eq('id', 1).maybeSingle();
@@ -354,7 +353,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (auth.role !== 'admin') { alert('Access denied. Admin only.'); await API.signOut(); return showLogin(); }
 
     await syncCategoriesFromDB(); 
-    showDashboard(); await loadStats(); await loadSiteSettings(); await loadProductsList(); setupProductForm(); setupToggleList(); setupToggleAddProduct(); setupToggleSpecialDeal(); setupToggleFlashSale(); setupToggleSale2();
+    showDashboard(); 
+    await loadStats(); 
+    await loadSiteSettings(); 
+    await loadProductsList(); 
+    await window.loadBlogList(); // ⭐ YAHAN ADD KIA HAI: Page load par blogs load karo ⭐
+    setupProductForm(); 
+    setupToggleList(); 
+    setupToggleAddProduct(); 
+    setupToggleSpecialDeal(); 
+    setupToggleFlashSale(); 
+    setupToggleSale2();
     
     document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
     document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
