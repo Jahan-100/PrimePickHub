@@ -269,10 +269,10 @@ function renderHoverPanel(mainSlug, targetElement) {
         
         html += `
             <div class="sub-cat-col">
-                <div class="sub-cat-title" onclick="handleSubClick('${sub.slug}', '${sub.name}')">${sub.name}</div>
+                <div class="sub-cat-title" data-slug="${sub.slug}" data-name="${escapeHTML(sub.name)}">${escapeHTML(sub.name)}</div>
                 ${minis.length > 0 ? `
                     <div class="mini-list">
-                        ${minis.map(mini => `<div class="mini-item" onclick="handleMiniClick('${mini.slug}', '${mini.name}', event)">${mini.name}</div>`).join('')}
+                        ${minis.map(mini => `<div class="mini-item" data-slug="${mini.slug}" data-name="${escapeHTML(mini.name)}">${escapeHTML(mini.name)}</div>`).join('')}
                     </div>
                 ` : ''}
             </div>
@@ -281,36 +281,44 @@ function renderHoverPanel(mainSlug, targetElement) {
     
     panel.innerHTML = html;
 
-    // ⭐ Position the panel dynamically centered over the target element ⭐
+    // ⭐ FIXED: Event listeners use data attributes to avoid quote issues ⭐
+    panel.querySelectorAll('.sub-cat-title').forEach(el => {
+        el.addEventListener('click', function(e) {
+            e.preventDefault();
+            const slug = this.dataset.slug;
+            const name = this.dataset.name;
+            document.getElementById('categoryHoverPanel').style.display = 'none';
+            loadCategoryProducts(slug, name);
+        });
+    });
+
+    panel.querySelectorAll('.mini-item').forEach(el => {
+        el.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const slug = this.dataset.slug;
+            const name = this.dataset.name;
+            document.getElementById('categoryHoverPanel').style.display = 'none';
+            loadCategoryProducts(slug, name);
+        });
+    });
+
+    // Position the panel dynamically centered over the target element
     const wrapper = document.querySelector('.category-nav-wrapper');
     const wrapperRect = wrapper.getBoundingClientRect();
     const targetRect = targetElement.getBoundingClientRect();
     
-    // Center of the target category icon/text relative to the wrapper
     const targetCenter = (targetRect.left - wrapperRect.left) + (targetRect.width / 2);
     const panelWidth = panel.offsetWidth;
     
     let leftPos = targetCenter - (panelWidth / 2);
     
-    // Keep bounds within the wrapper
     if (leftPos < 0) leftPos = 0;
     if (leftPos + panelWidth > wrapperRect.width) leftPos = wrapperRect.width - panelWidth;
     
     panel.style.left = `${leftPos}px`;
-    // Attach right below the target element (with slight overlap to avoid gap)
     panel.style.top = `${targetRect.bottom - wrapperRect.top - 5}px`;
 }
-
-window.handleSubClick = function(subSlug, subName) {
-    document.getElementById('categoryHoverPanel').style.display = 'none';
-    loadCategoryProducts(subSlug, subName);
-};
-
-window.handleMiniClick = function(miniSlug, miniName, event) {
-    event.stopPropagation();
-    document.getElementById('categoryHoverPanel').style.display = 'none';
-    loadCategoryProducts(miniSlug, miniName);
-};
 
 async function loadCategoryProducts(catSlug, catName) {
     const titleEl = document.getElementById('productSectionTitle');
