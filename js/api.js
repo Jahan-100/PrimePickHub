@@ -27,6 +27,7 @@ const API = {
         let req = window.supabaseClient.from('products').select('*, affiliate_offers(*)').limit(100);
         
         if (category) {
+            // ⭐ FIX: If category is an array, use .in() operator, otherwise .eq() ⭐
             if (Array.isArray(category)) {
                 req = req.in('category_slug', category);
             } else {
@@ -67,7 +68,7 @@ const API = {
             city: geo.city || 'Unknown'
         }]).then(({ error }) => { if (error) console.warn('Track error:', error); }).catch(() => {});
     },
-    // ⭐ NAYA: Centralized Categories Fetcher ⭐
+    // ⭐ CENTRALIZED CATEGORIES FETCHER ⭐
     async getCategories() {
         if (!window.supabaseClient) return (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
         
@@ -76,10 +77,8 @@ const API = {
         let customCats = [];
         if (!error && data && data.custom_categories) {
             customCats = typeof data.custom_categories === 'string' ? JSON.parse(data.custom_categories) : data.custom_categories;
-            // Cache locally for offline fallback
             try { localStorage.setItem('cached_categories', JSON.stringify(customCats)); } catch(e) {}
         } else {
-            // Fallback to local cache if DB fails
             try { customCats = JSON.parse(localStorage.getItem('cached_categories') || '[]'); } catch(e) {}
         }
 
