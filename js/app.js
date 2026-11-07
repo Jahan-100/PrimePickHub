@@ -352,7 +352,7 @@ window.selectSubCategory = async function(subSlug, parentSlug, element) {
     try {
         const subContainer = document.getElementById('subCategoryScrollContainer');
         if (subContainer) {
-            subContainer.querySelectorAll('.category-item').forEach(el => el.classList.remove('active')); 
+            subContainer.querySelectorAll('.sub-pill, .mini-pill').forEach(el => el.classList.remove('active')); 
             if (element) element.classList.add('active');
         }
         
@@ -369,16 +369,17 @@ window.selectSubCategory = async function(subSlug, parentSlug, element) {
         const minis = allCategoriesGlobal.filter(c => c && c.parent && typeof c.parent === 'string' && c.parent.trim().toLowerCase() === normSlug && activeCategoriesSet.has((c.slug || '').trim().toLowerCase()));
         if (minis.length > 0 && miniSubContainer) {
             miniSubContainer.style.display = 'flex';
-            miniSubContainer.innerHTML = minis.map(c => `
-                <a href="javascript:void(0)" class="category-item" style="min-width: 80px;" data-slug="${c.slug}" data-parent="${subSlug}">
-                    <div class="cat-icon" style="width: 40px; height: 40px; font-size: 1rem; background: #fff; border: 1px solid #E2E8F0; overflow:hidden;">${getCategoryIcon(c)}</div>
-                    <span style="font-size: 0.7rem;">${c.name}</span>
-                </a>
-            `).join('');
+            let miniHtml = '';
+            minis.forEach(c => {
+                miniHtml += `<a href="javascript:void(0)" class="mini-pill" data-slug="${c.slug}" data-parent="${subSlug}">${c.name}</a>`;
+            });
+            miniSubContainer.innerHTML = miniHtml;
 
-            miniSubContainer.querySelectorAll('.category-item').forEach(el => {
+            miniSubContainer.querySelectorAll('.mini-pill').forEach(el => {
                 el.addEventListener('click', function(e) {
                     e.preventDefault();
+                    miniSubContainer.querySelectorAll('.mini-pill').forEach(p => p.classList.remove('active'));
+                    this.classList.add('active');
                     selectMiniSubCategory(this.dataset.slug, this.dataset.parent, this);
                 });
             });
@@ -401,7 +402,7 @@ window.selectMiniSubCategory = async function(miniSlug, parentSlug, element) {
     try {
         const miniSubContainer = document.getElementById('miniSubCategoryScrollContainer');
         if (miniSubContainer) {
-            miniSubContainer.querySelectorAll('.category-item').forEach(el => el.classList.remove('active')); 
+            miniSubContainer.querySelectorAll('.mini-pill').forEach(el => el.classList.remove('active')); 
             if (element) element.classList.add('active');
         }
 
@@ -449,32 +450,27 @@ window.selectCategory = async function(catSlug, element) {
         }
         
         if (subCats.length > 0 && normSlug !== 'all') {
-            // ⭐ Yahan safety check laga diya hai ke container null na ho ⭐
             if (subContainer) {
                 subContainer.style.display = 'flex';
                 let subHtml = '';
                 subCats.forEach(sub => {
                     const subNorm = (sub.slug || '').trim().toLowerCase();
-                    subHtml += `
-                    <a href="javascript:void(0)" class="category-item" style="min-width: 80px;" data-slug="${sub.slug}" data-parent="${catSlug}">
-                        <div class="cat-icon" style="width: 45px; height: 45px; font-size: 1.2rem; background: #fff; border: 1px solid #E2E8F0; overflow:hidden;">${getCategoryIcon(sub)}</div>
-                        <span style="font-size: 0.75rem;">${sub.name}</span>
-                    </a>`;
+                    subHtml += `<a href="javascript:void(0)" class="sub-pill" data-slug="${sub.slug}" data-parent="${catSlug}">${sub.name}</a>`;
+                    
                     const minis = allCategoriesGlobal.filter(c => c && c.parent && typeof c.parent === 'string' && c.parent.trim().toLowerCase() === subNorm && activeCategoriesSet.has((c.slug || '').trim().toLowerCase()));
                     minis.forEach(mini => {
-                        subHtml += `
-                        <a href="javascript:void(0)" class="category-item" style="min-width: 80px; margin-left: 10px; border-left: 2px solid #E2E8F0; padding-left: 10px;" data-slug="${mini.slug}" data-parent="${sub.slug}">
-                            <div class="cat-icon" style="width: 35px; height: 35px; font-size: 0.9rem; background: #F8FAFC; border: 1px solid #E2E8F0; overflow:hidden;">${getCategoryIcon(mini)}</div>
-                            <span style="font-size: 0.65rem;">${mini.name}</span>
-                        </a>`;
+                        subHtml += `<a href="javascript:void(0)" class="mini-pill" data-slug="${mini.slug}" data-parent="${sub.slug}">${mini.name}</a>`;
                     });
                 });
                 subContainer.innerHTML = subHtml;
                 
-                subContainer.querySelectorAll('.category-item').forEach(el => {
+                subContainer.querySelectorAll('.sub-pill, .mini-pill').forEach(el => {
                     el.addEventListener('click', function(e) {
                         e.preventDefault();
-                        if (this.dataset.parent === catSlug) {
+                        subContainer.querySelectorAll('.sub-pill, .mini-pill').forEach(p => p.classList.remove('active'));
+                        this.classList.add('active');
+
+                        if (this.classList.contains('sub-pill')) {
                             selectSubCategory(this.dataset.slug, catSlug, this);
                         } else {
                             selectMiniSubCategory(this.dataset.slug, this.dataset.parent, this);
@@ -482,10 +478,8 @@ window.selectCategory = async function(catSlug, element) {
                     });
                 });
 
-                showGridMessage(grid, `Please select a sub-category under "${currentCat ? currentCat.name : catSlug}" to view products.`);
+                showGridMessage(grid, `Please select a category under "${currentCat ? currentCat.name : catSlug}" to view products.`);
                 return;
-            } else {
-                console.warn("subCategoryScrollContainer not found in HTML. Skipping sub-categories.");
             }
         }
 
