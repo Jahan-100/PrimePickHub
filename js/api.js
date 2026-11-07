@@ -27,7 +27,6 @@ const API = {
         let req = window.supabaseClient.from('products').select('*, affiliate_offers(*)').limit(100);
         
         if (category) {
-            // ⭐ FIX: If category is an array, use .in() operator, otherwise .eq() ⭐
             if (Array.isArray(category)) {
                 req = req.in('category_slug', category);
             } else {
@@ -68,22 +67,25 @@ const API = {
             city: geo.city || 'Unknown'
         }]).then(({ error }) => { if (error) console.warn('Track error:', error); }).catch(() => {});
     },
-    // ⭐ CENTRALIZED CATEGORIES FETCHER ⭐
+    // ⭐ CRASH-PROOF CATEGORIES FETCHER ⭐
     async getCategories() {
-        if (!window.supabaseClient) return (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
-        
-        const { data, error } = await window.supabaseClient.from('site_settings').select('custom_categories').eq('id', 1).maybeSingle();
-        
+        const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
         let customCats = [];
-        if (!error && data && data.custom_categories) {
-            customCats = typeof data.custom_categories === 'string' ? JSON.parse(data.custom_categories) : data.custom_categories;
-            try { localStorage.setItem('cached_categories', JSON.stringify(customCats)); } catch(e) {}
-        } else {
+        
+        try {
+            if (window.supabaseClient) {
+                const { data, error } = await window.supabaseClient.from('site_settings').select('custom_categories').eq('id', 1).maybeSingle();
+                if (!error && data && data.custom_categories) {
+                    customCats = typeof data.custom_categories === 'string' ? JSON.parse(data.custom_categories) : data.custom_categories;
+                    try { localStorage.setItem('cached_categories', JSON.stringify(customCats)); } catch(e) {}
+                } else {
+                    try { customCats = JSON.parse(localStorage.getItem('cached_categories') || '[]'); } catch(e) {}
+                }
+            }
+        } catch (e) {
             try { customCats = JSON.parse(localStorage.getItem('cached_categories') || '[]'); } catch(e) {}
         }
 
-        const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
-        
         // Merge (custom overrides master)
         let merged = [...masterCats];
         customCats.forEach(c => {
@@ -92,6 +94,6 @@ const API = {
             else merged.push(c); 
         });
 
-        return merged;
+        return merged.filter(c => c.name !== '__DELETED__');
     }
 };
