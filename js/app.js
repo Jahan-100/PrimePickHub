@@ -92,10 +92,34 @@ function getAllDescendantSlugs(parentSlug, allCats) {
     return slugs;
 }
 
+// ⭐ SMART ICON SYSTEM ⭐
+function getCategoryIcon(cat) {
+    if (!cat) return '📦';
+    // Agar user ne admin se icon set kiya hai aur wo box nahi hai
+    if (cat.icon && cat.icon !== '📦') return cat.icon;
+
+    const text = (cat.name + ' ' + cat.slug).toLowerCase();
+    
+    if (text.includes('shoe') || text.includes('boot') || text.includes('sneaker')) return '👟';
+    if (text.includes('belt')) return '🥋'; // Ya 👖
+    if (text.includes('bag') || text.includes('luggage') || text.includes('purse')) return '👜';
+    if (text.includes('glass') || text.includes('eyewear')) return '🕶️';
+    if (text.includes('jewel') || text.includes('ring') || text.includes('watch')) return '💍';
+    if (text.includes('light') || text.includes('lamp') || text.includes('bulb')) return '💡';
+    if (text.includes('cloth') || text.includes('dress') || text.includes('shirt') || text.includes('fashion')) return '👗';
+    if (text.includes('electronic') || text.includes('phone') || text.includes('tech') || text.includes('computer')) return '📱';
+    if (text.includes('beauty') || text.includes('makeup') || text.includes('lipstick')) return '💄';
+    if (text.includes('sport') || text.includes('gym')) return '🏋️';
+    if (text.includes('toy') || text.includes('game')) return '🧸';
+    if (text.includes('car') || text.includes('auto') || text.includes('vehicle')) return '🚗';
+    if (text.includes('home') || text.includes('kitchen') || text.includes('furniture')) return '🛋️';
+    
+    return '🏷️'; // Fallback tag icon instead of box
+}
+
 let allCategoriesGlobal = [];
 let activeCategoriesSet = new Set();
 
-// ⭐ SMART: Fetch active categories directly from products ⭐
 async function fetchActiveCategories() {
     if (!window.supabaseClient) return;
     try {
@@ -103,12 +127,11 @@ async function fetchActiveCategories() {
         if (!error && data) {
             activeCategoriesSet.clear();
             activeCategoriesSet.add('all');
-            const productCats = new Set(data.map(p => p.category_slug ? p.category_slug.trim() : null).filter(Boolean));
+            const productCats = new Set(data.map(p => p.category_slug ? p.category_slug.trim().toLowerCase() : null).filter(Boolean));
             
             productCats.forEach(slug => {
                 activeCategoriesSet.add(slug);
                 let currentSlug = slug;
-                // Find ancestors
                 while (currentSlug) {
                     const cat = allCategoriesGlobal.find(c => c.slug.trim().toLowerCase() === currentSlug.toLowerCase() || c.name.trim().toLowerCase() === currentSlug.toLowerCase());
                     if (cat && cat.parent && cat.parent !== 'all') {
@@ -135,19 +158,17 @@ async function renderDynamicCategories() {
 
     await fetchActiveCategories();
 
-    // 1. Get defined top-level categories that are active
     let topCats = allCategoriesGlobal.filter(c => {
         const isTop = !c.parent || c.parent === 'all';
         return isTop && activeCategoriesSet.has(c.slug);
     });
 
-    // 2. Add any dynamic top-level categories that exist in products but not in definitions
     activeCategoriesSet.forEach(slug => {
         if (slug === 'all') return;
         if (!allCategoriesGlobal.find(c => c.slug.toLowerCase() === slug.toLowerCase())) {
             const isSub = allCategoriesGlobal.some(c => c.parent && c.parent.toLowerCase() === slug.toLowerCase());
             if (!isSub) {
-                topCats.push({ slug: slug, name: slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), icon: '📦', parent: null });
+                topCats.push({ slug: slug, name: slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), icon: null, parent: null });
             }
         }
     });
@@ -156,7 +177,7 @@ async function renderDynamicCategories() {
     if (catContainer) {
         catContainer.innerHTML = topCats.map(c => `
             <a href="/category/${c.slug}" onclick="event.preventDefault(); selectCategory('${c.slug}', this)" class="category-item ${c.slug === 'all' ? 'active' : ''}" data-cat="${c.slug}">
-                <div class="cat-icon" ${c.slug === 'all' ? 'style="color: #EF4444;"' : ''}>${c.icon || '📦'}</div>
+                <div class="cat-icon" ${c.slug === 'all' ? 'style="color: #EF4444;"' : ''}>${getCategoryIcon(c)}</div>
                 <span>${c.name}</span>
             </a>
         `).join('');
@@ -337,7 +358,7 @@ window.selectMiniSubCategory = async function(miniSlug, parentSlug, element) {
     } catch (err) { showGridMessage(grid, 'Failed to load products.'); }
 };
 
-// ⭐ UPDATED: Main Category Click Logic (With Hierarchical Sub-Cats) ⭐
+// ⭐ UPDATED: Strict Drill-Down Hierarchy ⭐
 window.selectCategory = async function(catSlug, element) {
     document.querySelectorAll('#categoryScrollContainer .category-item').forEach(el => el.classList.remove('active')); 
     if (element) element.classList.add('active');
@@ -354,17 +375,18 @@ window.selectCategory = async function(catSlug, element) {
     if (titleEl) titleEl.innerHTML = (catSlug === 'all') ? 'For You' : (currentCat ? currentCat.name : catSlug);
 
     // 1. Get active Sub-Categories
-    let subCats = allCategoriesGlobal.filter(c => c.parent === catSlug && activeCategoriesSet.has(c.slug));
+    let subCats = allCategoriesGlobal.filter(c => c.parent && c.parent.toLowerCase() === catSlug.toLowerCase() && activeCategoriesSet.has(c.slug));
     
-    // Add dynamic sub-cats
+    // Add dynamic sub-cats if any
     activeCategoriesSet.forEach(slug => {
         const cat = allCategoriesGlobal.find(c => c.slug.toLowerCase() === slug.toLowerCase());
-        if (cat && cat.parent === catSlug && !subCats.find(s => s.slug === cat.slug)) {
+        if (cat && cat.parent && cat.parent.toLowerCase() === catSlug.toLowerCase() && !subCats.find(s => s.slug === cat.slug)) {
             subCats.push(cat);
         }
     });
 
-    if (subCats.length > 0 && subContainer) {
+    // ⭐ AGAR SUB-CATEGORIES HAIN TOH PEHLE SIRF UNHEIN SHOW KARO, PRODUCTS NAHI ⭐
+    if (subCats.length > 0 && catSlug !== 'all') {
         subContainer.style.display = 'flex';
         
         let subHtml = '';
@@ -372,24 +394,29 @@ window.selectCategory = async function(catSlug, element) {
             // Render Sub-Category
             subHtml += `
             <a href="javascript:void(0)" onclick="event.preventDefault(); selectSubCategory('${sub.slug}', '${catSlug}', this)" class="category-item" style="min-width: 80px;" data-cat="${sub.slug}">
-                <div class="cat-icon" style="width: 45px; height: 45px; font-size: 1.2rem; background: #fff; border: 1px solid #E2E8F0;">${sub.icon || '📦'}</div>
+                <div class="cat-icon" style="width: 45px; height: 45px; font-size: 1.2rem; background: #fff; border: 1px solid #E2E8F0;">${getCategoryIcon(sub)}</div>
                 <span style="font-size: 0.75rem;">${sub.name}</span>
             </a>`;
 
             // Render Mini-Sub Categories inside the same list
-            const minis = allCategoriesGlobal.filter(c => c.parent === sub.slug && activeCategoriesSet.has(c.slug));
+            const minis = allCategoriesGlobal.filter(c => c.parent && c.parent.toLowerCase() === sub.slug.toLowerCase() && activeCategoriesSet.has(c.slug));
             minis.forEach(mini => {
                 subHtml += `
                 <a href="javascript:void(0)" onclick="event.preventDefault(); selectMiniSubCategory('${mini.slug}', '${sub.slug}', this)" class="category-item" style="min-width: 80px; margin-left: 10px; border-left: 2px solid #E2E8F0; padding-left: 10px;" data-cat="${mini.slug}">
-                    <div class="cat-icon" style="width: 35px; height: 35px; font-size: 0.9rem; background: #F8FAFC; border: 1px solid #E2E8F0;">${mini.icon || '📦'}</div>
+                    <div class="cat-icon" style="width: 35px; height: 35px; font-size: 0.9rem; background: #F8FAFC; border: 1px solid #E2E8F0;">${getCategoryIcon(mini)}</div>
                     <span style="font-size: 0.65rem;">${mini.name}</span>
                 </a>`;
             });
         });
         
         subContainer.innerHTML = subHtml;
+        
+        // Grid ko khali karo aur message dikhao
+        showGridMessage(grid, `Please select a sub-category under "${currentCat ? currentCat.name : catSlug}" to view products.`);
+        return; // ⭐ YAHAN RUK JAO. PRODUCTS LOAD MAT KARO ⭐
     }
 
+    // Agar koi sub-category nahi hai, toh direct products load karo
     showGridMessage(grid, 'Loading products...');
     try {
         if (catSlug === 'all') {
