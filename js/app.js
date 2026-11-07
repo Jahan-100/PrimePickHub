@@ -4,7 +4,11 @@
 
 function setCookie(name, value, days) {
     let expires = "";
-    if (days) { let date = new Date(); date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000)); expires = "; expires=" + date.toUTCString(); }
+    if (days) {
+        let date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    }
     document.cookie = name + "=" + (value || "") + expires + "; path=/; SameSite=Lax";
 }
 function getCookie(name) {
@@ -32,6 +36,7 @@ window.handleImageLoad = function(imgElement) {
     }
 };
 
+// ⭐ UPGRADED HD IMAGE HELPER (Shopify Fix) ⭐
 function getHighQualityImage(url, size = 400) {
     if (!url || typeof url !== 'string') return url;
     let cleanUrl = url.trim();
@@ -46,10 +51,15 @@ function getHighQualityImage(url, size = 400) {
     } else if (cleanUrl.includes('ebayimg.com')) {
         cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, `/s-l${size}.$1`);
     } else if (cleanUrl.includes('shopify') || cleanUrl.includes('govee') || cleanUrl.includes('allegra-k.com') || cleanUrl.includes('cdn.shopify')) {
+        // ⭐ SHOPIFY FIX: Remove existing '?v=...' completely so it doesn't block resizing
         const qIdx = cleanUrl.indexOf('?');
         if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
+
+        // Remove existing size modifiers in filename
         cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
-        cleanUrl = cleanUrl + `?width=${size}`; 
+        
+        // Force exact size and WebP format
+        cleanUrl = cleanUrl + `?width=${size}&height=${size}&crop=center&format=webp`;
     } else {
         cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
         cleanUrl = cleanUrl.replace(/_\d+x(?=\.(jpg|jpeg|png|webp|avif))/i, '');
@@ -79,22 +89,6 @@ function deduplicateProducts(list) {
 }
 function showGridMessage(grid, msg) { if (!grid) return; grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;"><p>${escapeHTML(msg)}</p></div>`; }
 
-// ⭐ Helper to get all categories merged (Fixes deleted categories) ⭐
-function getAllCategories() {
-    const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
-    const customCats = JSON.parse(localStorage.getItem('admin_custom_categories') || '[]');
-    const deletedCats = JSON.parse(localStorage.getItem('admin_deleted_categories') || '[]');
-
-    let merged = [...masterCats];
-    customCats.forEach(c => {
-        const idx = merged.findIndex(m => m.slug === c.slug);
-        if (idx > -1) merged[idx] = c;
-        else merged.push(c);
-    });
-
-    return merged.filter(c => !deletedCats.includes(c.slug));
-}
-
 // ⭐ Helper to get all child slugs recursively ⭐
 function getAllDescendantSlugs(parentSlug, allCats) {
     let slugs = [parentSlug];
@@ -105,10 +99,14 @@ function getAllDescendantSlugs(parentSlug, allCats) {
     return slugs;
 }
 
-function renderDynamicCategories(allProducts) {
-    const allCats = getAllCategories();
+// ⭐ Global variable for categories (loaded from API) ⭐
+let allCategoriesGlobal = [];
+
+async function renderDynamicCategories(allProducts) {
+    allCategoriesGlobal = await API.getCategories();
+    
     // Only show top-level categories
-    const topCats = allCats.filter(c => !c.parent || c.parent === 'all');
+    const topCats = allCategoriesGlobal.filter(c => !c.parent || c.parent === 'all');
     
     const catContainer = document.getElementById('categoryScrollContainer');
     if (catContainer) {
@@ -264,11 +262,10 @@ window.selectSubCategory = async function(subSlug, parentSlug, element) {
     const titleEl = document.getElementById('productSectionTitle'); 
     const grid = document.getElementById('productGrid');
     
-    const allCats = getAllCategories();
-    const currentCat = allCats.find(c => c.slug === subSlug);
+    const currentCat = allCategoriesGlobal.find(c => c.slug === subSlug);
     if (titleEl) titleEl.innerHTML = currentCat ? currentCat.name : subSlug;
 
-    const miniSubs = allCats.filter(c => c.parent === subSlug);
+    const miniSubs = allCategoriesGlobal.filter(c => c.parent === subSlug);
     if (miniSubs.length > 0 && miniSubContainer) {
         miniSubContainer.style.display = 'flex';
         miniSubContainer.innerHTML = miniSubs.map(c => `
@@ -281,7 +278,7 @@ window.selectSubCategory = async function(subSlug, parentSlug, element) {
 
     showGridMessage(grid, 'Loading products...');
     try {
-        let fetchSlugs = getAllDescendantSlugs(subSlug, allCats);
+        let fetchSlugs = getAllDescendantSlugs(subSlug, allCategoriesGlobal);
         const products = await API.searchProducts({ category: fetchSlugs }); 
         renderProductsGrid(products.filter(p => p.is_available !== false), grid); 
     } catch (err) { showGridMessage(grid, 'Failed to load products.'); }
@@ -298,13 +295,12 @@ window.selectMiniSubCategory = async function(miniSlug, parentSlug, element) {
     const titleEl = document.getElementById('productSectionTitle'); 
     const grid = document.getElementById('productGrid');
     
-    const allCats = getAllCategories();
-    const currentCat = allCats.find(c => c.slug === miniSlug);
+    const currentCat = allCategoriesGlobal.find(c => c.slug === miniSlug);
     if (titleEl) titleEl.innerHTML = currentCat ? currentCat.name : miniSlug;
 
     showGridMessage(grid, 'Loading products...');
     try {
-        let fetchSlugs = getAllDescendantSlugs(miniSlug, allCats);
+        let fetchSlugs = getAllDescendantSlugs(miniSlug, allCategoriesGlobal);
         const products = await API.searchProducts({ category: fetchSlugs }); 
         renderProductsGrid(products.filter(p => p.is_available !== false), grid); 
     } catch (err) { showGridMessage(grid, 'Failed to load products.'); }
@@ -323,11 +319,10 @@ window.selectCategory = async function(catSlug, element) {
     if (subContainer) subContainer.style.display = 'none';
     if (miniSubContainer) miniSubContainer.style.display = 'none';
 
-    const allCats = getAllCategories();
-    const currentCat = allCats.find(c => c.slug === catSlug);
+    const currentCat = allCategoriesGlobal.find(c => c.slug === catSlug);
     if (titleEl) titleEl.innerHTML = (catSlug === 'all') ? 'For You' : (currentCat ? currentCat.name : catSlug);
 
-    const subCats = allCats.filter(c => c.parent === catSlug);
+    const subCats = allCategoriesGlobal.filter(c => c.parent === catSlug);
     if (subCats.length > 0 && subContainer) {
         subContainer.style.display = 'flex';
         subContainer.innerHTML = subCats.map(c => `
@@ -354,7 +349,7 @@ window.selectCategory = async function(catSlug, element) {
             });
             renderProductsGrid(normalProducts, grid);
         } else { 
-            let fetchSlugs = getAllDescendantSlugs(catSlug, allCats);
+            let fetchSlugs = getAllDescendantSlugs(catSlug, allCategoriesGlobal);
             const products = await API.searchProducts({ category: fetchSlugs }); 
             renderProductsGrid(products.filter(p => p.is_available !== false), grid); 
         }
