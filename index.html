@@ -112,74 +112,77 @@
             line-height: 1 !important;
         }
 
-        /* ⭐ NEW MEGA MENU HOVER CSS ⭐ */
+        /* ⭐ NEW CENTERED DROPDOWN CSS ⭐ */
+        .category-nav-wrapper {
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
         #categoryHoverPanel {
             display: none;
-            width: 100%;
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
             background: #ffffff;
             border-radius: 16px;
-            padding: 20px;
-            margin-top: 15px;
+            padding: 25px;
+            z-index: 99999;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
             border: 1px solid #E2E8F0;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
             flex-wrap: wrap;
-            gap: 15px;
-            align-items: flex-start;
-            animation: slideDown 0.3s ease-out forwards;
-        }
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+            gap: 40px;
+            min-width: 300px;
+            max-width: 90vw;
+            animation: fadeInDrop 0.2s ease-out forwards;
         }
 
-        .sub-cat-group {
+        @keyframes fadeInDrop {
+            from { opacity: 0; transform: translate(-50%, -10px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+
+        .sub-cat-col {
             display: flex;
             flex-direction: column;
-            background: #F8FAFC;
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid #E2E8F0;
             min-width: 160px;
-            transition: all 0.2s;
-        }
-        .sub-cat-group:hover {
-            border-color: var(--accent);
-            box-shadow: 0 4px 12px rgba(255, 90, 60, 0.1);
         }
 
         .sub-cat-title {
+            font-size: 1.05rem;
             font-weight: 700;
             color: #1E1B4B;
-            font-size: 1rem;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #F1F5F9;
             cursor: pointer;
-            text-decoration: none;
             transition: color 0.2s;
+            text-decoration: none;
         }
-        .sub-cat-title:hover, .sub-cat-title.active {
-            color: var(--accent);
+        .sub-cat-title:hover {
+            color: #DC2626;
         }
 
-        .mini-cat-list {
+        .mini-list {
             display: flex;
             flex-direction: column;
             gap: 6px;
-            padding-left: 12px;
-            border-left: 2px solid #CBD5E1;
         }
 
-        .mini-cat-btn {
+        .mini-item {
             font-size: 0.85rem;
             color: #475569;
-            cursor: pointer;
-            padding: 6px 10px;
-            border-radius: 6px;
-            transition: all 0.2s;
             text-decoration: none;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            display: block;
         }
-        .mini-cat-btn:hover, .mini-cat-btn.active {
-            background: #E2E8F0;
+        .mini-item:hover {
+            background: #F8FAFC;
             color: #1E1B4B;
+            padding-left: 18px;
             font-weight: 600;
         }
     </style>
@@ -327,12 +330,12 @@
             </div>
         </div>
 
-        <div style="margin-bottom: 10px;">
+        <div class="category-nav-wrapper" style="margin-bottom: 10px;">
             <h2 style="margin-bottom: 15px; font-family: 'Poppins', sans-serif; font-weight: 800; color: var(--text-dark);">Shop by Category</h2>
             <!-- Main Categories -->
             <div class="horizontal-category-scroll" id="categoryScrollContainer"></div>
             
-            <!-- ⭐ NEW: Hover Mega Menu Container ⭐ -->
+            <!-- ⭐ NEW: Centered Hover Mega Menu ⭐ -->
             <div id="categoryHoverPanel"></div>
         </div>
 
@@ -450,7 +453,7 @@
 
     <script src="js/config.js?v=6"></script>
     <script src="js/api.js?v=12"></script> 
-    <script src="js/app.js?v=40"></script> <!-- Version updated to 40 -->
+    <script src="js/app.js?v=41"></script> <!-- Version updated to 41 -->
     <script src="js/affiliate.js?v=6"></script>
     <script>
         function toggleCatDropdown(event) {
