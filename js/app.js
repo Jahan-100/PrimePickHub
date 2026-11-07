@@ -78,9 +78,10 @@ function deduplicateProducts(list) {
 function showGridMessage(grid, msg) { if (!grid) return; grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;"><p>${escapeHTML(msg)}</p></div>`; }
 
 function getAllDescendantSlugs(parentSlug, allCats) {
+    if (!parentSlug) return [];
     let slugs = [parentSlug];
     const normParent = parentSlug.trim().toLowerCase();
-    const children = allCats.filter(c => c.parent && c.parent.trim().toLowerCase() === normParent);
+    const children = allCats.filter(c => c && c.parent && c.parent.trim().toLowerCase() === normParent && c.slug);
     children.forEach(child => {
         slugs = slugs.concat(getAllDescendantSlugs(child.slug, allCats));
     });
@@ -93,7 +94,6 @@ function getCategoryIcon(cat) {
     const name = (cat.name || '').toLowerCase().trim();
     const slug = (cat.slug || '').toLowerCase().trim();
 
-    // Name ko priority do, taake agar slug ghalat bhi ho, icon sahi aaye
     if (name === 'lights' || slug === 'lights') {
         return `<img src="assets/Lights-icon.jpg" alt="Lights" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff;">`;
     }
@@ -138,7 +138,7 @@ async function fetchActiveCategories() {
                 activeCategoriesSet.add(slug);
                 let currentSlug = slug;
                 while (currentSlug) {
-                    const cat = allCategoriesGlobal.find(c => c.slug.trim().toLowerCase() === currentSlug);
+                    const cat = allCategoriesGlobal.find(c => c && c.slug && c.slug.trim().toLowerCase() === currentSlug);
                     if (cat && cat.parent && cat.parent !== 'all') {
                         activeCategoriesSet.add(cat.parent.trim().toLowerCase());
                         currentSlug = cat.parent.trim().toLowerCase();
@@ -165,13 +165,13 @@ async function renderDynamicCategories() {
 
     let topCats = allCategoriesGlobal.filter(c => {
         const isTop = !c.parent || c.parent.trim().toLowerCase() === 'all';
-        return isTop && activeCategoriesSet.has(c.slug.trim().toLowerCase());
+        return isTop && activeCategoriesSet.has((c.slug || '').trim().toLowerCase());
     });
 
     activeCategoriesSet.forEach(slug => {
         if (slug === 'all') return;
-        if (!allCategoriesGlobal.find(c => c.slug.trim().toLowerCase() === slug)) {
-            const isSub = allCategoriesGlobal.some(c => c.parent && c.parent.trim().toLowerCase() === slug);
+        if (!allCategoriesGlobal.find(c => c && c.slug && c.slug.trim().toLowerCase() === slug)) {
+            const isSub = allCategoriesGlobal.some(c => c && c.parent && c.parent.trim().toLowerCase() === slug);
             if (!isSub) {
                 topCats.push({ slug: slug, name: slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), icon: null, parent: null });
             }
@@ -189,7 +189,6 @@ async function renderDynamicCategories() {
             </a>
         `).join('');
 
-        // ⭐ EVENT LISTENERS (No more inline onclick) ⭐
         catContainer.querySelectorAll('.category-item').forEach(el => {
             el.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -231,12 +230,13 @@ function renderProductCard(product, isPriority = false) {
     let cta = '';
 
     if (primaryOffer) {
-        const storeKey = primaryOffer.store_name.toLowerCase();
-        const cfg = networks[storeKey] ?? networks[primaryOffer.store_name] ?? { name: primaryOffer.store_name, brandColor: '#2563eb', textColor: '#ffffff' };
+        // ⭐ FIX: Safe fallback taake crash na ho
+        const storeKey = (primaryOffer.store_name || 'amazon').toLowerCase();
+        const cfg = networks[storeKey] ?? networks[primaryOffer.store_name || ''] ?? { name: primaryOffer.store_name || 'Store', brandColor: '#2563eb', textColor: '#ffffff' };
         let bg = safeColor(cfg.brandColor, '#2563eb'); if (bg === '#FF4747') bg = '#DC2626'; 
         const fg = safeColor(cfg.textColor, '#ffffff');
-        const storeName = escapeHTML(cfg.name || primaryOffer.store_name);
-        const affUrl = escapeHTML(primaryOffer.affiliate_url);
+        const storeName = escapeHTML(cfg.name || primaryOffer.store_name || 'Store');
+        const affUrl = escapeHTML(primaryOffer.affiliate_url || '#');
         const pid = escapeHTML(String(product.id ?? ''));
         const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
         const offerCurrency = (primaryOffer.currency || 'USD').toUpperCase();
@@ -288,11 +288,23 @@ function renderFlashCard(product, section = 1) {
     return `<a href="${productUrl}" class="special-deal-card flash-card"><div class="img-box"><img src="${imageSrc}" alt="${title}" width="190" height="190" loading="lazy" decoding="async" style="opacity: 0; transition: opacity 0.4s ease-in-out;" onload="handleImageLoad(this)"></div><div class="info-box">${priceDisplay}<div class="title">${title}</div><div class="card-timer" data-endtime="${endTime}">⏳ Calculating...</div></div></a>`;
 }
 
+// ⭐ UPDATED: Safety Shield lagaya hai taake 1 kharab product se poori site crash na ho ⭐
 function renderProductsGrid(products, grid) {
     if (!grid) return;
     if (!products || products.length === 0) { showGridMessage(grid, 'No products found in this category.'); return; }
     
-    grid.innerHTML = products.map((p, i) => renderProductCard(p, i < 4)).join('');
+    let html = '';
+    products.forEach((p, i) => {
+        try {
+            html += renderProductCard(p, i < 4);
+        } catch (e) {
+            console.warn("Skipping broken product:", p.id, e);
+        }
+    });
+    
+    if (html === '') { showGridMessage(grid, 'Products found, but data is corrupted.'); return; }
+    
+    grid.innerHTML = html;
     grid.querySelectorAll('img.product-thumb').forEach(img => { img.addEventListener('error', function () { this.src = 'assets/icon-192.png?v=4'; this.style.opacity = 1; }, { once: true }); });
 }
 
@@ -329,71 +341,77 @@ window.scrollFlash2 = function(direction) { const container = document.getElemen
 window.scrollSpecial = function(direction) { const container = document.getElementById('specialDealScroll'); const scrollAmount = 300; if (direction === 'left') container.scrollLeft -= scrollAmount; else container.scrollLeft += scrollAmount; };
 
 window.selectSubCategory = async function(subSlug, parentSlug, element) {
-    const subContainer = document.getElementById('subCategoryScrollContainer');
-    if (subContainer) {
-        subContainer.querySelectorAll('.category-item').forEach(el => el.classList.remove('active')); 
-        if (element) element.classList.add('active');
-    }
-    
-    const miniSubContainer = document.getElementById('miniSubCategoryScrollContainer');
-    if (miniSubContainer) miniSubContainer.style.display = 'none';
-
-    const titleEl = document.getElementById('productSectionTitle'); 
-    const grid = document.getElementById('productGrid');
-    
-    const normSlug = subSlug.trim().toLowerCase();
-    const currentCat = allCategoriesGlobal.find(c => c.slug.trim().toLowerCase() === normSlug);
-    if (titleEl) titleEl.innerHTML = currentCat ? currentCat.name : subSlug;
-
-    const minis = allCategoriesGlobal.filter(c => c.parent && c.parent.trim().toLowerCase() === normSlug && activeCategoriesSet.has(c.slug.trim().toLowerCase()));
-    if (minis.length > 0 && miniSubContainer) {
-        miniSubContainer.style.display = 'flex';
-        miniSubContainer.innerHTML = minis.map(c => `
-            <a href="javascript:void(0)" class="category-item" style="min-width: 80px;" data-slug="${c.slug}" data-parent="${subSlug}">
-                <div class="cat-icon" style="width: 40px; height: 40px; font-size: 1rem; background: #fff; border: 1px solid #E2E8F0; overflow:hidden;">${getCategoryIcon(c)}</div>
-                <span style="font-size: 0.7rem;">${c.name}</span>
-            </a>
-        `).join('');
-
-        miniSubContainer.querySelectorAll('.category-item').forEach(el => {
-            el.addEventListener('click', function(e) {
-                e.preventDefault();
-                selectMiniSubCategory(this.dataset.slug, this.dataset.parent, this);
-            });
-        });
-
-        showGridMessage(grid, `Please select a category under "${currentCat ? currentCat.name : subSlug}" to view products.`);
-        return;
-    }
-
-    showGridMessage(grid, 'Loading products...');
     try {
+        const subContainer = document.getElementById('subCategoryScrollContainer');
+        if (subContainer) {
+            subContainer.querySelectorAll('.category-item').forEach(el => el.classList.remove('active')); 
+            if (element) element.classList.add('active');
+        }
+        
+        const miniSubContainer = document.getElementById('miniSubCategoryScrollContainer');
+        if (miniSubContainer) miniSubContainer.style.display = 'none';
+
+        const titleEl = document.getElementById('productSectionTitle'); 
+        const grid = document.getElementById('productGrid');
+        
+        const normSlug = subSlug ? subSlug.trim().toLowerCase() : '';
+        const currentCat = allCategoriesGlobal.find(c => c && c.slug && c.slug.trim().toLowerCase() === normSlug);
+        if (titleEl) titleEl.innerHTML = currentCat ? currentCat.name : subSlug;
+
+        const minis = allCategoriesGlobal.filter(c => c && c.parent && c.parent.trim().toLowerCase() === normSlug && activeCategoriesSet.has((c.slug || '').trim().toLowerCase()));
+        if (minis.length > 0 && miniSubContainer) {
+            miniSubContainer.style.display = 'flex';
+            miniSubContainer.innerHTML = minis.map(c => `
+                <a href="javascript:void(0)" class="category-item" style="min-width: 80px;" data-slug="${c.slug}" data-parent="${subSlug}">
+                    <div class="cat-icon" style="width: 40px; height: 40px; font-size: 1rem; background: #fff; border: 1px solid #E2E8F0; overflow:hidden;">${getCategoryIcon(c)}</div>
+                    <span style="font-size: 0.7rem;">${c.name}</span>
+                </a>
+            `).join('');
+
+            miniSubContainer.querySelectorAll('.category-item').forEach(el => {
+                el.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    selectMiniSubCategory(this.dataset.slug, this.dataset.parent, this);
+                });
+            });
+
+            showGridMessage(grid, `Please select a category under "${currentCat ? currentCat.name : subSlug}" to view products.`);
+            return;
+        }
+
+        showGridMessage(grid, 'Loading products...');
         let fetchSlugs = getAllDescendantSlugs(subSlug, allCategoriesGlobal);
         const products = await API.searchProducts({ category: fetchSlugs }); 
         renderProductsGrid(products.filter(p => p.is_available !== false), grid); 
-    } catch (err) { showGridMessage(grid, 'Failed to load products.'); }
+    } catch (err) {
+        console.error("SubCategory Click Error:", err);
+        showGridMessage(document.getElementById('productGrid'), 'Error loading sub-category. Please try again.');
+    }
 };
 
 window.selectMiniSubCategory = async function(miniSlug, parentSlug, element) {
-    const miniSubContainer = document.getElementById('miniSubCategoryScrollContainer');
-    if (miniSubContainer) {
-        miniSubContainer.querySelectorAll('.category-item').forEach(el => el.classList.remove('active')); 
-        if (element) element.classList.add('active');
-    }
-
-    const titleEl = document.getElementById('productSectionTitle'); 
-    const grid = document.getElementById('productGrid');
-    
-    const normSlug = miniSlug.trim().toLowerCase();
-    const currentCat = allCategoriesGlobal.find(c => c.slug.trim().toLowerCase() === normSlug);
-    if (titleEl) titleEl.innerHTML = currentCat ? currentCat.name : miniSlug;
-
-    showGridMessage(grid, 'Loading products...');
     try {
+        const miniSubContainer = document.getElementById('miniSubCategoryScrollContainer');
+        if (miniSubContainer) {
+            miniSubContainer.querySelectorAll('.category-item').forEach(el => el.classList.remove('active')); 
+            if (element) element.classList.add('active');
+        }
+
+        const titleEl = document.getElementById('productSectionTitle'); 
+        const grid = document.getElementById('productGrid');
+        
+        const normSlug = miniSlug ? miniSlug.trim().toLowerCase() : '';
+        const currentCat = allCategoriesGlobal.find(c => c && c.slug && c.slug.trim().toLowerCase() === normSlug);
+        if (titleEl) titleEl.innerHTML = currentCat ? currentCat.name : miniSlug;
+
+        showGridMessage(grid, 'Loading products...');
         let fetchSlugs = getAllDescendantSlugs(miniSlug, allCategoriesGlobal);
         const products = await API.searchProducts({ category: fetchSlugs }); 
         renderProductsGrid(products.filter(p => p.is_available !== false), grid); 
-    } catch (err) { showGridMessage(grid, 'Failed to load products.'); }
+    } catch (err) {
+        console.error("MiniSubCategory Click Error:", err);
+        showGridMessage(document.getElementById('productGrid'), 'Error loading mini-category. Please try again.');
+    }
 };
 
 window.selectCategory = async function(catSlug, element) {
@@ -409,23 +427,29 @@ window.selectCategory = async function(catSlug, element) {
         if (subContainer) subContainer.style.display = 'none';
         if (miniSubContainer) miniSubContainer.style.display = 'none';
 
-        const normSlug = catSlug.trim().toLowerCase();
-        const currentCat = allCategoriesGlobal.find(c => c.slug.trim().toLowerCase() === normSlug);
+        const normSlug = catSlug ? catSlug.trim().toLowerCase() : 'all';
+        const currentCat = allCategoriesGlobal.find(c => c && c.slug && c.slug.trim().toLowerCase() === normSlug);
         if (titleEl) titleEl.innerHTML = (normSlug === 'all') ? 'For You' : (currentCat ? currentCat.name : catSlug);
 
-        let subCats = allCategoriesGlobal.filter(c => c.parent && c.parent.trim().toLowerCase() === normSlug && activeCategoriesSet.has(c.slug.trim().toLowerCase()));
+        let subCats = [];
+        if (Array.isArray(allCategoriesGlobal)) {
+            subCats = allCategoriesGlobal.filter(c => 
+                c && c.parent && c.parent.trim().toLowerCase() === normSlug && 
+                activeCategoriesSet.has((c.slug || '').trim().toLowerCase())
+            );
+        }
         
         if (subCats.length > 0 && normSlug !== 'all') {
             subContainer.style.display = 'flex';
             let subHtml = '';
             subCats.forEach(sub => {
-                const subNorm = sub.slug.trim().toLowerCase();
+                const subNorm = (sub.slug || '').trim().toLowerCase();
                 subHtml += `
                 <a href="javascript:void(0)" class="category-item" style="min-width: 80px;" data-slug="${sub.slug}" data-parent="${catSlug}">
                     <div class="cat-icon" style="width: 45px; height: 45px; font-size: 1.2rem; background: #fff; border: 1px solid #E2E8F0; overflow:hidden;">${getCategoryIcon(sub)}</div>
                     <span style="font-size: 0.75rem;">${sub.name}</span>
                 </a>`;
-                const minis = allCategoriesGlobal.filter(c => c.parent && c.parent.trim().toLowerCase() === subNorm && activeCategoriesSet.has(c.slug.trim().toLowerCase()));
+                const minis = allCategoriesGlobal.filter(c => c && c.parent && c.parent.trim().toLowerCase() === subNorm && activeCategoriesSet.has((c.slug || '').trim().toLowerCase()));
                 minis.forEach(mini => {
                     subHtml += `
                     <a href="javascript:void(0)" class="category-item" style="min-width: 80px; margin-left: 10px; border-left: 2px solid #E2E8F0; padding-left: 10px;" data-slug="${mini.slug}" data-parent="${sub.slug}">
@@ -436,7 +460,6 @@ window.selectCategory = async function(catSlug, element) {
             });
             subContainer.innerHTML = subHtml;
             
-            // ⭐ EVENT LISTENERS FOR SUB-CATEGORIES ⭐
             subContainer.querySelectorAll('.category-item').forEach(el => {
                 el.addEventListener('click', function(e) {
                     e.preventDefault();
