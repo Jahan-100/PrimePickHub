@@ -213,25 +213,39 @@ async function renderDynamicCategories() {
                 
                 if (catSlug === 'all') {
                     document.getElementById('categoryHoverPanel').style.display = 'none';
-                    loadCategoryProducts('all', 'For You');
                 } else {
                     renderHoverPanel(catSlug);
+                }
+            });
+
+            el.addEventListener('click', function(e) {
+                e.preventDefault();
+                const catSlug = this.dataset.slug;
+                document.getElementById('categoryHoverPanel').style.display = 'none';
+                if (catSlug === 'all') {
+                    loadCategoryProducts('all', 'For You');
+                } else {
+                    // If a main category has no sub-cats, clicking it loads products. If it has sub-cats, maybe just show the panel again.
+                    const mainCat = allCategoriesGlobal.find(c => c.slug === catSlug);
+                    const subCats = allCategoriesGlobal.filter(c => c.parent === catSlug && activeCategoriesSet.has(c.slug.toLowerCase()));
+                    if (subCats.length === 0) {
+                        loadCategoryProducts(catSlug, mainCat ? mainCat.name : catSlug);
+                    } else {
+                        renderHoverPanel(catSlug);
+                    }
                 }
             });
         });
 
         // Hide menu when mouse leaves the entire category area
-        document.querySelector('.container').addEventListener('mouseleave', function(e) {
+        document.querySelector('.category-nav-wrapper').addEventListener('mouseleave', function(e) {
             hoverTimeout = setTimeout(() => {
                 const panel = document.getElementById('categoryHoverPanel');
                 if (panel) panel.style.display = 'none';
                 document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
                 const defaultCat = document.querySelector('#categoryScrollContainer .category-item[data-slug="all"]');
-                if (defaultCat) {
-                    defaultCat.classList.add('active');
-                    loadCategoryProducts('all', 'For You');
-                }
-            }, 300);
+                if (defaultCat) defaultCat.classList.add('active');
+            }, 200);
         });
     }
     const dropdownMenu = document.getElementById('categoryDropdownMenu');
@@ -251,7 +265,6 @@ function renderHoverPanel(mainSlug) {
     
     if (subCats.length === 0) {
         panel.style.display = 'none';
-        loadCategoryProducts(mainSlug, mainCat ? mainCat.name : mainSlug);
         return;
     }
 
@@ -262,11 +275,11 @@ function renderHoverPanel(mainSlug) {
         const minis = allCategoriesGlobal.filter(c => c.parent === sub.slug && activeCategoriesSet.has(c.slug.toLowerCase()));
         
         html += `
-            <div class="sub-cat-group" onmouseenter="handleSubHover('${sub.slug}', '${sub.name}')">
-                <div class="sub-cat-title">${sub.name}</div>
+            <div class="sub-cat-col">
+                <div class="sub-cat-title" onclick="handleSubClick('${sub.slug}', '${sub.name}')">${sub.name}</div>
                 ${minis.length > 0 ? `
-                    <div class="mini-cat-list">
-                        ${minis.map(mini => `<div class="mini-cat-btn" onclick="handleMiniClick('${mini.slug}', '${mini.name}', event)">${mini.name}</div>`).join('')}
+                    <div class="mini-list">
+                        ${minis.map(mini => `<div class="mini-item" onclick="handleMiniClick('${mini.slug}', '${mini.name}', event)">${mini.name}</div>`).join('')}
                     </div>
                 ` : ''}
             </div>
@@ -274,31 +287,16 @@ function renderHoverPanel(mainSlug) {
     });
     
     panel.innerHTML = html;
-    
-    document.getElementById('productSectionTitle').innerHTML = `Select a category under "${mainCat ? mainCat.name : mainSlug}"`;
-    showGridMessage(document.getElementById('productGrid'), 'Hover over a sub-category to see options.');
 }
 
-window.handleSubHover = function(subSlug, subName) {
-    clearTimeout(hoverTimeout);
-    // If sub-category has no minis, load products immediately on hover
-    const minis = allCategoriesGlobal.filter(c => c.parent === subSlug && activeCategoriesSet.has(c.slug.toLowerCase()));
-    
-    document.querySelectorAll('.sub-cat-group').forEach(g => g.style.borderColor = '#E2E8F0');
-    event.currentTarget.style.borderColor = 'var(--accent)';
-    
-    if (minis.length === 0) {
-        loadCategoryProducts(subSlug, subName);
-    } else {
-        document.getElementById('productSectionTitle').innerHTML = `Select a mini-category under "${subName}"`;
-        showGridMessage(document.getElementById('productGrid'), 'Hover over a mini-category to load products.');
-    }
+window.handleSubClick = function(subSlug, subName) {
+    document.getElementById('categoryHoverPanel').style.display = 'none';
+    loadCategoryProducts(subSlug, subName);
 };
 
 window.handleMiniClick = function(miniSlug, miniName, event) {
     event.stopPropagation();
-    document.querySelectorAll('.mini-cat-btn').forEach(b => b.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+    document.getElementById('categoryHoverPanel').style.display = 'none';
     loadCategoryProducts(miniSlug, miniName);
 };
 
@@ -306,7 +304,7 @@ async function loadCategoryProducts(catSlug, catName) {
     const titleEl = document.getElementById('productSectionTitle');
     const grid = document.getElementById('productGrid');
     
-    if (titleEl) titleEl.innerHTML = catName;
+    if (titleEl) { titleEl.innerHTML = catName; titleEl.style.display = 'block'; }
     showGridMessage(grid, 'Loading products...');
     
     try {
