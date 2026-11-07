@@ -385,12 +385,18 @@ async function loadHomepageProducts() {
     const flashScroll2 = document.getElementById('flashSaleScroll2'); const flashSection2 = document.getElementById('flashSaleSection2'); const floatingAppIcon = document.getElementById('floatingAppIcon');
     if (!grid) return;
     try {
+        // ⭐ SAFETY CHECK: Agar DB connect na ho toh App Button show karo aur yahin ruk jao ⭐
+        if (!window.supabaseClient) {
+            console.warn("Supabase Client missing!");
+            if (floatingAppIcon) floatingAppIcon.style.display = 'flex';
+            return;
+        }
+
         if (typeof API === 'undefined' || !API.getHomepageProducts) throw new Error('API missing');
         
         const { data: settingsData } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).maybeSingle();
         const settings = settingsData || {};
         
-        // ⭐ APP BUTTON FIX: Agar database khali bhi ho, toh button show ho ⭐
         const showApp = settings.show_app_download !== false; 
         const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
         
