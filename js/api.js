@@ -26,7 +26,6 @@ const API = {
         if (!window.supabaseClient) return [];
         let req = window.supabaseClient.from('products').select('*, affiliate_offers(*)').limit(100);
         
-        // ⭐ UPDATED: Handle array of categories ⭐
         if (category) {
             if (Array.isArray(category)) {
                 req = req.in('category_slug', category);
@@ -67,5 +66,33 @@ const API = {
             country: geo.country || 'Unknown',
             city: geo.city || 'Unknown'
         }]).then(({ error }) => { if (error) console.warn('Track error:', error); }).catch(() => {});
+    },
+    // ⭐ NAYA: Centralized Categories Fetcher ⭐
+    async getCategories() {
+        if (!window.supabaseClient) return (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
+        
+        const { data, error } = await window.supabaseClient.from('site_settings').select('custom_categories').eq('id', 1).maybeSingle();
+        
+        let customCats = [];
+        if (!error && data && data.custom_categories) {
+            customCats = typeof data.custom_categories === 'string' ? JSON.parse(data.custom_categories) : data.custom_categories;
+            // Cache locally for offline fallback
+            try { localStorage.setItem('cached_categories', JSON.stringify(customCats)); } catch(e) {}
+        } else {
+            // Fallback to local cache if DB fails
+            try { customCats = JSON.parse(localStorage.getItem('cached_categories') || '[]'); } catch(e) {}
+        }
+
+        const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
+        
+        // Merge (custom overrides master)
+        let merged = [...masterCats];
+        customCats.forEach(c => {
+            const idx = merged.findIndex(m => m.slug === c.slug);
+            if (idx > -1) merged[idx] = c; 
+            else merged.push(c); 
+        });
+
+        return merged;
     }
 };
