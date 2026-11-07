@@ -86,7 +86,6 @@ const API = {
             try { customCats = JSON.parse(localStorage.getItem('cached_categories') || '[]'); } catch(e) {}
         }
 
-        // Merge (custom overrides master)
         let merged = [...masterCats];
         customCats.forEach(c => {
             const idx = merged.findIndex(m => m.slug === c.slug);
