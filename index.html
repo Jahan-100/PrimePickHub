@@ -35,9 +35,8 @@
     <link rel="canonical" href="https://primepickhub.vercel.app/">
     <link rel="icon" type="image/png" href="assets/favicon.png?v=4">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="css/main.css?v=40">
-    <!-- ⭐ FIX: FontAwesome ko async load kiya taake render block na ho ⭐ -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="css/main.css?v=37">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,800;0,900;1,800&family=Roboto:wght@400;700;900&family=Oswald:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Lobster&family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
     
@@ -65,7 +64,6 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ⭐ CONTRAST FIX: Dark Green color ⭐ */
         #floatingAppIcon {
             position: fixed !important;
             top: 50% !important;
@@ -74,7 +72,7 @@
             bottom: auto !important;
             margin-top: 10px !important;
             transform: none !important;
-            background: #047857 !important; 
+            background: #10b981 !important;
             color: #fff !important;
             border: none !important;
             border-radius: 15px 0 0 15px !important;
@@ -114,7 +112,7 @@
             line-height: 1 !important;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 </head>
 <body class="app-loading">
     
@@ -164,7 +162,7 @@
     </header>
 
     <div id="left-side-ad" class="left-ad-container">
-        <div style="text-align: center; color: #64748B; font-size: 0.8rem; font-weight: bold; padding: 10px;">
+        <div style="text-align: center; color: #475569; font-size: 0.8rem; font-weight: bold; padding: 10px;">
             Advertisement
             <br><br>
             <div style="width: 100px; height: 500px; border: 1px dashed #CBD5E1; margin: 0 auto; display: flex; align-items: center; justify-content: center; color: #CBD5E1; border-radius: 4px;">
@@ -210,7 +208,6 @@
             </div>
         </div>
 
-        <!-- Flash Sale Section 1 -->
         <div id="flashSaleSection" class="flash-sale-split" style="display: none;">
             <canvas id="fireworksCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;"></canvas>
             <div class="flash-sale-left">
@@ -235,7 +232,6 @@
             </div>
         </div>
 
-        <!-- Flash Sale Section 2 -->
         <div id="flashSaleSection2" class="flash-sale-split-2" style="display: none;">
             <canvas id="fireworksCanvas2" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;"></canvas>
             <div class="flash-sale-2-left">
@@ -262,14 +258,7 @@
 
         <div style="margin-bottom: 10px;">
             <h2 style="margin-bottom: 15px; font-family: 'Poppins', sans-serif; font-weight: 800; color: var(--text-dark);">Shop by Category</h2>
-            <!-- Main Categories -->
             <div class="horizontal-category-scroll" id="categoryScrollContainer"></div>
-            
-            <!-- ⭐ NAYA: Sub Categories Container ⭐ -->
-            <div class="horizontal-category-scroll" id="subCategoryScrollContainer" style="display:none; margin-top:10px; background:#F8FAFC; padding:15px; border-radius:8px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);"></div>
-            
-            <!-- ⭐ NAYA: Mini Sub Categories Container ⭐ -->
-            <div class="horizontal-category-scroll" id="miniSubCategoryScrollContainer" style="display:none; margin-top:10px; background:#F8FAFC; padding:15px; border-radius:8px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);"></div>
         </div>
 
         <div id="normalProductsSection" style="margin-bottom: 10px;">
@@ -281,8 +270,7 @@
             <div id="ad-fallback-middle"></div>
         </div>
 
-        <!-- CLS FIX: visibility hidden with min-height to reserve space -->
-        <div id="latestBlogSection" style="visibility: hidden; opacity: 0; transition: opacity 0.3s; margin-bottom: 20px; min-height: 280px;">
+        <div id="latestBlogSection" style="display: none; margin-bottom: 20px; min-height: 250px;">
             <h2 style="margin-bottom: 15px; font-family: 'Poppins', sans-serif; font-weight: 800; color: var(--text-dark);">Latest From Our Blog</h2>
             <a href="blog.html" id="latestBlogLink" style="text-decoration: none; display: block;">
                 <div class="latest-blog-card">
@@ -300,7 +288,7 @@
 
     </main>
 
-    <div class="newsletter-wrapper" style="min-height: 290px;">
+    <div class="newsletter-wrapper" style="min-height: 220px;">
         <div class="newsletter-box">
             <h2>Get the Best Deals in Your Inbox!</h2>
             <p>Subscribe to PrimePickHub and never miss out on exclusive sales, flash deals, and top-rated products.</p>
@@ -385,10 +373,10 @@
         <span>App</span>
     </button>
 
-    <script src="js/config.js?v=9"></script>
-    <script src="js/api.js?v=10"></script>
-    <script src="js/app.js?v=30"></script>
-    <script src="js/affiliate.js?v=9"></script>
+    <script src="js/config.js?v=6"></script>
+    <script src="js/api.js?v=8"></script>
+    <script src="js/app.js?v=27"></script>
+    <script src="js/affiliate.js?v=6"></script>
     <script>
         function toggleCatDropdown(event) {
             if(event) { event.preventDefault(); event.stopPropagation(); }
@@ -475,6 +463,6 @@
             }
         });
     </script>
-    <script src="js/floating-widgets.js?v=13"></script>
+    <script src="js/floating-widgets.js?v=10"></script>
 </body>
 </html>
