@@ -190,7 +190,7 @@
             }
             .category-item span {
                 font-size: 0.7rem;
-                white-space: normal; /* Allow text to wrap */
+                white-space: normal;
                 text-align: center;
                 line-height: 1.2;
                 max-width: 85px;
@@ -202,6 +202,15 @@
 </head>
 <body class="app-loading">
     
+    <!-- ⭐ INLINE SCRIPT TO HIDE SPLASH INSTANTLY IF ALREADY SHOWN ⭐ -->
+    <script>
+        if (sessionStorage.getItem('splashShown') === 'true') {
+            document.body.classList.remove('app-loading');
+            var splash = document.getElementById('splash-screen');
+            if (splash) splash.style.display = 'none';
+        }
+    </script>
+
     <div id="splash-screen">
         <div class="splash-bg-circle c1"></div>
         <div class="splash-bg-circle c2"></div>
@@ -465,7 +474,7 @@
 
     <script src="js/config.js?v=6"></script>
     <script src="js/api.js?v=12"></script> 
-    <script src="js/app.js?v=44"></script> <!-- Version updated to 44 -->
+    <script src="js/app.js?v=45"></script> <!-- Version updated to 45 -->
     <script src="js/affiliate.js?v=6"></script>
     <script>
         function toggleCatDropdown(event) {
