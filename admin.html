@@ -265,16 +265,16 @@
                             <div class="form-group"><label>Product Title <span style="color: #EF4444;">*</span></label><input type="text" id="pTitle" required style="background:#fff; width: 100%;"></div>
                             <div class="form-group"><label>URL Slug <span style="color: #EF4444;">*</span></label><input type="text" id="pSlug" required pattern="[a-z0-9\-]+" style="background:#fff; width: 100%;"></div>
                             
-                            <!-- PRIMARY IMAGE -->
+                            <!-- PRIMARY IMAGE (MULTIPLE SUPPORT) -->
                             <div class="form-group">
                                 <label>Primary Image (URL or Upload) <span style="color: #EF4444;">*</span></label>
                                 <input type="url" id="pImg" placeholder="https://...main-image.jpg" style="background:#fff; width: 100%;">
                                 <div class="upload-btn-wrap">
-                                    <input type="file" id="pImgFile" accept="image/*" style="display: none;" onchange="handlePrimaryImageSelect(this)">
-                                    <button type="button" class="btn-upload" onclick="document.getElementById('pImgFile').click()">📁 Choose from PC</button>
+                                    <input type="file" id="pImgFile" accept="image/*" multiple style="display: none;" onchange="handlePrimaryImageSelect(this)">
+                                    <button type="button" class="btn-upload" onclick="document.getElementById('pImgFile').click()">📁 Choose Multiple (1st is Main)</button>
                                     <span id="pImgFileName" class="file-name">No file chosen</span>
                                 </div>
-                                <!-- ⭐ Preview Container ⭐ -->
+                                <!-- Preview Container -->
                                 <div id="pImgPreview" class="image-preview-grid"></div>
                             </div>
 
@@ -287,7 +287,7 @@
                                     <button type="button" class="btn-upload" onclick="document.getElementById('pGalleryFile').click()">📁 Choose Multiple from PC</button>
                                     <span id="pGalleryFileName" class="file-name">No files chosen</span>
                                 </div>
-                                <!-- ⭐ Preview Container ⭐ -->
+                                <!-- Preview Container -->
                                 <div id="pGalleryPreview" class="image-preview-grid"></div>
                             </div>
 
@@ -326,7 +326,7 @@
                                         <button type="button" class="btn-upload" style="padding:4px 8px; font-size:0.75rem;" onclick="document.getElementById('pMainColorImgFile').click()">📁 Upload Colors</button>
                                         <span id="pMainColorImgName" class="file-name" style="font-size:0.7rem;">No files</span>
                                     </div>
-                                    <!-- ⭐ Preview Container ⭐ -->
+                                    <!-- Preview Container -->
                                     <div id="pMainColorPreview" class="image-preview-grid"></div>
                                 </div>
                                 <div class="form-group" style="flex: 1; min-width: 120px;"><label>Color Name</label><input type="text" id="pMainColorName" placeholder="e.g. Red,Blue,Green" style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
@@ -766,6 +766,6 @@
 
     <script src="/js/config.js?v=6"></script>
     <script src="/js/api.js?v=7"></script>
-    <script src="/js/admin.js?v=26"></script> <!-- Version 26 kiya gaya hai -->
+    <script src="/js/admin.js?v=27"></script> <!-- Version 27 kiya gaya hai -->
 </body>
 </html>
