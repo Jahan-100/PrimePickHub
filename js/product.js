@@ -60,6 +60,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     
     let activeColor = uniqueColors.length > 0 ? uniqueColors[0].value : null;
+    let activeColorName = uniqueColors.length > 0 ? uniqueColors[0].name : '';
     let activeOfferIndex = 0;
     let activeSize = null;
 
@@ -116,8 +117,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     boxStyle = `background-color: ${bgColor};`;
                 }
 
+                // Yahan hum colorName bhi pass kar rahe hain taake filter ho sake
                 html += `
-                <div style="cursor:pointer;" onclick="selectColor('${colorObj.value}')">
+                <div style="cursor:pointer;" onclick="selectColor('${colorObj.value}', '${colorObj.name}')">
                     <div style="width:50px; height:50px; border-radius:50%; ${boxStyle} border:3px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; box-shadow:${isActive ? '0 0 0 3px rgba(255,90,60,0.3)' : 'none'}; transition:all 0.2s; box-sizing:border-box;">
                     </div>
                 </div>`;
@@ -154,9 +156,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     let galleryImages = (product.gallery_images && product.gallery_images.length > 0) ? product.gallery_images.filter(Boolean) : (product.image_url ? [product.image_url] : []);
-    galleryImages = galleryImages.map(url => getHighQualityImage(url, 800));
+    
+    // ⭐ FIX: Ensure only valid HTTP image URLs are in the gallery ⭐
+    galleryImages = galleryImages.filter(url => typeof url === 'string' && url.startsWith('http')).map(url => getHighQualityImage(url, 800));
+    
+    // ⭐ FIX: Auto-Filter initial images based on first color ⭐
+    if (activeColorName && galleryImages.length > 0) {
+        let searchName = activeColorName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        let matched = galleryImages.filter(img => {
+            let lowerUrl = img.toLowerCase();
+            return lowerUrl.includes(searchName) && searchName.length > 2;
+        });
+        if (matched.length > 0) galleryImages = matched;
+    }
+    if (galleryImages.length === 0) galleryImages = ['/assets/icon-192.png'];
 
-    const mainImage = galleryImages[0] || '/assets/icon-192.png';
+    const mainImage = galleryImages[0];
     const videoHtml = product.video_url ? `<div style="background:#fff; padding:30px; border-radius:12px; border:1px solid #E2E8F0; margin-bottom:20px;"><h2 style="margin-bottom:15px; border-bottom:2px solid #FF5A3C; padding-bottom:10px; display:inline-block;">Product Video</h2>${getVideoHtml(product.video_url)}</div>` : '';
     const shareUrl = encodeURIComponent(window.location.href); const shareText = encodeURIComponent(`Check out ${product.title} on PrimePickHub`);
 
@@ -166,10 +181,9 @@ document.addEventListener('DOMContentLoaded', async () => {
              style="border:2px solid ${i === 0 ? '#FF5A3C' : '#E2E8F0'};">
     `).join('');
 
-    // ✅ Expert Verdict Preview (Google Ads Value Content)
-    const reviewPreview = product.review_html 
-        ? product.review_html.replace(/<[^>]*>/g, '').trim().substring(0, 220) + (product.review_html.length > 220 ? '…' : '')
-        : 'Our detailed expert review is being prepared. Check full specs, live price, and availability below.';
+    const rawReview = product.review_html || '';
+    const safeReviewPreview = rawReview.replace(/<[^>]*>/g, '').trim().substring(0, 220) + (rawReview.length > 220 ? '…' : '');
+    const reviewPreview = safeReviewPreview || 'Our detailed expert review is being prepared. Check full specs, live price, and availability below.';
 
     container.innerHTML = `
         <div class="product-layout">
@@ -211,7 +225,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 <p style="color:#64748B;margin-bottom:20px;">${escapeHTML(product.description || '')}</p>
 
-                <!-- ✅ Expert Verdict (Value Content for Google Ads) -->
                 <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; padding:15px; margin-bottom:15px;">
                     <h3 style="color:#166534; margin-bottom:6px; font-size:1.05rem; font-family:'Poppins',sans-serif;">📝 Expert Verdict</h3>
                     <p style="color:#334155; line-height:1.6; margin:0; font-size:0.9rem;">${escapeHTML(reviewPreview)}</p>
@@ -234,10 +247,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
         </div>
 
-        <!-- ✅ Full Review Section (Moved UP for Google Ads compliance) -->
         <div id="fullReview" style="background:#fff;padding:30px;border-radius:12px;border:1px solid #E2E8F0; margin-top: 20px;">
             <h2 style="margin-bottom:20px;border-bottom:2px solid #FF5A3C;padding-bottom:10px;display:inline-block;font-family:'Poppins',sans-serif;">Our Detailed Review</h2>
-            <div style="color:#334155;line-height:1.8;font-size:1.05rem;">${product.review_html || '<p>Detailed review coming soon...</p>'}</div>
+            <div style="color:#334155;line-height:1.8;font-size:1.05rem;">${rawReview || '<p>Detailed review coming soon...</p>'}</div>
         </div>
 
         ${videoHtml}
@@ -338,42 +350,67 @@ document.addEventListener('DOMContentLoaded', async () => {
     await fetchRates(); updateUI(baseCurrency);
     currencySelector.addEventListener('change', (e) => updateUI(e.target.value));
 
-    window.selectColor = function(colorValue) {
+    // ⭐ UPDATED: selectColor with exact filtering ⭐
+    window.selectColor = function(colorValue, colorName) {
         activeColor = colorValue;
-        let imageUrl = null;
-        if (colorValue.includes('|')) {
-            const parts = colorValue.split('|');
-            if (parts.length > 1) imageUrl = parts[1].trim();
-        } else if (colorValue.startsWith('http')) {
-            imageUrl = colorValue;
-        }
-        if (imageUrl && imageUrl.startsWith('http')) {
-            const existingIndex = galleryImages.findIndex(img => img === getHighQualityImage(imageUrl, 800));
-            if (existingIndex !== -1) {
-                changeMainImage(existingIndex, false); 
-            } else {
-                document.getElementById('mainImage').src = getHighQualityImage(imageUrl, 800);
-                galleryImages[0] = getHighQualityImage(imageUrl, 800);
-                window.currentMainImageIndex = 0;
-            }
-        }
+        activeColorName = colorName;
+        
+        // 1. Find best offer for this color
         const offersForColor = allVariations.filter(v => v.product_color && v.product_color.includes(colorValue));
-        let availableSizes = [];
-        offersForColor.forEach(o => {
-            if (o.variation_name) {
-                o.variation_name.split(',').map(s => s.trim()).filter(Boolean).forEach(s => {
-                    if (!availableSizes.includes(s)) availableSizes.push(s);
-                });
-            }
-        });
-        if (availableSizes.length > 0) { if (!availableSizes.includes(activeSize)) activeSize = availableSizes[0]; }
-        else { activeSize = null; }
         let idxExact = allVariations.findIndex(v => v.product_color && v.product_color.includes(colorValue) && (activeSize ? v.variation_name && v.variation_name.trim() === activeSize : true));
         let idxPartial = allVariations.findIndex(v => v.product_color && v.product_color.includes(colorValue) && (activeSize ? v.variation_name && v.variation_name.split(',').map(s=>s.trim()).includes(activeSize) : true));
+        
         if (idxExact !== -1) activeOfferIndex = idxExact;
         else if (idxPartial !== -1) activeOfferIndex = idxPartial;
         else if (offersForColor.length > 0) activeOfferIndex = allVariations.indexOf(offersForColor[0]);
+        
         activeOffer = allVariations[activeOfferIndex];
+        
+        // 2. Filter Gallery Images based on color name
+        let allRawImages = [];
+        if (product.image_url) allRawImages.push(product.image_url);
+        if (product.gallery_images) allRawImages = allRawImages.concat(product.gallery_images);
+        
+        let allImages = allRawImages
+            .filter(url => typeof url === 'string' && url.startsWith('http'))
+            .map(url => getHighQualityImage(url, 800));
+            
+        allImages = [...new Set(allImages)];
+
+        let searchName = (colorName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        let matchedImages = allImages.filter(img => {
+            let lowerUrl = img.toLowerCase();
+            return lowerUrl.includes(searchName) && searchName.length > 2;
+        });
+
+        if (matchedImages.length > 0) {
+            galleryImages = matchedImages;
+        } else {
+            galleryImages = allImages;
+        }
+
+        if (galleryImages.length === 0) galleryImages = ['/assets/icon-192.png'];
+
+        window.currentMainImageIndex = 0;
+        document.getElementById('mainImage').src = galleryImages[0];
+
+        // 3. Re-render thumbnails
+        const thumbnailContainer = document.getElementById('thumbnailContainer');
+        if (thumbnailContainer) {
+            thumbnailContainer.innerHTML = galleryImages.map((url, i) => `
+                <img src="${escapeHTML(getHighQualityImage(url, 150))}" alt="View ${i + 1}" 
+                     class="gallery-thumb" data-src="${escapeHTML(url)}" data-index="${i}"
+                     style="border:2px solid ${i === 0 ? '#FF5A3C' : '#E2E8F0'};">
+            `).join('');
+            
+            container.querySelectorAll('.gallery-thumb').forEach((thumb, index) => {
+                thumb.addEventListener('click', function () {
+                    changeMainImage(index, false);
+                });
+            });
+        }
+
+        // 4. Update UI
         document.getElementById('variationContainer').innerHTML = generateVariationUI();
         updateUI(currencySelector.value);
     };
@@ -572,7 +609,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // ✅ JSON-LD Product Schema (already existed)
+    // ✅ JSON-LD Product Schema
     const jsonLd = {
         "@context": "https://schema.org/", "@type": "Product", "name": product.title,
         "image": [getHighQualityImage(product.image_url, 800)].concat((product.gallery_images || []).map(u => getHighQualityImage(u, 800))).filter(Boolean),
@@ -589,7 +626,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (product.rating && product.reviews_count > 0) jsonLd.aggregateRating = { "@type": "AggregateRating", "ratingValue": product.rating, "reviewCount": product.reviews_count };
     const script = document.createElement('script'); script.type = 'application/ld+json'; script.text = JSON.stringify(jsonLd); document.head.appendChild(script);
 
-    // ✅ NEW: FAQ Schema (Google Rich Snippets)
+    // ✅ FAQ Schema
     const faqSchema = {
         "@context": "https://schema.org",
         "@type": "FAQPage",
@@ -627,7 +664,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     faqScript.text = JSON.stringify(faqSchema);
     document.head.appendChild(faqScript);
 
-    // ✅ NEW: Breadcrumb Schema
+    // ✅ Breadcrumb Schema
     const breadcrumbSchema = {
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
