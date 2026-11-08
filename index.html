@@ -115,15 +115,13 @@
         /* ⭐ NEW CENTERED DROPDOWN CSS ⭐ */
         .category-nav-wrapper {
             position: relative;
-            /* No padding-bottom to keep it tight */
         }
         
         #categoryHoverPanel {
             display: none;
             position: absolute;
-            /* top and left will be set by JS */
             background: #ffffff;
-            border-radius: 0 16px 16px 16px; /* Flat top left to attach to icon */
+            border-radius: 0 16px 16px 16px;
             padding: 15px;
             z-index: 99999;
             box-shadow: 0 15px 40px rgba(0,0,0,0.15);
@@ -132,7 +130,7 @@
             gap: 20px;
             min-width: max-content;
             max-width: 90vw;
-            margin-top: -2px; /* slight overlap to remove gap */
+            margin-top: -2px;
         }
 
         .sub-cat-col {
@@ -179,11 +177,24 @@
             font-weight: 600;
         }
 
+        /* ⭐ MOBILE FIX: Text Wrap & Spacing ⭐ */
         @media (max-width: 768px) {
             #categoryHoverPanel {
                 overflow-x: auto;
                 flex-wrap: nowrap;
                 max-width: 95vw;
+            }
+            .category-item {
+                min-width: 80px;
+                flex-shrink: 0;
+            }
+            .category-item span {
+                font-size: 0.7rem;
+                white-space: normal; /* Allow text to wrap */
+                text-align: center;
+                line-height: 1.2;
+                max-width: 85px;
+                word-break: break-word;
             }
         }
     </style>
@@ -454,7 +465,7 @@
 
     <script src="js/config.js?v=6"></script>
     <script src="js/api.js?v=12"></script> 
-    <script src="js/app.js?v=43"></script> <!-- Version updated to 43 -->
+    <script src="js/app.js?v=44"></script> <!-- Version updated to 44 -->
     <script src="js/affiliate.js?v=6"></script>
     <script>
         function toggleCatDropdown(event) {
