@@ -30,6 +30,17 @@ window.handleImageLoad = function(imgElement) {
     } else { imgElement.style.opacity = 1; }
 };
 
+// ⭐ SMART: Splash Hide Function ⭐
+function hideSplash() {
+    var splash = document.getElementById('splash-screen');
+    if (splash && splash.style.display !== 'none') {
+        splash.classList.add('hidden');
+        document.body.classList.remove('app-loading');
+        setTimeout(() => { splash.style.display = 'none'; }, 800);
+        sessionStorage.setItem('splashShown', 'true');
+    }
+}
+
 function getHighQualityImage(url, size = 400) {
     if (!url || typeof url !== 'string') return url;
     let cleanUrl = url.trim();
@@ -240,7 +251,6 @@ async function renderDynamicCategories() {
                 const subCats = allCategoriesGlobal.filter(c => c.parent === catSlug && activeCategoriesSet.has(c.slug.toLowerCase()));
 
                 if (subCats.length > 0) {
-                    // Show dropdown instead of loading products
                     if (panel.style.display === 'flex' && panel.dataset.activeSlug === catSlug) {
                         panel.style.display = 'none';
                         panel.dataset.activeSlug = '';
@@ -251,7 +261,6 @@ async function renderDynamicCategories() {
                         panel.dataset.activeSlug = catSlug;
                     }
                 } else {
-                    // Load products directly
                     panel.style.display = 'none';
                     panel.dataset.activeSlug = '';
                     document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
@@ -273,7 +282,6 @@ async function renderDynamicCategories() {
             });
         }
 
-        // Click outside to close panel on mobile
         document.addEventListener('click', function(e) {
             const panel = document.getElementById('categoryHoverPanel');
             if (panel && panel.style.display === 'flex' && !e.target.closest('.category-item') && !e.target.closest('#categoryHoverPanel')) {
@@ -656,6 +664,9 @@ async function loadHomepageProducts() {
         
     } catch (err) { 
         console.error('Load failed:', err); 
+    } finally {
+        // ⭐ SPLASH SCREEN TAB HI CHUPEGI JAB PRODUCTS LOAD HO JAYENGY ⭐
+        if (typeof hideSplash === 'function') hideSplash();
     }
 }
 
@@ -820,23 +831,8 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); }, 5000);
     document.addEventListener('click', function(e) { if (!e.target.closest('.notif-wrapper')) { const panel = document.getElementById('notifPanel'); if(panel) panel.style.display = 'none'; } });
     
-    function hideSplash() {
-        var splash = document.getElementById('splash-screen');
-        if (splash) {
-            if (sessionStorage.getItem('splashShown') === 'true') {
-                splash.style.display = 'none';
-                document.body.classList.remove('app-loading');
-            } else {
-                splash.classList.add('hidden');
-                document.body.classList.remove('app-loading');
-                setTimeout(() => { splash.style.display = 'none'; }, 800);
-                sessionStorage.setItem('splashShown', 'true');
-            }
-        }
-    }
-    setTimeout(hideSplash, 1500); 
+    // Fallback: If network is super slow and splash doesn't hide in 5s, hide it forcefully
     setTimeout(() => { 
-        var splash = document.getElementById('splash-screen');
-        if (splash && !splash.classList.contains('hidden') && splash.style.display !== 'none') hideSplash(); 
-    }, 3500);
+        if (typeof hideSplash === 'function') hideSplash(); 
+    }, 5000);
 });
