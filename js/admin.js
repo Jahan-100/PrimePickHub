@@ -11,6 +11,49 @@ async function uploadFileToSupabase(file) {
     return publicUrlData.publicUrl;
 }
 
+// ⭐ NAYA: Main Color Images Upload Handler ⭐
+window.handleMainColorUpload = async function(input) {
+    if (input.files.length === 0) return;
+    const fileNameSpan = document.getElementById('pMainColorImgName');
+    fileNameSpan.innerText = 'Uploading...';
+    let urls = [];
+    try {
+        for (let i = 0; i < input.files.length; i++) {
+            const url = await uploadFileToSupabase(input.files[i]);
+            urls.push(url);
+        }
+        document.getElementById('pMainColor').value = urls.join(',');
+        fileNameSpan.innerText = `${urls.length} images uploaded`;
+        alert("Images uploaded successfully!\n\n⚠️ ZAROORI: Ab Color Name wale box mein exactly usi order mein naam likhein jis order mein aapne images select ki hain (e.g. Red, Blue, Green).");
+    } catch (err) {
+        alert('Upload failed: ' + err.message);
+        fileNameSpan.innerText = 'Failed';
+    }
+};
+
+// ⭐ NAYA: Variation Color Images Upload Handler ⭐
+window.handleVarColorUpload = async function(input) {
+    if (input.files.length === 0) return;
+    const colorInput = input.parentElement.querySelector('.var-color');
+    const btn = input.parentElement.querySelector('.btn-upload');
+    const originalText = btn.innerText;
+    btn.innerText = '⌛...';
+    let urls = [];
+    try {
+        for (let i = 0; i < input.files.length; i++) {
+            const url = await uploadFileToSupabase(input.files[i]);
+            urls.push(url);
+        }
+        colorInput.value = urls.join(',');
+        btn.innerText = '✅ Done';
+        setTimeout(() => btn.innerText = originalText, 2000);
+    } catch (err) {
+        alert('Upload failed: ' + err.message);
+        btn.innerText = '❌ Fail';
+        setTimeout(() => btn.innerText = originalText, 2000);
+    }
+};
+
 async function syncCategoriesFromDB() {
     const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
     const { data, error } = await window.supabaseClient.from('site_settings').select('custom_categories').eq('id', 1).maybeSingle();
@@ -357,7 +400,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadStats(); 
     await loadSiteSettings(); 
     await loadProductsList(); 
-    await window.loadBlogList(); // ⭐ YAHAN ADD KIA HAI: Page load par blogs load karo ⭐
+    await window.loadBlogList(); 
     setupProductForm(); 
     setupToggleList(); 
     setupToggleAddProduct(); 
@@ -563,9 +606,23 @@ function renderTable() {
     }).join('');
 }
 
+// ⭐ YAHAN VARIATION ROW UPDATE KIYA GAYA HAI (Upload Button ke sath) ⭐
 window.addVariationRow = function(color = '', colorName = '', name = '', price = '', salePrice = '', commission = '', url = '') {
     const container = document.getElementById('variationsContainer'); const div = document.createElement('div'); div.className = 'variation-row';
-    div.innerHTML = `<input type="text" placeholder="Color (Hex/URL)" value="${color}" class="var-color"><input type="text" placeholder="Color Name" value="${colorName}" class="var-color-name"><input type="text" placeholder="Size/Qty" value="${name}" class="var-name" required><input type="number" step="0.01" placeholder="Base Price" value="${price}" class="var-price" required><input type="number" step="0.01" placeholder="Sale Price" value="${salePrice}" class="var-sale-price"><input type="number" step="0.1" placeholder="Comm %" value="${commission}" class="var-comm"><input type="url" placeholder="Aff URL" value="${url}" class="var-url"><button type="button" class="btn-remove-var" onclick="this.parentElement.remove()">X</button>`;
+    div.innerHTML = `
+        <div style="flex: 1.5; min-width: 130px; display:flex; flex-direction:column; gap:4px;">
+            <input type="text" placeholder="Color (Hex/URL)" value="${color}" class="var-color" style="width:100%;">
+            <input type="file" class="var-color-file" accept="image/*" multiple style="display:none;" onchange="handleVarColorUpload(this)">
+            <button type="button" class="btn-upload" style="padding:4px; font-size:0.75rem;" onclick="this.previousElementSibling.click()">📁 Upload Imgs</button>
+        </div>
+        <input type="text" placeholder="Color Name" value="${colorName}" class="var-color-name" style="flex: 1.2; min-width: 100px;">
+        <input type="text" placeholder="Size/Qty" value="${name}" class="var-name" required style="flex: 1; min-width: 80px;">
+        <input type="number" step="0.01" placeholder="Base Price" value="${price}" class="var-price" required style="flex: 1; min-width: 80px;">
+        <input type="number" step="0.01" placeholder="Sale Price" value="${salePrice}" class="var-sale-price" style="flex: 1; min-width: 80px;">
+        <input type="number" step="0.1" placeholder="Comm %" value="${commission}" class="var-comm" style="flex: 1; min-width: 80px;">
+        <input type="url" placeholder="Aff URL" value="${url}" class="var-url" style="flex: 1; min-width: 80px;">
+        <button type="button" class="btn-remove-var" onclick="this.parentElement.remove()">X</button>
+    `;
     container.appendChild(div);
 }
 document.getElementById('addVariationBtn')?.addEventListener('click', () => addVariationRow());
@@ -590,7 +647,7 @@ window.editProduct = async function(id) {
         document.getElementById('pDesc').value = p.description || ''; document.getElementById('pReview').value = p.review_html || ''; document.getElementById('pFeatured').checked = p.is_featured || false; document.getElementById('pTrending').checked = p.is_trending || false; document.getElementById('pSpecialDeal').checked = p.is_special_deal || false;
         document.getElementById('pSendNotification').checked = false; document.getElementById('pWriteBlog').checked = false;
         const varContainer = document.getElementById('variationsContainer'); varContainer.innerHTML = ''; const variations = p.affiliate_offers?.slice(1) || []; variations.forEach(v => addVariationRow(v.product_color, v.color_name, v.variation_name, v.price, v.sale_price, (v.commission_rate > 0 ? v.commission_rate : ''), v.affiliate_url));
-        document.getElementById('pImgFile').value = ''; document.getElementById('pGalleryFile').value = ''; document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen';
+        document.getElementById('pImgFile').value = ''; document.getElementById('pGalleryFile').value = ''; document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen'; document.getElementById('pMainColorImgName').innerText = 'No files';
         document.getElementById('formTitle').innerText = "Edit Product"; document.getElementById('saveBtn').innerText = "Update Product"; document.getElementById('cancelEditBtn').style.display = "block";
         const formContainer = document.getElementById('addProductContainer'); const toggleBtn = document.getElementById('toggleAddProductBtn'); if (formContainer && formContainer.style.display === 'none') { formContainer.style.display = 'block'; toggleBtn.textContent = 'Hide Product Form'; toggleBtn.style.background = '#EF4444'; }
         document.getElementById('productForm').scrollIntoView({ behavior: 'smooth' }); document.querySelectorAll('.error-input').forEach(el => el.classList.remove('error-input'));
@@ -609,6 +666,7 @@ function setupProductForm() {
         form.reset(); document.getElementById('variationsContainer').innerHTML = ''; document.getElementById('pId').value = ''; document.getElementById('pOfferId').value = ''; document.getElementById('pImgFile').value = ''; document.getElementById('pGalleryFile').value = ''; document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen'; document.getElementById('formTitle').innerText = "Add / Update Product"; document.getElementById('saveBtn').innerText = "Save Product"; cancelBtn.style.display = "none"; document.querySelectorAll('.error-input').forEach(el => el.classList.remove('error-input')); document.getElementById('addProductContainer').style.display = 'none'; const toggleBtn = document.getElementById('toggleAddProductBtn'); toggleBtn.textContent = 'Show Product Form'; toggleBtn.style.background = '#16a34a';
         document.getElementById('pHidePrice').checked = false;
         document.getElementById('pPrice').readOnly = false;
+        document.getElementById('pMainColorImgName').innerText = 'No files';
     });
     form.addEventListener('submit', async (e) => {
         e.preventDefault(); if (window.isSavingProduct) return; window.isSavingProduct = true;
