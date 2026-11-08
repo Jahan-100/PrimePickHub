@@ -18,22 +18,35 @@ async function uploadFileToSupabase(file) {
 
 // ================= PREVIEW LOGIC =================
 
-// ⭐ Primary Image Preview ⭐
+// ⭐ UPDATED: Primary Image Multiple Preview & Auto-Gallery Logic ⭐
 window.handlePrimaryImageSelect = function(input) {
     const container = document.getElementById('pImgPreview');
     container.innerHTML = '';
-    document.getElementById('pImgFileName').innerText = input.files.length > 0 ? input.files[0].name : 'No file chosen';
     
     if (input.files.length > 0) {
-        const file = input.files[0];
-        const url = URL.createObjectURL(file);
+        document.getElementById('pImgFileName').innerText = input.files.length + ' files selected';
+        
+        // 1. Pehli image ko Primary banayein
+        const primaryFile = input.files[0];
+        const url = URL.createObjectURL(primaryFile);
+        
         container.innerHTML = `
-            <div class="preview-item">
-                <img src="${url}" onclick="openImageLightbox('${url}')" title="Click to view">
+            <div class="preview-item" style="width: 90px; height: 90px; border: 2px solid #e11d48;">
+                <img src="${url}" onclick="openImageLightbox('${url}')" title="Main Image (Click to view)">
                 <button class="preview-remove" onclick="removePrimaryImage()" title="Remove Image">X</button>
+                <div style="position:absolute; bottom:0; left:0; right:0; background:rgba(225,29,72,0.8); color:#fff; font-size:0.6rem; text-align:center; padding:2px;">MAIN</div>
             </div>`;
+            
+        // 2. Agar 1 se zyada images hain, toh baqi ko Gallery mein dalein
+        if (input.files.length > 1) {
+            for (let i = 1; i < input.files.length; i++) {
+                currentGalleryFiles.push(input.files[i]);
+            }
+            renderGalleryPreviews();
+            alert(`1st image set as MAIN. Remaining ${input.files.length - 1} images added to Gallery automatically.`);
+        }
     } else {
-        // Agar file input khali hai, toh check karein ke URL input mein kuch hai ya nahi
+        document.getElementById('pImgFileName').innerText = 'No file chosen';
         const urlInput = document.getElementById('pImg').value.trim();
         if(urlInput) renderPrimaryUrlPreview(urlInput);
     }
@@ -50,9 +63,10 @@ function renderPrimaryUrlPreview(url) {
     const container = document.getElementById('pImgPreview');
     if(url) {
         container.innerHTML = `
-            <div class="preview-item">
-                <img src="${url}" onclick="openImageLightbox('${url}')" title="Click to view">
+            <div class="preview-item" style="width: 90px; height: 90px; border: 2px solid #e11d48;">
+                <img src="${url}" onclick="openImageLightbox('${url}')" title="Main Image (Click to view)">
                 <button class="preview-remove" onclick="removePrimaryImage()" title="Remove Image">X</button>
+                <div style="position:absolute; bottom:0; left:0; right:0; background:rgba(225,29,72,0.8); color:#fff; font-size:0.6rem; text-align:center; padding:2px;">MAIN</div>
             </div>`;
     } else {
         container.innerHTML = '';
@@ -890,8 +904,6 @@ function setupProductForm() {
     document.getElementById('logoutBtn')?.addEventListener('click', async () => { await API.signOut(); window.location.reload(); });
 }
 
-// ... (Baqi ka code wesa hi rahega: Blog forms, AI hunter, scroll buttons, etc.)
-// Is code ko save kar lein, ye aapki admin.js ko completely replace karega.
 document.addEventListener('DOMContentLoaded', () => {
     if (!document.getElementById('blogForm')) return;
     const toggleFormBtn = document.getElementById('toggleBlogFormBtn'); const formContainer = document.getElementById('blogFormContainer'); const toggleListBtn = document.getElementById('toggleBlogListBtn'); const listContainer = document.getElementById('blogListContainer'); const blogForm = document.getElementById('blogForm'); const cancelBtn = document.getElementById('cancelBlogBtn');
