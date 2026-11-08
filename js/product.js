@@ -1,41 +1,7 @@
 /**
  * Product Detail Page with Real-Time Currency Conversion & Color/Size Selection
+ * NOTE: escapeHTML() and getHighQualityImage() are loaded from /js/utils.js
  */
-function escapeHTML(s) {
-    if (s === null || s === undefined) return '';
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-}
-
-// ⭐ SMART IMAGE OPTIMIZER (Shopify CDN Fix) ⭐
-function getHighQualityImage(url, size = 400) {
-    if (!url || typeof url !== 'string') return url;
-    let cleanUrl = url.trim();
-    
-    if (cleanUrl.includes('aliexpress') || cleanUrl.includes('daraz') || cleanUrl.includes('alicdn') || cleanUrl.includes('alibaba')) {
-        const qIdx = cleanUrl.indexOf('?'); if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
-        cleanUrl = cleanUrl.replace(/(\.(?:jpg|jpeg|png|webp))(?:_[^.?]*)?(?:\.(?:jpg|jpeg|png|webp|avif))?$/i, `$1_${size}x${size}q80.jpg`);
-    } else if (cleanUrl.includes('amazon') || cleanUrl.includes('media-amazon')) {
-        const qIdx = cleanUrl.indexOf('?'); if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
-        if (/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i.test(cleanUrl)) cleanUrl = cleanUrl.replace(/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i, `._AC_SL${size}_.$1`);
-        else cleanUrl = cleanUrl.replace(/(\.(?:jpg|jpeg|png|webp))$/i, `._AC_SL${size}_$1`);
-    } else if (cleanUrl.includes('ebayimg.com')) {
-        cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, `/s-l${size}.$1`);
-    } else if (cleanUrl.includes('shopify') || cleanUrl.includes('govee') || cleanUrl.includes('allegra-k.com') || cleanUrl.includes('cdn.shopify')) {
-        // ⭐ SHOPIFY FIX: Remove existing '?v=...' completely so it doesn't block resizing
-        const qIdx = cleanUrl.indexOf('?');
-        if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
-
-        // Remove existing size modifiers in filename
-        cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
-        
-        // Force exact size and WebP format
-        cleanUrl = cleanUrl + `?width=${size}&height=${size}&crop=center&format=webp`;
-    } else {
-        cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
-        cleanUrl = cleanUrl.replace(/_\d+x(?=\.(jpg|jpeg|png|webp|avif))/i, '');
-    }
-    return cleanUrl;
-}
 
 function getVideoHtml(url) {
     if (!url || typeof url !== 'string') return '';
@@ -200,6 +166,11 @@ document.addEventListener('DOMContentLoaded', async () => {
              style="border:2px solid ${i === 0 ? '#FF5A3C' : '#E2E8F0'};">
     `).join('');
 
+    // ✅ Expert Verdict Preview (Google Ads Value Content)
+    const reviewPreview = product.review_html 
+        ? product.review_html.replace(/<[^>]*>/g, '').trim().substring(0, 220) + (product.review_html.length > 220 ? '…' : '')
+        : 'Our detailed expert review is being prepared. Check full specs, live price, and availability below.';
+
     container.innerHTML = `
         <div class="product-layout">
             <div class="product-thumbnails-section">
@@ -239,6 +210,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
 
                 <p style="color:#64748B;margin-bottom:20px;">${escapeHTML(product.description || '')}</p>
+
+                <!-- ✅ Expert Verdict (Value Content for Google Ads) -->
+                <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; padding:15px; margin-bottom:15px;">
+                    <h3 style="color:#166534; margin-bottom:6px; font-size:1.05rem; font-family:'Poppins',sans-serif;">📝 Expert Verdict</h3>
+                    <p style="color:#334155; line-height:1.6; margin:0; font-size:0.9rem;">${escapeHTML(reviewPreview)}</p>
+                </div>
                 
                 <div style="background-color:#FEF3C7; border-left:4px solid #F59E0B; padding:12px 15px; margin-bottom:15px; border-radius:6px; display:flex; align-items:flex-start; gap:10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
                     <i class="fa-solid fa-circle-info" style="color:#D97706; font-size:1.2rem; margin-top:2px;"></i>
@@ -256,13 +233,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             </div>
         </div>
-        
-        ${videoHtml}
-        
-        <div style="background:#fff;padding:30px;border-radius:12px;border:1px solid #E2E8F0; margin-top: 20px;">
-            <h2 style="margin-bottom:20px;border-bottom:2px solid #FF5A3C;padding-bottom:10px;display:inline-block;">Our Detailed Review</h2>
+
+        <!-- ✅ Full Review Section (Moved UP for Google Ads compliance) -->
+        <div id="fullReview" style="background:#fff;padding:30px;border-radius:12px;border:1px solid #E2E8F0; margin-top: 20px;">
+            <h2 style="margin-bottom:20px;border-bottom:2px solid #FF5A3C;padding-bottom:10px;display:inline-block;font-family:'Poppins',sans-serif;">Our Detailed Review</h2>
             <div style="color:#334155;line-height:1.8;font-size:1.05rem;">${product.review_html || '<p>Detailed review coming soon...</p>'}</div>
         </div>
+
+        ${videoHtml}
 
         <div id="fullScreenImageModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.95); z-index:9999999; align-items:center; justify-content:center; overflow:hidden;">
             <div id="zoomPanContainer" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; cursor:zoom-in; overflow:hidden;">
@@ -594,6 +572,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // ✅ JSON-LD Product Schema (already existed)
     const jsonLd = {
         "@context": "https://schema.org/", "@type": "Product", "name": product.title,
         "image": [getHighQualityImage(product.image_url, 800)].concat((product.gallery_images || []).map(u => getHighQualityImage(u, 800))).filter(Boolean),
@@ -609,6 +588,73 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     if (product.rating && product.reviews_count > 0) jsonLd.aggregateRating = { "@type": "AggregateRating", "ratingValue": product.rating, "reviewCount": product.reviews_count };
     const script = document.createElement('script'); script.type = 'application/ld+json'; script.text = JSON.stringify(jsonLd); document.head.appendChild(script);
+
+    // ✅ NEW: FAQ Schema (Google Rich Snippets)
+    const faqSchema = {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": `Is ${product.title} worth buying?`,
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": product.review_html 
+                        ? product.review_html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 300)
+                        : `${product.title} is available at competitive prices. Check the live price on ${mainOffer.store_name || 'the official store'} before purchasing.`
+                }
+            },
+            {
+                "@type": "Question",
+                "name": `Where can I buy ${product.title}?`,
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": `You can buy ${product.title} from ${mainOffer.store_name || 'the official store'}. Click the "Buy Now" button to check the latest price and availability.`
+                }
+            },
+            {
+                "@type": "Question",
+                "name": `What is the price of ${product.title}?`,
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": `The price starts at ${mainOffer.sale_price || mainOffer.price || 'check live'} ${mainOffer.currency || 'USD'}. Prices may change — please check the live price on the store before ordering.`
+                }
+            }
+        ]
+    };
+    const faqScript = document.createElement('script');
+    faqScript.type = 'application/ld+json';
+    faqScript.text = JSON.stringify(faqSchema);
+    document.head.appendChild(faqScript);
+
+    // ✅ NEW: Breadcrumb Schema
+    const breadcrumbSchema = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": window.location.origin
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": product.category_slug ? product.category_slug.replace(/-/g, ' ') : "Products",
+                "item": `${window.location.origin}/category.html?cat=${product.category_slug || ''}`
+            },
+            {
+                "@type": "ListItem",
+                "position": 3,
+                "name": product.title
+            }
+        ]
+    };
+    const bcScript = document.createElement('script');
+    bcScript.type = 'application/ld+json';
+    bcScript.text = JSON.stringify(breadcrumbSchema);
+    document.head.appendChild(bcScript);
 });
 
 function getHexFromColorString(colorStr) {
