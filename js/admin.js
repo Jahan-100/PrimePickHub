@@ -1,7 +1,6 @@
 let allProducts = [];
 let builderState = { main: null, subs: [], minis: [] };
 let globalCategories = [];
-
 let currentGalleryFiles = []; 
 
 async function uploadFileToSupabase(file) {
@@ -588,9 +587,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     document.getElementById('saveAppSettingsBtn')?.addEventListener('click', async function() {
-        const isLive = document.getElementById('appDownloadStatusToggle').checked;
-        const { error } = await window.supabaseClient.from('site_settings').update({ show_app_download: isLive }).eq('id', 1);
-        if (error) alert("Error: " + error.message); else alert(`App Download Popup is now ${isLive ? 'LIVE (Visible)' : 'STOPPED (Hidden)'} on website!`);
+        const showPopup = document.getElementById('showAppPopupToggle').checked;
+        const showFloating = document.getElementById('showFloatingBtnToggle').checked;
+        
+        const { error } = await window.supabaseClient.from('site_settings').update({ 
+            show_app_download: showPopup,
+            show_floating_app_btn: showFloating
+        }).eq('id', 1);
+        
+        if (error) alert("Error: " + error.message); 
+        else alert(`Settings Updated!\nPopup: ${showPopup ? 'ON' : 'OFF'}\nFloating Button: ${showFloating ? 'ON' : 'OFF'}`);
     });
 
     document.getElementById('saveTitleBtn')?.addEventListener('click', async function() {
@@ -667,7 +673,9 @@ function setupToggleSale2() { const toggleBtn = document.getElementById('toggleS
 async function loadSiteSettings() {
     const { data } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).maybeSingle();
     if (data) {
-        if(document.getElementById('appDownloadStatusToggle')) document.getElementById('appDownloadStatusToggle').checked = data.show_app_download !== false;
+        if(document.getElementById('showAppPopupToggle')) document.getElementById('showAppPopupToggle').checked = data.show_app_download !== false;
+        if(document.getElementById('showFloatingBtnToggle')) document.getElementById('showFloatingBtnToggle').checked = data.show_floating_app_btn !== false;
+        
         if(document.getElementById('specialDealTitleInput')) { document.getElementById('specialDealTitleInput').value = data.special_deal_title || 'First order deal'; document.getElementById('titleFontFamily').value = data.title_font_family || 'Poppins'; document.getElementById('titleFontSize').value = data.title_font_size || '2rem'; document.getElementById('titleFontWeight').value = data.title_font_weight || '800'; document.getElementById('titleFontStyle').value = data.title_font_style || 'normal'; }
         if(document.getElementById('flashTitleText')) { document.getElementById('flashTitleText').value = data.flash_title_text || 'Sale Section 1'; document.getElementById('flashTitleFontFamily').value = data.flash_title_font_family || 'Poppins'; document.getElementById('flashTitleFontSize').value = data.flash_title_font_size || '2rem'; document.getElementById('flashTitleFontWeight').value = data.flash_title_font_weight || '900'; document.getElementById('flashTitleFontStyle').value = data.flash_title_font_style || 'normal'; }
         if(document.getElementById('sale2TitleText')) { document.getElementById('sale2TitleText').value = data.sale_section_2_title || 'Sale Section 2'; document.getElementById('sale2TitleFontFamily').value = data.sale_section_2_font_family || 'Poppins'; document.getElementById('sale2TitleFontSize').value = data.sale_section_2_font_size || '2rem'; document.getElementById('sale2TitleFontWeight').value = data.sale_section_2_font_weight || '900'; document.getElementById('sale2TitleFontStyle').value = data.sale_section_2_font_style || 'normal'; }
