@@ -204,41 +204,82 @@ async function renderDynamicCategories() {
             </a>
         `).join('');
 
+        const isHoverDevice = window.matchMedia('(hover: hover)').matches;
+
         catContainer.querySelectorAll('.category-item').forEach(el => {
-            el.addEventListener('mouseenter', function(e) {
-                clearTimeout(hoverTimeout);
-                const catSlug = this.dataset.slug;
-                document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
-                this.classList.add('active');
-                
-                if (catSlug === 'all') {
-                    document.getElementById('categoryHoverPanel').style.display = 'none';
-                } else {
-                    renderHoverPanel(catSlug, this);
-                }
-            });
+            if (isHoverDevice) {
+                el.addEventListener('mouseenter', function(e) {
+                    clearTimeout(hoverTimeout);
+                    const catSlug = this.dataset.slug;
+                    document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    if (catSlug === 'all') {
+                        document.getElementById('categoryHoverPanel').style.display = 'none';
+                    } else {
+                        renderHoverPanel(catSlug, this);
+                    }
+                });
+            }
 
             el.addEventListener('click', function(e) {
                 e.preventDefault();
                 const catSlug = this.dataset.slug;
-                document.getElementById('categoryHoverPanel').style.display = 'none';
-                document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
-                this.classList.add('active');
-                
+                const panel = document.getElementById('categoryHoverPanel');
+
+                if (catSlug === 'all') {
+                    panel.style.display = 'none';
+                    panel.dataset.activeSlug = '';
+                    document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
+                    this.classList.add('active');
+                    loadCategoryProducts('all', 'For You');
+                    return;
+                }
+
                 const mainCat = allCategoriesGlobal.find(c => c.slug === catSlug);
-                loadCategoryProducts(catSlug, (catSlug === 'all') ? 'For You' : (mainCat ? mainCat.name : catSlug));
+                const subCats = allCategoriesGlobal.filter(c => c.parent === catSlug && activeCategoriesSet.has(c.slug.toLowerCase()));
+
+                if (subCats.length > 0) {
+                    // Show dropdown instead of loading products
+                    if (panel.style.display === 'flex' && panel.dataset.activeSlug === catSlug) {
+                        panel.style.display = 'none';
+                        panel.dataset.activeSlug = '';
+                    } else {
+                        document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
+                        this.classList.add('active');
+                        renderHoverPanel(catSlug, this);
+                        panel.dataset.activeSlug = catSlug;
+                    }
+                } else {
+                    // Load products directly
+                    panel.style.display = 'none';
+                    panel.dataset.activeSlug = '';
+                    document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
+                    this.classList.add('active');
+                    loadCategoryProducts(catSlug, mainCat ? mainCat.name : catSlug);
+                }
             });
         });
 
-        // Hide menu when mouse leaves the entire category area
-        document.querySelector('.category-nav-wrapper').addEventListener('mouseleave', function(e) {
-            hoverTimeout = setTimeout(() => {
-                const panel = document.getElementById('categoryHoverPanel');
-                if (panel) panel.style.display = 'none';
-                document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
-                const defaultCat = document.querySelector('#categoryScrollContainer .category-item[data-slug="all"]');
-                if (defaultCat) defaultCat.classList.add('active');
-            }, 200);
+        if (isHoverDevice) {
+            document.querySelector('.category-nav-wrapper').addEventListener('mouseleave', function(e) {
+                hoverTimeout = setTimeout(() => {
+                    const panel = document.getElementById('categoryHoverPanel');
+                    if (panel) panel.style.display = 'none';
+                    document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
+                    const defaultCat = document.querySelector('#categoryScrollContainer .category-item[data-slug="all"]');
+                    if (defaultCat) defaultCat.classList.add('active');
+                }, 200);
+            });
+        }
+
+        // Click outside to close panel on mobile
+        document.addEventListener('click', function(e) {
+            const panel = document.getElementById('categoryHoverPanel');
+            if (panel && panel.style.display === 'flex' && !e.target.closest('.category-item') && !e.target.closest('#categoryHoverPanel')) {
+                panel.style.display = 'none';
+                panel.dataset.activeSlug = '';
+            }
         });
     }
     const dropdownMenu = document.getElementById('categoryDropdownMenu');
@@ -281,7 +322,6 @@ function renderHoverPanel(mainSlug, targetElement) {
     
     panel.innerHTML = html;
 
-    // ⭐ FIXED: Event listeners use data attributes to avoid quote issues ⭐
     panel.querySelectorAll('.sub-cat-title').forEach(el => {
         el.addEventListener('click', function(e) {
             e.preventDefault();
@@ -303,7 +343,6 @@ function renderHoverPanel(mainSlug, targetElement) {
         });
     });
 
-    // Position the panel dynamically centered over the target element
     const wrapper = document.querySelector('.category-nav-wrapper');
     const wrapperRect = wrapper.getBoundingClientRect();
     const targetRect = targetElement.getBoundingClientRect();
