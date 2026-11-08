@@ -176,14 +176,21 @@
                     </div>
                 </div>
 
-                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 20px; padding: 15px; border-radius: 8px; display: inline-flex; flex-direction: column; gap: 2px; width: fit-content;">
-                    <h3 style="margin: 0; color: #166534; font-size: 1rem; font-weight: 700; line-height: 1.2;">App Download Popup Settings</h3>
-                    <p style="margin: 0; font-size: 0.8rem; color: #15803d; line-height: 1.2;">(Uncheck to hide QR popup and corner button)</p>
-                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: #1E1B4B; margin-top: 8px; line-height: 1.2;">
-                        <input type="checkbox" id="appDownloadStatusToggle" style="width: 16px; height: 16px; margin: 0; cursor: pointer;">
-                        Show App Popup & Floating Button (Live)
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 20px; padding: 15px; border-radius: 8px; display: inline-flex; flex-direction: column; gap: 5px; width: fit-content;">
+                    <h3 style="margin: 0; color: #166534; font-size: 1rem; font-weight: 700; line-height: 1.2;">App Download Settings</h3>
+                    <p style="margin: 0; font-size: 0.8rem; color: #15803d; line-height: 1.2;">(Control Popup and Floating Button separately)</p>
+                    
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: #1E1B4B; margin-top: 8px; line-height: 1.2;">
+                        <input type="checkbox" id="showAppPopupToggle" style="width: 18px; height: 18px; margin: 0; cursor: pointer;">
+                        Show App Download Popup (QR/Install)
                     </label>
-                    <button type="button" id="saveAppSettingsBtn" style="width: auto; padding: 8px 15px; background: #16a34a; color: white; border: none; border-radius: 4px; font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 8px; box-shadow: 0 2px 4px rgba(22,163,74,0.2); align-self: flex-start;">Update Settings</button>
+                    
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: #1E1B4B; margin-top: 4px; line-height: 1.2;">
+                        <input type="checkbox" id="showFloatingBtnToggle" style="width: 18px; height: 18px; margin: 0; cursor: pointer;">
+                        Show Floating App Button (Side Icon)
+                    </label>
+
+                    <button type="button" id="saveAppSettingsBtn" style="width: auto; padding: 8px 15px; background: #16a34a; color: white; border: none; border-radius: 4px; font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 12px; box-shadow: 0 2px 4px rgba(22,163,74,0.2); align-self: flex-start;">Update Settings</button>
                 </div>
 
                 <div class="admin-card box-manage-categories">
@@ -265,7 +272,6 @@
                             <div class="form-group"><label>Product Title <span style="color: #EF4444;">*</span></label><input type="text" id="pTitle" required style="background:#fff; width: 100%;"></div>
                             <div class="form-group"><label>URL Slug <span style="color: #EF4444;">*</span></label><input type="text" id="pSlug" required pattern="[a-z0-9\-]+" style="background:#fff; width: 100%;"></div>
                             
-                            <!-- PRIMARY IMAGE (MULTIPLE SUPPORT) -->
                             <div class="form-group">
                                 <label>Primary Image (URL or Upload) <span style="color: #EF4444;">*</span></label>
                                 <input type="url" id="pImg" placeholder="https://...main-image.jpg" style="background:#fff; width: 100%;">
@@ -274,11 +280,9 @@
                                     <button type="button" class="btn-upload" onclick="document.getElementById('pImgFile').click()">📁 Choose Multiple (1st is Main)</button>
                                     <span id="pImgFileName" class="file-name">No file chosen</span>
                                 </div>
-                                <!-- Preview Container -->
                                 <div id="pImgPreview" class="image-preview-grid"></div>
                             </div>
 
-                            <!-- GALLERY IMAGES -->
                             <div class="form-group">
                                 <label>Gallery Images (URLs or Upload)</label>
                                 <textarea id="pGallery" rows="3" placeholder="https://...image2.jpg&#10;https://...image3.jpg" style="background:#fff; width: 100%;"></textarea>
@@ -287,7 +291,6 @@
                                     <button type="button" class="btn-upload" onclick="document.getElementById('pGalleryFile').click()">📁 Choose Multiple from PC</button>
                                     <span id="pGalleryFileName" class="file-name">No files chosen</span>
                                 </div>
-                                <!-- Preview Container -->
                                 <div id="pGalleryPreview" class="image-preview-grid"></div>
                             </div>
 
@@ -317,7 +320,6 @@
                             <div class="form-group"><label>Affiliate URL <span style="color: #EF4444;">*</span></label><input type="url" id="pAffUrl" required style="background:#fff; width: 100%;"></div>
                             
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <!-- MAIN COLOR VALUE -->
                                 <div class="form-group" style="flex: 1.5; min-width: 150px;">
                                     <label>Color Value (Hex/URL)</label>
                                     <input type="text" id="pMainColor" placeholder="e.g. #FF0000 or https://..." style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
@@ -326,7 +328,6 @@
                                         <button type="button" class="btn-upload" style="padding:4px 8px; font-size:0.75rem;" onclick="document.getElementById('pMainColorImgFile').click()">📁 Upload Colors</button>
                                         <span id="pMainColorImgName" class="file-name" style="font-size:0.7rem;">No files</span>
                                     </div>
-                                    <!-- Preview Container -->
                                     <div id="pMainColorPreview" class="image-preview-grid"></div>
                                 </div>
                                 <div class="form-group" style="flex: 1; min-width: 120px;"><label>Color Name</label><input type="text" id="pMainColorName" placeholder="e.g. Red,Blue,Green" style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
@@ -411,9 +412,6 @@
                         </form>
                     </div>
                 </div>
-
-                <!-- ... (Baqi sections same hain: Special Deal, Sale 1, Sale 2, Blog, AI Hunter, Manage Products) ... -->
-                <!-- Inko mat change karna, maine wese hi chora hai -->
 
                 <div class="admin-card box-special-deal">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
@@ -758,7 +756,6 @@
         </div>
     </div>
 
-    <!-- ⭐ NAYA: Image Lightbox (Medium Size Preview) ⭐ -->
     <div id="imageLightbox" onclick="closeImageLightbox(event)">
         <img id="lightboxImg" src="" alt="Preview">
         <button class="close-lightbox" onclick="closeImageLightbox(event)">Close Preview</button>
@@ -766,6 +763,6 @@
 
     <script src="/js/config.js?v=6"></script>
     <script src="/js/api.js?v=7"></script>
-    <script src="/js/admin.js?v=27"></script> <!-- Version 27 kiya gaya hai -->
+    <script src="/js/admin.js?v=28"></script> <!-- Version 28 -->
 </body>
 </html>
