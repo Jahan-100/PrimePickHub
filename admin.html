@@ -95,6 +95,20 @@
         .box-manage-products h2 { color: #92400e !important; margin-bottom: 15px; }
         .box-manage-categories { background: #e0f2fe; border: 1px solid #bae6fd; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
         .box-manage-categories h2 { color: #0369a1 !important; margin-bottom: 15px; }
+        
+        /* ⭐ NAYA: Image Preview CSS ⭐ */
+        .image-preview-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .preview-item { position: relative; width: 70px; height: 70px; border-radius: 6px; border: 1px solid #CBD5E1; background: #fff; }
+        .preview-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 5px; cursor: pointer; transition: transform 0.2s; }
+        .preview-item img:hover { transform: scale(1.05); }
+        .preview-remove { position: absolute; top: -6px; right: -6px; background: #EF4444; color: white; border: 2px solid #fff; width: 20px; height: 20px; border-radius: 50%; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 10; line-height: 1; }
+        .preview-remove:hover { background: #DC2626; }
+        
+        /* Lightbox Modal */
+        #imageLightbox { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 9999999; align-items: center; justify-content: center; flex-direction: column; }
+        #imageLightbox img { max-width: 90vw; max-height: 85vh; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        #imageLightbox .close-lightbox { margin-top: 15px; background: #fff; color: #000; padding: 8px 20px; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 1rem; }
+
         @media (max-width: 768px) {
             .admin-layout { flex-direction: column; }
             .admin-sidebar { width: 100%; padding: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
@@ -181,28 +195,23 @@
                         </div>
                     </div>
                     
-                    <!-- CATEGORY MANAGEMENT TABLE -->
                     <div id="manageCatsContainer" style="display: none; margin-top: 20px; background: #fff; padding: 15px; border-radius: 8px;">
                         <div class="table-scroll-outer">
                             <div class="table-scroll-wrapper" style="max-height: 400px;">
                                 <div class="table-responsive-mobile">
                                     <table class="admin-table">
                                         <thead><tr><th>Category Name (Hierarchy)</th><th>Slug</th><th>Parent</th><th>Actions</th></tr></thead>
-                                        <tbody id="categoryManagementBody">
-                                            <!-- Loaded via JS -->
-                                        </tbody>
+                                        <tbody id="categoryManagementBody"></tbody>
                                     </table>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- ⭐ NEW CATEGORY BUILDER (3 STEPS) ⭐ -->
                     <div id="categoryBuilderContainer" style="display: none; margin-top: 20px; background: #fff; padding: 20px; border-radius: 8px; border: 2px dashed #10b981;">
                         <h3 style="color: #047857; margin-bottom: 15px;">Step-by-Step Category Builder</h3>
                         
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
-                            <!-- Box 1: Main Category -->
                             <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0;">
                                 <h4 style="margin-top:0; color:#166534;">1. Main Category</h4>
                                 <select id="bMainSelect" style="width:100%; padding:8px; margin-bottom:8px; border-radius:4px; border:1px solid #ccc;"><option value="">-- Select Existing --</option></select>
@@ -211,7 +220,6 @@
                                 <div id="bActiveMainDisplay" style="margin-top:10px; font-weight:bold; color:#166534; font-size:0.9rem;"></div>
                             </div>
 
-                            <!-- Box 2: Sub Category -->
                             <div style="background: #eff6ff; padding: 15px; border-radius: 8px; border: 1px solid #bfdbfe;">
                                 <h4 style="margin-top:0; color:#1e3a8a;">2. Sub Category</h4>
                                 <select id="bSubSelect" style="width:100%; padding:8px; margin-bottom:8px; border-radius:4px; border:1px solid #ccc;"><option value="">-- Select Existing --</option></select>
@@ -220,7 +228,6 @@
                                 <ul id="bSubList" style="margin-top:10px; padding-left:15px; font-size:0.85rem; color:#1e3a8a; max-height:100px; overflow-y:auto;"></ul>
                             </div>
 
-                            <!-- Box 3: Mini-Sub Category -->
                             <div style="background: #fef2f2; padding: 15px; border-radius: 8px; border: 1px solid #fecaca;">
                                 <h4 style="margin-top:0; color:#991b1b;">3. Mini-Sub Category</h4>
                                 <select id="bMiniParentSelect" style="width:100%; padding:8px; margin-bottom:8px; border-radius:4px; border:1px solid #ccc;"><option value="">-- Select Parent Sub-Cat --</option></select>
@@ -231,13 +238,11 @@
                             </div>
                         </div>
 
-                        <!-- Preview Section -->
                         <div style="margin-top: 20px; border-top: 2px solid #E2E8F0; padding-top: 15px;">
                             <h4 style="color: #1E1B4B;">Preview of New Categories to be Saved:</h4>
                             <ul id="builderPreviewList" style="background: #F8FAFC; padding: 15px; border-radius: 8px; font-size: 0.9rem; max-height: 200px; overflow-y: auto; list-style-type: none; margin: 0; border: 1px solid #E2E8F0;"></ul>
                         </div>
 
-                        <!-- Final Save Button -->
                         <div style="margin-top: 20px; display: flex; gap: 10px;">
                             <button type="button" onclick="saveBuilderData()" style="padding:12px 30px; background:#10b981; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold; font-size:1rem;">Final Add & Save All Categories</button>
                             <button type="button" onclick="resetBuilder()" style="padding:12px 30px; background:#64748B; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold; font-size:1rem;">Reset Builder</button>
@@ -260,24 +265,30 @@
                             <div class="form-group"><label>Product Title <span style="color: #EF4444;">*</span></label><input type="text" id="pTitle" required style="background:#fff; width: 100%;"></div>
                             <div class="form-group"><label>URL Slug <span style="color: #EF4444;">*</span></label><input type="text" id="pSlug" required pattern="[a-z0-9\-]+" style="background:#fff; width: 100%;"></div>
                             
+                            <!-- PRIMARY IMAGE -->
                             <div class="form-group">
                                 <label>Primary Image (URL or Upload) <span style="color: #EF4444;">*</span></label>
                                 <input type="url" id="pImg" placeholder="https://...main-image.jpg" style="background:#fff; width: 100%;">
                                 <div class="upload-btn-wrap">
-                                    <input type="file" id="pImgFile" accept="image/*" style="display: none;" onchange="document.getElementById('pImgFileName').innerText = this.files[0] ? this.files[0].name : 'No file chosen'">
+                                    <input type="file" id="pImgFile" accept="image/*" style="display: none;" onchange="handlePrimaryImageSelect(this)">
                                     <button type="button" class="btn-upload" onclick="document.getElementById('pImgFile').click()">📁 Choose from PC</button>
                                     <span id="pImgFileName" class="file-name">No file chosen</span>
                                 </div>
+                                <!-- ⭐ Preview Container ⭐ -->
+                                <div id="pImgPreview" class="image-preview-grid"></div>
                             </div>
 
+                            <!-- GALLERY IMAGES -->
                             <div class="form-group">
                                 <label>Gallery Images (URLs or Upload)</label>
                                 <textarea id="pGallery" rows="3" placeholder="https://...image2.jpg&#10;https://...image3.jpg" style="background:#fff; width: 100%;"></textarea>
                                 <div class="upload-btn-wrap">
-                                    <input type="file" id="pGalleryFile" accept="image/*" multiple style="display: none;" onchange="document.getElementById('pGalleryFileName').innerText = this.files.length > 0 ? this.files.length + ' files selected' : 'No files chosen'">
+                                    <input type="file" id="pGalleryFile" accept="image/*" multiple style="display: none;" onchange="handleGalleryImagesSelect(this)">
                                     <button type="button" class="btn-upload" onclick="document.getElementById('pGalleryFile').click()">📁 Choose Multiple from PC</button>
                                     <span id="pGalleryFileName" class="file-name">No files chosen</span>
                                 </div>
+                                <!-- ⭐ Preview Container ⭐ -->
+                                <div id="pGalleryPreview" class="image-preview-grid"></div>
                             </div>
 
                             <div class="form-group"><label>Video URL (YouTube - Optional)</label><input type="url" id="pVideo" placeholder="https://www.youtube.com/watch?v=..." style="background:#fff; width: 100%;"></div>
@@ -306,7 +317,7 @@
                             <div class="form-group"><label>Affiliate URL <span style="color: #EF4444;">*</span></label><input type="url" id="pAffUrl" required style="background:#fff; width: 100%;"></div>
                             
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <!-- ⭐ MAIN COLOR UPLOAD ⭐ -->
+                                <!-- MAIN COLOR VALUE -->
                                 <div class="form-group" style="flex: 1.5; min-width: 150px;">
                                     <label>Color Value (Hex/URL)</label>
                                     <input type="text" id="pMainColor" placeholder="e.g. #FF0000 or https://..." style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
@@ -315,6 +326,8 @@
                                         <button type="button" class="btn-upload" style="padding:4px 8px; font-size:0.75rem;" onclick="document.getElementById('pMainColorImgFile').click()">📁 Upload Colors</button>
                                         <span id="pMainColorImgName" class="file-name" style="font-size:0.7rem;">No files</span>
                                     </div>
+                                    <!-- ⭐ Preview Container ⭐ -->
+                                    <div id="pMainColorPreview" class="image-preview-grid"></div>
                                 </div>
                                 <div class="form-group" style="flex: 1; min-width: 120px;"><label>Color Name</label><input type="text" id="pMainColorName" placeholder="e.g. Red,Blue,Green" style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
                                 <div class="form-group" style="flex: 1; min-width: 120px;"><label>Size/Qty (Optional)</label><input type="text" id="pMainVarName" placeholder="e.g. M, L, 1kg" style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
@@ -745,8 +758,14 @@
         </div>
     </div>
 
+    <!-- ⭐ NAYA: Image Lightbox (Medium Size Preview) ⭐ -->
+    <div id="imageLightbox" onclick="closeImageLightbox(event)">
+        <img id="lightboxImg" src="" alt="Preview">
+        <button class="close-lightbox" onclick="closeImageLightbox(event)">Close Preview</button>
+    </div>
+
     <script src="/js/config.js?v=6"></script>
     <script src="/js/api.js?v=7"></script>
-    <script src="/js/admin.js?v=25"></script> <!-- Version 25 kiya gaya hai -->
+    <script src="/js/admin.js?v=26"></script> <!-- Version 26 kiya gaya hai -->
 </body>
 </html>
