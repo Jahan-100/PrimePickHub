@@ -2,13 +2,12 @@ let allProducts = [];
 let builderState = { main: null, subs: [], minis: [] };
 let globalCategories = [];
 
-// ⭐ GLOBAL FILE ARRAYS (Taa ke X dabane par file remove ho sake) ⭐
 let currentGalleryFiles = []; 
 
 async function uploadFileToSupabase(file) {
     const fileExt = file.name.split('.').pop();
     const safeName = file.name.replace(/\.[^/.]+$/, "").toLowerCase().replace(/[^a-z0-9]/g, '-');
-    const fileName = `${safeName}-${Date.now()}.${fileExt}`; 
+    const fileName = `${safeName}-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`; 
     
     const { data, error } = await window.supabaseClient.storage.from('product-images').upload(fileName, file);
     if (error) throw error;
@@ -18,7 +17,6 @@ async function uploadFileToSupabase(file) {
 
 // ================= PREVIEW LOGIC =================
 
-// ⭐ UPDATED: Primary Image Multiple Preview & Auto-Gallery Logic ⭐
 window.handlePrimaryImageSelect = function(input) {
     const container = document.getElementById('pImgPreview');
     container.innerHTML = '';
@@ -26,7 +24,6 @@ window.handlePrimaryImageSelect = function(input) {
     if (input.files.length > 0) {
         document.getElementById('pImgFileName').innerText = input.files.length + ' files selected';
         
-        // 1. Pehli image ko Primary banayein
         const primaryFile = input.files[0];
         const url = URL.createObjectURL(primaryFile);
         
@@ -37,13 +34,11 @@ window.handlePrimaryImageSelect = function(input) {
                 <div style="position:absolute; bottom:0; left:0; right:0; background:rgba(225,29,72,0.8); color:#fff; font-size:0.6rem; text-align:center; padding:2px;">MAIN</div>
             </div>`;
             
-        // 2. Agar 1 se zyada images hain, toh baqi ko Gallery mein dalein
         if (input.files.length > 1) {
             for (let i = 1; i < input.files.length; i++) {
                 currentGalleryFiles.push(input.files[i]);
             }
             renderGalleryPreviews();
-            alert(`1st image set as MAIN. Remaining ${input.files.length - 1} images added to Gallery automatically.`);
         }
     } else {
         document.getElementById('pImgFileName').innerText = 'No file chosen';
@@ -73,15 +68,11 @@ function renderPrimaryUrlPreview(url) {
     }
 }
 
-// ⭐ Gallery Images Preview ⭐
 window.handleGalleryImagesSelect = function(input) {
-    // Naye files ko array mein push karein
     for(let i=0; i<input.files.length; i++) {
         currentGalleryFiles.push(input.files[i]);
     }
-    // File input ko reset karein taake dobara select kar sakein
     input.value = '';
-    
     renderGalleryPreviews();
 }
 
@@ -92,7 +83,6 @@ function renderGalleryPreviews() {
     
     let html = '';
     
-    // 1. Existing URLs from Textarea
     if(urlText) {
         const urls = urlText.split('\n').map(u => u.trim()).filter(Boolean);
         urls.forEach((url, idx) => {
@@ -104,7 +94,6 @@ function renderGalleryPreviews() {
         });
     }
 
-    // 2. Newly Selected Files
     currentGalleryFiles.forEach((file, idx) => {
         const url = URL.createObjectURL(file);
         html += `
@@ -131,10 +120,8 @@ window.removeGalleryUrl = function(index) {
     renderGalleryPreviews();
 }
 
-// Textarea mein manually URL change karne par preview update ho
 document.getElementById('pGallery')?.addEventListener('input', renderGalleryPreviews);
 
-// ⭐ Main Color Images Preview ⭐
 window.handleMainColorUpload = async function(input) {
     if (input.files.length === 0) return;
     const fileNameSpan = document.getElementById('pMainColorImgName');
@@ -151,7 +138,7 @@ window.handleMainColorUpload = async function(input) {
         
         fileNameSpan.innerText = `${urls.length} images uploaded`;
         renderColorPreviews();
-        alert("Images uploaded successfully!\n\n⚠️ ZAROORI: Ab Color Name wale box mein exactly usi order mein naam likhein jis order mein aapne images select ki hain (e.g. Red, Blue, Green).");
+        alert("Images uploaded successfully!\n\n⚠️ ZAROORI: Ab Color Name wale box mein exactly usi order mein naam likhein jis order mein aapne images select ki hain.");
     } catch (err) {
         alert('Upload failed: ' + err.message);
         fileNameSpan.innerText = 'Failed';
@@ -172,7 +159,6 @@ function renderColorPreviews() {
                 <button class="preview-remove" onclick="removeColorUrl(${idx})" title="Remove Image">X</button>
             </div>`;
         } else {
-            // Agar Hex color hai toh ek chota box dikhayein
             return `
             <div class="preview-item" style="background:${url};">
                 <button class="preview-remove" onclick="removeColorUrl(${idx})" title="Remove Color">X</button>
@@ -191,21 +177,17 @@ window.removeColorUrl = function(index) {
 
 document.getElementById('pMainColor')?.addEventListener('input', renderColorPreviews);
 
-
-// ⭐ Lightbox Functions ⭐
 window.openImageLightbox = function(src) {
     document.getElementById('lightboxImg').src = src;
     document.getElementById('imageLightbox').style.display = 'flex';
 }
 
 window.closeImageLightbox = function(e) {
-    if (e) e.stopPropagation(); // Taake image par click karne se band na ho agar wo chahiye
+    if (e) e.stopPropagation();
     document.getElementById('imageLightbox').style.display = 'none';
 }
 
-
 // ================= END PREVIEW LOGIC =================
-
 
 async function syncCategoriesFromDB() {
     const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
@@ -858,14 +840,13 @@ function setupProductForm() {
                 finalImageUrl = await uploadFileToSupabase(primaryFileInput.files[0]); 
             }
             
-            // Handle Gallery URLs and Files
+            // ⭐ SPEED FIX: Upload all gallery files in parallel ⭐
             let finalGalleryUrls = document.getElementById('pGallery').value.trim() ? document.getElementById('pGallery').value.split('\n').map(u=>u.trim()).filter(Boolean) : []; 
             if (currentGalleryFiles.length > 0) { 
-                saveBtn.innerText = "Uploading Gallery..."; 
-                for (let i = 0; i < currentGalleryFiles.length; i++) { 
-                    const url = await uploadFileToSupabase(currentGalleryFiles[i]); 
-                    finalGalleryUrls.push(url); 
-                } 
+                saveBtn.innerText = `Uploading ${currentGalleryFiles.length} Images...`; 
+                const uploadPromises = currentGalleryFiles.map(file => uploadFileToSupabase(file));
+                const uploadedUrls = await Promise.all(uploadPromises);
+                finalGalleryUrls = finalGalleryUrls.concat(uploadedUrls);
             }
             
             const productData = { title: document.getElementById('pTitle').value.trim(), slug: document.getElementById('pSlug').value.trim(), image_url: finalImageUrl, category_slug: document.getElementById('pCategory').value, description: document.getElementById('pDesc').value.trim(), review_html: document.getElementById('pReview').value.trim(), is_featured: document.getElementById('pFeatured').checked, is_trending: document.getElementById('pTrending').checked, is_special_deal: document.getElementById('pSpecialDeal').checked, badge: document.getElementById('pBadge').value.trim() || null, rating: document.getElementById('pRating').value ? parseFloat(document.getElementById('pRating').value) : null, reviews_count: document.getElementById('pReviewsCount').value ? parseInt(document.getElementById('pReviewsCount').value) : 0, gallery_images: finalGalleryUrls, video_url: document.getElementById('pVideo').value.trim() || null, event_name: eventName || null, sale_end_date: saleEndDate ? new Date(saleEndDate).toISOString() : null, event_name_2: eventName2 || null, sale_end_date_2: saleEndDate2 ? new Date(saleEndDate2).toISOString() : null, is_available: true };
@@ -892,7 +873,6 @@ function setupProductForm() {
             toggleBtn.textContent = 'Show Product Form'; 
             toggleBtn.style.background = '#16a34a'; 
             
-            // Clear Previews
             currentGalleryFiles = [];
             document.getElementById('pImgPreview').innerHTML = '';
             document.getElementById('pGalleryPreview').innerHTML = '';
