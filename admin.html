@@ -306,8 +306,17 @@
                             <div class="form-group"><label>Affiliate URL <span style="color: #EF4444;">*</span></label><input type="url" id="pAffUrl" required style="background:#fff; width: 100%;"></div>
                             
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <div class="form-group" style="flex: 1; min-width: 120px;"><label>Color Value (Hex/URL)</label><input type="text" id="pMainColor" placeholder="e.g. #FF0000 or https://..." style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
-                                <div class="form-group" style="flex: 1; min-width: 120px;"><label>Color Name</label><input type="text" id="pMainColorName" placeholder="e.g. Red" style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
+                                <!-- ⭐ MAIN COLOR UPLOAD ⭐ -->
+                                <div class="form-group" style="flex: 1.5; min-width: 150px;">
+                                    <label>Color Value (Hex/URL)</label>
+                                    <input type="text" id="pMainColor" placeholder="e.g. #FF0000 or https://..." style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
+                                    <div class="upload-btn-wrap" style="margin-top:4px;">
+                                        <input type="file" id="pMainColorImgFile" accept="image/*" multiple style="display: none;" onchange="handleMainColorUpload(this)">
+                                        <button type="button" class="btn-upload" style="padding:4px 8px; font-size:0.75rem;" onclick="document.getElementById('pMainColorImgFile').click()">📁 Upload Colors</button>
+                                        <span id="pMainColorImgName" class="file-name" style="font-size:0.7rem;">No files</span>
+                                    </div>
+                                </div>
+                                <div class="form-group" style="flex: 1; min-width: 120px;"><label>Color Name</label><input type="text" id="pMainColorName" placeholder="e.g. Red,Blue,Green" style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
                                 <div class="form-group" style="flex: 1; min-width: 120px;"><label>Size/Qty (Optional)</label><input type="text" id="pMainVarName" placeholder="e.g. M, L, 1kg" style="background:#fff; width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
                                 <div class="form-group" style="flex: 1; min-width: 120px;">
                                     <label>Base Price <span style="color: #EF4444;">*</span></label>
@@ -738,6 +747,6 @@
 
     <script src="/js/config.js?v=6"></script>
     <script src="/js/api.js?v=7"></script>
-    <script src="/js/admin.js?v=24"></script>
+    <script src="/js/admin.js?v=25"></script> <!-- Version 25 kiya gaya hai -->
 </body>
 </html>
