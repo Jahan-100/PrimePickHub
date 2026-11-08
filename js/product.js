@@ -117,7 +117,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     boxStyle = `background-color: ${bgColor};`;
                 }
 
-                // Yahan hum colorName bhi pass kar rahe hain taake filter ho sake
                 html += `
                 <div style="cursor:pointer;" onclick="selectColor('${colorObj.value}', '${colorObj.name}')">
                     <div style="width:50px; height:50px; border-radius:50%; ${boxStyle} border:3px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; box-shadow:${isActive ? '0 0 0 3px rgba(255,90,60,0.3)' : 'none'}; transition:all 0.2s; box-sizing:border-box;">
@@ -157,28 +156,35 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let galleryImages = (product.gallery_images && product.gallery_images.length > 0) ? product.gallery_images.filter(Boolean) : (product.image_url ? [product.image_url] : []);
     
-    // ⭐ FIX: Ensure only valid HTTP image URLs are in the gallery ⭐
+    // Ensure only valid HTTP image URLs are in the gallery
     galleryImages = galleryImages.filter(url => typeof url === 'string' && url.startsWith('http')).map(url => getHighQualityImage(url, 800));
-    
-    // ⭐ FIX: Auto-Filter initial images based on first color ⭐
-    if (activeColorName && galleryImages.length > 0) {
-        let searchName = activeColorName.toLowerCase().replace(/[^a-z0-9]/g, '');
-        let matched = galleryImages.filter(img => {
-            let lowerUrl = img.toLowerCase();
-            return lowerUrl.includes(searchName) && searchName.length > 2;
-        });
-        if (matched.length > 0) galleryImages = matched;
-    }
     if (galleryImages.length === 0) galleryImages = ['/assets/icon-192.png'];
 
-    const mainImage = galleryImages[0];
+    // ⭐ FIX 1: Find the initial main image index based on the first active color ⭐
+    let initialMainImageIndex = 0;
+    if (activeColorName) {
+        const cleanColor = activeColorName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (cleanColor.length > 2) {
+            for (let i = 0; i < galleryImages.length; i++) {
+                const cleanUrl = galleryImages[i].toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (cleanUrl.includes(cleanColor)) {
+                    initialMainImageIndex = i;
+                    break;
+                }
+            }
+        }
+    }
+    window.currentMainImageIndex = initialMainImageIndex;
+
+    const mainImage = galleryImages[window.currentMainImageIndex];
     const videoHtml = product.video_url ? `<div style="background:#fff; padding:30px; border-radius:12px; border:1px solid #E2E8F0; margin-bottom:20px;"><h2 style="margin-bottom:15px; border-bottom:2px solid #FF5A3C; padding-bottom:10px; display:inline-block;">Product Video</h2>${getVideoHtml(product.video_url)}</div>` : '';
     const shareUrl = encodeURIComponent(window.location.href); const shareText = encodeURIComponent(`Check out ${product.title} on PrimePickHub`);
 
+    // ⭐ FIX 2: Render ALL thumbnails, highlight the active one ⭐
     const thumbnailsHtml = galleryImages.map((url, i) => `
         <img src="${escapeHTML(getHighQualityImage(url, 150))}" alt="View ${i + 1}" 
              class="gallery-thumb" data-src="${escapeHTML(url)}" data-index="${i}"
-             style="border:2px solid ${i === 0 ? '#FF5A3C' : '#E2E8F0'};">
+             style="border:2px solid ${i === window.currentMainImageIndex ? '#FF5A3C' : '#E2E8F0'};">
     `).join('');
 
     const rawReview = product.review_html || '';
@@ -350,7 +356,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await fetchRates(); updateUI(baseCurrency);
     currencySelector.addEventListener('change', (e) => updateUI(e.target.value));
 
-    // ⭐ UPDATED: selectColor with exact filtering ⭐
+    // ⭐ UPDATED: selectColor now only updates the main image and highlights the thumbnail ⭐
     window.selectColor = function(colorValue, colorName) {
         activeColor = colorValue;
         activeColorName = colorName;
@@ -366,51 +372,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         activeOffer = allVariations[activeOfferIndex];
         
-        // 2. Filter Gallery Images based on color name
-        let allRawImages = [];
-        if (product.image_url) allRawImages.push(product.image_url);
-        if (product.gallery_images) allRawImages = allRawImages.concat(product.gallery_images);
+        // 2. Find image matching this color
+        const cleanColor = (colorName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        let targetIndex = -1;
         
-        let allImages = allRawImages
-            .filter(url => typeof url === 'string' && url.startsWith('http'))
-            .map(url => getHighQualityImage(url, 800));
-            
-        allImages = [...new Set(allImages)];
-
-        let searchName = (colorName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-        let matchedImages = allImages.filter(img => {
-            let lowerUrl = img.toLowerCase();
-            return lowerUrl.includes(searchName) && searchName.length > 2;
-        });
-
-        if (matchedImages.length > 0) {
-            galleryImages = matchedImages;
-        } else {
-            galleryImages = allImages;
+        if (cleanColor.length > 2) {
+            for (let i = 0; i < galleryImages.length; i++) {
+                const cleanUrl = galleryImages[i].toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (cleanUrl.includes(cleanColor)) {
+                    targetIndex = i;
+                    break;
+                }
+            }
         }
-
-        if (galleryImages.length === 0) galleryImages = ['/assets/icon-192.png'];
-
-        window.currentMainImageIndex = 0;
-        document.getElementById('mainImage').src = galleryImages[0];
-
-        // 3. Re-render thumbnails
-        const thumbnailContainer = document.getElementById('thumbnailContainer');
-        if (thumbnailContainer) {
-            thumbnailContainer.innerHTML = galleryImages.map((url, i) => `
-                <img src="${escapeHTML(getHighQualityImage(url, 150))}" alt="View ${i + 1}" 
-                     class="gallery-thumb" data-src="${escapeHTML(url)}" data-index="${i}"
-                     style="border:2px solid ${i === 0 ? '#FF5A3C' : '#E2E8F0'};">
-            `).join('');
+        
+        // 3. Update main image if a match is found
+        if (targetIndex !== -1) {
+            window.currentMainImageIndex = targetIndex;
+            document.getElementById('mainImage').src = galleryImages[targetIndex];
             
-            container.querySelectorAll('.gallery-thumb').forEach((thumb, index) => {
-                thumb.addEventListener('click', function () {
-                    changeMainImage(index, false);
-                });
+            container.querySelectorAll('.gallery-thumb').forEach((t, i) => {
+                t.style.borderColor = (i === targetIndex) ? '#FF5A3C' : '#E2E8F0';
             });
+            
+            // Scroll the active thumbnail into view
+            const activeThumb = container.querySelector(`.gallery-thumb[data-index="${targetIndex}"]`);
+            if (activeThumb) {
+                activeThumb.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }
+        } else {
+            console.warn(`No image found matching color: ${colorName}. Please ensure the image filename contains the color name.`);
         }
 
-        // 4. Update UI
+        // 4. Update UI (colors and sizes)
         document.getElementById('variationContainer').innerHTML = generateVariationUI();
         updateUI(currencySelector.value);
     };
@@ -437,8 +431,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             else container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
         }
     };
-
-    window.currentMainImageIndex = 0;
 
     window.changeMainImage = function(indexOrDirection, isDirection = true) {
         if (isDirection) {
