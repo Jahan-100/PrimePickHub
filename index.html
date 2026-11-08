@@ -112,7 +112,6 @@
             line-height: 1 !important;
         }
 
-        /* ⭐ NEW CENTERED DROPDOWN CSS ⭐ */
         .category-nav-wrapper {
             position: relative;
         }
@@ -177,7 +176,6 @@
             font-weight: 600;
         }
 
-        /* ⭐ MOBILE FIX: Text Wrap & Spacing ⭐ */
         @media (max-width: 768px) {
             #categoryHoverPanel {
                 overflow-x: auto;
@@ -202,7 +200,6 @@
 </head>
 <body class="app-loading">
     
-    <!-- ⭐ INLINE SCRIPT TO HIDE SPLASH INSTANTLY IF ALREADY SHOWN ⭐ -->
     <script>
         if (sessionStorage.getItem('splashShown') === 'true') {
             document.body.classList.remove('app-loading');
@@ -353,10 +350,7 @@
 
         <div class="category-nav-wrapper" style="margin-bottom: 10px;">
             <h2 style="margin-bottom: 15px; font-family: 'Poppins', sans-serif; font-weight: 800; color: var(--text-dark);">Shop by Category</h2>
-            <!-- Main Categories -->
             <div class="horizontal-category-scroll" id="categoryScrollContainer"></div>
-            
-            <!-- ⭐ NEW: Centered Hover Mega Menu ⭐ -->
             <div id="categoryHoverPanel"></div>
         </div>
 
@@ -472,9 +466,10 @@
         <span>App</span>
     </button>
 
+    <script src="js/utils.js"></script>
     <script src="js/config.js?v=6"></script>
     <script src="js/api.js?v=12"></script> 
-    <script src="js/app.js?v=45"></script> <!-- Version updated to 45 -->
+    <script src="js/app.js?v=46"></script>
     <script src="js/affiliate.js?v=6"></script>
     <script>
         function toggleCatDropdown(event) {
