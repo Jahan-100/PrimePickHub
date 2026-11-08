@@ -547,11 +547,20 @@ async function loadHomepageProducts() {
         const { data: settingsData } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).maybeSingle();
         const settings = settingsData || {};
         
-        const showApp = settings.show_app_download !== false; 
+        // ⭐ UPDATED: Independent App Popup & Floating Button Logic ⭐
+        const showAppPopup = settings.show_app_download !== false; 
+        const showFloatingBtn = settings.show_floating_app_btn !== false;
         const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
         
-        if (showApp && !isPWA) {
+        // 1. Floating Button Control
+        if (showFloatingBtn && !isPWA) {
             if (floatingAppIcon) floatingAppIcon.style.display = 'flex';
+        } else {
+            if (floatingAppIcon) floatingAppIcon.style.display = 'none'; 
+        }
+
+        // 2. Popup Control
+        if (showAppPopup && !isPWA) {
             if (!sessionStorage.getItem('appPopupShown')) { 
                 setTimeout(() => { 
                     if(typeof toggleAppPopup === 'function') toggleAppPopup(); 
@@ -559,12 +568,12 @@ async function loadHomepageProducts() {
                 }, 8000); 
             }
         } else {
-            if (floatingAppIcon) floatingAppIcon.style.display = 'none'; 
             const popup = document.getElementById('appDownloadPopup'); 
             const overlay = document.getElementById('appPopupOverlay'); 
             if (popup) popup.style.display = 'none'; 
             if (overlay) overlay.style.display = 'none';
         }
+        // ====================================================
 
         if (document.getElementById('specialDealTitle')) {
             const spTitle = document.getElementById('specialDealTitle');
