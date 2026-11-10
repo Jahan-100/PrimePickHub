@@ -1,39 +1,18 @@
 /**
  * PrimePickHub Homepage Renderer + Realtime + Notifications + PWA + Tracking
- * NOTE: escapeHTML(), getHighQualityImage(), isValidURL(), isValidExternalURL() come from /js/utils.js
  */
 
-function setCookie(name, value, days) {
-    let expires = "";
-    if (days) {
-        let date = new Date();
-        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-        expires = "; expires=" + date.toUTCString();
-    }
-    document.cookie = name + "=" + (value || "") + expires + "; path=/; SameSite=Lax";
-}
-function getCookie(name) {
-    let nameEQ = name + "="; let ca = document.cookie.split(';');
-    for (let i = 0; i < ca.length; i++) { let c = ca[i]; while (c.charAt(0) == ' ') c = c.substring(1, c.length); if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length); }
-    return null;
-}
-
+function setCookie(name, value, days) { let expires = ""; if (days) { let date = new Date(); date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000)); expires = "; expires=" + date.toUTCString(); } document.cookie = name + "=" + (value || "") + expires + "; path=/; SameSite=Lax"; }
+function getCookie(name) { let nameEQ = name + "="; let ca = document.cookie.split(';'); for (let i = 0; i < ca.length; i++) { let c = ca[i]; while (c.charAt(0) == ' ') c = c.substring(1, c.length); if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length); } return null; }
 function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb; }
 
 window.handleImageLoad = function(imgElement) {
-    if (imgElement.decode) {
-        imgElement.decode().then(() => { imgElement.style.opacity = 1; }).catch(() => { imgElement.style.opacity = 1; });
-    } else { imgElement.style.opacity = 1; }
+    if (imgElement.decode) { imgElement.decode().then(() => { imgElement.style.opacity = 1; }).catch(() => { imgElement.style.opacity = 1; }); } else { imgElement.style.opacity = 1; }
 };
 
 function hideSplash() {
     var splash = document.getElementById('splash-screen');
-    if (splash && splash.style.display !== 'none') {
-        splash.classList.add('hidden');
-        document.body.classList.remove('app-loading');
-        setTimeout(() => { splash.style.display = 'none'; }, 800);
-        sessionStorage.setItem('splashShown', 'true');
-    }
+    if (splash && splash.style.display !== 'none') { splash.classList.add('hidden'); document.body.classList.remove('app-loading'); setTimeout(() => { splash.style.display = 'none'; }, 800); sessionStorage.setItem('splashShown', 'true'); }
 }
 
 function getProductUrl(product) {
@@ -59,45 +38,33 @@ function deduplicateProducts(list) {
 function showGridMessage(grid, msg) { if (!grid) return; grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;"><p>${escapeHTML(msg)}</p></div>`; }
 
 function getAllDescendantSlugs(parentSlug, allCats) {
-    const slugs = new Set();
-    const visited = new Set();
-    
+    const slugs = new Set(); const visited = new Set();
     function traverse(slug) {
         if (!slug || typeof slug !== 'string') return;
         const norm = slug.trim().toLowerCase();
         if (visited.has(norm)) return;
-        visited.add(norm);
-        slugs.add(norm);
-        
+        visited.add(norm); slugs.add(norm);
         if (!Array.isArray(allCats)) return;
-        
         allCats.forEach(c => {
             if (c && typeof c === 'object' && c.parent && typeof c.parent === 'string' && c.slug && typeof c.slug === 'string') {
-                if (c.parent.trim().toLowerCase() === norm) {
-                    traverse(c.slug);
-                }
+                if (c.parent.trim().toLowerCase() === norm) traverse(c.slug);
             }
         });
     }
-    
-    traverse(parentSlug);
-    return Array.from(slugs);
+    traverse(parentSlug); return Array.from(slugs);
 }
 
 // ⭐ CLEAN & FOOLPROOF ICON LOGIC ⭐
 function getCategoryIcon(cat) {
     if (!cat) return '📦';
-    
     const name = (cat.name || '').toLowerCase().trim();
     const slug = (cat.slug || '').toLowerCase().trim();
     
-    // 1. Agar database mein custom URL set hai (jaise http wali image)
     if (cat.icon && (cat.icon.startsWith('http') || cat.icon.includes('assets/'))) {
         const iconPath = cat.icon.startsWith('/') ? cat.icon : '/' + cat.icon;
         return `<img src="${iconPath}" alt="${escapeHTML(cat.name)}" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff;">`;
     }
 
-    // 2. Fallback Emoji (Agar image na mile tabhi ye dikhega)
     let fallbackEmoji = '🏷️';
     if (name.includes('bag') || name.includes('luggage')) fallbackEmoji = '👜';
     else if (name.includes('jewel') || name.includes('watch')) fallbackEmoji = '💍';
@@ -114,42 +81,37 @@ function getCategoryIcon(cat) {
     else if (name.includes('accessories')) fallbackEmoji = '💍';
     else if (name.includes('belt')) fallbackEmoji = '🩱';
 
-    // 3. HAMESHA IMAGE DHOONDO (Cache Buster ke sath)
+    // Force cache-busting timestamp
     const timestamp = new Date().getTime();
+    
+    // Intelligent fallback for singular/plural slugs
+    const altSlug = slug.endsWith('s') ? slug.slice(0, -1) : slug + 's';
+    
     return `
         <div style="width:100%; height:100%; position:relative; display:flex; align-items:center; justify-content:center;">
             <img src="/assets/${slug}-icon.jpg?v=${timestamp}" alt="${escapeHTML(cat.name)}" 
                  style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff; position:absolute; top:0; left:0;" 
-                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                 onerror="if (this.src.includes('${slug}-icon')) { this.src = '/assets/${altSlug}-icon.jpg?v=${timestamp}'; } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }">
             <span style="display:none; font-size:2.2rem; align-items:center; justify-content:center; height:100%; width:100%;">${fallbackEmoji}</span>
         </div>
     `;
 }
 
-let allCategoriesGlobal = [];
-let activeCategoriesSet = new Set();
-let hoverTimeout;
+let allCategoriesGlobal = []; let activeCategoriesSet = new Set(); let hoverTimeout;
 
 async function fetchActiveCategories() {
     if (!window.supabaseClient) return;
     try {
         const { data, error } = await window.supabaseClient.from('products').select('category_slug');
         if (!error && data) {
-            activeCategoriesSet.clear();
-            activeCategoriesSet.add('all');
+            activeCategoriesSet.clear(); activeCategoriesSet.add('all');
             const productCats = new Set(data.map(p => p && p.category_slug && typeof p.category_slug === 'string' ? p.category_slug.trim().toLowerCase() : null).filter(Boolean));
-            
             productCats.forEach(slug => {
                 activeCategoriesSet.add(slug);
                 let currentSlug = slug;
                 while (currentSlug) {
                     const cat = allCategoriesGlobal.find(c => c && c.slug && typeof c.slug === 'string' && c.slug.trim().toLowerCase() === currentSlug);
-                    if (cat && cat.parent && typeof cat.parent === 'string' && cat.parent !== 'all') {
-                        activeCategoriesSet.add(cat.parent.trim().toLowerCase());
-                        currentSlug = cat.parent.trim().toLowerCase();
-                    } else {
-                        break;
-                    }
+                    if (cat && cat.parent && typeof cat.parent === 'string' && cat.parent !== 'all') { activeCategoriesSet.add(cat.parent.trim().toLowerCase()); currentSlug = cat.parent.trim().toLowerCase(); } else { break; }
                 }
             });
         }
@@ -157,14 +119,8 @@ async function fetchActiveCategories() {
 }
 
 async function renderDynamicCategories() {
-    try {
-        allCategoriesGlobal = await API.getCategories();
-    } catch(e) {
-        allCategoriesGlobal = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
-    }
-    if (!allCategoriesGlobal || allCategoriesGlobal.length === 0) {
-        allCategoriesGlobal = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
-    }
+    try { allCategoriesGlobal = await API.getCategories(); } catch(e) { allCategoriesGlobal = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : []; }
+    if (!allCategoriesGlobal || allCategoriesGlobal.length === 0) { allCategoriesGlobal = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : []; }
 
     await fetchActiveCategories();
 
@@ -177,9 +133,7 @@ async function renderDynamicCategories() {
         if (slug === 'all') return;
         if (!allCategoriesGlobal.find(c => c && c.slug && c.slug.trim().toLowerCase() === slug)) {
             const isSub = allCategoriesGlobal.some(c => c && c.parent && typeof c.parent === 'string' && c.parent.trim().toLowerCase() === slug);
-            if (!isSub) {
-                topCats.push({ slug: slug, name: slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), icon: null, parent: null });
-            }
+            if (!isSub) topCats.push({ slug: slug, name: slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), icon: null, parent: null });
         }
     });
     
@@ -203,48 +157,30 @@ async function renderDynamicCategories() {
                     const catSlug = this.dataset.slug;
                     document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
                     this.classList.add('active');
-                    
-                    if (catSlug === 'all') {
-                        document.getElementById('categoryHoverPanel').style.display = 'none';
-                    } else {
-                        renderHoverPanel(catSlug, this);
-                    }
+                    if (catSlug === 'all') { document.getElementById('categoryHoverPanel').style.display = 'none'; } else { renderHoverPanel(catSlug, this); }
                 });
             }
-
             el.addEventListener('click', function(e) {
                 e.preventDefault();
                 const catSlug = this.dataset.slug;
                 const panel = document.getElementById('categoryHoverPanel');
-
                 if (catSlug === 'all') {
-                    panel.style.display = 'none';
-                    panel.dataset.activeSlug = '';
+                    panel.style.display = 'none'; panel.dataset.activeSlug = '';
                     document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
-                    this.classList.add('active');
-                    loadCategoryProducts('all', 'For You');
-                    return;
+                    this.classList.add('active'); loadCategoryProducts('all', 'For You'); return;
                 }
-
                 const mainCat = allCategoriesGlobal.find(c => c.slug === catSlug);
                 const subCats = allCategoriesGlobal.filter(c => c.parent === catSlug && activeCategoriesSet.has(c.slug.toLowerCase()));
-
                 if (subCats.length > 0) {
-                    if (panel.style.display === 'flex' && panel.dataset.activeSlug === catSlug) {
-                        panel.style.display = 'none';
-                        panel.dataset.activeSlug = '';
-                    } else {
+                    if (panel.style.display === 'flex' && panel.dataset.activeSlug === catSlug) { panel.style.display = 'none'; panel.dataset.activeSlug = ''; } 
+                    else {
                         document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
-                        this.classList.add('active');
-                        renderHoverPanel(catSlug, this);
-                        panel.dataset.activeSlug = catSlug;
+                        this.classList.add('active'); renderHoverPanel(catSlug, this); panel.dataset.activeSlug = catSlug;
                     }
                 } else {
-                    panel.style.display = 'none';
-                    panel.dataset.activeSlug = '';
+                    panel.style.display = 'none'; panel.dataset.activeSlug = '';
                     document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
-                    this.classList.add('active');
-                    loadCategoryProducts(catSlug, mainCat ? mainCat.name : catSlug);
+                    this.classList.add('active'); loadCategoryProducts(catSlug, mainCat ? mainCat.name : catSlug);
                 }
             });
         });
@@ -252,226 +188,113 @@ async function renderDynamicCategories() {
         if (isHoverDevice) {
             document.querySelector('.category-nav-wrapper').addEventListener('mouseleave', function(e) {
                 hoverTimeout = setTimeout(() => {
-                    const panel = document.getElementById('categoryHoverPanel');
-                    if (panel) panel.style.display = 'none';
+                    const panel = document.getElementById('categoryHoverPanel'); if (panel) panel.style.display = 'none';
                     document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
-                    const defaultCat = document.querySelector('#categoryScrollContainer .category-item[data-slug="all"]');
-                    if (defaultCat) defaultCat.classList.add('active');
+                    const defaultCat = document.querySelector('#categoryScrollContainer .category-item[data-slug="all"]'); if (defaultCat) defaultCat.classList.add('active');
                 }, 200);
             });
         }
 
         document.addEventListener('click', function(e) {
             const panel = document.getElementById('categoryHoverPanel');
-            if (panel && panel.style.display === 'flex' && !e.target.closest('.category-item') && !e.target.closest('#categoryHoverPanel')) {
-                panel.style.display = 'none';
-                panel.dataset.activeSlug = '';
-            }
+            if (panel && panel.style.display === 'flex' && !e.target.closest('.category-item') && !e.target.closest('#categoryHoverPanel')) { panel.style.display = 'none'; panel.dataset.activeSlug = ''; }
         });
     }
     const dropdownMenu = document.getElementById('categoryDropdownMenu');
-    if (dropdownMenu) {
-        dropdownMenu.innerHTML = topCats.map(c => `
-            <li data-value="${c.slug}" class="${c.slug.trim().toLowerCase() === 'all' ? 'active' : ''}" onclick="selectCatDropdown('${c.slug}', '${c.name}', this)">${c.name}</li>
-        `).join('');
-    }
+    if (dropdownMenu) { dropdownMenu.innerHTML = topCats.map(c => `<li data-value="${c.slug}" class="${c.slug.trim().toLowerCase() === 'all' ? 'active' : ''}" onclick="selectCatDropdown('${c.slug}', '${c.name}', this)">${c.name}</li>`).join(''); }
 }
 
 function renderHoverPanel(mainSlug, targetElement) {
-    const panel = document.getElementById('categoryHoverPanel');
-    if (!panel) return;
-    
+    const panel = document.getElementById('categoryHoverPanel'); if (!panel) return;
     const mainCat = allCategoriesGlobal.find(c => c.slug === mainSlug);
     const subCats = allCategoriesGlobal.filter(c => c.parent === mainSlug && activeCategoriesSet.has(c.slug.toLowerCase()));
-    
-    if (subCats.length === 0) {
-        panel.style.display = 'none';
-        return;
-    }
+    if (subCats.length === 0) { panel.style.display = 'none'; return; }
 
     panel.style.display = 'flex';
-    
     let html = '';
     subCats.forEach(sub => {
         const minis = allCategoriesGlobal.filter(c => c.parent === sub.slug && activeCategoriesSet.has(c.slug.toLowerCase()));
-        
-        html += `
-            <div class="sub-cat-col">
-                <div class="sub-cat-title" data-slug="${sub.slug}" data-name="${escapeHTML(sub.name)}">${escapeHTML(sub.name)}</div>
-                ${minis.length > 0 ? `
-                    <div class="mini-list">
-                        ${minis.map(mini => `<div class="mini-item" data-slug="${mini.slug}" data-name="${escapeHTML(mini.name)}">${escapeHTML(mini.name)}</div>`).join('')}
-                    </div>
-                ` : ''}
-            </div>
-        `;
+        html += `<div class="sub-cat-col"><div class="sub-cat-title" data-slug="${sub.slug}" data-name="${escapeHTML(sub.name)}">${escapeHTML(sub.name)}</div>${minis.length > 0 ? `<div class="mini-list">${minis.map(mini => `<div class="mini-item" data-slug="${mini.slug}" data-name="${escapeHTML(mini.name)}">${escapeHTML(mini.name)}</div>`).join('')}</div>` : ''}</div>`;
     });
-    
     panel.innerHTML = html;
 
-    panel.querySelectorAll('.sub-cat-title').forEach(el => {
-        el.addEventListener('click', function(e) {
-            e.preventDefault();
-            const slug = this.dataset.slug;
-            const name = this.dataset.name;
-            document.getElementById('categoryHoverPanel').style.display = 'none';
-            loadCategoryProducts(slug, name);
-        });
-    });
+    panel.querySelectorAll('.sub-cat-title').forEach(el => { el.addEventListener('click', function(e) { e.preventDefault(); const slug = this.dataset.slug; const name = this.dataset.name; document.getElementById('categoryHoverPanel').style.display = 'none'; loadCategoryProducts(slug, name); }); });
+    panel.querySelectorAll('.mini-item').forEach(el => { el.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); const slug = this.dataset.slug; const name = this.dataset.name; document.getElementById('categoryHoverPanel').style.display = 'none'; loadCategoryProducts(slug, name); }); });
 
-    panel.querySelectorAll('.mini-item').forEach(el => {
-        el.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const slug = this.dataset.slug;
-            const name = this.dataset.name;
-            document.getElementById('categoryHoverPanel').style.display = 'none';
-            loadCategoryProducts(slug, name);
-        });
-    });
-
-    const wrapper = document.querySelector('.category-nav-wrapper');
-    const wrapperRect = wrapper.getBoundingClientRect();
-    const targetRect = targetElement.getBoundingClientRect();
-    
-    const targetCenter = (targetRect.left - wrapperRect.left) + (targetRect.width / 2);
-    const panelWidth = panel.offsetWidth;
-    
+    const wrapper = document.querySelector('.category-nav-wrapper'); const wrapperRect = wrapper.getBoundingClientRect(); const targetRect = targetElement.getBoundingClientRect();
+    const targetCenter = (targetRect.left - wrapperRect.left) + (targetRect.width / 2); const panelWidth = panel.offsetWidth;
     let leftPos = targetCenter - (panelWidth / 2);
-    
-    if (leftPos < 0) leftPos = 0;
-    if (leftPos + panelWidth > wrapperRect.width) leftPos = wrapperRect.width - panelWidth;
-    
-    panel.style.left = `${leftPos}px`;
-    panel.style.top = `${targetRect.bottom - wrapperRect.top - 5}px`;
+    if (leftPos < 0) leftPos = 0; if (leftPos + panelWidth > wrapperRect.width) leftPos = wrapperRect.width - panelWidth;
+    panel.style.left = `${leftPos}px`; panel.style.top = `${targetRect.bottom - wrapperRect.top - 5}px`;
 }
 
 async function loadCategoryProducts(catSlug, catName) {
-    const titleEl = document.getElementById('productSectionTitle');
-    const grid = document.getElementById('productGrid');
-    
+    const titleEl = document.getElementById('productSectionTitle'); const grid = document.getElementById('productGrid');
     if (titleEl) { titleEl.innerHTML = catName; titleEl.style.display = 'block'; }
     showGridMessage(grid, 'Loading products...');
-    
     try {
         if (catSlug === 'all') {
-            const data = await API.getHomepageProducts(); 
-            const raw = [...(data.featured ?? []), ...(data.trending ?? []), ...(data.latest ?? [])];
-            const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false); 
-            const now = new Date();
-            const normalProducts = allProducts.filter(p => { 
-                const endDate1 = p.sale_end_date ? new Date(p.sale_end_date) : null; 
-                const endDate2 = p.sale_end_date_2 ? new Date(p.sale_end_date_2) : null; 
-                const inSec1 = (endDate1 && endDate1 > now); 
-                const inSec2 = (endDate2 && endDate2 > now); 
-                return !inSec1 && !inSec2; 
-            });
+            const data = await API.getHomepageProducts(); const raw = [...(data.featured ?? []), ...(data.trending ?? []), ...(data.latest ?? [])];
+            const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false); const now = new Date();
+            const normalProducts = allProducts.filter(p => { const endDate1 = p.sale_end_date ? new Date(p.sale_end_date) : null; const endDate2 = p.sale_end_date_2 ? new Date(p.sale_end_date_2) : null; const inSec1 = (endDate1 && endDate1 > now); const inSec2 = (endDate2 && endDate2 > now); return !inSec1 && !inSec2; });
             renderProductsGrid(normalProducts, grid);
-        } else { 
-            let fetchSlugs = getAllDescendantSlugs(catSlug, allCategoriesGlobal);
-            const products = await API.searchProducts({ category: fetchSlugs }) || []; 
-            renderProductsGrid(products.filter(p => p.is_available !== false), grid); 
-        }
-    } catch (err) {
-        console.error("Product Load Error:", err);
-        showGridMessage(grid, 'Error loading products.');
-    }
+        } else { let fetchSlugs = getAllDescendantSlugs(catSlug, allCategoriesGlobal); const products = await API.searchProducts({ category: fetchSlugs }) || []; renderProductsGrid(products.filter(p => p.is_available !== false), grid); }
+    } catch (err) { console.error("Product Load Error:", err); showGridMessage(grid, 'Error loading products.'); }
 }
 
 function renderProductCard(product, isPriority = false) {
     if (!product || typeof product !== 'object') return '';
-    const title = escapeHTML(product.title || 'Untitled');
-    const productUrl = getProductUrl(product);
-    const hasLink = productUrl !== '#';
-    const disabledAttr = hasLink ? '' : 'aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:0.6;"';
+    const title = escapeHTML(product.title || 'Untitled'); const productUrl = getProductUrl(product);
+    const hasLink = productUrl !== '#'; const disabledAttr = hasLink ? '' : 'aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:0.6;"';
     const imageSrc = isValidURL(product.image_url) ? escapeHTML(getHighQualityImage(product.image_url, 300)) : 'assets/icon-192.png?v=4';
-    
-    const imgPriority = isPriority ? 'fetchpriority="high"' : '';
-    const loadingAttr = isPriority ? 'loading="eager"' : 'loading="lazy"';
-
+    const imgPriority = isPriority ? 'fetchpriority="high"' : ''; const loadingAttr = isPriority ? 'loading="eager"' : 'loading="lazy"';
     const r = Number(product.rating); const rating = Number.isFinite(r) && r > 0 && r <= 5 ? r : null;
     const rc = Number(product.reviews_count); const reviewCount = Number.isInteger(rc) && rc >= 0 ? rc : 0;
     const ratingText = rating !== null ? `★ ${rating.toFixed(1)} (${reviewCount})` : 'Not yet rated';
-
     let timerHtml = '';
-    if (product.sale_end_date) {
-        const endDate = new Date(product.sale_end_date).getTime();
-        if (endDate > new Date().getTime()) timerHtml = `<div class="card-timer" data-endtime="${product.sale_end_date}">⏳ Calculating...</div>`;
-    }
-
-    const primaryOffer = getPrimaryOffer(product);
-    const networks = (typeof CONFIG !== 'undefined' && CONFIG.networks) ? CONFIG.networks : {};
-    let cta = '';
-
+    if (product.sale_end_date) { const endDate = new Date(product.sale_end_date).getTime(); if (endDate > new Date().getTime()) timerHtml = `<div class="card-timer" data-endtime="${product.sale_end_date}">⏳ Calculating...</div>`; }
+    const primaryOffer = getPrimaryOffer(product); const networks = (typeof CONFIG !== 'undefined' && CONFIG.networks) ? CONFIG.networks : {}; let cta = '';
     if (primaryOffer) {
-        const storeKey = String(primaryOffer.store_name || 'amazon').toLowerCase();
-        const cfg = networks[storeKey] ?? networks[primaryOffer.store_name || ''] ?? { name: primaryOffer.store_name || 'Store', brandColor: '#2563eb', textColor: '#ffffff' };
+        const storeKey = String(primaryOffer.store_name || 'amazon').toLowerCase(); const cfg = networks[storeKey] ?? networks[primaryOffer.store_name || ''] ?? { name: primaryOffer.store_name || 'Store', brandColor: '#2563eb', textColor: '#ffffff' };
         let bg = safeColor(cfg.brandColor, '#2563eb'); if (bg === '#FF4747') bg = '#DC2626'; 
-        const fg = safeColor(cfg.textColor, '#ffffff');
-        const storeName = escapeHTML(cfg.name || primaryOffer.store_name || 'Store');
-        const affUrl = escapeHTML(primaryOffer.affiliate_url || '#');
-        const pid = escapeHTML(String(product.id ?? ''));
-        const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
-        const offerCurrency = (primaryOffer.currency || 'USD').toUpperCase();
-        const offerSymbol = currencySymbols[offerCurrency] || offerCurrency + ' ';
-        const basePrice = parseFloat(primaryOffer.price) || 0;
-        const salePrice = parseFloat(primaryOffer.sale_price) || 0;
-        const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
+        const fg = safeColor(cfg.textColor, '#ffffff'); const storeName = escapeHTML(cfg.name || primaryOffer.store_name || 'Store');
+        const affUrl = escapeHTML(primaryOffer.affiliate_url || '#'); const pid = escapeHTML(String(product.id ?? ''));
+        const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' }; const offerCurrency = (primaryOffer.currency || 'USD').toUpperCase(); const offerSymbol = currencySymbols[offerCurrency] || offerCurrency + ' ';
+        const basePrice = parseFloat(primaryOffer.price) || 0; const salePrice = parseFloat(primaryOffer.sale_price) || 0; const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
         let finalBasePrice = basePrice; let finalSalePrice = salePrice;
         if (commissionRate > 0) { finalBasePrice = basePrice + (basePrice * (commissionRate / 100)); if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100)); }
-        
         let priceDisplay = '';
-        if (basePrice === 0 && salePrice === 0) {
-            priceDisplay = `<div style="font-weight:bold; color:#FF5A3C; margin-bottom:5px; font-size:1.05rem;">Check Price on ${storeName}</div>`;
-        } else if (salePrice > 0) {
-            priceDisplay = `<div style="margin-bottom:5px; display:flex; align-items:center; gap:8px;"><span style="text-decoration:line-through; color:#64748B; font-size:0.9rem;">${offerSymbol}${finalBasePrice.toFixed(2)}</span><span style="font-weight:bold; color:#DC2626; font-size:1.2rem;">${offerSymbol}${finalSalePrice.toFixed(2)}</span></div>`;
-        } else {
-            priceDisplay = `<div style="font-weight:bold; color:#1E1B4B; margin-bottom:5px;">${offerSymbol}${finalBasePrice.toFixed(2)}</div>`;
-        }
-
+        if (basePrice === 0 && salePrice === 0) { priceDisplay = `<div style="font-weight:bold; color:#FF5A3C; margin-bottom:5px; font-size:1.05rem;">Check Price on ${storeName}</div>`; } 
+        else if (salePrice > 0) { priceDisplay = `<div style="margin-bottom:5px; display:flex; align-items:center; gap:8px;"><span style="text-decoration:line-through; color:#64748B; font-size:0.9rem;">${offerSymbol}${finalBasePrice.toFixed(2)}</span><span style="font-weight:bold; color:#DC2626; font-size:1.2rem;">${offerSymbol}${finalSalePrice.toFixed(2)}</span></div>`; } 
+        else { priceDisplay = `<div style="font-weight:bold; color:#1E1B4B; margin-bottom:5px;">${offerSymbol}${finalBasePrice.toFixed(2)}</div>`; }
         cta = `${priceDisplay}<a href="${affUrl}" target="_blank" rel="noopener noreferrer sponsored" class="btn-check-price js-affiliate-link" style="background-color:${bg};color:${fg};" data-store="${storeName}" data-product-id="${pid}" data-url="${affUrl}">Check Price on ${storeName}</a>`;
     } else { cta = `<a href="${productUrl}" ${disabledAttr} class="btn-check-price" style="background:#64748B;">View Details</a>`; }
     const badge = product.badge ? `<span class="card-badge">${escapeHTML(product.badge)}</span>` : '';
-
     return `<div class="product-card">${badge}<div class="card-img-wrap"><a href="${productUrl}" ${disabledAttr}><img src="${imageSrc}" alt="${title}" width="200" height="200" ${loadingAttr} ${imgPriority} decoding="async" class="product-thumb" style="opacity: 0; transition: opacity 0.4s ease-in-out;" onload="handleImageLoad(this)"></a></div><div class="card-body"><a href="${productUrl}" ${disabledAttr} class="card-title">${title}</a><div class="card-rating">${escapeHTML(ratingText)}</div>${timerHtml}${cta}</div></div>`;
 }
 
 function renderFlashCard(product, section = 1) {
     const title = escapeHTML(product.title || 'Untitled'); const productUrl = getProductUrl(product);
     const imageSrc = isValidURL(product.image_url) ? escapeHTML(getHighQualityImage(product.image_url, 200)) : 'assets/icon-192.png?v=4';
-    
     const primaryOffer = getPrimaryOffer(product) || {};
-    const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
-    const sym = currencySymbols[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
+    const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' }; const sym = currencySymbols[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
     const basePrice = parseFloat(primaryOffer.price) || 0; const salePrice = parseFloat(primaryOffer.sale_price) || 0; const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
     let finalBasePrice = basePrice; let finalSalePrice = salePrice;
     if (commissionRate > 0) { finalBasePrice = basePrice + (basePrice * (commissionRate / 100)); if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100)); }
-    
     let priceDisplay = '';
-    if (basePrice === 0 && salePrice === 0) {
-        priceDisplay = `<div style="font-weight:bold; color:#FF5A3C; font-size:0.95rem;">Check Price</div>`;
-    } else if (salePrice > 0) {
-        priceDisplay = `<div style="display:flex; flex-direction:column; justify-content:center; align-items:center; width: 100%;"><div style="display:flex; align-items:center; gap:4px;"><span style="text-decoration:line-through; color:#64748B; font-size:0.75rem;">${sym}${finalBasePrice.toFixed(2)}</span><span style="font-weight:bold; color:#DC2626; font-size:0.95rem;">${sym}${finalSalePrice.toFixed(2)}</span></div></div>`;
-    } else {
-        priceDisplay = `<div class="price" style="font-size:0.95rem;">${sym}${finalBasePrice.toFixed(2)}</div>`;
-    }
-    
+    if (basePrice === 0 && salePrice === 0) { priceDisplay = `<div style="font-weight:bold; color:#FF5A3C; font-size:0.95rem;">Check Price</div>`; } 
+    else if (salePrice > 0) { priceDisplay = `<div style="display:flex; flex-direction:column; justify-content:center; align-items:center; width: 100%;"><div style="display:flex; align-items:center; gap:4px;"><span style="text-decoration:line-through; color:#64748B; font-size:0.75rem;">${sym}${finalBasePrice.toFixed(2)}</span><span style="font-weight:bold; color:#DC2626; font-size:0.95rem;">${sym}${finalSalePrice.toFixed(2)}</span></div></div>`; } 
+    else { priceDisplay = `<div class="price" style="font-size:0.95rem;">${sym}${finalBasePrice.toFixed(2)}</div>`; }
     const endTime = section === 1 ? product.sale_end_date : product.sale_end_date_2;
-    
     return `<a href="${productUrl}" class="special-deal-card flash-card"><div class="img-box"><img src="${imageSrc}" alt="${title}" width="190" height="190" loading="lazy" decoding="async" style="opacity: 0; transition: opacity 0.4s ease-in-out;" onload="handleImageLoad(this)"></div><div class="info-box">${priceDisplay}<div class="title">${title}</div><div class="card-timer" data-endtime="${endTime}">⏳ Calculating...</div></div></a>`;
 }
 
 function renderProductsGrid(products, grid) {
     if (!grid) return;
     if (!products || products.length === 0) { showGridMessage(grid, 'No products found in this category.'); return; }
-    
     let html = '';
-    products.forEach((p, i) => {
-        try { html += renderProductCard(p, i < 4); } catch (e) { console.warn("Skipping broken product:", p && p.id, e); }
-    });
-    
+    products.forEach((p, i) => { try { html += renderProductCard(p, i < 4); } catch (e) { console.warn("Skipping broken product:", p && p.id, e); } });
     if (html === '') { showGridMessage(grid, 'Products found, but data is corrupted.'); return; }
-    
     grid.innerHTML = html;
     grid.querySelectorAll('img.product-thumb').forEach(img => { img.addEventListener('error', function () { this.src = 'assets/icon-192.png?v=4'; this.style.opacity = 1; }, { once: true }); });
 }
@@ -480,28 +303,14 @@ setInterval(() => {
     let flashSaleChanged = false;
     document.querySelectorAll('.card-timer').forEach(el => {
         const endTime = new Date(el.dataset.endtime).getTime(); const now = new Date().getTime(); const distance = endTime - now;
-        if (distance < 0) {
-            if (el.innerHTML !== "❌ EXPIRED") { el.innerHTML = "❌ EXPIRED"; el.style.background = "#F1F5F9"; el.style.color = "#64748B"; el.style.borderColor = "#E2E8F0"; if (el.closest('.flash-card')) flashSaleChanged = true; }
-        } else {
-            const days = Math.floor(distance / (1000 * 60 * 60 * 24)); const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)); const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-            if (days > 0) el.innerHTML = `⏳ ${days}d ${hours}h ${minutes}m`; else el.innerHTML = `🔥 ${hours}h ${minutes}m ${seconds}s`;
-        }
+        if (distance < 0) { if (el.innerHTML !== "❌ EXPIRED") { el.innerHTML = "❌ EXPIRED"; el.style.background = "#F1F5F9"; el.style.color = "#64748B"; el.style.borderColor = "#E2E8F0"; if (el.closest('.flash-card')) flashSaleChanged = true; } } 
+        else { const days = Math.floor(distance / (1000 * 60 * 60 * 24)); const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)); const seconds = Math.floor((distance % (1000 * 60)) / 1000); if (days > 0) el.innerHTML = `⏳ ${days}d ${hours}h ${minutes}m`; else el.innerHTML = `🔥 ${hours}h ${minutes}m ${seconds}s`; }
     });
     if (flashSaleChanged) setTimeout(() => loadHomepageProducts(), 2000);
 }, 1000);
 
 let fireworksInterval;
-function startFireworks() {
-    const canvas = document.getElementById('fireworksCanvas');
-    if (!canvas || typeof confetti === 'undefined') return;
-    const myConfetti = confetti.create(canvas, { resize: true, useWorker: true });
-    clearInterval(fireworksInterval);
-    fireworksInterval = setInterval(() => {
-        const type = Math.random() > 0.5 ? 'rocket' : 'sparkler';
-        if (type === 'rocket') myConfetti({ particleCount: 40, spread: 70, origin: { x: Math.random() * 0.8 + 0.1, y: Math.random() * 0.5 + 0.1 }, colors: ['#fbbf24', '#ef4444', '#3b82f6', '#ffffff', '#ff8c00'], scalar: 1.2 });
-        else myConfetti({ particleCount: 15, angle: 90, spread: 60, origin: { x: Math.random() * 0.8 + 0.1, y: 1 }, colors: ['#fbbf24', '#ffffff'], startVelocity: 45, gravity: 1.2, scalar: 0.8 });
-    }, 800);
-}
+function startFireworks() { const canvas = document.getElementById('fireworksCanvas'); if (!canvas || typeof confetti === 'undefined') return; const myConfetti = confetti.create(canvas, { resize: true, useWorker: true }); clearInterval(fireworksInterval); fireworksInterval = setInterval(() => { const type = Math.random() > 0.5 ? 'rocket' : 'sparkler'; if (type === 'rocket') myConfetti({ particleCount: 40, spread: 70, origin: { x: Math.random() * 0.8 + 0.1, y: Math.random() * 0.5 + 0.1 }, colors: ['#fbbf24', '#ef4444', '#3b82f6', '#ffffff', '#ff8c00'], scalar: 1.2 }); else myConfetti({ particleCount: 15, angle: 90, spread: 60, origin: { x: Math.random() * 0.8 + 0.1, y: 1 }, colors: ['#fbbf24', '#ffffff'], startVelocity: 45, gravity: 1.2, scalar: 0.8 }); }, 800); }
 function stopFireworks() { clearInterval(fireworksInterval); }
 
 window.scrollFlash = function(direction) { const container = document.getElementById('flashSaleScroll'); const scrollAmount = 300; if (direction === 'left') container.scrollLeft -= scrollAmount; else container.scrollLeft += scrollAmount; };
@@ -512,31 +321,20 @@ function renderAdFallback(products) {
     const topSlot = document.getElementById('ad-fallback-top'); const midSlot = document.getElementById('ad-fallback-middle');
     if (products && products.length > 0) {
         const shuffled = [...products].sort(() => 0.5 - Math.random()); const selected = shuffled.slice(0, 12);
-        const html = selected.map(p => {
-            const title = escapeHTML(p.title || 'Product'); const productUrl = getProductUrl(p);
-            const imageSrc = isValidURL(p.image_url) ? escapeHTML(getHighQualityImage(p.image_url, 200)) : 'assets/icon-192.png?v=4';
-            const primaryOffer = getPrimaryOffer(p) || {}; const sym = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' }[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
-            const price = parseFloat(primaryOffer.sale_price) || parseFloat(primaryOffer.price) || 0;
-            return `<div class="product-card" style="cursor:pointer;" onclick="window.location.href='${productUrl}'"><div class="card-img-wrap"><img src="${imageSrc}" alt="${title}" width="200" height="200" loading="lazy" decoding="async" style="opacity: 0; transition: opacity 0.4s;" onload="handleImageLoad(this)"></div><div class="card-body"><a href="${productUrl}" class="card-title">${title}</a><div style="font-weight:bold; color:#DC2626; font-size:0.85rem; margin-bottom:4px;">${sym}${price.toFixed(2)}</div><button class="btn-check-price" style="background:#2563eb; pointer-events:none;">View</button></div></div>`;
-        }).join('');
+        const html = selected.map(p => { const title = escapeHTML(p.title || 'Product'); const productUrl = getProductUrl(p); const imageSrc = isValidURL(p.image_url) ? escapeHTML(getHighQualityImage(p.image_url, 200)) : 'assets/icon-192.png?v=4'; const primaryOffer = getPrimaryOffer(p) || {}; const sym = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' }[(primaryOffer.currency || 'USD').toUpperCase()] || '$'; const price = parseFloat(primaryOffer.sale_price) || parseFloat(primaryOffer.price) || 0; return `<div class="product-card" style="cursor:pointer;" onclick="window.location.href='${productUrl}'"><div class="card-img-wrap"><img src="${imageSrc}" alt="${title}" width="200" height="200" loading="lazy" decoding="async" style="opacity: 0; transition: opacity 0.4s;" onload="handleImageLoad(this)"></div><div class="card-body"><a href="${productUrl}" class="card-title">${title}</a><div style="font-weight:bold; color:#DC2626; font-size:0.85rem; margin-bottom:4px;">${sym}${price.toFixed(2)}</div><button class="btn-check-price" style="background:#2563eb; pointer-events:none;">View</button></div></div>`; }).join('');
         if (topSlot) topSlot.innerHTML = html; if (midSlot) midSlot.innerHTML = html;
     }
 }
 
 async function loadLatestBlog() {
-    if (!window.supabaseClient) return; 
-    const section = document.getElementById('latestBlogSection'); 
-    if (!section) return;
+    if (!window.supabaseClient) return; const section = document.getElementById('latestBlogSection'); if (!section) return;
     try {
         const { data: blog, error } = await window.supabaseClient.from('blogs').select('*').eq('is_published', true).order('created_at', { ascending: false }).limit(1).maybeSingle();
         if (error || !blog) { section.style.display = 'none'; return; }
         document.getElementById('latestBlogImg').src = getHighQualityImage(blog.image_url, 300) || 'assets/icon-192.png?v=4';
         document.getElementById('latestBlogTitle').innerText = blog.title;
         document.getElementById('latestBlogDate').innerText = `Published on: ${new Date(blog.created_at).toLocaleDateString()}`;
-        
-        section.style.display = 'block'; 
-        section.style.visibility = 'visible'; 
-        section.style.opacity = '1';
+        section.style.display = 'block'; section.style.visibility = 'visible'; section.style.opacity = '1';
     } catch (err) { console.warn('Error loading latest blog:', err); }
 }
 
@@ -545,45 +343,19 @@ async function loadHomepageProducts() {
     const flashScroll2 = document.getElementById('flashSaleScroll2'); const flashSection2 = document.getElementById('flashSaleSection2'); const floatingAppIcon = document.getElementById('floatingAppIcon');
     if (!grid) return;
     try {
-        if (!window.supabaseClient) {
-            console.warn("Supabase Client missing!");
-            if (floatingAppIcon) floatingAppIcon.style.display = 'flex';
-            return;
-        }
-
+        if (!window.supabaseClient) { console.warn("Supabase Client missing!"); if (floatingAppIcon) floatingAppIcon.style.display = 'flex'; return; }
         if (typeof API === 'undefined' || !API.getHomepageProducts) throw new Error('API missing');
         
         const { data: settingsData } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).maybeSingle();
         const settings = settingsData || {};
-        
-        const showAppPopup = settings.show_app_download !== false; 
-        const showFloatingBtn = settings.show_floating_app_btn !== false;
+        const showAppPopup = settings.show_app_download !== false; const showFloatingBtn = settings.show_floating_app_btn !== false;
         const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
         
-        if (showFloatingBtn && !isPWA) {
-            if (floatingAppIcon) floatingAppIcon.style.display = 'flex';
-        } else {
-            if (floatingAppIcon) floatingAppIcon.style.display = 'none'; 
-        }
+        if (showFloatingBtn && !isPWA) { if (floatingAppIcon) floatingAppIcon.style.display = 'flex'; } else { if (floatingAppIcon) floatingAppIcon.style.display = 'none'; }
+        if (showAppPopup && !isPWA) { if (!sessionStorage.getItem('appPopupShown')) { setTimeout(() => { if(typeof toggleAppPopup === 'function') toggleAppPopup(); sessionStorage.setItem('appPopupShown', 'true'); }, 8000); } } 
+        else { const popup = document.getElementById('appDownloadPopup'); const overlay = document.getElementById('appPopupOverlay'); if (popup) popup.style.display = 'none'; if (overlay) overlay.style.display = 'none'; }
 
-        if (showAppPopup && !isPWA) {
-            if (!sessionStorage.getItem('appPopupShown')) { 
-                setTimeout(() => { 
-                    if(typeof toggleAppPopup === 'function') toggleAppPopup(); 
-                    sessionStorage.setItem('appPopupShown', 'true'); 
-                }, 8000); 
-            }
-        } else {
-            const popup = document.getElementById('appDownloadPopup'); 
-            const overlay = document.getElementById('appPopupOverlay'); 
-            if (popup) popup.style.display = 'none'; 
-            if (overlay) overlay.style.display = 'none';
-        }
-
-        if (document.getElementById('specialDealTitle')) {
-            const spTitle = document.getElementById('specialDealTitle');
-            spTitle.innerText = settings.special_deal_title || 'First order deal'; spTitle.style.fontFamily = settings.title_font_family || 'Poppins, sans-serif'; spTitle.style.fontSize = settings.title_font_size || '2rem'; spTitle.style.fontWeight = settings.title_font_weight || '800'; spTitle.style.fontStyle = settings.title_font_style || 'normal';
-        }
+        if (document.getElementById('specialDealTitle')) { const spTitle = document.getElementById('specialDealTitle'); spTitle.innerText = settings.special_deal_title || 'First order deal'; spTitle.style.fontFamily = settings.title_font_family || 'Poppins, sans-serif'; spTitle.style.fontSize = settings.title_font_size || '2rem'; spTitle.style.fontWeight = settings.title_font_weight || '800'; spTitle.style.fontStyle = settings.title_font_style || 'normal'; }
         if (document.getElementById('flashSaleTitle')) {
             const flTitle = document.getElementById('flashSaleTitle'); const endingSoonBtn = document.querySelector('#flashSaleSection .blinking-ending-soon');
             const titleFontFamily = settings.flash_title_font_family || 'Poppins, sans-serif'; const titleBaseSize = settings.flash_title_font_size || '2rem'; const titleFontWeight = settings.flash_title_font_weight || '900'; const titleFontStyle = settings.flash_title_font_style || 'normal';
@@ -597,12 +369,10 @@ async function loadHomepageProducts() {
             if (endingSoonBtn2) { endingSoonBtn2.style.fontFamily = titleFontFamily; endingSoonBtn2.style.fontWeight = titleFontWeight; endingSoonBtn2.style.fontStyle = titleFontStyle; endingSoonBtn2.style.fontSize = '1.92rem'; endingSoonBtn2.style.padding = '7px 24px'; }
         }
 
-        const data = await API.getHomepageProducts(); 
-        const raw = [...(data.featured ?? []), ...(data.trending ?? []), ...(data.latest ?? [])]; 
+        const data = await API.getHomepageProducts(); const raw = [...(data.featured ?? []), ...(data.trending ?? []), ...(data.latest ?? [])]; 
         const allProducts = deduplicateProducts(raw).filter(p => p.is_available !== false);
         
-        await renderDynamicCategories(); 
-        renderAdFallback(allProducts);
+        await renderDynamicCategories(); renderAdFallback(allProducts);
         
         const now = new Date(); const flashSaleProducts1 = []; const flashSaleProducts2 = []; const normalProducts = [];
         allProducts.forEach(p => {
@@ -634,30 +404,17 @@ async function loadHomepageProducts() {
                 let finalBasePrice = basePrice; let finalSalePrice = salePrice;
                 if (commissionRate > 0) { finalBasePrice = basePrice + (basePrice * (commissionRate / 100)); if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100)); }
                 let priceDisplay = '';
-                if (basePrice === 0 && salePrice === 0) {
-                    priceDisplay = `<div style="font-weight:bold; color:#FF5A3C; font-size:0.85rem;">Check Price</div>`;
-                } else if (salePrice > 0) {
-                    priceDisplay = `<div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;"><span style="text-decoration:line-through; color:#64748B; font-size:0.75rem;">${sym}${finalBasePrice.toFixed(2)}</span><span class="price" style="margin-bottom:0;">${sym}${finalSalePrice.toFixed(2)}</span></div>`;
-                } else {
-                    priceDisplay = `<div class="price">${sym}${finalBasePrice.toFixed(2)}</div>`;
-                }
+                if (basePrice === 0 && salePrice === 0) { priceDisplay = `<div style="font-weight:bold; color:#FF5A3C; font-size:0.85rem;">Check Price</div>`; } 
+                else if (salePrice > 0) { priceDisplay = `<div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;"><span style="text-decoration:line-through; color:#64748B; font-size:0.75rem;">${sym}${finalBasePrice.toFixed(2)}</span><span class="price" style="margin-bottom:0;">${sym}${finalSalePrice.toFixed(2)}</span></div>`; } 
+                else { priceDisplay = `<div class="price">${sym}${finalBasePrice.toFixed(2)}</div>`; }
                 const specialImg = getHighQualityImage(p.image_url, 200) || '/assets/icon-192.png?v=4';
                 return `<a href="${getProductUrl(p)}" class="special-deal-card"><div class="img-box"><img src="${escapeHTML(specialImg)}" alt="${escapeHTML(p.title)}" width="190" height="190" loading="lazy" decoding="async" style="opacity: 0; transition: opacity 0.4s;" onload="handleImageLoad(this)"></div><div class="info-box">${priceDisplay}<div class="title">${escapeHTML(p.title)}</div></div></a>`;
             }).join('');
         } else { section.style.display = 'none'; }
-        
-    } catch (err) { 
-        console.error('Load failed:', err); 
-    } finally {
-        if (typeof hideSplash === 'function') hideSplash();
-    }
+    } catch (err) { console.error('Load failed:', err); } finally { if (typeof hideSplash === 'function') hideSplash(); }
 }
 
-function handleSearch() {
-    const input = document.getElementById('searchInput'); const select = document.getElementById('searchCategory'); if (!input) return;
-    const q = input.value.trim(); const cat = select ? select.value : 'all';
-    if (q) { let url = `search.html?q=${encodeURIComponent(q)}`; if (cat !== 'all') url += `&cat=${encodeURIComponent(cat)}`; window.location.href = url; }
-}
+function handleSearch() { const input = document.getElementById('searchInput'); const select = document.getElementById('searchCategory'); if (!input) return; const q = input.value.trim(); const cat = select ? select.value : 'all'; if (q) { let url = `search.html?q=${encodeURIComponent(q)}`; if (cat !== 'all') url += `&cat=${encodeURIComponent(cat)}`; window.location.href = url; } }
 
 let userReadNotifs = JSON.parse(getCookie('read_notifs') || '[]'); let currentNotifs = [];
 window.toggleNotifPanel = function(e) { if (e) e.stopPropagation(); const panel = document.getElementById('notifPanel'); if(panel) panel.style.display = panel.style.display === 'block' ? 'none' : 'block'; }
@@ -683,9 +440,7 @@ function renderNotifications() {
     }).join('');
 }
 window.markAsRead = function(id) { if (!userReadNotifs.includes(id)) { userReadNotifs.push(id); setCookie('read_notifs', JSON.stringify(userReadNotifs), 30); renderNotifications(); } }
-window.deleteNotif = async function(id) {
-    try { const { error } = await window.supabaseClient.from('app_notifications').update({ is_deleted: true }).eq('id', id); if (error) throw error; currentNotifs = currentNotifs.filter(n => n.id !== id); renderNotifications(); } catch (err) { console.error("Error deleting notification:", err); }
-}
+window.deleteNotif = async function(id) { try { const { error } = await window.supabaseClient.from('app_notifications').update({ is_deleted: true }).eq('id', id); if (error) throw error; currentNotifs = currentNotifs.filter(n => n.id !== id); renderNotifications(); } catch (err) { console.error("Error deleting notification:", err); } }
 window.handleNotifClick = async function(id, slug, type) {
     window.markAsRead(id); if (!slug) return;
     const { data: product } = await window.supabaseClient.from('products').select('is_available, sale_end_date, sale_end_date_2, is_special_deal').eq('slug', slug).maybeSingle();
@@ -701,48 +456,25 @@ window.clearAllNotifs = async function(e) {
 }
 
 function showBrowserNotification(title, body) {
-    if (!("Notification" in window)) return;
-    
-    const hasAllowed = localStorage.getItem('notifications_allowed');
-    if (hasAllowed === 'true') return; 
-
-    if (Notification.permission === "granted") {
-        new Notification(title, { body: body, icon: '/assets/icon-192.png?v=4' });
-        localStorage.setItem('notifications_allowed', 'true');
-    } else if (Notification.permission !== "denied") {
-        Notification.requestPermission().then(permission => {
-            if (permission === "granted") {
-                new Notification(title, { body: body, icon: '/assets/icon-192.png?v=4' });
-                localStorage.setItem('notifications_allowed', 'true');
-            }
-        });
-    }
+    if (!("Notification" in window)) return; const hasAllowed = localStorage.getItem('notifications_allowed'); if (hasAllowed === 'true') return; 
+    if (Notification.permission === "granted") { new Notification(title, { body: body, icon: '/assets/icon-192.png?v=4' }); localStorage.setItem('notifications_allowed', 'true'); } 
+    else if (Notification.permission !== "denied") { Notification.requestPermission().then(permission => { if (permission === "granted") { new Notification(title, { body: body, icon: '/assets/icon-192.png?v=4' }); localStorage.setItem('notifications_allowed', 'true'); } }); }
 }
 
 let deferredPrompt; window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
-window.triggerPWAInstall = function() {
-    if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then((choiceResult) => { if (choiceResult.outcome === 'accepted') toggleAppPopup(); deferredPrompt = null; }); }
-    else alert("To install: Tap the browser menu (3 dots) and select 'Add to Home screen'.");
-}
+window.triggerPWAInstall = function() { if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then((choiceResult) => { if (choiceResult.outcome === 'accepted') toggleAppPopup(); deferredPrompt = null; }); } else alert("To install: Tap the browser menu (3 dots) and select 'Add to Home screen'."); }
 window.toggleAppPopup = function() {
     const popup = document.getElementById('appDownloadPopup'); const overlay = document.getElementById('appPopupOverlay'); const desktopContent = document.getElementById('desktopAppContent'); const mobileContent = document.getElementById('mobileAppContent');
     if (!popup || !overlay) return;
     if (popup.style.display === 'none' || popup.style.display === '') {
-        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-        if (isMobile) { if(mobileContent) mobileContent.style.display = 'block'; if(desktopContent) desktopContent.style.display = 'none'; }
-        else { if(desktopContent) desktopContent.style.display = 'block'; if(mobileContent) mobileContent.style.display = 'none'; }
+        const userAgent = navigator.userAgent || navigator.vendor || window.opera; const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+        if (isMobile) { if(mobileContent) mobileContent.style.display = 'block'; if(desktopContent) desktopContent.style.display = 'none'; } else { if(desktopContent) desktopContent.style.display = 'block'; if(mobileContent) mobileContent.style.display = 'none'; }
         popup.style.display = 'block'; overlay.style.display = 'block';
     } else { popup.style.display = 'none'; overlay.style.display = 'none'; }
 }
-function redirectToStore() {
-    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-    const playStoreLink = 'https://play.google.com/store/apps/details?id=your.package.name'; const appStoreLink = 'https://apps.apple.com/app/idYOUR_APP_ID'; const appGalleryLink = 'https://appgallery.huawei.com/app/CYOUR_APP_ID';
-    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) window.location.href = appStoreLink; else if (/Huawei|HONOR/i.test(userAgent)) window.location.href = appGalleryLink; else window.location.href = playStoreLink;
-}
+function redirectToStore() { const userAgent = navigator.userAgent || navigator.vendor || window.opera; const playStoreLink = 'https://play.google.com/store/apps/details?id=your.package.name'; const appStoreLink = 'https://apps.apple.com/app/idYOUR_APP_ID'; const appGalleryLink = 'https://appgallery.huawei.com/app/CYOUR_APP_ID'; if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) window.location.href = appStoreLink; else if (/Huawei|HONOR/i.test(userAgent)) window.location.href = appGalleryLink; else window.location.href = playStoreLink; }
 
-let realtimeTimeout;
-function triggerRealtimeUpdate(payload) { clearTimeout(realtimeTimeout); realtimeTimeout = setTimeout(() => { loadHomepageProducts(); loadLatestBlog(); }, 500); }
+let realtimeTimeout; function triggerRealtimeUpdate(payload) { clearTimeout(realtimeTimeout); realtimeTimeout = setTimeout(() => { loadHomepageProducts(); loadLatestBlog(); }, 500); }
 async function setupRealtime() {
     if (!window.supabaseClient) return; await window.supabaseClient.removeAllChannels();
     window.supabaseClient.channel('schema-db-changes')
@@ -754,40 +486,18 @@ async function setupRealtime() {
         .subscribe((status) => { if (status === 'SUBSCRIBED') console.log('✅ Realtime connected! Live updates are ON.'); });
 }
 
-async function getGeoData() {
-    let geo = { country: 'Unknown', city: 'Unknown' };
-    try {
-        const res = await fetch('/api/geo');
-        if (res.ok) {
-            const data = await res.json();
-            geo = { country: data.country || 'Unknown', city: data.city || 'Unknown' };
-            try { localStorage.setItem('geo_data', JSON.stringify(geo)); } catch (e) {}
-        }
-    } catch (e) { console.warn("Geo fetch failed", e); }
-    return geo;
-}
-
+async function getGeoData() { let geo = { country: 'Unknown', city: 'Unknown' }; try { const res = await fetch('/api/geo'); if (res.ok) { const data = await res.json(); geo = { country: data.country || 'Unknown', city: data.city || 'Unknown' }; try { localStorage.setItem('geo_data', JSON.stringify(geo)); } catch (e) {} } } catch (e) { console.warn("Geo fetch failed", e); } return geo; }
 async function trackVisitor() {
-    if (!window.supabaseClient) return;
-    let visitorId = getCookie('visitor_id');
+    if (!window.supabaseClient) return; let visitorId = getCookie('visitor_id');
     if (!visitorId) { visitorId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2); setCookie('visitor_id', visitorId, 365); }
-    let ref = document.referrer; let source = 'Direct';
-    if (ref) { if (ref.includes('google')) source = 'Google Search'; else if (ref.includes('facebook')) source = 'Facebook'; else if (ref.includes('admitad')) source = 'Admitad'; else if (ref.includes('vercel')) source = 'Vercel'; else source = 'Other Website'; }
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const deviceType = isMobile ? 'Mobile' : 'Desktop';
-    const geo = await getGeoData();
+    let ref = document.referrer; let source = 'Direct'; if (ref) { if (ref.includes('google')) source = 'Google Search'; else if (ref.includes('facebook')) source = 'Facebook'; else if (ref.includes('admitad')) source = 'Admitad'; else if (ref.includes('vercel')) source = 'Vercel'; else source = 'Other Website'; }
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); const deviceType = isMobile ? 'Mobile' : 'Desktop'; const geo = await getGeoData();
     await window.supabaseClient.from('website_visitors').upsert({ visitor_id: visitorId, last_seen: new Date().toISOString(), referrer: source, device_type: deviceType, country: geo.country, city: geo.city }, { onConflict: 'visitor_id' });
 }
-
 async function trackActiveApp() {
-    if (!window.supabaseClient) return;
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-    if (!isPWA) return;
-    let deviceId = getCookie('device_id');
-    if (!deviceId) { deviceId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2); setCookie('device_id', deviceId, 365); }
-    const geo = await getGeoData();
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const deviceType = isMobile ? 'Mobile' : 'Desktop';
+    if (!window.supabaseClient) return; const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; if (!isPWA) return;
+    let deviceId = getCookie('device_id'); if (!deviceId) { deviceId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2); setCookie('device_id', deviceId, 365); }
+    const geo = await getGeoData(); const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); const deviceType = isMobile ? 'Mobile' : 'Desktop';
     await window.supabaseClient.from('active_app_installs').upsert({ device_id: deviceId, last_active: new Date().toISOString(), country: geo.country, city: geo.city, device_type: deviceType }, { onConflict: 'device_id' });
 }
 
@@ -796,25 +506,11 @@ window.acceptCookies = function() { setCookie('cookie_consent', 'accepted', 365)
 document.addEventListener('DOMContentLoaded', () => {
     trackVisitor(); trackActiveApp(); loadHomepageProducts(); loadLatestBlog(); setupRealtime(); loadNotifications();
     if (!getCookie('cookie_consent')) { setTimeout(() => { const banner = document.getElementById('cookie-consent-banner'); if (banner) banner.style.display = 'flex'; }, 2000); }
-    
-    setInterval(() => { 
-        const popup = document.getElementById('appDownloadPopup'); 
-        if (document.getElementById('productGrid') && (!popup || popup.style.display !== 'block')) { 
-            const activeCat = document.querySelector('#categoryScrollContainer .category-item.active');
-            if (!activeCat || activeCat.dataset.slug === 'all') {
-                loadHomepageProducts(); 
-            }
-            loadLatestBlog(); 
-        } 
-    }, 60000); 
-
+    setInterval(() => { const popup = document.getElementById('appDownloadPopup'); if (document.getElementById('productGrid') && (!popup || popup.style.display !== 'block')) { const activeCat = document.querySelector('#categoryScrollContainer .category-item.active'); if (!activeCat || activeCat.dataset.slug === 'all') { loadHomepageProducts(); } loadLatestBlog(); } }, 60000); 
     if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('/service-worker.js').then(registration => console.log('✅ Service Worker registered! PWA is ready.')).catch(err => console.log('❌ Service Worker failed:', err)); }); }
     const btn = document.getElementById('searchBtn'); const input = document.getElementById('searchInput'); if (btn) btn.addEventListener('click', handleSearch); if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') handleSearch(); });
     const catBtn = document.getElementById('categoryDropdownBtn'); const catMenu = document.getElementById('categoryDropdownMenu'); if (catBtn && catMenu && typeof toggleCatDropdown === 'undefined') { catBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); catMenu.style.display = catMenu.style.display === 'block' ? 'none' : 'block'; }); }
     setTimeout(() => { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); }, 5000);
     document.addEventListener('click', function(e) { if (!e.target.closest('.notif-wrapper')) { const panel = document.getElementById('notifPanel'); if(panel) panel.style.display = 'none'; } });
-    
-    setTimeout(() => { 
-        if (typeof hideSplash === 'function') hideSplash();
-    }, 5000);
+    setTimeout(() => { if (typeof hideSplash === 'function') hideSplash(); }, 5000);
 });
