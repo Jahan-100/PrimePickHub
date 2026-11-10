@@ -121,6 +121,7 @@ window.removeGalleryUrl = function(index) {
 
 document.getElementById('pGallery')?.addEventListener('input', renderGalleryPreviews);
 
+// ⭐ FIXED: Ab purani URLs ko overwrite karega
 window.handleMainColorUpload = async function(input) {
     if (input.files.length === 0) return;
     const fileNameSpan = document.getElementById('pMainColorImgName');
@@ -131,9 +132,9 @@ window.handleMainColorUpload = async function(input) {
             const url = await uploadFileToSupabase(input.files[i]);
             urls.push(url);
         }
-        const currentVal = document.getElementById('pMainColor').value.trim();
-        const newVal = currentVal ? currentVal + ',' + urls.join(',') : urls.join(',');
-        document.getElementById('pMainColor').value = newVal;
+        
+        // Overwrite logic: Purani URLs ko delete kar ke nayi dalega
+        document.getElementById('pMainColor').value = urls.join(',');
         
         fileNameSpan.innerText = `${urls.length} images uploaded`;
         renderColorPreviews();
