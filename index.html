@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     
+    <!-- ⭐ CACHE BUSTER (Force browser to load new code) ⭐ -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
     <!-- ⭐ BACK BUTTON SPLASH FIX (RENDER BLOCKING) ⭐ -->
     <script>
         if (sessionStorage.getItem('splashShown') === 'true') {
@@ -45,9 +50,9 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" defer></script>
 
     <link rel="canonical" href="https://primepickhub.vercel.app/">
-    <link rel="icon" type="image/png" href="assets/favicon.png?v=4">
+    <link rel="icon" type="image/png" href="assets/favicon.png?v=5">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="css/main.css?v=40">
+    <link rel="stylesheet" href="css/main.css?v=41">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,800;0,900;1,800&family=Roboto:wght@400;700;900&family=Oswald:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Lobster&family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
@@ -212,8 +217,6 @@
 </head>
 <body class="app-loading">
     
-    <!-- Purani body wali script yahan se hata di gayi hai -->
-
     <div id="splash-screen">
         <div class="splash-bg-circle c1"></div>
         <div class="splash-bg-circle c2"></div>
@@ -472,11 +475,11 @@
         <span>App</span>
     </button>
 
-    <!-- ⭐ SPEED FIX: Scripts ko defer kiya gaya hai taake page foran load ho ⭐ -->
+    <!-- ⭐ VERSION UPDATED: app.js?v=50 (Cache Busting) ⭐ -->
     <script src="js/utils.js" defer></script>
-    <script src="js/config.js?v=6"></script> <!-- Config defer nahi hai kyunki iski zaroorat foran hoti hai -->
+    <script src="js/config.js?v=6"></script>
     <script src="js/api.js?v=12" defer></script> 
-    <script src="js/app.js?v=48" defer></script>
+    <script src="js/app.js?v=50" defer></script>
     <script src="js/affiliate.js?v=6" defer></script>
     
     <script>
