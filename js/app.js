@@ -84,41 +84,43 @@ function getAllDescendantSlugs(parentSlug, allCats) {
     return Array.from(slugs);
 }
 
-// ⭐ NEW FOOLPROOF SMART ICON LOGIC ⭐
+// ⭐ SMART ICON LOGIC (Always tries image first, falls back to emoji) ⭐
 function getCategoryIcon(cat) {
     if (!cat) return '📦';
     
     const name = (cat.name || '').toLowerCase().trim();
     const slug = (cat.slug || '').toLowerCase().trim();
     
-    if (cat.icon && cat.icon.trim() !== '' && cat.icon !== '📦') {
-        if (cat.icon.startsWith('http') || cat.icon.includes('assets/')) {
-            const iconPath = cat.icon.startsWith('/') ? cat.icon : '/' + cat.icon;
-            return `<img src="${iconPath}" alt="${escapeHTML(cat.name)}" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff;">`;
-        }
-        return cat.icon;
+    // 1. Agar database mein koi custom URL (http ya assets) set hai toh wo direct use karo
+    if (cat.icon && (cat.icon.startsWith('http') || cat.icon.includes('assets/'))) {
+        const iconPath = cat.icon.startsWith('/') ? cat.icon : '/' + cat.icon;
+        return `<img src="${iconPath}" alt="${escapeHTML(cat.name)}" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff;">`;
     }
 
-    let fallbackEmoji = '🏷️';
-    if (name.includes('bag') || name.includes('luggage')) fallbackEmoji = '👜';
-    else if (name.includes('jewel') || name.includes('watch')) fallbackEmoji = '💍';
-    else if (name.includes('electronic') || name.includes('tech')) fallbackEmoji = '📱';
-    else if (name.includes('cloth') || name.includes('fashion')) fallbackEmoji = '👗';
-    else if (name.includes('shoe')) fallbackEmoji = '👟';
-    else if (name.includes('light')) fallbackEmoji = '💡';
-    else if (name.includes('glass') || name.includes('eyewear')) fallbackEmoji = '🕶️';
-    else if (name.includes('beauty') || name.includes('makeup')) fallbackEmoji = '💄';
-    else if (name.includes('sport')) fallbackEmoji = '🏋️';
-    else if (name.includes('toy') || name.includes('game')) fallbackEmoji = '🧸';
-    else if (name.includes('car') || name.includes('auto')) fallbackEmoji = '🚗';
-    else if (name.includes('home') || name.includes('kitchen')) fallbackEmoji = '🛋️';
-    else if (name.includes('accessories')) fallbackEmoji = '💍';
-    else if (name.includes('belt')) fallbackEmoji = '🩱';
+    // 2. Default fallback emoji determine karein
+    let fallbackEmoji = cat.icon || '🏷️'; 
+    
+    if (!cat.icon || cat.icon === '📦') {
+        if (name.includes('bag') || name.includes('luggage')) fallbackEmoji = '👜';
+        else if (name.includes('jewel') || name.includes('watch')) fallbackEmoji = '💍';
+        else if (name.includes('electronic') || name.includes('tech')) fallbackEmoji = '📱';
+        else if (name.includes('cloth') || name.includes('fashion')) fallbackEmoji = '👗';
+        else if (name.includes('shoe')) fallbackEmoji = '👟';
+        else if (name.includes('light')) fallbackEmoji = '💡';
+        else if (name.includes('glass') || name.includes('eyewear')) fallbackEmoji = '🕶️';
+        else if (name.includes('beauty') || name.includes('makeup')) fallbackEmoji = '💄';
+        else if (name.includes('sport')) fallbackEmoji = '🏋️';
+        else if (name.includes('toy') || name.includes('game')) fallbackEmoji = '🧸';
+        else if (name.includes('car') || name.includes('auto')) fallbackEmoji = '🚗';
+        else if (name.includes('home') || name.includes('kitchen')) fallbackEmoji = '🛋️';
+        else if (name.includes('accessories')) fallbackEmoji = '💍';
+        else if (name.includes('belt')) fallbackEmoji = '🩱';
+    }
 
-    // Direct Image and Fallback to Emoji
+    // 3. HAMESHA Image load karne ki koshish karo (chahe database mein emoji ho)
     return `
         <div style="width:100%; height:100%; position:relative; display:flex; align-items:center; justify-content:center;">
-            <img src="assets/${slug}-icon.jpg" alt="${escapeHTML(cat.name)}" 
+            <img src="/assets/${slug}-icon.jpg" alt="${escapeHTML(cat.name)}" 
                  style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff; position:absolute; top:0; left:0;" 
                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
             <span style="display:none; font-size:2.2rem; align-items:center; justify-content:center; height:100%; width:100%;">${fallbackEmoji}</span>
