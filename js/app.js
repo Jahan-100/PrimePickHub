@@ -84,7 +84,7 @@ function getAllDescendantSlugs(parentSlug, allCats) {
     return Array.from(slugs);
 }
 
-// ⭐ ULTRA SMART ICON LOGIC ⭐
+// ⭐ ULTRA SMART ICON LOGIC (Always image first, emoji fallback) ⭐
 function getCategoryIcon(cat) {
     if (!cat) return '📦';
     
@@ -814,6 +814,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', function(e) { if (!e.target.closest('.notif-wrapper')) { const panel = document.getElementById('notifPanel'); if(panel) panel.style.display = 'none'; } });
     
     setTimeout(() => { 
-        if (typeof hideSplash === 'function') hideSplash(); 
+        if (typeof hideSplash === 'function') hideSplash();
     }, 5000);
 });
