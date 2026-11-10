@@ -84,14 +84,13 @@ function getAllDescendantSlugs(parentSlug, allCats) {
     return Array.from(slugs);
 }
 
-// ⭐ SMART ICON LOGIC (Automatically loads /assets/[slug]-icon.jpg) ⭐
+// ⭐ NEW FOOLPROOF SMART ICON LOGIC ⭐
 function getCategoryIcon(cat) {
     if (!cat) return '📦';
     
     const name = (cat.name || '').toLowerCase().trim();
     const slug = (cat.slug || '').toLowerCase().trim();
     
-    // 1. If DB has a custom icon set (emoji or url), use it
     if (cat.icon && cat.icon.trim() !== '' && cat.icon !== '📦') {
         if (cat.icon.startsWith('http') || cat.icon.includes('assets/')) {
             const iconPath = cat.icon.startsWith('/') ? cat.icon : '/' + cat.icon;
@@ -100,7 +99,6 @@ function getCategoryIcon(cat) {
         return cat.icon;
     }
 
-    // 2. Fallback Emoji Mapping (Agar image na mile toh ye emoji show hoga)
     let fallbackEmoji = '🏷️';
     if (name.includes('bag') || name.includes('luggage')) fallbackEmoji = '👜';
     else if (name.includes('jewel') || name.includes('watch')) fallbackEmoji = '💍';
@@ -117,10 +115,12 @@ function getCategoryIcon(cat) {
     else if (name.includes('accessories')) fallbackEmoji = '💍';
     else if (name.includes('belt')) fallbackEmoji = '🩱';
 
-    // 3. Automatically try to load "/assets/[slug]-icon.jpg"
+    // Direct Image and Fallback to Emoji
     return `
         <div style="width:100%; height:100%; position:relative; display:flex; align-items:center; justify-content:center;">
-            <img src="/assets/${slug}-icon.jpg" alt="${escapeHTML(cat.name)}" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff; position:absolute; top:0; left:0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <img src="assets/${slug}-icon.jpg" alt="${escapeHTML(cat.name)}" 
+                 style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff; position:absolute; top:0; left:0;" 
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
             <span style="display:none; font-size:2.2rem; align-items:center; justify-content:center; height:100%; width:100%;">${fallbackEmoji}</span>
         </div>
     `;
