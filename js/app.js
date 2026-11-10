@@ -84,7 +84,7 @@ function getAllDescendantSlugs(parentSlug, allCats) {
     return Array.from(slugs);
 }
 
-// ⭐ ULTRA SMART ICON LOGIC WITH CACHE BUSTING ⭐
+// ⭐ CLEAN & FOOLPROOF ICON LOGIC ⭐
 function getCategoryIcon(cat) {
     if (!cat) return '📦';
     
@@ -97,7 +97,7 @@ function getCategoryIcon(cat) {
         return `<img src="${iconPath}" alt="${escapeHTML(cat.name)}" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff;">`;
     }
 
-    // 2. Fallback Emoji
+    // 2. Fallback Emoji (Agar image na mile tabhi ye dikhega)
     let fallbackEmoji = '🏷️';
     if (name.includes('bag') || name.includes('luggage')) fallbackEmoji = '👜';
     else if (name.includes('jewel') || name.includes('watch')) fallbackEmoji = '💍';
@@ -114,7 +114,7 @@ function getCategoryIcon(cat) {
     else if (name.includes('accessories')) fallbackEmoji = '💍';
     else if (name.includes('belt')) fallbackEmoji = '🩱';
 
-    // 3. CHAHE DATABASE MEIN EMOJI HO YA NA HO, HAMESHA IMAGE DHOONDO WITH CACHE BUSTER!
+    // 3. HAMESHA IMAGE DHOONDO (Cache Buster ke sath)
     const timestamp = new Date().getTime();
     return `
         <div style="width:100%; height:100%; position:relative; display:flex; align-items:center; justify-content:center;">
