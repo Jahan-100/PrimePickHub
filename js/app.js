@@ -84,7 +84,7 @@ function getAllDescendantSlugs(parentSlug, allCats) {
     return Array.from(slugs);
 }
 
-// ⭐ ULTRA SMART ICON LOGIC (Always image first, emoji fallback) ⭐
+// ⭐ ULTRA SMART ICON LOGIC WITH CACHE BUSTING ⭐
 function getCategoryIcon(cat) {
     if (!cat) return '📦';
     
@@ -97,7 +97,7 @@ function getCategoryIcon(cat) {
         return `<img src="${iconPath}" alt="${escapeHTML(cat.name)}" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff;">`;
     }
 
-    // 2. Fallback Emoji (Agar image na mile tabhi ye dikhega)
+    // 2. Fallback Emoji
     let fallbackEmoji = '🏷️';
     if (name.includes('bag') || name.includes('luggage')) fallbackEmoji = '👜';
     else if (name.includes('jewel') || name.includes('watch')) fallbackEmoji = '💍';
@@ -114,10 +114,11 @@ function getCategoryIcon(cat) {
     else if (name.includes('accessories')) fallbackEmoji = '💍';
     else if (name.includes('belt')) fallbackEmoji = '🩱';
 
-    // 3. CHAHE DATABASE MEIN EMOJI HO YA NA HO, HAMESHA IMAGE DHOONDO!
+    // 3. CHAHE DATABASE MEIN EMOJI HO YA NA HO, HAMESHA IMAGE DHOONDO WITH CACHE BUSTER!
+    const timestamp = new Date().getTime();
     return `
         <div style="width:100%; height:100%; position:relative; display:flex; align-items:center; justify-content:center;">
-            <img src="/assets/${slug}-icon.jpg" alt="${escapeHTML(cat.name)}" 
+            <img src="/assets/${slug}-icon.jpg?v=${timestamp}" alt="${escapeHTML(cat.name)}" 
                  style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff; position:absolute; top:0; left:0;" 
                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
             <span style="display:none; font-size:2.2rem; align-items:center; justify-content:center; height:100%; width:100%;">${fallbackEmoji}</span>
