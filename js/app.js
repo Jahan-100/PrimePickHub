@@ -84,37 +84,45 @@ function getAllDescendantSlugs(parentSlug, allCats) {
     return Array.from(slugs);
 }
 
+// ⭐ SMART ICON LOGIC (Automatically loads assets/[slug]-icon.jpg) ⭐
 function getCategoryIcon(cat) {
     if (!cat) return '📦';
+    
     const name = (cat.name || '').toLowerCase().trim();
     const slug = (cat.slug || '').toLowerCase().trim();
-
-    if (name === 'lights' || slug === 'lights') {
-        return `<img src="assets/Lights-icon.jpg" alt="Lights" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff;">`;
-    }
-    if (name === 'shoes' || slug === 'shoes') {
-        return `<img src="assets/shoes-icon.jpg" alt="Shoes" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff;">`;
-    }
-    if (name === 'accessories' || slug === 'accessories') {
-        return `<img src="assets/accessories-icon.jpg" alt="Accessories" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff;">`;
-    }
-
-    if (cat.icon && cat.icon.trim() !== '' && cat.icon !== '📦') return cat.icon;
-
-    if (name.includes('bag') || slug.includes('bag') || name.includes('luggage') || slug.includes('luggage')) return '👜';
-    if (name.includes('belt') || slug.includes('belt')) return '🩱';
-    if (name.includes('glass') || slug.includes('glass') || name.includes('eyewear') || slug.includes('eyewear')) return '🕶️';
-    if (name.includes('jewel') || slug.includes('jewel') || name.includes('watch') || slug.includes('watch')) return '💍';
-    if (name.includes('cloth') || slug.includes('cloth') || name.includes('dress') || slug.includes('dress')) return '👗';
-    if (name.includes('electronic') || slug.includes('electronic') || name.includes('tech') || slug.includes('tech')) return '📱';
-    if (name.includes('beauty') || slug.includes('beauty') || name.includes('makeup') || slug.includes('makeup')) return '💄';
-    if (name.includes('sport') || slug.includes('sport')) return '🏋️';
-    if (name.includes('toy') || slug.includes('toy') || name.includes('game') || slug.includes('game')) return '🧸';
-    if (name.includes('car') || slug.includes('car') || name.includes('auto') || slug.includes('auto')) return '🚗';
-    if (name.includes('home') || slug.includes('home') || name.includes('kitchen') || slug.includes('kitchen')) return '🛋️';
     
-    if (cat.name && cat.name.length > 0) return cat.name.charAt(0).toUpperCase();
-    return '🏷️';
+    // 1. If DB has a custom icon set (emoji or url), use it
+    if (cat.icon && cat.icon.trim() !== '' && cat.icon !== '📦') {
+        if (cat.icon.startsWith('http') || cat.icon.startsWith('assets/')) {
+            return `<img src="${cat.icon}" alt="${escapeHTML(cat.name)}" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff;">`;
+        }
+        return cat.icon;
+    }
+
+    // 2. Fallback Emoji Mapping (Agar image na mile toh ye emoji show hoga)
+    let fallbackEmoji = '🏷️';
+    if (name.includes('bag') || name.includes('luggage')) fallbackEmoji = '👜';
+    else if (name.includes('jewel') || name.includes('watch')) fallbackEmoji = '💍';
+    else if (name.includes('electronic') || name.includes('tech')) fallbackEmoji = '📱';
+    else if (name.includes('cloth') || name.includes('fashion')) fallbackEmoji = '👗';
+    else if (name.includes('shoe')) fallbackEmoji = '👟';
+    else if (name.includes('light')) fallbackEmoji = '💡';
+    else if (name.includes('glass') || name.includes('eyewear')) fallbackEmoji = '🕶️';
+    else if (name.includes('beauty') || name.includes('makeup')) fallbackEmoji = '💄';
+    else if (name.includes('sport')) fallbackEmoji = '🏋️';
+    else if (name.includes('toy') || name.includes('game')) fallbackEmoji = '🧸';
+    else if (name.includes('car') || name.includes('auto')) fallbackEmoji = '🚗';
+    else if (name.includes('home') || name.includes('kitchen')) fallbackEmoji = '🛋️';
+    else if (name.includes('accessories')) fallbackEmoji = '💍';
+    else if (name.includes('belt')) fallbackEmoji = '🩱';
+
+    // 3. Automatically try to load "assets/[slug]-icon.jpg"
+    return `
+        <div style="width:100%; height:100%; position:relative; display:flex; align-items:center; justify-content:center;">
+            <img src="assets/${slug}-icon.jpg" alt="${escapeHTML(cat.name)}" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff; position:absolute; top:0; left:0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <span style="display:none; font-size:2.2rem; align-items:center; justify-content:center; height:100%; width:100%;">${fallbackEmoji}</span>
+        </div>
+    `;
 }
 
 let allCategoriesGlobal = [];
@@ -547,19 +555,16 @@ async function loadHomepageProducts() {
         const { data: settingsData } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).maybeSingle();
         const settings = settingsData || {};
         
-        // ⭐ UPDATED: Independent App Popup & Floating Button Logic ⭐
         const showAppPopup = settings.show_app_download !== false; 
         const showFloatingBtn = settings.show_floating_app_btn !== false;
         const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
         
-        // 1. Floating Button Control
         if (showFloatingBtn && !isPWA) {
             if (floatingAppIcon) floatingAppIcon.style.display = 'flex';
         } else {
             if (floatingAppIcon) floatingAppIcon.style.display = 'none'; 
         }
 
-        // 2. Popup Control
         if (showAppPopup && !isPWA) {
             if (!sessionStorage.getItem('appPopupShown')) { 
                 setTimeout(() => { 
@@ -573,7 +578,6 @@ async function loadHomepageProducts() {
             if (popup) popup.style.display = 'none'; 
             if (overlay) overlay.style.display = 'none';
         }
-        // ====================================================
 
         if (document.getElementById('specialDealTitle')) {
             const spTitle = document.getElementById('specialDealTitle');
