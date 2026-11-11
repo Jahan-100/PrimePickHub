@@ -106,9 +106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (typeof API === 'undefined' || !API.getCurrentUser) { alert('API not loaded. Refresh the page.'); return; }
     const auth = await API.getCurrentUser(); if (!auth) return showLogin(); if (auth.role !== 'admin') { alert('Access denied. Admin only.'); await API.signOut(); return showLogin(); }
     await syncCategoriesFromDB(); showDashboard(); await loadStats(); await loadSiteSettings(); await loadProductsList(); await window.loadBlogList(); setupProductForm(); setupToggleList(); setupToggleAddProduct(); setupToggleSpecialDeal(); setupToggleFlashSale(); setupToggleSale2();
-    document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
-    document.getElementById('adminStoreFilter')?.addEventListener('change', renderTable);
-    document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
+    document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable); document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
     document.getElementById('toggleManageCatsBtn')?.addEventListener('click', function() { const container = document.getElementById('manageCatsContainer'); if (container.style.display === 'none') { container.style.display = 'block'; this.textContent = 'Hide Categories List'; this.style.background = '#EF4444'; renderCategoryManagementTable(); } else { container.style.display = 'none'; this.textContent = 'Show Categories List'; this.style.background = '#0284c7'; } });
     document.getElementById('toggleBuilderBtn')?.addEventListener('click', function() { const container = document.getElementById('categoryBuilderContainer'); if (container.style.display === 'none') { container.style.display = 'block'; this.textContent = 'Hide Builder'; this.style.background = '#EF4444'; updateBuilderUI(); } else { container.style.display = 'none'; this.textContent = '+ Add New Category Tree'; this.style.background = '#10b981'; } });
     document.getElementById('bMiniParentSelect')?.addEventListener('change', function() { const activeParent = this.value; const miniSelect = document.getElementById('bMiniSelect'); if (activeParent) { const allCats = globalCategories; const availableMinis = allCats.filter(c => c.parent === activeParent); miniSelect.innerHTML = `<option value="">-- Select Existing --</option>` + availableMinis.map(c => `<option value="${c.slug}">${c.name}</option>`).join(''); } else { miniSelect.innerHTML = `<option value="">-- Select Parent Sub First --</option>`; } });
@@ -301,8 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadDiscoveredProducts();
 });
 
-// ⭐ ADD THIS TO THE END OF ADMIN.JS ⭐
-
+// ⭐ FIXED & ADDED: Manage Reviews Logic ⭐
 document.addEventListener('DOMContentLoaded', () => {
     const toggleReviewsBtn = document.getElementById('toggleReviewsBtn');
     const reviewsContainer = document.getElementById('reviewsContainer');
@@ -315,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
             reviewsContainer.style.display = 'block';
             toggleReviewsBtn.textContent = 'Hide Reviews';
             toggleReviewsBtn.style.background = '#EF4444';
-            loadAdminReviews();
+            window.loadAdminReviews();
         } else {
             reviewsContainer.style.display = 'none';
             toggleReviewsBtn.textContent = 'Show Pending & Approved Reviews';
@@ -328,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const { data: reviews, error } = await window.supabaseClient
             .from('product_reviews')
-            .select('*, products(title)')
+            .select('*') 
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -370,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return `
                 <tr>
                     <td style="text-align:center;">${index + 1}</td>
-                    <td style="text-align:center; font-size:0.75rem;">${r.products?.title ? escapeHTML(r.products.title).substring(0,20)+'...' : r.product_id.substring(0,8)}</td>
+                    <td style="text-align:center; font-size:0.75rem;">${r.product_id.substring(0,8)}</td>
                     <td style="text-align:center; font-weight:bold;">${escapeHTML(r.customer_name)}</td>
                     <td style="text-align:center; color:#F59E0B;">${r.rating} ★</td>
                     <td style="text-align:left; font-size:0.8rem; max-width:300px;">
