@@ -14,216 +14,80 @@ async function uploadFileToSupabase(file) {
 }
 
 window.handlePrimaryImageSelect = function(input) {
-    const container = document.getElementById('pImgPreview');
-    container.innerHTML = '';
+    const container = document.getElementById('pImgPreview'); container.innerHTML = '';
     if (input.files.length > 0) {
         document.getElementById('pImgFileName').innerText = input.files.length + ' files selected';
-        const primaryFile = input.files[0];
-        const url = URL.createObjectURL(primaryFile);
+        const primaryFile = input.files[0]; const url = URL.createObjectURL(primaryFile);
         container.innerHTML = `<div class="preview-item" style="width: 90px; height: 90px; border: 2px solid #e11d48;"><img src="${url}" onclick="openImageLightbox('${url}')" title="Main Image (Click to view)"><button class="preview-remove" onclick="removePrimaryImage()" title="Remove Image">X</button><div style="position:absolute; bottom:0; left:0; right:0; background:rgba(225,29,72,0.8); color:#fff; font-size:0.6rem; text-align:center; padding:2px;">MAIN</div></div>`;
-        if (input.files.length > 1) {
-            for (let i = 1; i < input.files.length; i++) { currentGalleryFiles.push(input.files[i]); }
-            renderGalleryPreviews();
-        }
-    } else {
-        document.getElementById('pImgFileName').innerText = 'No file chosen';
-        const urlInput = document.getElementById('pImg').value.trim();
-        if(urlInput) renderPrimaryUrlPreview(urlInput);
-    }
+        if (input.files.length > 1) { for (let i = 1; i < input.files.length; i++) { currentGalleryFiles.push(input.files[i]); } renderGalleryPreviews(); }
+    } else { document.getElementById('pImgFileName').innerText = 'No file chosen'; const urlInput = document.getElementById('pImg').value.trim(); if(urlInput) renderPrimaryUrlPreview(urlInput); }
 }
-
 window.removePrimaryImage = function() { document.getElementById('pImgFile').value = ''; document.getElementById('pImg').value = ''; document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pImgPreview').innerHTML = ''; }
-
-function renderPrimaryUrlPreview(url) {
-    const container = document.getElementById('pImgPreview');
-    if(url) { container.innerHTML = `<div class="preview-item" style="width: 90px; height: 90px; border: 2px solid #e11d48;"><img src="${url}" onclick="openImageLightbox('${url}')" title="Main Image (Click to view)"><button class="preview-remove" onclick="removePrimaryImage()" title="Remove Image">X</button><div style="position:absolute; bottom:0; left:0; right:0; background:rgba(225,29,72,0.8); color:#fff; font-size:0.6rem; text-align:center; padding:2px;">MAIN</div></div>`; } else { container.innerHTML = ''; }
-}
-
+function renderPrimaryUrlPreview(url) { const container = document.getElementById('pImgPreview'); if(url) { container.innerHTML = `<div class="preview-item" style="width: 90px; height: 90px; border: 2px solid #e11d48;"><img src="${url}" onclick="openImageLightbox('${url}')" title="Main Image (Click to view)"><button class="preview-remove" onclick="removePrimaryImage()" title="Remove Image">X</button><div style="position:absolute; bottom:0; left:0; right:0; background:rgba(225,29,72,0.8); color:#fff; font-size:0.6rem; text-align:center; padding:2px;">MAIN</div></div>`; } else { container.innerHTML = ''; } }
 window.handleGalleryImagesSelect = function(input) { for(let i=0; i<input.files.length; i++) { currentGalleryFiles.push(input.files[i]); } input.value = ''; renderGalleryPreviews(); }
-
 function renderGalleryPreviews() {
-    const container = document.getElementById('pGalleryPreview');
-    const textarea = document.getElementById('pGallery');
-    const urlText = textarea.value.trim();
-    let html = '';
-    if(urlText) {
-        const urls = urlText.split('\n').map(u => u.trim()).filter(Boolean);
-        urls.forEach((url, idx) => { html += `<div class="preview-item"><img src="${url}" onclick="openImageLightbox('${url}')" title="Click to view"><button class="preview-remove" onclick="removeGalleryUrl(${idx})" title="Remove Image">X</button></div>`; });
-    }
+    const container = document.getElementById('pGalleryPreview'); const textarea = document.getElementById('pGallery'); const urlText = textarea.value.trim(); let html = '';
+    if(urlText) { const urls = urlText.split('\n').map(u => u.trim()).filter(Boolean); urls.forEach((url, idx) => { html += `<div class="preview-item"><img src="${url}" onclick="openImageLightbox('${url}')" title="Click to view"><button class="preview-remove" onclick="removeGalleryUrl(${idx})" title="Remove Image">X</button></div>`; }); }
     currentGalleryFiles.forEach((file, idx) => { const url = URL.createObjectURL(file); html += `<div class="preview-item"><img src="${url}" onclick="openImageLightbox('${url}')" title="Click to view"><button class="preview-remove" onclick="removeGalleryFile(${idx})" title="Remove Image">X</button></div>`; });
-    container.innerHTML = html;
-    document.getElementById('pGalleryFileName').innerText = currentGalleryFiles.length > 0 ? currentGalleryFiles.length + ' files ready' : 'No files chosen';
+    container.innerHTML = html; document.getElementById('pGalleryFileName').innerText = currentGalleryFiles.length > 0 ? currentGalleryFiles.length + ' files ready' : 'No files chosen';
 }
-
 window.removeGalleryFile = function(index) { currentGalleryFiles.splice(index, 1); renderGalleryPreviews(); }
 window.removeGalleryUrl = function(index) { const textarea = document.getElementById('pGallery'); let urls = textarea.value.split('\n').map(u => u.trim()).filter(Boolean); urls.splice(index, 1); textarea.value = urls.join('\n'); renderGalleryPreviews(); }
 document.getElementById('pGallery')?.addEventListener('input', renderGalleryPreviews);
 
 // ⭐ OVERWRITE FIX: Purani URLs ko replace karega
 window.handleMainColorUpload = async function(input) {
-    if (input.files.length === 0) return;
-    const fileNameSpan = document.getElementById('pMainColorImgName');
-    fileNameSpan.innerText = 'Uploading...';
-    let urls = [];
+    if (input.files.length === 0) return; const fileNameSpan = document.getElementById('pMainColorImgName'); fileNameSpan.innerText = 'Uploading...'; let urls = [];
     try {
-        for (let i = 0; i < input.files.length; i++) {
-            const url = await uploadFileToSupabase(input.files[i]);
-            urls.push(url);
-        }
+        for (let i = 0; i < input.files.length; i++) { const url = await uploadFileToSupabase(input.files[i]); urls.push(url); }
         document.getElementById('pMainColor').value = urls.join(',');
-        fileNameSpan.innerText = `${urls.length} images uploaded`;
-        renderColorPreviews();
+        fileNameSpan.innerText = `${urls.length} images uploaded`; renderColorPreviews();
         alert("Images uploaded successfully!\n\n⚠️ ZAROORI: Ab Color Name wale box mein exactly usi order mein naam likhein jis order mein aapne images select ki hain.");
-    } catch (err) {
-        alert('Upload failed: ' + err.message);
-        fileNameSpan.innerText = 'Failed';
-    }
+    } catch (err) { alert('Upload failed: ' + err.message); fileNameSpan.innerText = 'Failed'; }
 };
-
 function renderColorPreviews() {
-    const container = document.getElementById('pMainColorPreview');
-    const val = document.getElementById('pMainColor').value.trim();
-    if(!val) { container.innerHTML = ''; return; }
+    const container = document.getElementById('pMainColorPreview'); const val = document.getElementById('pMainColor').value.trim(); if(!val) { container.innerHTML = ''; return; }
     const urls = val.split(',').map(u => u.trim()).filter(Boolean);
-    container.innerHTML = urls.map((url, idx) => {
-        if(url.startsWith('http')) { return `<div class="preview-item"><img src="${url}" onclick="openImageLightbox('${url}')" title="Click to view"><button class="preview-remove" onclick="removeColorUrl(${idx})" title="Remove Image">X</button></div>`; } 
-        else { return `<div class="preview-item" style="background:${url};"><button class="preview-remove" onclick="removeColorUrl(${idx})" title="Remove Color">X</button></div>`; }
-    }).join('');
+    container.innerHTML = urls.map((url, idx) => { if(url.startsWith('http')) { return `<div class="preview-item"><img src="${url}" onclick="openImageLightbox('${url}')" title="Click to view"><button class="preview-remove" onclick="removeColorUrl(${idx})" title="Remove Image">X</button></div>`; } else { return `<div class="preview-item" style="background:${url};"><button class="preview-remove" onclick="removeColorUrl(${idx})" title="Remove Color">X</button></div>`; } }).join('');
 }
-
 window.removeColorUrl = function(index) { const input = document.getElementById('pMainColor'); let urls = input.value.split(',').map(u => u.trim()).filter(Boolean); urls.splice(index, 1); input.value = urls.join(','); renderColorPreviews(); }
 document.getElementById('pMainColor')?.addEventListener('input', renderColorPreviews);
-
 window.openImageLightbox = function(src) { document.getElementById('lightboxImg').src = src; document.getElementById('imageLightbox').style.display = 'flex'; }
 window.closeImageLightbox = function(e) { if (e) e.stopPropagation(); document.getElementById('imageLightbox').style.display = 'none'; }
 
 async function syncCategoriesFromDB() {
     const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
     const { data, error } = await window.supabaseClient.from('site_settings').select('custom_categories').eq('id', 1).maybeSingle();
-    let customCats = [];
-    if (!error && data && data.custom_categories) { customCats = typeof data.custom_categories === 'string' ? JSON.parse(data.custom_categories) : data.custom_categories; }
-    let merged = [...masterCats];
-    customCats.forEach(c => { const idx = merged.findIndex(m => m.slug === c.slug); if (idx > -1) merged[idx] = c; else merged.push(c); });
-    globalCategories = merged;
+    let customCats = []; if (!error && data && data.custom_categories) { customCats = typeof data.custom_categories === 'string' ? JSON.parse(data.custom_categories) : data.custom_categories; }
+    let merged = [...masterCats]; customCats.forEach(c => { const idx = merged.findIndex(m => m.slug === c.slug); if (idx > -1) merged[idx] = c; else merged.push(c); }); globalCategories = merged;
 }
-
 window.loadBlogList = async function() {
-    const tbody = document.getElementById('blogListBody'); if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading...</td></tr>';
+    const tbody = document.getElementById('blogListBody'); if (!tbody) return; tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading...</td></tr>';
     const { data: blogs, error } = await window.supabaseClient.from('blogs').select('*').order('created_at', { ascending: false });
     if (error || !blogs || blogs.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No blog posts found.</td></tr>'; const countEl = document.getElementById('totalBlogsCount'); if (countEl) countEl.innerText = 0; const draftCountEl = document.getElementById('totalDraftsCount'); if (draftCountEl) draftCountEl.innerText = 0; return; }
-    const publishedBlogs = blogs.filter(b => b.is_published === true);
-    const draftBlogs = blogs.filter(b => b.is_published !== true);
-    const countEl = document.getElementById('totalBlogsCount'); if (countEl) countEl.innerText = publishedBlogs.length;
-    const draftCountEl = document.getElementById('totalDraftsCount'); if (draftCountEl) draftCountEl.innerText = draftBlogs.length;
-    tbody.innerHTML = blogs.map((b, index) => {
-        const isPublished = b.is_published !== false; const statusBadge = isPublished ? '' : `<span style="background:#F59E0B; color:white; padding:2px 6px; border-radius:4px; font-size:0.65rem; margin-left:5px;">🤖 AI DRAFT</span>`;
-        let actionBtns = `<button class="btn-edit" onclick="editBlog('${b.id}', '${b.title.replace(/'/g, "\\'")}', '${b.slug}', '${b.image_url || ''}')">Edit</button><button class="btn-delete" onclick="deleteBlog('${b.id}')">Delete</button>`;
-        if (!isPublished) actionBtns = `<button onclick="publishBlog('${b.id}')" style="background:#10B981; color:white; padding:6px 10px; border:none; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">Publish</button>` + actionBtns;
-        return `<tr><td style="text-align: center; font-weight: bold;">${index + 1}</td><td style="text-align: center;"><img src="${b.image_url || '/assets/icon-192.png?v=4'}" class="table-img"></td><td style="text-align: left; font-weight: 500;">${b.title} ${statusBadge}</td><td style="text-align:center;">${new Date(b.created_at).toLocaleDateString()}</td><td><div class="action-btns">${actionBtns}</div></td></tr>`;
-    }).join('');
+    const publishedBlogs = blogs.filter(b => b.is_published === true); const draftBlogs = blogs.filter(b => b.is_published !== true);
+    const countEl = document.getElementById('totalBlogsCount'); if (countEl) countEl.innerText = publishedBlogs.length; const draftCountEl = document.getElementById('totalDraftsCount'); if (draftCountEl) draftCountEl.innerText = draftBlogs.length;
+    tbody.innerHTML = blogs.map((b, index) => { const isPublished = b.is_published !== false; const statusBadge = isPublished ? '' : `<span style="background:#F59E0B; color:white; padding:2px 6px; border-radius:4px; font-size:0.65rem; margin-left:5px;">🤖 AI DRAFT</span>`; let actionBtns = `<button class="btn-edit" onclick="editBlog('${b.id}', '${b.title.replace(/'/g, "\\'")}', '${b.slug}', '${b.image_url || ''}')">Edit</button><button class="btn-delete" onclick="deleteBlog('${b.id}')">Delete</button>`; if (!isPublished) actionBtns = `<button onclick="publishBlog('${b.id}')" style="background:#10B981; color:white; padding:6px 10px; border:none; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">Publish</button>` + actionBtns; return `<tr><td style="text-align: center; font-weight: bold;">${index + 1}</td><td style="text-align: center;"><img src="${b.image_url || '/assets/icon-192.png?v=4'}" class="table-img"></td><td style="text-align: left; font-weight: 500;">${b.title} ${statusBadge}</td><td style="text-align:center;">${new Date(b.created_at).toLocaleDateString()}</td><td><div class="action-btns">${actionBtns}</div></td></tr>`; }).join('');
 }
-
-function loadCategoriesToDropdown(selectedSlug = null) {
-    const allCats = globalCategories; const addCategorySelect = document.getElementById('pCategory');
-    if (addCategorySelect) {
-        let sortedCats = [];
-        const addWithIndent = (parent, level) => { allCats.filter(c => c.parent === parent || (parent === null && !c.parent)).forEach(c => { const indent = '&nbsp;&nbsp;&nbsp;&nbsp;'.repeat(level); sortedCats.push({ ...c, display: indent + (level > 0 ? '↳ ' : '') + c.name }); addWithIndent(c.slug, level + 1); }); };
-        addWithIndent(null, 0); addWithIndent('all', 0);
-        addCategorySelect.innerHTML = sortedCats.map(c => `<option value="${c.slug}">${c.display}</option>`).join('');
-        if(selectedSlug) addCategorySelect.value = selectedSlug;
-    }
-}
-
-function renderCategoryManagementTable() {
-    const tbody = document.getElementById('categoryManagementBody'); if(!tbody) return;
-    const allCats = globalCategories; let sortedCats = [];
-    const addWithIndent = (parent, level) => { allCats.filter(c => c.parent === parent || (parent === null && !c.parent)).forEach(c => { const indent = '&nbsp;&nbsp;&nbsp;&nbsp;'.repeat(level); sortedCats.push({ ...c, display: indent + (level > 0 ? '↳ ' : '') + c.name }); addWithIndent(c.slug, level + 1); }); };
-    addWithIndent(null, 0); addWithIndent('all', 0);
-    tbody.innerHTML = sortedCats.map(c => `<tr><td style="text-align:left; font-weight:600;">${c.display}</td><td>${c.slug}</td><td>${c.parent || 'None'}</td><td><div class="action-btns"><button class="btn-edit" onclick="editCategory('${c.slug}')">Edit</button><button class="btn-delete" onclick="deleteCategory('${c.slug}')">Delete</button></div></td></tr>`).join('');
-}
-
-window.editCategory = async function(slug) {
-    const cat = globalCategories.find(c => c.slug === slug); if(!cat) return;
-    const newName = prompt("Edit Category Name:", cat.name); if(!newName || newName.trim() === "") return;
-    const { data } = await window.supabaseClient.from('site_settings').select('custom_categories').eq('id', 1).maybeSingle();
-    let customCats = (data && data.custom_categories) ? (typeof data.custom_categories === 'string' ? JSON.parse(data.custom_categories) : data.custom_categories) : [];
-    const existingIdx = customCats.findIndex(c => c.slug === slug);
-    if (existingIdx > -1) { customCats[existingIdx].name = newName.trim(); } else { customCats.push({ slug: slug, name: newName.trim(), parent: cat.parent || null }); }
-    await window.supabaseClient.from('site_settings').update({ custom_categories: customCats }).eq('id', 1);
-    await syncCategoriesFromDB(); renderCategoryManagementTable(); loadCategoriesToDropdown();
-    alert("Category name updated successfully! Website will update automatically.");
-}
-
-window.deleteCategory = async function(slug) {
-    if(!confirm("Are you sure you want to delete this category? Sub-categories will also be hidden.")) return;
-    const getChildren = (parent) => { let res = []; globalCategories.filter(c => c.parent === parent).forEach(c => { res.push(c.slug); res = res.concat(getChildren(c.slug)); }); return res; };
-    const toDelete = [slug, ...getChildren(slug)];
-    const { data } = await window.supabaseClient.from('site_settings').select('custom_categories').eq('id', 1).maybeSingle();
-    let customCats = (data && data.custom_categories) ? (typeof data.custom_categories === 'string' ? JSON.parse(data.custom_categories) : data.custom_categories) : [];
-    customCats = customCats.filter(c => !toDelete.includes(c.slug));
-    toDelete.forEach(s => { if(!customCats.find(c => c.slug === s)) { customCats.push({ slug: s, name: '__DELETED__', parent: null }); } });
-    await window.supabaseClient.from('site_settings').update({ custom_categories: customCats }).eq('id', 1);
-    await syncCategoriesFromDB(); renderCategoryManagementTable(); loadCategoriesToDropdown();
-}
-
-window.setBuilderMain = function() {
-    const sel = document.getElementById('bMainSelect').value; const inp = document.getElementById('bMainInput').value.trim();
-    let mainSlug = sel; let mainName = document.getElementById('bMainSelect').options[document.getElementById('bMainSelect').selectedIndex].text;
-    if (inp) { mainSlug = inp.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''); mainName = inp; }
-    if (!mainSlug) return alert("Please select or enter a Main Category");
-    builderState.main = { slug: mainSlug, name: mainName, parent: null }; builderState.subs = []; builderState.minis = []; 
-    document.getElementById('bActiveMainDisplay').innerHTML = `Active Main: <span style="background:#166534; color:white; padding:2px 6px; border-radius:4px;">${mainName}</span>`;
-    document.getElementById('bMainInput').value = ''; updateBuilderUI();
-    alert(`Main Category "${mainName}" set! You can now add Sub-Categories.`);
-}
-
-window.addBuilderSub = function() {
-    if (!builderState.main) return alert("Please set a Main Category first.");
-    const sel = document.getElementById('bSubSelect').value; const inp = document.getElementById('bSubInput').value.trim();
-    let subSlug = sel; let subName = document.getElementById('bSubSelect').options[document.getElementById('bSubSelect').selectedIndex].text;
-    if (inp) { subSlug = inp.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''); subName = inp; }
-    if (!subSlug || subSlug === "") return alert("Please select or enter a valid Sub Category");
-    if (!builderState.subs.find(s => s.slug === subSlug)) { builderState.subs.push({ slug: subSlug, name: subName, parent: builderState.main.slug }); alert(`Sub Category "${subName}" added!`); } else { alert("This Sub Category is already added in this session."); }
-    document.getElementById('bSubInput').value = ''; updateBuilderUI();
-}
-
-window.addBuilderMini = function() {
-    const parentSubSlug = document.getElementById('bMiniParentSelect').value; if (!parentSubSlug) return alert("Please select a parent Sub Category from the dropdown in Box 3.");
-    const sel = document.getElementById('bMiniSelect').value; const inp = document.getElementById('bMiniInput').value.trim();
-    let miniSlug = sel; let miniName = document.getElementById('bMiniSelect').options[document.getElementById('bMiniSelect').selectedIndex].text;
-    if (inp) { miniSlug = inp.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''); miniName = inp; }
-    if (!miniSlug) return alert("Please select or enter a Mini-Sub Category");
-    if (!builderState.minis.find(m => m.slug === miniSlug && m.parent === parentSubSlug)) { builderState.minis.push({ slug: miniSlug, name: miniName, parent: parentSubSlug }); alert(`Mini-Sub Category "${miniName}" added!`); } else { alert("This Mini-Sub Category is already added in this session."); }
-    document.getElementById('bMiniInput').value = ''; updateBuilderUI();
-}
-
+function loadCategoriesToDropdown(selectedSlug = null) { const allCats = globalCategories; const addCategorySelect = document.getElementById('pCategory'); if (addCategorySelect) { let sortedCats = []; const addWithIndent = (parent, level) => { allCats.filter(c => c.parent === parent || (parent === null && !c.parent)).forEach(c => { const indent = '&nbsp;&nbsp;&nbsp;&nbsp;'.repeat(level); sortedCats.push({ ...c, display: indent + (level > 0 ? '↳ ' : '') + c.name }); addWithIndent(c.slug, level + 1); }); }; addWithIndent(null, 0); addWithIndent('all', 0); addCategorySelect.innerHTML = sortedCats.map(c => `<option value="${c.slug}">${c.display}</option>`).join(''); if(selectedSlug) addCategorySelect.value = selectedSlug; } }
+function renderCategoryManagementTable() { const tbody = document.getElementById('categoryManagementBody'); if(!tbody) return; const allCats = globalCategories; let sortedCats = []; const addWithIndent = (parent, level) => { allCats.filter(c => c.parent === parent || (parent === null && !c.parent)).forEach(c => { const indent = '&nbsp;&nbsp;&nbsp;&nbsp;'.repeat(level); sortedCats.push({ ...c, display: indent + (level > 0 ? '↳ ' : '') + c.name }); addWithIndent(c.slug, level + 1); }); }; addWithIndent(null, 0); addWithIndent('all', 0); tbody.innerHTML = sortedCats.map(c => `<tr><td style="text-align:left; font-weight:600;">${c.display}</td><td>${c.slug}</td><td>${c.parent || 'None'}</td><td><div class="action-btns"><button class="btn-edit" onclick="editCategory('${c.slug}')">Edit</button><button class="btn-delete" onclick="deleteCategory('${c.slug}')">Delete</button></div></td></tr>`).join(''); }
+window.editCategory = async function(slug) { const cat = globalCategories.find(c => c.slug === slug); if(!cat) return; const newName = prompt("Edit Category Name:", cat.name); if(!newName || newName.trim() === "") return; const { data } = await window.supabaseClient.from('site_settings').select('custom_categories').eq('id', 1).maybeSingle(); let customCats = (data && data.custom_categories) ? (typeof data.custom_categories === 'string' ? JSON.parse(data.custom_categories) : data.custom_categories) : []; const existingIdx = customCats.findIndex(c => c.slug === slug); if (existingIdx > -1) { customCats[existingIdx].name = newName.trim(); } else { customCats.push({ slug: slug, name: newName.trim(), parent: cat.parent || null }); } await window.supabaseClient.from('site_settings').update({ custom_categories: customCats }).eq('id', 1); await syncCategoriesFromDB(); renderCategoryManagementTable(); loadCategoriesToDropdown(); alert("Category name updated successfully! Website will update automatically."); }
+window.deleteCategory = async function(slug) { if(!confirm("Are you sure you want to delete this category? Sub-categories will also be hidden.")) return; const getChildren = (parent) => { let res = []; globalCategories.filter(c => c.parent === parent).forEach(c => { res.push(c.slug); res = res.concat(getChildren(c.slug)); }); return res; }; const toDelete = [slug, ...getChildren(slug)]; const { data } = await window.supabaseClient.from('site_settings').select('custom_categories').eq('id', 1).maybeSingle(); let customCats = (data && data.custom_categories) ? (typeof data.custom_categories === 'string' ? JSON.parse(data.custom_categories) : data.custom_categories) : []; customCats = customCats.filter(c => !toDelete.includes(c.slug)); toDelete.forEach(s => { if(!customCats.find(c => c.slug === s)) { customCats.push({ slug: s, name: '__DELETED__', parent: null }); } }); await window.supabaseClient.from('site_settings').update({ custom_categories: customCats }).eq('id', 1); await syncCategoriesFromDB(); renderCategoryManagementTable(); loadCategoriesToDropdown(); }
+window.setBuilderMain = function() { const sel = document.getElementById('bMainSelect').value; const inp = document.getElementById('bMainInput').value.trim(); let mainSlug = sel; let mainName = document.getElementById('bMainSelect').options[document.getElementById('bMainSelect').selectedIndex].text; if (inp) { mainSlug = inp.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''); mainName = inp; } if (!mainSlug) return alert("Please select or enter a Main Category"); builderState.main = { slug: mainSlug, name: mainName, parent: null }; builderState.subs = []; builderState.minis = []; document.getElementById('bActiveMainDisplay').innerHTML = `Active Main: <span style="background:#166534; color:white; padding:2px 6px; border-radius:4px;">${mainName}</span>`; document.getElementById('bMainInput').value = ''; updateBuilderUI(); alert(`Main Category "${mainName}" set! You can now add Sub-Categories.`); }
+window.addBuilderSub = function() { if (!builderState.main) return alert("Please set a Main Category first."); const sel = document.getElementById('bSubSelect').value; const inp = document.getElementById('bSubInput').value.trim(); let subSlug = sel; let subName = document.getElementById('bSubSelect').options[document.getElementById('bSubSelect').selectedIndex].text; if (inp) { subSlug = inp.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''); subName = inp; } if (!subSlug || subSlug === "") return alert("Please select or enter a valid Sub Category"); if (!builderState.subs.find(s => s.slug === subSlug)) { builderState.subs.push({ slug: subSlug, name: subName, parent: builderState.main.slug }); alert(`Sub Category "${subName}" added!`); } else { alert("This Sub Category is already added in this session."); } document.getElementById('bSubInput').value = ''; updateBuilderUI(); }
+window.addBuilderMini = function() { const parentSubSlug = document.getElementById('bMiniParentSelect').value; if (!parentSubSlug) return alert("Please select a parent Sub Category from the dropdown in Box 3."); const sel = document.getElementById('bMiniSelect').value; const inp = document.getElementById('bMiniInput').value.trim(); let miniSlug = sel; let miniName = document.getElementById('bMiniSelect').options[document.getElementById('bMiniSelect').selectedIndex].text; if (inp) { miniSlug = inp.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''); miniName = inp; } if (!miniSlug) return alert("Please select or enter a Mini-Sub Category"); if (!builderState.minis.find(m => m.slug === miniSlug && m.parent === parentSubSlug)) { builderState.minis.push({ slug: miniSlug, name: miniName, parent: parentSubSlug }); alert(`Mini-Sub Category "${miniName}" added!`); } else { alert("This Mini-Sub Category is already added in this session."); } document.getElementById('bMiniInput').value = ''; updateBuilderUI(); }
 function updateBuilderUI() {
     const subList = document.getElementById('bSubList'); const miniList = document.getElementById('bMiniList');
     if (subList) { subList.innerHTML = builderState.subs.map(s => `<li style="margin-bottom:3px;">- ${s.name}</li>`).join('') || '<li style="color:#94A3B8; list-style:none; font-size:0.75rem;">No subs added yet.</li>'; }
     if (miniList) { miniList.innerHTML = builderState.minis.map(m => { const parentSub = builderState.subs.find(s => s.slug === m.parent); return `<li style="margin-bottom:3px;">- ${m.name} <span style="font-size:0.65rem; color:#64748B;">(in ${parentSub ? parentSub.name : 'Unknown'})</span></li>`; }).join('') || '<li style="color:#94A3B8; list-style:none; font-size:0.75rem;">No minis added yet.</li>'; }
-    const list = document.getElementById('builderPreviewList'); let html = '';
-    if (builderState.main) html += `<li style="color:#166534; font-weight:bold; margin-bottom:5px;">📁 Main: ${builderState.main.name}</li>`;
-    builderState.subs.forEach(sub => { html += `<li style="color:#1e3a8a; margin-left: 15px; font-weight:bold;">↳ Sub: ${sub.name}</li>`; const minis = builderState.minis.filter(m => m.parent === sub.slug); minis.forEach(mini => { html += `<li style="color:#991b1b; margin-left: 30px; font-size:0.85rem;">- Mini: ${mini.name}</li>`; }); });
-    list.innerHTML = html || '<li style="color:#94A3B8;">No categories added yet. Start with Step 1.</li>';
+    const list = document.getElementById('builderPreviewList'); let html = ''; if (builderState.main) html += `<li style="color:#166534; font-weight:bold; margin-bottom:5px;">📁 Main: ${builderState.main.name}</li>`; builderState.subs.forEach(sub => { html += `<li style="color:#1e3a8a; margin-left: 15px; font-weight:bold;">↳ Sub: ${sub.name}</li>`; const minis = builderState.minis.filter(m => m.parent === sub.slug); minis.forEach(mini => { html += `<li style="color:#991b1b; margin-left: 30px; font-size:0.85rem;">- Mini: ${mini.name}</li>`; }); }); list.innerHTML = html || '<li style="color:#94A3B8;">No categories added yet. Start with Step 1.</li>';
     const allCats = globalCategories; const mainSelect = document.getElementById('bMainSelect'); const subSelect = document.getElementById('bSubSelect'); const miniSelect = document.getElementById('bMiniSelect'); const miniParentSelect = document.getElementById('bMiniParentSelect');
     if(mainSelect) { mainSelect.innerHTML = `<option value="">-- Select Existing --</option>` + allCats.filter(c => !c.parent || c.parent === 'all').map(c => `<option value="${c.slug}">${c.name}</option>`).join(''); }
     if(subSelect) { if(builderState.main) { const availableSubs = allCats.filter(c => c.parent === builderState.main.slug); subSelect.innerHTML = `<option value="">-- Select Existing --</option>` + availableSubs.map(c => `<option value="${c.slug}">${c.name}</option>`).join(''); } else { subSelect.innerHTML = `<option value="">-- Set Main First --</option>`; } }
     if(miniParentSelect) { const currentSel = miniParentSelect.value; miniParentSelect.innerHTML = `<option value="">-- Select Parent Sub-Cat --</option>` + builderState.subs.map(c => `<option value="${c.slug}">${c.name}</option>`).join(''); if (builderState.subs.length > 0) { if (builderState.subs.find(s => s.slug === currentSel)) { miniParentSelect.value = currentSel; } else { miniParentSelect.value = builderState.subs[0].slug; } } }
     if(miniSelect) { const activeParent = miniParentSelect.value; if(activeParent) { const availableMinis = allCats.filter(c => c.parent === activeParent); miniSelect.innerHTML = `<option value="">-- Select Existing --</option>` + availableMinis.map(c => `<option value="${c.slug}">${c.name}</option>`).join(''); } else { miniSelect.innerHTML = `<option value="">-- Select Parent Sub First --</option>`; } }
 }
-
-window.saveBuilderData = async function() {
-    if (!builderState.main) return alert("Please set a Main Category first.");
-    const { data } = await window.supabaseClient.from('site_settings').select('custom_categories').eq('id', 1).maybeSingle();
-    let customCats = (data && data.custom_categories) ? (typeof data.custom_categories === 'string' ? JSON.parse(data.custom_categories) : data.custom_categories) : [];
-    const upsertCat = (catObj) => { const idx = customCats.findIndex(c => c.slug === catObj.slug); if (idx > -1) customCats[idx] = catObj; else customCats.push(catObj); };
-    upsertCat(builderState.main); builderState.subs.forEach(sub => upsertCat(sub)); builderState.minis.forEach(mini => upsertCat(mini));
-    await window.supabaseClient.from('site_settings').update({ custom_categories: customCats }).eq('id', 1);
-    alert("✅ All categories added successfully to the database!");
-    resetBuilder(); await syncCategoriesFromDB(); renderCategoryManagementTable(); loadCategoriesToDropdown();
-}
-
+window.saveBuilderData = async function() { if (!builderState.main) return alert("Please set a Main Category first."); const { data } = await window.supabaseClient.from('site_settings').select('custom_categories').eq('id', 1).maybeSingle(); let customCats = (data && data.custom_categories) ? (typeof data.custom_categories === 'string' ? JSON.parse(data.custom_categories) : data.custom_categories) : []; const upsertCat = (catObj) => { const idx = customCats.findIndex(c => c.slug === catObj.slug); if (idx > -1) customCats[idx] = catObj; else customCats.push(catObj); }; upsertCat(builderState.main); builderState.subs.forEach(sub => upsertCat(sub)); builderState.minis.forEach(mini => upsertCat(mini)); await window.supabaseClient.from('site_settings').update({ custom_categories: customCats }).eq('id', 1); alert("✅ All categories added successfully to the database!"); resetBuilder(); await syncCategoriesFromDB(); renderCategoryManagementTable(); loadCategoriesToDropdown(); }
 window.resetBuilder = function() { builderState = { main: null, subs: [], minis: [] }; document.getElementById('bMainInput').value = ''; document.getElementById('bSubInput').value = ''; document.getElementById('bMiniInput').value = ''; document.getElementById('bActiveMainDisplay').innerHTML = ''; updateBuilderUI(); }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -251,7 +115,6 @@ function setupToggleAddProduct() { const toggleBtn = document.getElementById('to
 function setupToggleSpecialDeal() { const toggleBtn = document.getElementById('toggleSpecialDealBtn'); const container = document.getElementById('specialDealContainer'); if (toggleBtn && container) { toggleBtn.addEventListener('click', () => { if (container.style.display === 'none') { container.style.display = 'block'; toggleBtn.textContent = 'Hide Settings'; toggleBtn.style.background = '#EF4444'; } else { container.style.display = 'none'; toggleBtn.textContent = 'Show Settings'; toggleBtn.style.background = '#d946ef'; } }); } }
 function setupToggleFlashSale() { const toggleBtn = document.getElementById('toggleFlashSaleBtn'); const container = document.getElementById('flashSaleContainer'); if (toggleBtn && container) { toggleBtn.addEventListener('click', () => { if (container.style.display === 'none') { container.style.display = 'block'; toggleBtn.textContent = 'Hide Settings'; toggleBtn.style.background = '#EF4444'; } else { container.style.display = 'none'; toggleBtn.textContent = 'Show Settings'; toggleBtn.style.background = '#ea580c'; } }); } }
 function setupToggleSale2() { const toggleBtn = document.getElementById('toggleSale2Btn'); const container = document.getElementById('sale2Container'); if (toggleBtn && container) { toggleBtn.addEventListener('click', () => { if (container.style.display === 'none') { container.style.display = 'block'; toggleBtn.textContent = 'Hide Settings'; toggleBtn.style.background = '#EF4444'; } else { container.style.display = 'none'; toggleBtn.textContent = 'Show Settings'; toggleBtn.style.background = '#10b981'; } }); } }
-
 async function loadSiteSettings() {
     const { data } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).maybeSingle();
     if (data) {
@@ -262,21 +125,10 @@ async function loadSiteSettings() {
         if(document.getElementById('sale2TitleText')) { document.getElementById('sale2TitleText').value = data.sale_section_2_title || 'Sale Section 2'; document.getElementById('sale2TitleFontFamily').value = data.sale_section_2_font_family || 'Poppins'; document.getElementById('sale2TitleFontSize').value = data.sale_section_2_font_size || '2rem'; document.getElementById('sale2TitleFontWeight').value = data.sale_section_2_font_weight || '900'; document.getElementById('sale2TitleFontStyle').value = data.sale_section_2_font_style || 'normal'; }
     }
 }
-
 function setupToggleList() { const toggleBtn = document.getElementById('toggleProductListBtn'); const listContainer = document.getElementById('productListContainer'); if (toggleBtn && listContainer) { toggleBtn.addEventListener('click', () => { if (listContainer.style.display === 'none') { listContainer.style.display = 'block'; toggleBtn.textContent = 'Hide Product List'; toggleBtn.style.background = '#EF4444'; } else { listContainer.style.display = 'none'; toggleBtn.textContent = 'Show Product List'; toggleBtn.style.background = '#4f46e5'; } }); } }
-
-function showLogin() {
-    const loginContainer = document.getElementById('loginContainer'); const loginForm = document.getElementById('loginForm'); const dashEl = document.getElementById('dashboard');
-    if (loginContainer) loginContainer.style.display = 'block'; if (dashEl) dashEl.style.display = 'none';
-    loginForm?.addEventListener('submit', async (e) => { e.preventDefault(); const email = document.getElementById('loginEmail').value.trim(); const password = document.getElementById('loginPassword').value; const errorEl = document.getElementById('loginError'); try { await API.signIn(email, password); window.location.reload(); } catch (err) { if (errorEl) errorEl.innerText = err.message || 'Login failed'; else alert('Login failed: ' + err.message); } });
-}
-
+function showLogin() { const loginContainer = document.getElementById('loginContainer'); const loginForm = document.getElementById('loginForm'); const dashEl = document.getElementById('dashboard'); if (loginContainer) loginContainer.style.display = 'block'; if (dashEl) dashEl.style.display = 'none'; loginForm?.addEventListener('submit', async (e) => { e.preventDefault(); const email = document.getElementById('loginEmail').value.trim(); const password = document.getElementById('loginPassword').value; const errorEl = document.getElementById('loginError'); try { await API.signIn(email, password); window.location.reload(); } catch (err) { if (errorEl) errorEl.innerText = err.message || 'Login failed'; else alert('Login failed: ' + err.message); } }); }
 function showDashboard() { const loginContainer = document.getElementById('loginContainer'); const dashEl = document.getElementById('dashboard'); if (loginContainer) loginContainer.style.display = 'none'; if (dashEl) dashEl.style.display = 'block'; }
-
-async function loadStats() {
-    try { const stats = await API.getAdminStats(); const p = document.getElementById('statProducts'); const c = document.getElementById('statClicks'); if (p) p.innerText = stats.totalProducts; if (c) c.innerText = stats.totalClicks; const { data: visitors } = await window.supabaseClient.rpc('get_total_visitors'); const { data: installs } = await window.supabaseClient.rpc('get_active_app_installs'); const vEl = document.getElementById('statVisitors'); const iEl = document.getElementById('statAppInstalls'); if (vEl) vEl.innerText = visitors || 0; if (iEl) iEl.innerText = installs || 0; } catch (err) { console.warn('Stats error:', err); }
-}
-
+async function loadStats() { try { const stats = await API.getAdminStats(); const p = document.getElementById('statProducts'); const c = document.getElementById('statClicks'); if (p) p.innerText = stats.totalProducts; if (c) c.innerText = stats.totalClicks; const { data: visitors } = await window.supabaseClient.rpc('get_total_visitors'); const { data: installs } = await window.supabaseClient.rpc('get_active_app_installs'); const vEl = document.getElementById('statVisitors'); const iEl = document.getElementById('statAppInstalls'); if (vEl) vEl.innerText = visitors || 0; if (iEl) iEl.innerText = installs || 0; } catch (err) { console.warn('Stats error:', err); } }
 async function loadProductsList() {
     const tbody = document.getElementById('productListBody'); if (!tbody) return;
     try {
@@ -288,7 +140,6 @@ async function loadProductsList() {
         loadCategoriesToDropdown(); renderTable();
     } catch (err) { console.error('List Load Error:', err); tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:red;">Failed to load products.</td></tr>'; }
 }
-
 function renderTable() {
     const tbody = document.getElementById('productListBody'); if (!tbody) return;
     const categoryFilter = document.getElementById('adminCategoryFilter')?.value || 'all'; const searchQuery = document.getElementById('adminSearchInput')?.value.toLowerCase().trim() || '';
@@ -307,14 +158,12 @@ function renderTable() {
         return `<tr class="${rowClass}"><td style="text-align: center; font-weight: bold;">${index + 1}</td><td style="text-align: center;"><span style="background:#e2e8f0; color:#1e293b; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:600; white-space:nowrap; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis;">${catName}</span></td><td style="text-align: center;"><img src="${p.image_url}" class="table-img" onerror="this.src='/assets/icon-192.png?v=4'"></td><td style="text-align: left; font-weight: 500;">${p.title} ${statusBadge}</td><td style="text-align: center;">${priceStr}</td><td><div class="action-btns"><button class="btn-edit" onclick="editProduct('${p.id}')">Edit</button><button class="btn-delete" onclick="deleteProduct('${p.id}')">Delete</button></div></td></tr>`;
     }).join('');
 }
-
 window.addVariationRow = function(color = '', colorName = '', name = '', price = '', salePrice = '', commission = '', url = '') {
     const container = document.getElementById('variationsContainer'); const div = document.createElement('div'); div.className = 'variation-row';
     div.innerHTML = `<div style="flex: 1.5; min-width: 130px; display:flex; flex-direction:column; gap:4px;"><input type="text" placeholder="Color (Hex/URL)" value="${color}" class="var-color" style="width:100%;"><input type="file" class="var-color-file" accept="image/*" multiple style="display:none;" onchange="handleVarColorUpload(this)"><button type="button" class="btn-upload" style="padding:4px; font-size:0.75rem;" onclick="this.previousElementSibling.click()">📁 Upload Imgs</button></div><input type="text" placeholder="Color Name" value="${colorName}" class="var-color-name" style="flex: 1.2; min-width: 100px;"><input type="text" placeholder="Size/Qty" value="${name}" class="var-name" required style="flex: 1; min-width: 80px;"><input type="number" step="0.01" placeholder="Base Price" value="${price}" class="var-price" required style="flex: 1; min-width: 80px;"><input type="number" step="0.01" placeholder="Sale Price" value="${salePrice}" class="var-sale-price" style="flex: 1; min-width: 80px;"><input type="number" step="0.1" placeholder="Comm %" value="${commission}" class="var-comm" style="flex: 1; min-width: 80px;"><input type="url" placeholder="Aff URL" value="${url}" class="var-url" style="flex: 1; min-width: 80px;"><button type="button" class="btn-remove-var" onclick="this.parentElement.remove()">X</button>`;
     container.appendChild(div);
 }
 document.getElementById('addVariationBtn')?.addEventListener('click', () => addVariationRow());
-
 window.editProduct = async function(id) {
     try {
         const { data: p, error } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').eq('id', id).maybeSingle(); if (error) throw error; if (!p) { alert("Product not found."); return; }
@@ -323,8 +172,7 @@ window.editProduct = async function(id) {
         document.getElementById('pEventName').value = p.event_name || ''; if(p.sale_end_date) { const d = new Date(p.sale_end_date); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); document.getElementById('pSaleEndDate').value = d.toISOString().slice(0,16); } else { document.getElementById('pSaleEndDate').value = ''; }
         document.getElementById('pEventName2').value = p.event_name_2 || ''; if(p.sale_end_date_2) { const d = new Date(p.sale_end_date_2); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); document.getElementById('pSaleEndDate2').value = d.toISOString().slice(0,16); } else { document.getElementById('pSaleEndDate2').value = ''; }
         document.getElementById('pStore').value = defaultOffer.store_name || ''; document.getElementById('pMainColor').value = defaultOffer.product_color || ''; document.getElementById('pMainColorName').value = defaultOffer.color_name || ''; document.getElementById('pMainVarName').value = defaultOffer.variation_name || ''; document.getElementById('pPrice').value = defaultOffer.price || ''; document.getElementById('pSalePrice').value = defaultOffer.sale_price || ''; document.getElementById('pCommission').value = (defaultOffer.commission_rate && defaultOffer.commission_rate > 0) ? defaultOffer.commission_rate : ''; document.getElementById('pCurrency').value = defaultOffer.currency || 'USD'; document.getElementById('pAffUrl').value = defaultOffer.affiliate_url || '';
-        currentGalleryFiles = [];
-        renderPrimaryUrlPreview(p.image_url); renderGalleryPreviews(); renderColorPreviews();
+        currentGalleryFiles = []; renderPrimaryUrlPreview(p.image_url); renderGalleryPreviews(); renderColorPreviews();
         if (document.getElementById('pPrice').value == '0') { document.getElementById('pHidePrice').checked = true; document.getElementById('pPrice').readOnly = true; } else { document.getElementById('pHidePrice').checked = false; document.getElementById('pPrice').readOnly = false; }
         document.getElementById('pDesc').value = p.description || ''; document.getElementById('pReview').value = p.review_html || ''; document.getElementById('pFeatured').checked = p.is_featured || false; document.getElementById('pTrending').checked = p.is_trending || false; document.getElementById('pSpecialDeal').checked = p.is_special_deal || false;
         document.getElementById('pSendNotification').checked = false; document.getElementById('pWriteBlog').checked = false;
@@ -335,12 +183,10 @@ window.editProduct = async function(id) {
         document.getElementById('productForm').scrollIntoView({ behavior: 'smooth' }); document.querySelectorAll('.error-input').forEach(el => el.classList.remove('error-input'));
     } catch (err) { alert("Error loading product: " + err.message); }
 }
-
 window.deleteProduct = async function(id) {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try { const { data: productData } = await window.supabaseClient.from('products').select('slug').eq('id', id).single(); const { error } = await window.supabaseClient.from('products').delete().eq('id', id); if (error) throw error; if (productData && productData.slug) { await window.supabaseClient.from('app_notifications').delete().eq('product_slug', productData.slug); } alert("Product and its notifications deleted!"); await loadStats(); await loadProductsList(); } catch (err) { alert("Error deleting product: " + err.message); }
 }
-
 function setupProductForm() {
     const form = document.getElementById('productForm'); const cancelBtn = document.getElementById('cancelEditBtn'); if (!form) return;
     form.querySelectorAll('input, textarea, select').forEach(el => { el.addEventListener('input', function() { if (this.classList.contains('error-input')) { if (this.id === 'pImg') { const fileInput = document.getElementById('pImgFile'); if (this.value.trim() || fileInput.files.length > 0) this.classList.remove('error-input'); } else if (this.value.trim()) { this.classList.remove('error-input'); } } }); });
@@ -372,7 +218,6 @@ function setupProductForm() {
     });
     document.getElementById('logoutBtn')?.addEventListener('click', async () => { await API.signOut(); window.location.reload(); });
 }
-
 document.addEventListener('DOMContentLoaded', () => {
     if (!document.getElementById('blogForm')) return;
     const toggleFormBtn = document.getElementById('toggleBlogFormBtn'); const formContainer = document.getElementById('blogFormContainer'); const toggleListBtn = document.getElementById('toggleBlogListBtn'); const listContainer = document.getElementById('blogListContainer'); const blogForm = document.getElementById('blogForm'); const cancelBtn = document.getElementById('cancelBlogBtn');
@@ -387,7 +232,6 @@ document.addEventListener('DOMContentLoaded', () => {
         try { const id = document.getElementById('bId').value; const blogData = { title: document.getElementById('bTitle').value.trim(), slug: document.getElementById('bSlug').value.trim(), image_url: document.getElementById('bImg').value.trim() || null, content_html: document.getElementById('bContent').value.trim(), is_published: true }; if (id) { const { error } = await window.supabaseClient.from('blogs').update(blogData).eq('id', id); if (error) throw error; } else { const { error } = await window.supabaseClient.from('blogs').insert([blogData]); if (error) throw error; } alert("Blog Post Saved Successfully!"); blogForm.reset(); document.getElementById('bId').value = ''; document.getElementById('blogFormTitle').innerText = "Add New Blog Post"; document.getElementById('saveBlogBtn').innerText = "Publish Post"; cancelBtn.style.display = 'none'; formContainer.style.display = 'none'; toggleFormBtn.textContent = 'Show Manual Form'; toggleFormBtn.style.background = '#d946ef'; if(listContainer.style.display === 'block') window.loadBlogList(); } catch (err) { alert("Error: " + err.message); } finally { saveBtn.innerText = originalText; saveBtn.disabled = false; }
     });
 });
-
 document.addEventListener('DOMContentLoaded', () => {
     function setupScrollButtons(upBtnId, downBtnId, wrapperId) { const upBtn = document.getElementById(upBtnId); const downBtn = document.getElementById(downBtnId); const wrapper = document.getElementById(wrapperId); if (!upBtn || !downBtn || !wrapper) return; let scrollInterval; const startScroll = (direction) => { scrollInterval = setInterval(() => { if (direction === 'up') wrapper.scrollTop -= 10; else wrapper.scrollTop += 10; }, 20); }; const stopScroll = () => clearInterval(scrollInterval); upBtn.addEventListener('mousedown', () => startScroll('up')); upBtn.addEventListener('mouseup', stopScroll); upBtn.addEventListener('mouseleave', stopScroll); downBtn.addEventListener('mousedown', () => startScroll('down')); downBtn.addEventListener('mouseup', stopScroll); downBtn.addEventListener('mouseleave', stopScroll); }
     setupScrollButtons('scrollUpBtnAI', 'scrollDownBtnAI', 'tableScrollWrapperAI'); setupScrollButtons('scrollUpBtnProducts', 'scrollDownBtnProducts', 'tableScrollWrapperProducts');
