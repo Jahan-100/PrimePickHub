@@ -7,9 +7,7 @@ function getCookie(name) { let nameEQ = name + "="; let ca = document.cookie.spl
 function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb; }
 
 window.handleImageLoad = function(imgElement) { if (imgElement.decode) { imgElement.decode().then(() => { imgElement.style.opacity = 1; }).catch(() => { imgElement.style.opacity = 1; }); } else { imgElement.style.opacity = 1; } };
-
 function hideSplash() { var splash = document.getElementById('splash-screen'); if (splash && splash.style.display !== 'none') { splash.classList.add('hidden'); document.body.classList.remove('app-loading'); setTimeout(() => { splash.style.display = 'none'; }, 800); sessionStorage.setItem('splashShown', 'true'); } }
-
 function getProductUrl(product) { if (!product) return '#'; if (product.slug) return `/product/${encodeURIComponent(product.slug)}`; if (product.id != null) return `/product.html?id=${encodeURIComponent(product.id)}`; return '#'; }
 
 function getPrimaryOffer(product) {
@@ -44,12 +42,15 @@ function getAllDescendantSlugs(parentSlug, allCats) {
     traverse(parentSlug); return Array.from(slugs);
 }
 
-// ⭐ CLEAN & FOOLPROOF ICON LOGIC ⭐
+// ⭐ FINAL SMART ICON LOGIC (Force loads images with cache buster) ⭐
 function getCategoryIcon(cat) {
     if (!cat) return '📦';
     
     const name = (cat.name || '').toLowerCase().trim();
-    const slug = (cat.slug || '').toLowerCase().trim();
+    let slug = (cat.slug || '').toLowerCase().trim();
+    
+    // Force correct slug for known categories to bypass any DB mismatch
+    if (name.includes('light')) slug = 'lights';
     
     // 1. Agar database mein custom URL set hai (jaise http wali image)
     if (cat.icon && (cat.icon.startsWith('http') || cat.icon.includes('assets/'))) {
@@ -57,7 +58,7 @@ function getCategoryIcon(cat) {
         return `<img src="${iconPath}" alt="${escapeHTML(cat.name)}" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff;">`;
     }
 
-    // 2. Fallback Emoji (Agar image na mile tabhi ye dikhega)
+    // 2. Fallback Emoji
     let fallbackEmoji = '🏷️';
     if (name.includes('bag') || name.includes('luggage')) fallbackEmoji = '👜';
     else if (name.includes('jewel') || name.includes('watch')) fallbackEmoji = '💍';
@@ -74,15 +75,17 @@ function getCategoryIcon(cat) {
     else if (name.includes('accessories')) fallbackEmoji = '💍';
     else if (name.includes('belt')) fallbackEmoji = '🩱';
 
-    // 3. HAMESHA IMAGE DHOONDO (Cache Buster + Smart Fallback)
+    // 3. HAMESHA IMAGE DHOONDO (Tries .jpg, then .png, then .jpeg, then Emoji)
     const timestamp = new Date().getTime();
-    const altSlug = slug.endsWith('s') ? slug.slice(0, -1) : slug + 's'; // Agar 'lights' na mile toh 'light' try karega
-
     return `
         <div style="width:100%; height:100%; position:relative; display:flex; align-items:center; justify-content:center;">
             <img src="/assets/${slug}-icon.jpg?v=${timestamp}" alt="${escapeHTML(cat.name)}" 
                  style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff; position:absolute; top:0; left:0;" 
-                 onerror="if (this.src.includes('${slug}-icon')) { this.src = '/assets/${altSlug}-icon.jpg?v=${timestamp}'; } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }">
+                 onerror="
+                    if(this.src.includes('.jpg')) { this.src = this.src.replace('.jpg', '.png'); }
+                    else if(this.src.includes('.png')) { this.src = this.src.replace('.png', '.jpeg'); }
+                    else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }
+                 ">
             <span style="display:none; font-size:2.2rem; align-items:center; justify-content:center; height:100%; width:100%;">${fallbackEmoji}</span>
         </div>
     `;
@@ -112,14 +115,9 @@ async function fetchActiveCategories() {
 async function renderDynamicCategories() {
     try { allCategoriesGlobal = await API.getCategories(); } catch(e) { allCategoriesGlobal = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : []; }
     if (!allCategoriesGlobal || allCategoriesGlobal.length === 0) { allCategoriesGlobal = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : []; }
-
     await fetchActiveCategories();
 
-    let topCats = allCategoriesGlobal.filter(c => {
-        const isTop = !c.parent || c.parent.trim().toLowerCase() === 'all';
-        return isTop && activeCategoriesSet.has((c.slug || '').trim().toLowerCase());
-    });
-
+    let topCats = allCategoriesGlobal.filter(c => { const isTop = !c.parent || c.parent.trim().toLowerCase() === 'all'; return isTop && activeCategoriesSet.has((c.slug || '').trim().toLowerCase()); });
     activeCategoriesSet.forEach(slug => {
         if (slug === 'all') return;
         if (!allCategoriesGlobal.find(c => c && c.slug && c.slug.trim().toLowerCase() === slug)) {
@@ -140,56 +138,22 @@ async function renderDynamicCategories() {
         `).join('');
 
         const isHoverDevice = window.matchMedia('(hover: hover)').matches;
-
         catContainer.querySelectorAll('.category-item').forEach(el => {
-            if (isHoverDevice) {
-                el.addEventListener('mouseenter', function(e) {
-                    clearTimeout(hoverTimeout);
-                    const catSlug = this.dataset.slug;
-                    document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
-                    this.classList.add('active');
-                    if (catSlug === 'all') { document.getElementById('categoryHoverPanel').style.display = 'none'; } else { renderHoverPanel(catSlug, this); }
-                });
-            }
+            if (isHoverDevice) { el.addEventListener('mouseenter', function(e) { clearTimeout(hoverTimeout); const catSlug = this.dataset.slug; document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active')); this.classList.add('active'); if (catSlug === 'all') { document.getElementById('categoryHoverPanel').style.display = 'none'; } else { renderHoverPanel(catSlug, this); } }); }
             el.addEventListener('click', function(e) {
-                e.preventDefault();
-                const catSlug = this.dataset.slug;
-                const panel = document.getElementById('categoryHoverPanel');
-                if (catSlug === 'all') {
-                    panel.style.display = 'none'; panel.dataset.activeSlug = '';
-                    document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
-                    this.classList.add('active'); loadCategoryProducts('all', 'For You'); return;
-                }
+                e.preventDefault(); const catSlug = this.dataset.slug; const panel = document.getElementById('categoryHoverPanel');
+                if (catSlug === 'all') { panel.style.display = 'none'; panel.dataset.activeSlug = ''; document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active')); this.classList.add('active'); loadCategoryProducts('all', 'For You'); return; }
                 const mainCat = allCategoriesGlobal.find(c => c.slug === catSlug);
                 const subCats = allCategoriesGlobal.filter(c => c.parent === catSlug && activeCategoriesSet.has(c.slug.toLowerCase()));
                 if (subCats.length > 0) {
                     if (panel.style.display === 'flex' && panel.dataset.activeSlug === catSlug) { panel.style.display = 'none'; panel.dataset.activeSlug = ''; } 
-                    else {
-                        document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
-                        this.classList.add('active'); renderHoverPanel(catSlug, this); panel.dataset.activeSlug = catSlug;
-                    }
-                } else {
-                    panel.style.display = 'none'; panel.dataset.activeSlug = '';
-                    document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
-                    this.classList.add('active'); loadCategoryProducts(catSlug, mainCat ? mainCat.name : catSlug);
-                }
+                    else { document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active')); this.classList.add('active'); renderHoverPanel(catSlug, this); panel.dataset.activeSlug = catSlug; }
+                } else { panel.style.display = 'none'; panel.dataset.activeSlug = ''; document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active')); this.classList.add('active'); loadCategoryProducts(catSlug, mainCat ? mainCat.name : catSlug); }
             });
         });
 
-        if (isHoverDevice) {
-            document.querySelector('.category-nav-wrapper').addEventListener('mouseleave', function(e) {
-                hoverTimeout = setTimeout(() => {
-                    const panel = document.getElementById('categoryHoverPanel'); if (panel) panel.style.display = 'none';
-                    document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
-                    const defaultCat = document.querySelector('#categoryScrollContainer .category-item[data-slug="all"]'); if (defaultCat) defaultCat.classList.add('active');
-                }, 200);
-            });
-        }
-
-        document.addEventListener('click', function(e) {
-            const panel = document.getElementById('categoryHoverPanel');
-            if (panel && panel.style.display === 'flex' && !e.target.closest('.category-item') && !e.target.closest('#categoryHoverPanel')) { panel.style.display = 'none'; panel.dataset.activeSlug = ''; }
-        });
+        if (isHoverDevice) { document.querySelector('.category-nav-wrapper').addEventListener('mouseleave', function(e) { hoverTimeout = setTimeout(() => { const panel = document.getElementById('categoryHoverPanel'); if (panel) panel.style.display = 'none'; document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active')); const defaultCat = document.querySelector('#categoryScrollContainer .category-item[data-slug="all"]'); if (defaultCat) defaultCat.classList.add('active'); }, 200); }); }
+        document.addEventListener('click', function(e) { const panel = document.getElementById('categoryHoverPanel'); if (panel && panel.style.display === 'flex' && !e.target.closest('.category-item') && !e.target.closest('#categoryHoverPanel')) { panel.style.display = 'none'; panel.dataset.activeSlug = ''; } });
     }
     const dropdownMenu = document.getElementById('categoryDropdownMenu');
     if (dropdownMenu) { dropdownMenu.innerHTML = topCats.map(c => `<li data-value="${c.slug}" class="${c.slug.trim().toLowerCase() === 'all' ? 'active' : ''}" onclick="selectCatDropdown('${c.slug}', '${c.name}', this)">${c.name}</li>`).join(''); }
@@ -200,29 +164,20 @@ function renderHoverPanel(mainSlug, targetElement) {
     const mainCat = allCategoriesGlobal.find(c => c.slug === mainSlug);
     const subCats = allCategoriesGlobal.filter(c => c.parent === mainSlug && activeCategoriesSet.has(c.slug.toLowerCase()));
     if (subCats.length === 0) { panel.style.display = 'none'; return; }
-
-    panel.style.display = 'flex';
-    let html = '';
-    subCats.forEach(sub => {
-        const minis = allCategoriesGlobal.filter(c => c.parent === sub.slug && activeCategoriesSet.has(c.slug.toLowerCase()));
-        html += `<div class="sub-cat-col"><div class="sub-cat-title" data-slug="${sub.slug}" data-name="${escapeHTML(sub.name)}">${escapeHTML(sub.name)}</div>${minis.length > 0 ? `<div class="mini-list">${minis.map(mini => `<div class="mini-item" data-slug="${mini.slug}" data-name="${escapeHTML(mini.name)}">${escapeHTML(mini.name)}</div>`).join('')}</div>` : ''}</div>`;
-    });
+    panel.style.display = 'flex'; let html = '';
+    subCats.forEach(sub => { const minis = allCategoriesGlobal.filter(c => c.parent === sub.slug && activeCategoriesSet.has(c.slug.toLowerCase())); html += `<div class="sub-cat-col"><div class="sub-cat-title" data-slug="${sub.slug}" data-name="${escapeHTML(sub.name)}">${escapeHTML(sub.name)}</div>${minis.length > 0 ? `<div class="mini-list">${minis.map(mini => `<div class="mini-item" data-slug="${mini.slug}" data-name="${escapeHTML(mini.name)}">${escapeHTML(mini.name)}</div>`).join('')}</div>` : ''}</div>`; });
     panel.innerHTML = html;
-
     panel.querySelectorAll('.sub-cat-title').forEach(el => { el.addEventListener('click', function(e) { e.preventDefault(); const slug = this.dataset.slug; const name = this.dataset.name; document.getElementById('categoryHoverPanel').style.display = 'none'; loadCategoryProducts(slug, name); }); });
     panel.querySelectorAll('.mini-item').forEach(el => { el.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); const slug = this.dataset.slug; const name = this.dataset.name; document.getElementById('categoryHoverPanel').style.display = 'none'; loadCategoryProducts(slug, name); }); });
-
     const wrapper = document.querySelector('.category-nav-wrapper'); const wrapperRect = wrapper.getBoundingClientRect(); const targetRect = targetElement.getBoundingClientRect();
     const targetCenter = (targetRect.left - wrapperRect.left) + (targetRect.width / 2); const panelWidth = panel.offsetWidth;
-    let leftPos = targetCenter - (panelWidth / 2);
-    if (leftPos < 0) leftPos = 0; if (leftPos + panelWidth > wrapperRect.width) leftPos = wrapperRect.width - panelWidth;
+    let leftPos = targetCenter - (panelWidth / 2); if (leftPos < 0) leftPos = 0; if (leftPos + panelWidth > wrapperRect.width) leftPos = wrapperRect.width - panelWidth;
     panel.style.left = `${leftPos}px`; panel.style.top = `${targetRect.bottom - wrapperRect.top - 5}px`;
 }
 
 async function loadCategoryProducts(catSlug, catName) {
     const titleEl = document.getElementById('productSectionTitle'); const grid = document.getElementById('productGrid');
-    if (titleEl) { titleEl.innerHTML = catName; titleEl.style.display = 'block'; }
-    showGridMessage(grid, 'Loading products...');
+    if (titleEl) { titleEl.innerHTML = catName; titleEl.style.display = 'block'; } showGridMessage(grid, 'Loading products...');
     try {
         if (catSlug === 'all') {
             const data = await API.getHomepageProducts(); const raw = [...(data.featured ?? []), ...(data.trending ?? []), ...(data.latest ?? [])];
@@ -239,16 +194,13 @@ function renderProductCard(product, isPriority = false) {
     const hasLink = productUrl !== '#'; const disabledAttr = hasLink ? '' : 'aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:0.6;"';
     const imageSrc = isValidURL(product.image_url) ? escapeHTML(getHighQualityImage(product.image_url, 300)) : 'assets/icon-192.png?v=4';
     const imgPriority = isPriority ? 'fetchpriority="high"' : ''; const loadingAttr = isPriority ? 'loading="eager"' : 'loading="lazy"';
-    const r = Number(product.rating); const rating = Number.isFinite(r) && r > 0 && r <= 5 ? r : null;
-    const rc = Number(product.reviews_count); const reviewCount = Number.isInteger(rc) && rc >= 0 ? rc : 0;
+    const r = Number(product.rating); const rating = Number.isFinite(r) && r > 0 && r <= 5 ? r : null; const rc = Number(product.reviews_count); const reviewCount = Number.isInteger(rc) && rc >= 0 ? rc : 0;
     const ratingText = rating !== null ? `★ ${rating.toFixed(1)} (${reviewCount})` : 'Not yet rated';
-    let timerHtml = '';
-    if (product.sale_end_date) { const endDate = new Date(product.sale_end_date).getTime(); if (endDate > new Date().getTime()) timerHtml = `<div class="card-timer" data-endtime="${product.sale_end_date}">⏳ Calculating...</div>`; }
+    let timerHtml = ''; if (product.sale_end_date) { const endDate = new Date(product.sale_end_date).getTime(); if (endDate > new Date().getTime()) timerHtml = `<div class="card-timer" data-endtime="${product.sale_end_date}">⏳ Calculating...</div>`; }
     const primaryOffer = getPrimaryOffer(product); const networks = (typeof CONFIG !== 'undefined' && CONFIG.networks) ? CONFIG.networks : {}; let cta = '';
     if (primaryOffer) {
         const storeKey = String(primaryOffer.store_name || 'amazon').toLowerCase(); const cfg = networks[storeKey] ?? networks[primaryOffer.store_name || ''] ?? { name: primaryOffer.store_name || 'Store', brandColor: '#2563eb', textColor: '#ffffff' };
-        let bg = safeColor(cfg.brandColor, '#2563eb'); if (bg === '#FF4747') bg = '#DC2626'; 
-        const fg = safeColor(cfg.textColor, '#ffffff'); const storeName = escapeHTML(cfg.name || primaryOffer.store_name || 'Store');
+        let bg = safeColor(cfg.brandColor, '#2563eb'); if (bg === '#FF4747') bg = '#DC2626'; const fg = safeColor(cfg.textColor, '#ffffff'); const storeName = escapeHTML(cfg.name || primaryOffer.store_name || 'Store');
         const affUrl = escapeHTML(primaryOffer.affiliate_url || '#'); const pid = escapeHTML(String(product.id ?? ''));
         const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' }; const offerCurrency = (primaryOffer.currency || 'USD').toUpperCase(); const offerSymbol = currencySymbols[offerCurrency] || offerCurrency + ' ';
         const basePrice = parseFloat(primaryOffer.price) || 0; const salePrice = parseFloat(primaryOffer.sale_price) || 0; const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
@@ -283,8 +235,7 @@ function renderFlashCard(product, section = 1) {
 function renderProductsGrid(products, grid) {
     if (!grid) return;
     if (!products || products.length === 0) { showGridMessage(grid, 'No products found in this category.'); return; }
-    let html = '';
-    products.forEach((p, i) => { try { html += renderProductCard(p, i < 4); } catch (e) { console.warn("Skipping broken product:", p && p.id, e); } });
+    let html = ''; products.forEach((p, i) => { try { html += renderProductCard(p, i < 4); } catch (e) { console.warn("Skipping broken product:", p && p.id, e); } });
     if (html === '') { showGridMessage(grid, 'Products found, but data is corrupted.'); return; }
     grid.innerHTML = html;
     grid.querySelectorAll('img.product-thumb').forEach(img => { img.addEventListener('error', function () { this.src = 'assets/icon-192.png?v=4'; this.style.opacity = 1; }, { once: true }); });
