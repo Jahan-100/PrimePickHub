@@ -2,6 +2,27 @@
  * PrimePickHub Homepage Renderer + Realtime + Notifications + PWA + Tracking
  */
 
+// ⭐ MANUAL SCROLL RESTORATION (Back Button Fix) ⭐
+if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+}
+
+window.addEventListener('beforeunload', () => {
+    if (window.location.pathname === '/' || window.location.pathname.includes('index.html')) {
+        sessionStorage.setItem('homeScrollY', window.scrollY);
+    }
+});
+
+document.addEventListener('click', (e) => {
+    const link = e.target.closest('a');
+    if (link && link.href && !link.href.includes('#') && link.target !== '_blank' && !link.href.startsWith('javascript:')) {
+        if (window.location.pathname === '/' || window.location.pathname.includes('index.html')) {
+            sessionStorage.setItem('homeScrollY', window.scrollY);
+        }
+    }
+}, { capture: true });
+// ⭐ ========================================= ⭐
+
 function setCookie(name, value, days) { let expires = ""; if (days) { let date = new Date(); date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000)); expires = "; expires=" + date.toUTCString(); } document.cookie = name + "=" + (value || "") + expires + "; path=/; SameSite=Lax"; }
 function getCookie(name) { let nameEQ = name + "="; let ca = document.cookie.split(';'); for (let i = 0; i < ca.length; i++) { let c = ca[i]; while (c.charAt(0) == ' ') c = c.substring(1, c.length); if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length); } return null; }
 function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb; }
@@ -48,17 +69,13 @@ function getCategoryIcon(cat) {
     
     const name = (cat.name || '').toLowerCase().trim();
     let slug = (cat.slug || '').toLowerCase().trim();
-    
-    // Force correct slug for known categories to bypass any DB mismatch
     if (name.includes('light')) slug = 'lights';
     
-    // 1. Agar database mein custom URL set hai (jaise http wali image)
     if (cat.icon && (cat.icon.startsWith('http') || cat.icon.includes('assets/'))) {
         const iconPath = cat.icon.startsWith('/') ? cat.icon : '/' + cat.icon;
         return `<img src="${iconPath}" alt="${escapeHTML(cat.name)}" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff;">`;
     }
 
-    // 2. Fallback Emoji
     let fallbackEmoji = '🏷️';
     if (name.includes('bag') || name.includes('luggage')) fallbackEmoji = '👜';
     else if (name.includes('jewel') || name.includes('watch')) fallbackEmoji = '💍';
@@ -75,7 +92,6 @@ function getCategoryIcon(cat) {
     else if (name.includes('accessories')) fallbackEmoji = '💍';
     else if (name.includes('belt')) fallbackEmoji = '🩱';
 
-    // 3. HAMESHA IMAGE DHOONDO (Tries .jpg, then .png, then .jpeg, then Emoji)
     const timestamp = new Date().getTime();
     return `
         <div style="width:100%; height:100%; position:relative; display:flex; align-items:center; justify-content:center;">
