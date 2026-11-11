@@ -47,6 +47,19 @@ const CONFIG = {
     ]
 };
 
+// ⭐ Helper: Append Amazon affiliate tag if missing ⭐
+function appendAffiliateTag(url) {
+    if (!url || typeof url !== 'string') return url;
+    if (!url.includes('amazon.')) return url;
+    try {
+        const u = new URL(url);
+        if (!u.searchParams.has('tag')) {
+            u.searchParams.set('tag', CONFIG.defaultAffiliateTag);
+        }
+        return u.toString();
+    } catch { return url; }
+}
+
 // ⭐ SAFE INITIALIZATION ⭐
 if (typeof supabase !== 'undefined' && CONFIG.supabaseUrl) {
     window.supabaseClient = supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
