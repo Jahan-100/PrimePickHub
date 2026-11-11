@@ -42,6 +42,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (!product) { container.innerHTML = '<h2 style="text-align:center;padding:40px;">Product not found. <a href="/index.html">Return Home</a></h2>'; return; }
 
+    // ⭐ Canonical & Meta Description ⭐
+    const canonical = document.getElementById('canonicalLink');
+    if (canonical) canonical.href = window.location.href.split('?')[0];
+    const metaDesc = document.createElement('meta');
+    metaDesc.name = 'description';
+    metaDesc.content = product.description || product.title;
+    document.head.appendChild(metaDesc);
+
     document.title = `${product.title} - Best Price | PrimePickHub`;
     document.querySelector('meta[property="og:title"]')?.setAttribute('content', product.title);
     document.querySelector('meta[property="og:image"]')?.setAttribute('content', getHighQualityImage(product.image_url, 800) || '');
@@ -86,7 +94,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const cfg = CONFIG.networks[offer.store_name?.toLowerCase()] || CONFIG.networks.amazon;
         const bg = /^#[0-9a-fA-F]{6}$/.test(cfg.brandColor) ? cfg.brandColor : '#2563eb';
         const fg = /^#[0-9a-fA-F]{6}$/.test(cfg.textColor) ? cfg.textColor : '#ffffff';
-        return `<a href="${escapeHTML(offer.affiliate_url || '#')}" target="_blank" rel="noopener noreferrer sponsored" class="btn-check-price js-affiliate-link" style="background-color:${bg};color:${fg};padding:14px;display:block;text-align:center;font-size:1.1rem;" data-store="${escapeHTML(offer.store_name)}" data-product-id="${escapeHTML(String(product.id))}" data-url="${escapeHTML(offer.affiliate_url)}">Buy on ${escapeHTML(offer.store_name || 'Store')}</a>`;
+        return `<a href="${escapeHTML(offer.affiliate_url || '#')}" target="_blank" rel="sponsored nofollow noopener noreferrer" class="btn-check-price js-affiliate-link" style="background-color:${bg};color:${fg};padding:14px;display:block;text-align:center;font-size:1.1rem;" data-store="${escapeHTML(offer.store_name)}" data-product-id="${escapeHTML(String(product.id))}" data-url="${escapeHTML(offer.affiliate_url)}">Buy on ${escapeHTML(offer.store_name || 'Store')}</a>`;
     };
 
     function generateVariationUI() {
@@ -143,9 +151,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="product-info-section">
                 <h1 style="font-size:1.8rem;margin-bottom:10px;">${escapeHTML(product.title)}</h1>
                 
-                <!-- Google Ads: Independent Affiliate Note -->
-                <div style="background: #EFF6FF; border-left: 4px solid #3B82F6; padding: 10px; margin-bottom: 15px; border-radius: 4px;">
-                    <p style="font-size: 0.8rem; color: #1E3A8A; margin: 0; font-weight: 600;">Independent Review: We are not the official seller. We independently research and compare prices. Purchases are made directly on the official store website.</p>
+                <!-- Google Ads: Prominent Affiliate Disclosure -->
+                <div style="background: #FEF2F2; border-left: 4px solid #EF4444; padding: 12px 15px; margin-bottom: 15px; border-radius: 6px;">
+                    <p style="font-size: 0.9rem; color: #991B1B; margin: 0; font-weight: 600;">
+                        <strong>Affiliate Disclosure:</strong> We are an independent review site and may earn a commission when you click our links and make a purchase. 
+                        This helps support our research at no extra cost to you. 
+                        <a href="/affiliate-disclosure.html" style="color: #DC2626;">Learn more</a>.
+                    </p>
                 </div>
 
                 <div style="margin-bottom: 20px; background: #F8FAFC; padding: 15px; border-radius: 8px; border: 1px solid #E2E8F0;"><div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;"><div id="displayPriceContainer"></div><select id="currencySelector" aria-label="Select Currency" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #CBD5E1; font-weight: bold; color: #1E1B4B; background: #fff; cursor: pointer; font-size: 1rem;"><option value="${baseCurrency}">${baseCurrency}</option><optgroup label="South Asia"><option value="PKR">PKR (Rs)</option><option value="INR">INR (₹)</option><option value="BDT">BDT (৳)</option></optgroup><optgroup label="Middle East"><option value="AED">AED (د.إ)</option><option value="SAR">SAR (ر.س)</option><option value="QAR">QAR (ر.ق)</option><option value="KWD">KWD (د.ك)</option><option value="BHD">BHD (د.ب)</option><option value="OMR">OMR (ر.ع.)</option><option value="TRY">TRY (₺)</option></optgroup><optgroup label="Americas"><option value="USD">USD ($)</option><option value="CAD">CAD (C$)</option><option value="BRL">BRL (R$)</option><option value="MXN">MXN (MX$)</option></optgroup><optgroup label="Europe / UK"><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option><option value="CHF">CHF</option><option value="SEK">SEK (kr)</option><option value="NOK">NOK (kr)</option><option value="RUB">RUB (₽)</option></optgroup><optgroup label="Asia Pacific"><option value="AUD">AUD (A$)</option><option value="NZD">NZD (NZ$)</option><option value="CNY">CNY (¥)</option><option value="JPY">JPY (¥)</option><option value="KRW">KRW (₩)</option><option value="SGD">SGD (S$)</option><option value="HKD">HKD (HK$)</option><option value="MYR">MYR (RM)</option><option value="IDR">IDR (Rp)</option></optgroup><optgroup label="Africa"><option value="ZAR">ZAR (R)</option></optgroup></select></div><p style="font-size: 0.75rem; color: #64748B; margin: 0;"><i>Real-time rates powered by open.er-api.com</i></p></div>
@@ -163,6 +175,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div style="background:#fff;padding:20px;border-radius:12px;border:1px solid #E2E8F0; margin-top: 10px;">
                     <h2 style="margin-bottom:15px;border-bottom:2px solid #FF5A3C;padding-bottom:10px;display:inline-block;font-family:'Poppins',sans-serif; font-size: 1.3rem;">Detailed Review & Analysis</h2>
                     <div style="color:#334155;line-height:1.7;font-size:0.95rem;">${rawReview || '<p>Detailed review coming soon...</p>'}</div>
+                    <p style="margin-top: 15px; font-size: 0.85rem;">
+                        <a href="/review-policy.html" style="color: var(--accent);">How we review products →</a>
+                    </p>
+                </div>
+
+                <!-- Author Box -->
+                <div style="background:#F8FAFC;padding:15px;border-radius:12px;border:1px solid #E2E8F0; margin-top: 15px;">
+                    <p style="font-size: 0.85rem; color: #475569; margin: 0;">
+                        <strong>Reviewed by:</strong> PrimePickHub Editorial Team · 
+                        <a href="/review-policy.html" style="color: var(--accent);">Review Policy</a>
+                    </p>
                 </div>
 
             </div>
