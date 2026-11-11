@@ -106,7 +106,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (typeof API === 'undefined' || !API.getCurrentUser) { alert('API not loaded. Refresh the page.'); return; }
     const auth = await API.getCurrentUser(); if (!auth) return showLogin(); if (auth.role !== 'admin') { alert('Access denied. Admin only.'); await API.signOut(); return showLogin(); }
     await syncCategoriesFromDB(); showDashboard(); await loadStats(); await loadSiteSettings(); await loadProductsList(); await window.loadBlogList(); setupProductForm(); setupToggleList(); setupToggleAddProduct(); setupToggleSpecialDeal(); setupToggleFlashSale(); setupToggleSale2();
-    document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable); document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
+    document.getElementById('adminCategoryFilter')?.addEventListener('change', renderTable);
+    document.getElementById('adminStoreFilter')?.addEventListener('change', renderTable);
+    document.getElementById('adminSearchInput')?.addEventListener('input', renderTable);
     document.getElementById('toggleManageCatsBtn')?.addEventListener('click', function() { const container = document.getElementById('manageCatsContainer'); if (container.style.display === 'none') { container.style.display = 'block'; this.textContent = 'Hide Categories List'; this.style.background = '#EF4444'; renderCategoryManagementTable(); } else { container.style.display = 'none'; this.textContent = 'Show Categories List'; this.style.background = '#0284c7'; } });
     document.getElementById('toggleBuilderBtn')?.addEventListener('click', function() { const container = document.getElementById('categoryBuilderContainer'); if (container.style.display === 'none') { container.style.display = 'block'; this.textContent = 'Hide Builder'; this.style.background = '#EF4444'; updateBuilderUI(); } else { container.style.display = 'none'; this.textContent = '+ Add New Category Tree'; this.style.background = '#10b981'; } });
     document.getElementById('bMiniParentSelect')?.addEventListener('change', function() { const activeParent = this.value; const miniSelect = document.getElementById('bMiniSelect'); if (activeParent) { const allCats = globalCategories; const availableMinis = allCats.filter(c => c.parent === activeParent); miniSelect.innerHTML = `<option value="">-- Select Existing --</option>` + availableMinis.map(c => `<option value="${c.slug}">${c.name}</option>`).join(''); } else { miniSelect.innerHTML = `<option value="">-- Select Parent Sub First --</option>`; } });
@@ -146,16 +148,39 @@ async function loadProductsList() {
     try {
         const { data: products, error } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').order('created_at', { ascending: false });
         if (error) throw error; allProducts = products || [];
+        
         const dbCats = [...new Set(allProducts.map(p => p.category_slug).filter(Boolean))];
         const categoryFilter = document.getElementById('adminCategoryFilter');
         if (categoryFilter) { let filterHtml = `<option value="all">All Categories</option>`; dbCats.forEach(slug => { const catObj = globalCategories.find(c => c.slug === slug); const catName = catObj ? catObj.name : slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()); filterHtml += `<option value="${slug}">${catName}</option>`; }); categoryFilter.innerHTML = filterHtml; }
+
+        const dbStores = [...new Set(allProducts.map(p => p.affiliate_offers?.[0]?.store_name).filter(Boolean))];
+        const storeFilter = document.getElementById('adminStoreFilter');
+        if (storeFilter) {
+            let storeHtml = `<option value="all">All Stores</option>`;
+            dbStores.forEach(store => {
+                const displayStore = store.charAt(0).toUpperCase() + store.slice(1);
+                storeHtml += `<option value="${store}">${displayStore}</option>`;
+            });
+            storeFilter.innerHTML = storeHtml;
+        }
+
         loadCategoriesToDropdown(); renderTable();
     } catch (err) { console.error('List Load Error:', err); tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:red;">Failed to load products.</td></tr>'; }
 }
 function renderTable() {
     const tbody = document.getElementById('productListBody'); if (!tbody) return;
-    const categoryFilter = document.getElementById('adminCategoryFilter')?.value || 'all'; const searchQuery = document.getElementById('adminSearchInput')?.value.toLowerCase().trim() || '';
-    let filteredProducts = allProducts.filter(p => { const matchesCategory = categoryFilter === 'all' || p.category_slug === categoryFilter; const matchesSearch = p.title.toLowerCase().includes(searchQuery); return matchesCategory && matchesSearch; });
+    const categoryFilter = document.getElementById('adminCategoryFilter')?.value || 'all';
+    const storeFilter = document.getElementById('adminStoreFilter')?.value || 'all';
+    const searchQuery = document.getElementById('adminSearchInput')?.value.toLowerCase().trim() || '';
+    
+    let filteredProducts = allProducts.filter(p => {
+        const productStore = p.affiliate_offers?.[0]?.store_name || 'N/A';
+        const matchesCategory = categoryFilter === 'all' || p.category_slug === categoryFilter;
+        const matchesStore = storeFilter === 'all' || productStore === storeFilter;
+        const matchesSearch = p.title.toLowerCase().includes(searchQuery);
+        return matchesCategory && matchesStore && matchesSearch;
+    });
+    
     filteredProducts.sort((a, b) => { const aIsAvailable = a.is_available !== false; const bIsAvailable = b.is_available !== false; if (aIsAvailable === bIsAvailable) return 0; return aIsAvailable ? 1 : -1; });
     const countEl = document.getElementById('totalProductsCount'); if (countEl) countEl.innerText = filteredProducts.length;
     if (filteredProducts.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No products found.</td></tr>'; return; }
@@ -169,7 +194,7 @@ function renderTable() {
         const catObj = globalCategories.find(c => c.slug === p.category_slug); const catName = catObj ? catObj.name : (p.category_slug ? p.category_slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Uncategorized');
         
         const storeName = defaultOffer.store_name || 'N/A';
-        const displayStoreName = storeName.charAt(0).toUpperCase() + storeName.slice(1);
+        const displayStoreName = storeName === 'N/A' ? 'N/A' : storeName.charAt(0).toUpperCase() + storeName.slice(1);
 
         return `<tr class="${rowClass}"><td style="text-align: center; font-weight: bold;">${index + 1}</td><td style="text-align: center;"><span style="background:#f0fdf4; color:#166534; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:600; white-space:nowrap; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis;">${displayStoreName}</span></td><td style="text-align: center;"><span style="background:#e2e8f0; color:#1e293b; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:600; white-space:nowrap; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis;">${catName}</span></td><td style="text-align: center;"><img src="${p.image_url}" class="table-img" onerror="this.src='/assets/icon-192.png?v=4'"></td><td style="text-align: left; font-weight: 500;">${p.title} ${statusBadge}</td><td style="text-align: center;">${priceStr}</td><td><div class="action-btns"><button class="btn-edit" onclick="editProduct('${p.id}')">Edit</button><button class="btn-delete" onclick="deleteProduct('${p.id}')">Delete</button></div></td></tr>`;
     }).join('');
