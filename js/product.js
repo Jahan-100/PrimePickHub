@@ -13,7 +13,7 @@ function getVideoHtml(url) {
 
 const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ', SAR: 'SAR ', CAD: 'C$', AUD: 'A$', CNY: '¥', JPY: '¥', TRY: '₺', BDT: '৳', MYR: 'RM ', IDR: 'Rp ', QAR: 'QAR ', KWD: 'KWD ', BHD: 'BHD ', OMR: 'OMR ', ZAR: 'R ', BRL: 'R$', MXN: 'MX$', RUB: '₽', KRW: '₩', SGD: 'S$', HKD: 'HK$', NZD: 'NZ$', CHF: 'CHF ', SEK: 'kr ', NOK: 'kr ' };
 
-// ⭐ IMAGE COMPRESSION FUNCTION ⭐
+// ⭐ IMAGE COMPRESSION FUNCTION (Canvas API) ⭐
 async function compressImage(file, maxWidth = 1000, maxHeight = 1000, quality = 0.75) {
     return new Promise((resolve) => {
         const reader = new FileReader();
@@ -36,6 +36,28 @@ async function compressImage(file, maxWidth = 1000, maxHeight = 1000, quality = 
                 canvas.toBlob((blob) => resolve(new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", { type: 'image/jpeg' })), 'image/jpeg', quality);
             };
         };
+    });
+}
+
+// ⭐ PHOTO PREVIEW FUNCTION FOR REVIEW FORM ⭐
+window.previewReviewImages = function(input) {
+    const container = document.getElementById('rvImagePreviewContainer');
+    if (!container) return;
+    container.innerHTML = '';
+    const files = Array.from(input.files).slice(0, 3); // Max 3 limit
+    files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.style.width = '35px';
+            img.style.height = '35px';
+            img.style.objectFit = 'cover';
+            img.style.borderRadius = '4px';
+            img.style.border = '1px solid #CBD5E1';
+            container.appendChild(img);
+        };
+        reader.readAsDataURL(file);
     });
 }
 
@@ -125,14 +147,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     galleryImages = galleryImages.filter(url => typeof url === 'string' && url.startsWith('http')).map(url => getHighQualityImage(url, 800));
     if (galleryImages.length === 0) galleryImages = ['/assets/icon-192.png'];
 
-    let initialMainImageIndex = 0;
-    window.currentMainImageIndex = initialMainImageIndex;
+    window.currentMainImageIndex = 0;
     const mainImage = galleryImages[window.currentMainImageIndex];
     const videoHtml = product.video_url ? `<div style="background:#fff; padding:30px; border-radius:12px; border:1px solid #E2E8F0; margin-bottom:20px;"><h2 style="margin-bottom:15px; border-bottom:2px solid #FF5A3C; padding-bottom:10px; display:inline-block;">Product Video</h2>${getVideoHtml(product.video_url)}</div>` : '';
     const shareUrl = encodeURIComponent(window.location.href); const shareText = encodeURIComponent(`Check out ${product.title} on PrimePickHub`);
-
     const thumbnailsHtml = galleryImages.map((url, i) => `<img src="${escapeHTML(getHighQualityImage(url, 150))}" alt="View ${i + 1}" class="gallery-thumb" data-src="${escapeHTML(url)}" data-index="${i}" style="border:2px solid ${i === window.currentMainImageIndex ? '#FF5A3C' : '#E2E8F0'};">`).join('');
-
     const rawReview = product.review_html || '';
 
     // Main Layout Generation
@@ -174,36 +193,40 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
         </div>
 
-        <!-- ⭐ CUSTOMER REVIEWS SECTION ⭐ -->
-        <div style="width: 100%; margin-top: 30px; background: #fff; padding: 30px; border-radius: 12px; border: 1px solid #E2E8F0;">
-            <h2 style="font-family:'Poppins',sans-serif; font-size:1.6rem; margin-bottom:20px; border-bottom:2px solid #10B981; padding-bottom:10px; display:inline-block;">Customer Reviews & Photos</h2>
+        <!-- ⭐ CUSTOMER REVIEWS SECTION (COMPACT & PREVIEW) ⭐ -->
+        <div style="width: 100%; margin-top: 20px; background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #E2E8F0;">
+            <h2 style="font-family:'Poppins',sans-serif; font-size:1.4rem; margin-bottom:15px; border-bottom:2px solid #10B981; padding-bottom:10px; display:inline-block;">Customer Reviews & Photos</h2>
             
-            <div id="customerReviewsList" style="margin-bottom: 30px;">
-                <p style="color:#64748B;">Loading reviews...</p>
+            <div id="customerReviewsList" style="margin-bottom: 20px;">
+                <p style="color:#64748B; font-size:0.9rem;">Loading reviews...</p>
             </div>
 
-            <!-- Review Form -->
-            <div style="background: #F8FAFC; padding: 20px; border-radius: 8px; border: 1px dashed #CBD5E1;">
-                <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: #1E1B4B;">Write a Review</h3>
+            <!-- Review Form (Compact) -->
+            <div style="background: #F8FAFC; padding: 15px; border-radius: 8px; border: 1px dashed #CBD5E1;">
+                <h3 style="font-size: 1rem; margin-bottom: 10px; color: #1E1B4B;">Write a Review</h3>
                 <form id="reviewForm">
                     <input type="hidden" id="rvProductId" value="${product.id}">
-                    <div style="display: flex; gap: 15px; margin-bottom: 10px; flex-wrap: wrap;">
-                        <input type="text" id="rvName" placeholder="Your Name *" required style="flex:1; padding:10px; border:1px solid #CBD5E1; border-radius:6px;">
-                        <select id="rvRating" required style="padding:10px; border:1px solid #CBD5E1; border-radius:6px;">
-                            <option value="5">★★★★★ (Excellent)</option>
+                    <div style="display: flex; gap: 10px; margin-bottom: 8px; flex-wrap: wrap;">
+                        <input type="text" id="rvName" placeholder="Your Name *" required style="flex:1; padding:8px; border:1px solid #CBD5E1; border-radius:6px; font-size:0.9rem;">
+                        <select id="rvRating" required style="padding:8px; border:1px solid #CBD5E1; border-radius:6px; font-size:0.9rem;">
+                            <option value="5" selected>★★★★★ (Excellent)</option>
                             <option value="4">★★★★☆ (Good)</option>
                             <option value="3">★★★☆☆ (Average)</option>
                             <option value="2">★★☆☆☆ (Poor)</option>
                             <option value="1">★☆☆☆☆ (Terrible)</option>
                         </select>
                     </div>
-                    <textarea id="rvText" placeholder="What did you like or dislike? *" required rows="3" style="width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:6px; margin-bottom:10px;"></textarea>
-                    <div style="margin-bottom: 15px;">
-                        <label style="font-size:0.85rem; font-weight:bold; color:#475569; display:block; margin-bottom:5px;">Add Photos (Optional - Max 3)</label>
-                        <input type="file" id="rvImages" accept="image/*" multiple style="font-size:0.85rem;">
+                    <textarea id="rvText" placeholder="What did you like or dislike? *" required rows="2" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:6px; margin-bottom:8px; font-size:0.9rem;"></textarea>
+                    
+                    <div style="margin-bottom: 12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <label style="font-size:0.85rem; font-weight:bold; color:#475569;">Add Photos:</label>
+                        <input type="file" id="rvImages" accept="image/*" multiple style="font-size:0.85rem;" onchange="previewReviewImages(this)">
+                        <span style="font-size:0.75rem; color:#94A3B8;">(Max 3)</span>
+                        <div id="rvImagePreviewContainer" style="display:flex; gap:5px;"></div>
                     </div>
-                    <button type="submit" id="rvSubmitBtn" style="background: #10B981; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer;">Submit Review</button>
-                    <p id="rvMsg" style="margin-top:10px; font-size:0.85rem; font-weight:bold;"></p>
+                    
+                    <button type="submit" id="rvSubmitBtn" style="background: #10B981; color: white; border: none; padding: 8px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size:0.9rem;">Submit Review</button>
+                    <p id="rvMsg" style="margin-top:8px; font-size:0.85rem; font-weight:bold;"></p>
                 </form>
             </div>
         </div>
@@ -273,7 +296,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     updateUI(baseCurrency);
     fetchRates().then(() => updateUI(currencySelector.value));
-
     currencySelector.addEventListener('change', (e) => updateUI(e.target.value));
 
     window.selectColor = function(colorValue, colorName) {
@@ -301,7 +323,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.scrollThumbnails = function(direction) { const container = document.getElementById('thumbnailContainer'); const scrollAmount = 150; if (window.innerWidth > 1023) { if (direction === 'up') container.scrollBy({ top: -scrollAmount, behavior: 'smooth' }); else container.scrollBy({ top: scrollAmount, behavior: 'smooth' }); } else { if (direction === 'up') container.scrollBy({ left: -scrollAmount, behavior: 'smooth' }); else container.scrollBy({ left: scrollAmount, behavior: 'smooth' }); } };
     window.changeMainImage = function(indexOrDirection, isDirection = true) { if (isDirection) { let newIndex = window.currentMainImageIndex + indexOrDirection; if (newIndex < 0) newIndex = galleryImages.length - 1; if (newIndex >= galleryImages.length) newIndex = 0; window.currentMainImageIndex = newIndex; } else { window.currentMainImageIndex = indexOrDirection; } document.getElementById('mainImage').src = galleryImages[window.currentMainImageIndex]; container.querySelectorAll('.gallery-thumb').forEach((t, i) => { t.style.borderColor = (i === window.currentMainImageIndex) ? '#FF5A3C' : '#E2E8F0'; }); };
 
-    // Image Slider Logic
     let mainTouchStart = 0; const mainWrapper = document.getElementById('mainImageWrapper');
     mainWrapper.addEventListener('touchstart', e => { mainTouchStart = e.changedTouches[0].screenX; }, { passive: true });
     mainWrapper.addEventListener('touchend', e => { let mainTouchEnd = e.changedTouches[0].screenX; if (mainTouchEnd < mainTouchStart - 50) changeMainImage(1); if (mainTouchEnd > mainTouchStart + 50) changeMainImage(-1); }, { passive: true });
@@ -382,8 +403,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (dbError) throw dbError;
             
-            msg.style.color = "#16a34a"; msg.innerText = "Thank you! Your review is pending approval.";
+            msg.style.color = "#16a34a"; msg.innerText = "Thank you! Your review is submitted.";
             document.getElementById('reviewForm').reset();
+            document.getElementById('rvImagePreviewContainer').innerHTML = '';
         } catch (err) {
             msg.style.color = "#DC2626"; msg.innerText = "Error: " + err.message;
         } finally {
