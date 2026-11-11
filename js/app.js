@@ -6,21 +6,11 @@ function setCookie(name, value, days) { let expires = ""; if (days) { let date =
 function getCookie(name) { let nameEQ = name + "="; let ca = document.cookie.split(';'); for (let i = 0; i < ca.length; i++) { let c = ca[i]; while (c.charAt(0) == ' ') c = c.substring(1, c.length); if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length); } return null; }
 function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb; }
 
-window.handleImageLoad = function(imgElement) {
-    if (imgElement.decode) { imgElement.decode().then(() => { imgElement.style.opacity = 1; }).catch(() => { imgElement.style.opacity = 1; }); } else { imgElement.style.opacity = 1; }
-};
+window.handleImageLoad = function(imgElement) { if (imgElement.decode) { imgElement.decode().then(() => { imgElement.style.opacity = 1; }).catch(() => { imgElement.style.opacity = 1; }); } else { imgElement.style.opacity = 1; } };
 
-function hideSplash() {
-    var splash = document.getElementById('splash-screen');
-    if (splash && splash.style.display !== 'none') { splash.classList.add('hidden'); document.body.classList.remove('app-loading'); setTimeout(() => { splash.style.display = 'none'; }, 800); sessionStorage.setItem('splashShown', 'true'); }
-}
+function hideSplash() { var splash = document.getElementById('splash-screen'); if (splash && splash.style.display !== 'none') { splash.classList.add('hidden'); document.body.classList.remove('app-loading'); setTimeout(() => { splash.style.display = 'none'; }, 800); sessionStorage.setItem('splashShown', 'true'); } }
 
-function getProductUrl(product) {
-    if (!product) return '#';
-    if (product.slug) return `/product/${encodeURIComponent(product.slug)}`;
-    if (product.id != null) return `/product.html?id=${encodeURIComponent(product.id)}`;
-    return '#';
-}
+function getProductUrl(product) { if (!product) return '#'; if (product.slug) return `/product/${encodeURIComponent(product.slug)}`; if (product.id != null) return `/product.html?id=${encodeURIComponent(product.id)}`; return '#'; }
 
 function getPrimaryOffer(product) {
     if (!product || !Array.isArray(product.affiliate_offers)) return null;
@@ -57,14 +47,17 @@ function getAllDescendantSlugs(parentSlug, allCats) {
 // ⭐ CLEAN & FOOLPROOF ICON LOGIC ⭐
 function getCategoryIcon(cat) {
     if (!cat) return '📦';
+    
     const name = (cat.name || '').toLowerCase().trim();
     const slug = (cat.slug || '').toLowerCase().trim();
     
+    // 1. Agar database mein custom URL set hai (jaise http wali image)
     if (cat.icon && (cat.icon.startsWith('http') || cat.icon.includes('assets/'))) {
         const iconPath = cat.icon.startsWith('/') ? cat.icon : '/' + cat.icon;
         return `<img src="${iconPath}" alt="${escapeHTML(cat.name)}" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff;">`;
     }
 
+    // 2. Fallback Emoji (Agar image na mile tabhi ye dikhega)
     let fallbackEmoji = '🏷️';
     if (name.includes('bag') || name.includes('luggage')) fallbackEmoji = '👜';
     else if (name.includes('jewel') || name.includes('watch')) fallbackEmoji = '💍';
@@ -81,12 +74,10 @@ function getCategoryIcon(cat) {
     else if (name.includes('accessories')) fallbackEmoji = '💍';
     else if (name.includes('belt')) fallbackEmoji = '🩱';
 
-    // Force cache-busting timestamp
+    // 3. HAMESHA IMAGE DHOONDO (Cache Buster + Smart Fallback)
     const timestamp = new Date().getTime();
-    
-    // Intelligent fallback for singular/plural slugs
-    const altSlug = slug.endsWith('s') ? slug.slice(0, -1) : slug + 's';
-    
+    const altSlug = slug.endsWith('s') ? slug.slice(0, -1) : slug + 's'; // Agar 'lights' na mile toh 'light' try karega
+
     return `
         <div style="width:100%; height:100%; position:relative; display:flex; align-items:center; justify-content:center;">
             <img src="/assets/${slug}-icon.jpg?v=${timestamp}" alt="${escapeHTML(cat.name)}" 
