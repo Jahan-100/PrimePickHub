@@ -300,3 +300,125 @@ document.addEventListener('DOMContentLoaded', () => {
     window.rejectDiscovered = async function(id) { if(!confirm("Remove this product from the list?")) return; const { error } = await window.supabaseClient.from('discovered_products').delete().eq('id', id); if (!error) { selectedIds.delete(id); await loadDiscoveredProducts(); } };
     loadDiscoveredProducts();
 });
+
+// ⭐ ADD THIS TO THE END OF ADMIN.JS ⭐
+
+document.addEventListener('DOMContentLoaded', () => {
+    const toggleReviewsBtn = document.getElementById('toggleReviewsBtn');
+    const reviewsContainer = document.getElementById('reviewsContainer');
+    const reviewsListBody = document.getElementById('reviewsListBody');
+
+    if (!toggleReviewsBtn) return;
+
+    toggleReviewsBtn.addEventListener('click', () => {
+        if (reviewsContainer.style.display === 'none') {
+            reviewsContainer.style.display = 'block';
+            toggleReviewsBtn.textContent = 'Hide Reviews';
+            toggleReviewsBtn.style.background = '#EF4444';
+            loadAdminReviews();
+        } else {
+            reviewsContainer.style.display = 'none';
+            toggleReviewsBtn.textContent = 'Show Pending & Approved Reviews';
+            toggleReviewsBtn.style.background = '#16a34a';
+        }
+    });
+
+    window.loadAdminReviews = async function() {
+        reviewsListBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Fetching reviews...</td></tr>';
+        
+        const { data: reviews, error } = await window.supabaseClient
+            .from('product_reviews')
+            .select('*, products(title)')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            reviewsListBody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:red;">Error: ${error.message}</td></tr>`;
+            return;
+        }
+
+        if (!reviews || reviews.length === 0) {
+            reviewsListBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No reviews found.</td></tr>';
+            return;
+        }
+
+        reviewsListBody.innerHTML = reviews.map((r, index) => {
+            const statusBadge = r.status === 'approved' 
+                ? `<span style="background:#10B981; color:white; padding:2px 6px; border-radius:4px; font-size:0.75rem;">APPROVED</span>`
+                : `<span style="background:#F59E0B; color:white; padding:2px 6px; border-radius:4px; font-size:0.75rem;">PENDING</span>`;
+
+            const imagesHtml = r.images && r.images.length > 0 ? `
+                <div style="display:flex; gap:5px; flex-wrap:wrap; margin-top:5px;">
+                    ${r.images.map((imgUrl, imgIdx) => `
+                        <div style="position:relative; display:inline-block;">
+                            <img src="${escapeHTML(imgUrl)}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; cursor:pointer;" onclick="window.open('${escapeHTML(imgUrl)}', '_blank')">
+                            <button onclick="deleteSingleReviewImage('${r.id}', '${escapeHTML(imgUrl)}', ${imgIdx})" style="position:absolute; top:-5px; right:-5px; background:red; color:white; border:none; border-radius:50%; width:15px; height:15px; font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center;" title="Delete Image">&times;</button>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : '<span style="font-size:0.75rem; color:#94A3B8;">No Images</span>';
+
+            let actionBtns = '';
+            if (r.status === 'pending') {
+                actionBtns = `
+                    <button onclick="approveReview('${r.id}')" style="background:#10B981; color:white; padding:4px 8px; border:none; border-radius:4px; font-size:0.75rem; margin-bottom:3px; cursor:pointer; width:100%;">Approve</button>
+                    <button onclick="deleteFullReview('${r.id}')" style="background:#EF4444; color:white; padding:4px 8px; border:none; border-radius:4px; font-size:0.75rem; cursor:pointer; width:100%;">Reject/Delete</button>
+                `;
+            } else {
+                actionBtns = `<button onclick="deleteFullReview('${r.id}')" style="background:#EF4444; color:white; padding:4px 8px; border:none; border-radius:4px; font-size:0.75rem; cursor:pointer; width:100%;">Delete Review</button>`;
+            }
+
+            return `
+                <tr>
+                    <td style="text-align:center;">${index + 1}</td>
+                    <td style="text-align:center; font-size:0.75rem;">${r.products?.title ? escapeHTML(r.products.title).substring(0,20)+'...' : r.product_id.substring(0,8)}</td>
+                    <td style="text-align:center; font-weight:bold;">${escapeHTML(r.customer_name)}</td>
+                    <td style="text-align:center; color:#F59E0B;">${r.rating} ★</td>
+                    <td style="text-align:left; font-size:0.8rem; max-width:300px;">
+                        <div style="margin-bottom:5px;">${escapeHTML(r.review_text)}</div>
+                        ${imagesHtml}
+                    </td>
+                    <td style="text-align:center;">${statusBadge}</td>
+                    <td style="text-align:center; min-width:100px;">${actionBtns}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    window.approveReview = async function(id) {
+        if (!confirm("Approve this review to show on the website?")) return;
+        const { error } = await window.supabaseClient.from('product_reviews').update({ status: 'approved' }).eq('id', id);
+        if (error) alert("Error: " + error.message);
+        else loadAdminReviews();
+    }
+
+    window.deleteFullReview = async function(id) {
+        if (!confirm("Are you sure? This will permanently delete the review and its images.")) return;
+        try {
+            const { data: rev } = await window.supabaseClient.from('product_reviews').select('images').eq('id', id).single();
+            if (rev && rev.images && rev.images.length > 0) {
+                for (const imgUrl of rev.images) {
+                    const fileName = imgUrl.split('/').pop(); 
+                    await window.supabaseClient.storage.from('customer-review-photos').remove([fileName]);
+                }
+            }
+            const { error } = await window.supabaseClient.from('product_reviews').delete().eq('id', id);
+            if (error) throw error;
+            loadAdminReviews();
+        } catch (err) { alert("Error: " + err.message); }
+    }
+
+    window.deleteSingleReviewImage = async function(reviewId, imgUrl, imgIdx) {
+        if (!confirm("Delete this specific image?")) return;
+        try {
+            const fileName = imgUrl.split('/').pop();
+            await window.supabaseClient.storage.from('customer-review-photos').remove([fileName]);
+
+            const { data: rev } = await window.supabaseClient.from('product_reviews').select('images').eq('id', reviewId).single();
+            if (rev && rev.images) {
+                const newImages = rev.images.filter((_, i) => i !== idx);
+                await window.supabaseClient.from('product_reviews').update({ images: newImages }).eq('id', reviewId);
+            }
+            loadAdminReviews();
+        } catch (err) { alert("Error deleting image: " + err.message); }
+    }
+});
