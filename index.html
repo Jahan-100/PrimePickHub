@@ -2,9 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    
+    <!-- ⭐ CACHE BUSTER (Force browser to load new code) ⭐ -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+
+    <!-- ⭐ BACK BUTTON SPLASH FIX (RENDER BLOCKING) ⭐ -->
     <script>
         if (sessionStorage.getItem('splashShown') === 'true') {
             document.documentElement.classList.add('hide-splash-init');
@@ -14,22 +18,27 @@
         .hide-splash-init #splash-screen { display: none !important; }
         .hide-splash-init body { overflow-y: auto !important; }
     </style>
+
     <meta name="theme-color" content="#f8fafc">
     <style> html, body { background-color: #f8fafc !important; margin: 0; padding: 0; } </style>
+    
     <meta name="mitgo-verification" content="e3f69518-ab0c-46db-a669-34aacd83fd21" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PrimePickHub - Compare & Click The Best Deals</title>
     <meta name="description" content="Compare products across Daraz, Amazon, AliExpress & eBay. Check live prices instantly.">
+
     <meta property="og:type" content="website">
     <meta property="og:title" content="PrimePickHub - Compare & Click The Best Deals">
     <meta property="og:description" content="Compare products across top stores. Live prices.">
     <meta property="og:image" content="https://primepickhub.vercel.app/assets/og-image.jpg">
     <meta property="og:url" content="https://primepickhub.vercel.app/">
     <meta property="og:site_name" content="PrimePickHub">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://smxjiwywepeaybhekrck.supabase.co">
+
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-7VE3L1Y8PQ"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -37,17 +46,27 @@
       gtag('js', new Date());
       gtag('config', 'G-7VE3L1Y8PQ');
     </script>
+
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" defer></script>
+
     <link rel="canonical" href="https://primepickhub.vercel.app/">
     <link rel="icon" type="image/png" href="assets/favicon.png?v=5">
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/main.css?v=41">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,800;0,900;1,800&family=Roboto:wght@400;700;900&family=Oswald:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Lobster&family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    
     <style>
         .card-timer { background: #FEF2F2; color: #DC2626; font-size: 0.75rem; font-weight: 800; padding: 5px 8px; border-radius: 4px; margin-bottom: 8px; text-align: center; border: 1px solid #FECACA; display: flex; align-items: center; justify-content: center; gap: 5px; }
         body.app-loading { overflow: hidden; }
-        #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #1E1B4B 0%, #4c1d95 50%, #FF5A3C 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999999; transition: opacity 0.6s ease-out, visibility 0.6s ease-out; }
+
+        #splash-screen { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: linear-gradient(135deg, #1E1B4B 0%, #4c1d95 50%, #FF5A3C 100%); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            z-index: 9999999; transition: opacity 0.6s ease-out, visibility 0.6s ease-out; 
+        }
         #splash-screen.hidden { opacity: 0; visibility: hidden; }
         .splash-bg-circle { position: absolute; border-radius: 50%; filter: blur(70px); opacity: 0.6; animation: pulseBg 4s infinite alternate; }
         .splash-bg-circle.c1 { width: 300px; height: 300px; background: #FF5A3C; top: -50px; left: -50px; }
@@ -61,26 +80,143 @@
         .splash-loader { width: 45px; height: 45px; border: 4px solid rgba(255,255,255,0.2); border-top-color: #FF5A3C; border-right-color: #FF5A3C; border-radius: 50%; animation: spin 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite; box-shadow: 0 0 20px rgba(255, 90, 60, 0.4); }
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        #floatingAppIcon { position: fixed !important; top: 50% !important; right: 0 !important; left: auto !important; bottom: auto !important; margin-top: 10px !important; transform: none !important; background: #10b981 !important; color: #fff !important; border: none !important; border-radius: 15px 0 0 15px !important; padding: 10px 6px !important; display: none; flex-direction: column !important; align-items: center !important; justify-content: center !important; gap: 5px !important; cursor: pointer !important; box-shadow: -2px 2px 10px rgba(0,0,0,0.2) !important; z-index: 999995 !important; width: 36px !important; height: auto !important; box-sizing: border-box !important; }
-        #floatingAppIcon img { width: 20px !important; height: 20px !important; max-width: 20px !important; max-height: 20px !important; object-fit: contain !important; border-radius: 4px !important; background: #fff !important; padding: 2px !important; margin: 0 !important; }
-        #floatingAppIcon span { writing-mode: vertical-rl !important; text-orientation: mixed !important; font-size: 0.75rem !important; font-weight: bold !important; letter-spacing: 1px !important; color: #fff !important; margin: 0 !important; padding: 0 !important; line-height: 1 !important; }
-        .category-nav-wrapper { position: relative; }
-        #categoryHoverPanel { display: none; position: absolute; background: #ffffff; border-radius: 0 16px 16px 16px; padding: 15px; z-index: 99999; box-shadow: 0 15px 40px rgba(0,0,0,0.15); border: 1px solid #E2E8F0; flex-wrap: wrap; gap: 20px; min-width: max-content; max-width: 90vw; margin-top: -2px; }
-        .sub-cat-col { display: flex; flex-direction: column; min-width: 140px; }
-        .sub-cat-title { font-size: 0.95rem; font-weight: 700; color: #1E1B4B; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid #F1F5F9; cursor: pointer; transition: color 0.2s; text-decoration: none; }
-        .sub-cat-title:hover { color: #DC2626; }
-        .mini-list { display: flex; flex-direction: column; gap: 4px; }
-        .mini-item { font-size: 0.85rem; color: #475569; text-decoration: none; cursor: pointer; padding: 6px 10px; border-radius: 6px; transition: all 0.2s; display: block; }
-        .mini-item:hover { background: #F8FAFC; color: #1E1B4B; padding-left: 14px; font-weight: 600; }
+
+        #floatingAppIcon {
+            position: fixed !important;
+            top: 50% !important;
+            right: 0 !important;
+            left: auto !important;
+            bottom: auto !important;
+            margin-top: 10px !important;
+            transform: none !important;
+            background: #10b981 !important;
+            color: #fff !important;
+            border: none !important;
+            border-radius: 15px 0 0 15px !important;
+            padding: 10px 6px !important;
+            display: none;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 5px !important;
+            cursor: pointer !important;
+            box-shadow: -2px 2px 10px rgba(0,0,0,0.2) !important;
+            z-index: 999995 !important;
+            width: 36px !important;
+            height: auto !important;
+            box-sizing: border-box !important;
+        }
+        #floatingAppIcon img {
+            width: 20px !important;
+            height: 20px !important;
+            max-width: 20px !important;
+            max-height: 20px !important;
+            object-fit: contain !important;
+            border-radius: 4px !important;
+            background: #fff !important;
+            padding: 2px !important;
+            margin: 0 !important;
+        }
+        #floatingAppIcon span {
+            writing-mode: vertical-rl !important;
+            text-orientation: mixed !important;
+            font-size: 0.75rem !important;
+            font-weight: bold !important;
+            letter-spacing: 1px !important;
+            color: #fff !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            line-height: 1 !important;
+        }
+
+        .category-nav-wrapper {
+            position: relative;
+        }
+        
+        #categoryHoverPanel {
+            display: none;
+            position: absolute;
+            background: #ffffff;
+            border-radius: 0 16px 16px 16px;
+            padding: 15px;
+            z-index: 99999;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            border: 1px solid #E2E8F0;
+            flex-wrap: wrap;
+            gap: 20px;
+            min-width: max-content;
+            max-width: 90vw;
+            margin-top: -2px;
+        }
+
+        .sub-cat-col {
+            display: flex;
+            flex-direction: column;
+            min-width: 140px;
+        }
+
+        .sub-cat-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1E1B4B;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #F1F5F9;
+            cursor: pointer;
+            transition: color 0.2s;
+            text-decoration: none;
+        }
+        .sub-cat-title:hover {
+            color: #DC2626;
+        }
+
+        .mini-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .mini-item {
+            font-size: 0.85rem;
+            color: #475569;
+            text-decoration: none;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            display: block;
+        }
+        .mini-item:hover {
+            background: #F8FAFC;
+            color: #1E1B4B;
+            padding-left: 14px;
+            font-weight: 600;
+        }
+
         @media (max-width: 768px) {
-            #categoryHoverPanel { overflow-x: auto; flex-wrap: nowrap; max-width: 95vw; }
-            .category-item { min-width: 80px; flex-shrink: 0; }
-            .category-item span { font-size: 0.7rem; white-space: normal; text-align: center; line-height: 1.2; max-width: 85px; word-break: break-word; }
+            #categoryHoverPanel {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                max-width: 95vw;
+            }
+            .category-item {
+                min-width: 80px;
+                flex-shrink: 0;
+            }
+            .category-item span {
+                font-size: 0.7rem;
+                white-space: normal;
+                text-align: center;
+                line-height: 1.2;
+                max-width: 85px;
+                word-break: break-word;
+            }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 </head>
 <body class="app-loading">
+    
     <div id="splash-screen">
         <div class="splash-bg-circle c1"></div>
         <div class="splash-bg-circle c2"></div>
@@ -91,12 +227,14 @@
         </div>
         <div class="splash-loader-wrap"><div class="splash-loader"></div></div>
     </div>
+
     <header class="header">
         <div class="nav-main">
             <div style="display:flex; align-items:center; gap:20px;">
                 <a href="index.html" class="logo">PrimePick<span>Hub</span></a>
                 <a href="blog.html" style="text-decoration:none; font-weight:600; color:var(--primary); font-size:1rem;">Blog</a>
             </div>
+
             <div style="display: flex; align-items: center; flex: 1; justify-content: flex-end;">
                 <div class="notif-wrapper" onclick="toggleNotifPanel(event)">
                     <button class="notif-btn" style="background:none;border:none;cursor:pointer;" aria-label="Notifications">
@@ -123,6 +261,7 @@
             </div>
         </div>
     </header>
+
     <div id="left-side-ad" class="left-ad-container">
         <div style="text-align: center; color: #475569; font-size: 0.8rem; font-weight: bold; padding: 10px;">
             Advertisement
@@ -132,16 +271,28 @@
             </div>
         </div>
     </div>
+
     <div class="container" style="margin-top: 10px; padding-bottom: 0;">
         <div class="ad-slot" id="ad-slot-top" style="margin-bottom: 0; display: none;">
             <div id="ad-fallback-top"></div>
         </div>
     </div>
+
     <main class="container" style="padding-top: 10px;">
         <div id="specialDealSection" class="special-deal-section" style="margin-top: 0px; display: none;">
             <div class="snowfall-bg">
-                <div class="snow">❅</div><div class="snow">❆</div><div class="snow">❅</div><div class="snow">❆</div><div class="snow">❅</div><div class="snow">❆</div><div class="snow">❅</div><div class="snow">❆</div><div class="snow">❅</div><div class="snow">❆</div>
+                <div class="snow">❅</div>
+                <div class="snow">❆</div>
+                <div class="snow">❅</div>
+                <div class="snow">❆</div>
+                <div class="snow">❅</div>
+                <div class="snow">❆</div>
+                <div class="snow">❅</div>
+                <div class="snow">❆</div>
+                <div class="snow">❅</div>
+                <div class="snow">❆</div>
             </div>
+
             <div class="special-deal-left">
                 <h2 id="specialDealTitle">First order deal</h2>
                 <p class="special-deal-subtitle">Exclusive offers just for you!</p>
@@ -157,6 +308,7 @@
                 <button class="scroll-arrow right-arrow" onclick="scrollSpecial('right')" aria-label="Scroll Right"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
         </div>
+
         <div id="flashSaleSection" class="flash-sale-split" style="display: none;">
             <canvas id="fireworksCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;"></canvas>
             <div class="flash-sale-left">
@@ -180,6 +332,7 @@
                 <button class="scroll-arrow right-arrow" onclick="scrollFlash('right')" aria-label="Scroll Right"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
         </div>
+
         <div id="flashSaleSection2" class="flash-sale-split-2" style="display: none;">
             <canvas id="fireworksCanvas2" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;"></canvas>
             <div class="flash-sale-2-left">
@@ -203,18 +356,22 @@
                 <button class="scroll-arrow right-arrow" onclick="scrollFlash2('right')" aria-label="Scroll Right"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
         </div>
+
         <div class="category-nav-wrapper" style="margin-bottom: 10px;">
             <h2 style="margin-bottom: 15px; font-family: 'Poppins', sans-serif; font-weight: 800; color: var(--text-dark);">Shop by Category</h2>
             <div class="horizontal-category-scroll" id="categoryScrollContainer"></div>
             <div id="categoryHoverPanel"></div>
         </div>
+
         <div id="normalProductsSection" style="margin-bottom: 10px;">
             <h2 id="productSectionTitle" style="display: none;"></h2>
             <div class="product-grid" id="productGrid"></div>
         </div>
+
         <div class="ad-slot" id="ad-slot-middle" style="margin-bottom: 10px; display: none;">
             <div id="ad-fallback-middle"></div>
         </div>
+
         <div id="latestBlogSection" style="display: none; margin-bottom: 20px; min-height: 250px;">
             <h2 style="margin-bottom: 15px; font-family: 'Poppins', sans-serif; font-weight: 800; color: var(--text-dark);">Latest From Our Blog</h2>
             <a href="blog.html" id="latestBlogLink" style="text-decoration: none; display: block;">
@@ -230,7 +387,9 @@
                 </div>
             </a>
         </div>
+
     </main>
+
     <div class="newsletter-wrapper" style="min-height: 220px;">
         <div class="newsletter-box">
             <h2>Get the Best Deals in Your Inbox!</h2>
@@ -242,6 +401,7 @@
             <p id="newsletterMsg" style="margin-top: 10px; font-weight: 600; font-size: 0.9rem;"></p>
         </div>
     </div>
+
     <footer class="footer">
         <p><strong>PrimePickHub</strong> — Compare. Click. Save Smarter.</p>
         <p style="margin-top:10px;font-size:0.85rem;">
@@ -249,6 +409,7 @@
         </p>
         <div class="footer-disclaimer">PrimePickHub is an affiliate website. We may earn a commission when you click our links and purchase items on official store sites at no additional cost to you.</div>
     </footer>
+
     <div id="cookie-consent-banner" class="cookie-banner" style="display: none;">
         <div class="cookie-content">
             <p>We use cookies to improve your experience. By continuing, you agree to our <a href="privacy-policy.html" style="color: #60A5FA;">Privacy Policy</a>.</p>
@@ -257,9 +418,11 @@
             <button onclick="acceptCookies()" class="btn-accept">Accept</button>
         </div>
     </div>
+
     <div id="floatingContactBtn" class="floating-contact-btn" onclick="toggleContactForm()">
         <span>Contact Us</span>
     </div>
+
     <div id="contactFormPanel" class="contact-form-panel">
         <div class="contact-form-header">
             <h3>Contact Us</h3>
@@ -270,6 +433,7 @@
                 <input type="hidden" name="access_key" value="59aca094-d044-44c9-b57e-5b19c9572270">
                 <input type="hidden" name="subject" value="New Message from PrimePickHub Floating Contact">
                 <input type="hidden" name="from_name" value="PrimePickHub Website">
+                
                 <div class="form-group">
                     <label for="fcName">Your Name</label>
                     <input type="text" id="fcName" name="name" required>
@@ -287,6 +451,7 @@
             <p id="contactFormMsg" style="text-align: center; margin-top: 10px; font-size: 0.85rem;"></p>
         </div>
     </div>
+
     <div id="appPopupOverlay" class="app-popup-overlay" onclick="toggleAppPopup()" style="display: none;"></div>
     <div id="appDownloadPopup" class="app-popup" style="display: none;">
         <div class="app-popup-content">
@@ -304,15 +469,18 @@
             </div>
         </div>
     </div>
+
     <button id="floatingAppIcon" onclick="toggleAppPopup()" style="display: none;" aria-label="Open App Download Popup">
         <img src="assets/icon-192.png?v=4" alt="" width="20" height="20">
         <span>App</span>
     </button>
+
     <script src="js/utils.js" defer></script>
     <script src="js/config.js?v=6" defer></script>
-    <script src="js/api.js?v=12" defer></script>
+    <script src="js/api.js?v=12" defer></script> 
     <script src="js/app.js?v=80" defer></script>
     <script src="js/affiliate.js?v=6" defer></script>
+    
     <script>
         function toggleCatDropdown(event) {
             if(event) { event.preventDefault(); event.stopPropagation(); }
