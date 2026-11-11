@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const safeReviewPreview = rawReview.replace(/<[^>]*>/g, '').trim().substring(0, 220) + (rawReview.length > 220 ? '…' : '');
     const reviewPreview = safeReviewPreview || 'Our detailed expert review is being prepared. Check full specs, live price, and availability below.';
 
-    // ⭐ GOOGLE ADS FIX: LAYOUT UPDATE (Review moved to Right Column) ⭐
+    // ⭐ LAYOUT UPDATED: Review & Author box moved BELOW the product layout for full width ⭐
     container.innerHTML = `
         <div class="product-layout">
             <div class="product-thumbnails-section"><button class="scroll-arrow up-arrow" onclick="scrollThumbnails('up')" aria-label="Scroll Up"><i class="fa-solid fa-chevron-up"></i></button><div id="thumbnailContainer" class="thumbnail-scroll-wrapper">${thumbnailsHtml}</div><button class="scroll-arrow down-arrow" onclick="scrollThumbnails('down')" aria-label="Scroll Down"><i class="fa-solid fa-chevron-down"></i></button></div>
@@ -169,25 +169,29 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div id="variationContainer">${generateVariationUI()}</div>
                 <div style="margin-bottom:25px;padding:15px;background:#F0FDF4; border: 1px solid #BBF7D0; border-radius:8px;" id="buyButtonContainer"></div>
                 
-                <div style="display:flex;gap:10px;flex-wrap:wrap; margin-bottom: 20px;"><a href="https://wa.me/?text=${shareText}%20${shareUrl}" target="_blank" rel="noopener" style="padding:8px 16px;background:#25D366;color:#fff;border-radius:6px;text-decoration:none;font-size:0.9rem;">Share on WhatsApp</a><a href="https://www.facebook.com/sharer/sharer.php?u=${shareUrl}" target="_blank" rel="noopener" style="padding:8px 16px;background:#1877F2;color:#fff;border-radius:6px;text-decoration:none;font-size:0.9rem;">Share on Facebook</a></div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap; margin-bottom: 10px;"><a href="https://wa.me/?text=${shareText}%20${shareUrl}" target="_blank" rel="noopener" style="padding:8px 16px;background:#25D366;color:#fff;border-radius:6px;text-decoration:none;font-size:0.9rem;">Share on WhatsApp</a><a href="https://www.facebook.com/sharer/sharer.php?u=${shareUrl}" target="_blank" rel="noopener" style="padding:8px 16px;background:#1877F2;color:#fff;border-radius:6px;text-decoration:none;font-size:0.9rem;">Share on Facebook</a></div>
+            </div>
+        </div>
 
-                <!-- ⭐ GOOGLE ADS FIX: Detailed Review moved up into the right column ⭐ -->
-                <div style="background:#fff;padding:20px;border-radius:12px;border:1px solid #E2E8F0; margin-top: 10px;">
-                    <h2 style="margin-bottom:15px;border-bottom:2px solid #FF5A3C;padding-bottom:10px;display:inline-block;font-family:'Poppins',sans-serif; font-size: 1.3rem;">Detailed Review & Analysis</h2>
-                    <div style="color:#334155;line-height:1.7;font-size:0.95rem;">${rawReview || '<p>Detailed review coming soon...</p>'}</div>
-                    <p style="margin-top: 15px; font-size: 0.85rem;">
-                        <a href="/review-policy.html" style="color: var(--accent);">How we review products →</a>
-                    </p>
+        <!-- ⭐ NEW: DETAILED REVIEW & ANALYSIS (FULL WIDTH) ⭐ -->
+        <div style="width: 100%; margin-top: 30px; display: flex; flex-direction: column; gap: 20px;">
+            <div style="background:#fff;padding:30px;border-radius:12px;border:1px solid #E2E8F0; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+                <h2 style="margin-bottom:20px;border-bottom:2px solid #FF5A3C;padding-bottom:10px;display:inline-block;font-family:'Poppins',sans-serif; font-size: 1.6rem;">Detailed Review & Analysis</h2>
+                <div style="color:#334155;line-height:1.8;font-size:1.05rem;">${rawReview || '<p>Detailed review coming soon...</p>'}</div>
+                <p style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed #E2E8F0; font-size: 0.9rem;">
+                    <a href="/review-policy.html" style="color: var(--accent); font-weight: bold; text-decoration: none;">How we review products &rarr;</a>
+                </p>
+            </div>
+
+            <!-- Author Box -->
+            <div style="background:#F8FAFC;padding:20px;border-radius:12px;border:1px solid #E2E8F0; display: flex; align-items: center; gap: 15px;">
+                <div style="width: 50px; height: 50px; background: #E2E8F0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #64748B;">
+                    <i class="fa-solid fa-user-tie"></i>
                 </div>
-
-                <!-- Author Box -->
-                <div style="background:#F8FAFC;padding:15px;border-radius:12px;border:1px solid #E2E8F0; margin-top: 15px;">
-                    <p style="font-size: 0.85rem; color: #475569; margin: 0;">
-                        <strong>Reviewed by:</strong> PrimePickHub Editorial Team · 
-                        <a href="/review-policy.html" style="color: var(--accent);">Review Policy</a>
-                    </p>
+                <div>
+                    <p style="font-size: 1rem; color: #1E1B4B; margin: 0; font-weight: bold;">PrimePickHub Editorial Team</p>
+                    <p style="font-size: 0.85rem; color: #64748B; margin: 0;">Reviewed independently based on our <a href="/review-policy.html" style="color: var(--accent); text-decoration: none;">Review Policy</a>.</p>
                 </div>
-
             </div>
         </div>
         
