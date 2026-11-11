@@ -35,7 +35,6 @@ window.removeGalleryFile = function(index) { currentGalleryFiles.splice(index, 1
 window.removeGalleryUrl = function(index) { const textarea = document.getElementById('pGallery'); let urls = textarea.value.split('\n').map(u => u.trim()).filter(Boolean); urls.splice(index, 1); textarea.value = urls.join('\n'); renderGalleryPreviews(); }
 document.getElementById('pGallery')?.addEventListener('input', renderGalleryPreviews);
 
-// ⭐ OVERWRITE FIX: Purani URLs ko replace karega (XSS Safe)
 window.handleMainColorUpload = async function(input) {
     if (input.files.length === 0) return; 
     const fileNameSpan = document.getElementById('pMainColorImgName'); 
@@ -57,7 +56,6 @@ function renderColorPreviews() {
     const urls = val.split(',').map(u => u.trim()).filter(Boolean);
     container.innerHTML = urls.map((url, idx) => { 
         if(url.startsWith('http')) { 
-            // ⭐ SECURITY FIX: escapeHTML applied ⭐
             return `<div class="preview-item"><img src="${escapeHTML(url)}" onclick="openImageLightbox('${escapeHTML(url)}')" title="Click to view"><button class="preview-remove" onclick="removeColorUrl(${idx})" title="Remove Image">X</button></div>`; 
         } else { 
             return `<div class="preview-item" style="background:${escapeHTML(url)};"><button class="preview-remove" onclick="removeColorUrl(${idx})" title="Remove Color">X</button></div>`; 
@@ -152,7 +150,7 @@ async function loadProductsList() {
         const categoryFilter = document.getElementById('adminCategoryFilter');
         if (categoryFilter) { let filterHtml = `<option value="all">All Categories</option>`; dbCats.forEach(slug => { const catObj = globalCategories.find(c => c.slug === slug); const catName = catObj ? catObj.name : slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()); filterHtml += `<option value="${slug}">${catName}</option>`; }); categoryFilter.innerHTML = filterHtml; }
         loadCategoriesToDropdown(); renderTable();
-    } catch (err) { console.error('List Load Error:', err); tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:red;">Failed to load products.</td></tr>'; }
+    } catch (err) { console.error('List Load Error:', err); tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:red;">Failed to load products.</td></tr>'; }
 }
 function renderTable() {
     const tbody = document.getElementById('productListBody'); if (!tbody) return;
@@ -160,7 +158,7 @@ function renderTable() {
     let filteredProducts = allProducts.filter(p => { const matchesCategory = categoryFilter === 'all' || p.category_slug === categoryFilter; const matchesSearch = p.title.toLowerCase().includes(searchQuery); return matchesCategory && matchesSearch; });
     filteredProducts.sort((a, b) => { const aIsAvailable = a.is_available !== false; const bIsAvailable = b.is_available !== false; if (aIsAvailable === bIsAvailable) return 0; return aIsAvailable ? 1 : -1; });
     const countEl = document.getElementById('totalProductsCount'); if (countEl) countEl.innerText = filteredProducts.length;
-    if (filteredProducts.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No products found.</td></tr>'; return; }
+    if (filteredProducts.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No products found.</td></tr>'; return; }
     tbody.innerHTML = filteredProducts.map((p, index) => {
         const defaultOffer = p.affiliate_offers?.[0] || {}; const basePrice = parseFloat(defaultOffer.price) || 0; const salePrice = parseFloat(defaultOffer.sale_price) || 0; const commissionRate = parseFloat(defaultOffer.commission_rate) || 0; const currency = defaultOffer.currency || 'USD';
         let finalBasePrice = basePrice; let finalSalePrice = salePrice;
@@ -169,7 +167,11 @@ function renderTable() {
         if (defaultOffer.price) { if (salePrice > 0) { priceStr = `<div style="text-decoration:line-through; color:#94A3B8; font-size:0.8rem;">${finalBasePrice.toFixed(2)} ${currency}</div><div style="font-weight:bold; color:#FF5A3C; font-size:1rem;">${finalSalePrice.toFixed(2)} ${currency}</div>`; } else { priceStr = `<strong style="color:#1E1B4B;">${finalBasePrice.toFixed(2)} ${currency}</strong>`; } } else { priceStr = 'N/A'; }
         const isAvailable = p.is_available !== false; const rowClass = isAvailable ? '' : 'unavailable-row'; const statusBadge = isAvailable ? '' : `<span class="badge-unavailable">UNAVAILABLE</span>`;
         const catObj = globalCategories.find(c => c.slug === p.category_slug); const catName = catObj ? catObj.name : (p.category_slug ? p.category_slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Uncategorized');
-        return `<tr class="${rowClass}"><td style="text-align: center; font-weight: bold;">${index + 1}</td><td style="text-align: center;"><span style="background:#e2e8f0; color:#1e293b; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:600; white-space:nowrap; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis;">${catName}</span></td><td style="text-align: center;"><img src="${p.image_url}" class="table-img" onerror="this.src='/assets/icon-192.png?v=4'"></td><td style="text-align: left; font-weight: 500;">${p.title} ${statusBadge}</td><td style="text-align: center;">${priceStr}</td><td><div class="action-btns"><button class="btn-edit" onclick="editProduct('${p.id}')">Edit</button><button class="btn-delete" onclick="deleteProduct('${p.id}')">Delete</button></div></td></tr>`;
+        
+        const storeName = defaultOffer.store_name || 'N/A';
+        const displayStoreName = storeName.charAt(0).toUpperCase() + storeName.slice(1);
+
+        return `<tr class="${rowClass}"><td style="text-align: center; font-weight: bold;">${index + 1}</td><td style="text-align: center;"><span style="background:#f0fdf4; color:#166534; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:600; white-space:nowrap; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis;">${displayStoreName}</span></td><td style="text-align: center;"><span style="background:#e2e8f0; color:#1e293b; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:600; white-space:nowrap; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis;">${catName}</span></td><td style="text-align: center;"><img src="${p.image_url}" class="table-img" onerror="this.src='/assets/icon-192.png?v=4'"></td><td style="text-align: left; font-weight: 500;">${p.title} ${statusBadge}</td><td style="text-align: center;">${priceStr}</td><td><div class="action-btns"><button class="btn-edit" onclick="editProduct('${p.id}')">Edit</button><button class="btn-delete" onclick="deleteProduct('${p.id}')">Delete</button></div></td></tr>`;
     }).join('');
 }
 window.addVariationRow = function(color = '', colorName = '', name = '', price = '', salePrice = '', commission = '', url = '') {
