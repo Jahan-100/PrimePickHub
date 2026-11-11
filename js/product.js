@@ -13,7 +13,7 @@ function getVideoHtml(url) {
 
 const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ', SAR: 'SAR ', CAD: 'C$', AUD: 'A$', CNY: '¥', JPY: '¥', TRY: '₺', BDT: '৳', MYR: 'RM ', IDR: 'Rp ', QAR: 'QAR ', KWD: 'KWD ', BHD: 'BHD ', OMR: 'OMR ', ZAR: 'R ', BRL: 'R$', MXN: 'MX$', RUB: '₽', KRW: '₩', SGD: 'S$', HKD: 'HK$', NZD: 'NZ$', CHF: 'CHF ', SEK: 'kr ', NOK: 'kr ' };
 
-// ⭐ IMAGE COMPRESSION FUNCTION (Canvas API) ⭐
+// ⭐ IMAGE COMPRESSION FUNCTION ⭐
 async function compressImage(file, maxWidth = 1000, maxHeight = 1000, quality = 0.75) {
     return new Promise((resolve) => {
         const reader = new FileReader();
@@ -44,7 +44,7 @@ window.previewReviewImages = function(input) {
     const container = document.getElementById('rvImagePreviewContainer');
     if (!container) return;
     container.innerHTML = '';
-    const files = Array.from(input.files).slice(0, 3); // Max 3 limit
+    const files = Array.from(input.files).slice(0, 3); 
     files.forEach(file => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -70,7 +70,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const container = document.getElementById('productContainer');
     if (!slug && !id) { window.location.href = '/index.html'; return; }
 
-    // Fetch Product
     const product = slug ? await API.getProductBySlug(slug) : await (async () => {
         if (!window.supabaseClient) return null;
         const { data } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').eq('id', id).single();
@@ -82,7 +81,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const canonical = document.getElementById('canonicalLink'); if (canonical) canonical.href = window.location.href.split('?')[0];
     document.title = `${product.title} - Best Price | PrimePickHub`;
 
-    // Setup Variations & Offers
     const allOffers = product.affiliate_offers || [];
     const mainOffer = allOffers[0] || { price: '0', store_name: 'Store', currency: 'USD', commission_rate: 0, sale_price: null };
     const otherVariations = allOffers.slice(1);
@@ -154,7 +152,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const thumbnailsHtml = galleryImages.map((url, i) => `<img src="${escapeHTML(getHighQualityImage(url, 150))}" alt="View ${i + 1}" class="gallery-thumb" data-src="${escapeHTML(url)}" data-index="${i}" style="border:2px solid ${i === window.currentMainImageIndex ? '#FF5A3C' : '#E2E8F0'};">`).join('');
     const rawReview = product.review_html || '';
 
-    // Main Layout Generation
     container.innerHTML = `
         <div class="product-layout">
             <div class="product-thumbnails-section"><button class="scroll-arrow up-arrow" onclick="scrollThumbnails('up')" aria-label="Scroll Up"><i class="fa-solid fa-chevron-up"></i></button><div id="thumbnailContainer" class="thumbnail-scroll-wrapper">${thumbnailsHtml}</div><button class="scroll-arrow down-arrow" onclick="scrollThumbnails('down')" aria-label="Scroll Down"><i class="fa-solid fa-chevron-down"></i></button></div>
@@ -337,7 +334,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.closeFullScreenImage = function(e) { if (e) e.stopPropagation(); modal.style.display = 'none'; document.body.style.overflow = 'auto'; };
     window.changeFullScreenImage = function(direction, e) { if (e) e.stopPropagation(); if (galleryImages.length <= 1) return; let newIndex = window.currentMainImageIndex + direction; if (newIndex < 0) newIndex = galleryImages.length - 1; if (newIndex >= galleryImages.length) newIndex = 0; window.currentMainImageIndex = newIndex; imgElement.src = galleryImages[window.currentMainImageIndex]; resetZoomPan(); document.getElementById('mainImage').src = galleryImages[window.currentMainImageIndex]; container.querySelectorAll('.gallery-thumb').forEach((t, i) => { t.style.borderColor = (i === window.currentMainImageIndex) ? '#FF5A3C' : '#E2E8F0'; }); };
     
-    // ⭐ REVIEWS LOGIC ⭐
+    // ⭐ REVIEWS LOGIC (Compact Version) ⭐
     async function loadCustomerReviews() {
         const { data: reviews } = await window.supabaseClient.from('product_reviews').select('*').eq('product_id', product.id).eq('status', 'approved').order('created_at', { ascending: false });
         const revContainer = document.getElementById('customerReviewsList');
@@ -348,24 +345,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         revContainer.innerHTML = reviews.map(r => `
-            <div style="border-bottom: 1px solid #E2E8F0; padding: 15px 0;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                    <strong style="color:#1E1B4B; font-size:1rem;">${escapeHTML(r.customer_name)}</strong>
-                    <span style="color:#F59E0B; font-size:0.9rem;">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span>
+            <div style="border-bottom: 1px solid #E2E8F0; padding: 8px 0;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+                    <strong style="color:#1E1B4B; font-size:0.9rem;">${escapeHTML(r.customer_name)}</strong>
+                    <span style="color:#F59E0B; font-size:0.8rem;">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span>
                 </div>
-                <p style="color:#475569; font-size:0.9rem; line-height:1.5; margin-bottom:10px;">${escapeHTML(r.review_text)}</p>
+                <p style="color:#475569; font-size:0.85rem; line-height:1.4; margin-bottom:5px;">${escapeHTML(r.review_text)}</p>
                 ${r.images && r.images.length > 0 ? `
-                    <div style="display:flex; gap:10px; overflow-x:auto;">
-                        ${r.images.map(img => `<img src="${escapeHTML(img)}" style="width:70px; height:70px; object-fit:cover; border-radius:6px; cursor:pointer;" onclick="window.open('${escapeHTML(img)}', '_blank')">`).join('')}
+                    <div style="display:flex; gap:5px; overflow-x:auto;">
+                        ${r.images.map(img => `<img src="${escapeHTML(img)}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; cursor:pointer;" onclick="window.open('${escapeHTML(img)}', '_blank')">`).join('')}
                     </div>
                 ` : ''}
-                <p style="font-size:0.75rem; color:#94A3B8; margin-top:8px;">${new Date(r.created_at).toLocaleDateString()}</p>
+                <p style="font-size:0.7rem; color:#94A3B8; margin-top:4px;">${new Date(r.created_at).toLocaleDateString()}</p>
             </div>
         `).join('');
     }
     loadCustomerReviews();
 
-    // Review Form Handler
     document.getElementById('reviewForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('rvSubmitBtn'); const msg = document.getElementById('rvMsg');
@@ -413,7 +409,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // SEO Schemas
     const jsonLd = { "@context": "https://schema.org/", "@type": "Product", "name": product.title, "image": [getHighQualityImage(product.image_url, 800)].concat((product.gallery_images || []).map(u => getHighQualityImage(u, 800))).filter(Boolean), "description": product.description || product.title, "offers": allOffers.map(o => { const p = parseFloat(o.price) || 0; const sp = parseFloat(o.sale_price) || 0; const c = parseFloat(o.commission_rate) || 0; let finalP = sp > 0 ? sp : p; if (c > 0) finalP = finalP + (finalP * (c / 100)); return { "@type": "Offer", "url": o.affiliate_url, "priceCurrency": o.currency || "USD", "price": finalP.toFixed(2), "availability": "https://schema.org/InStock", "seller": { "@type": "Organization", "name": o.store_name } }; }) };
     if (product.rating && product.reviews_count > 0) jsonLd.aggregateRating = { "@type": "AggregateRating", "ratingValue": product.rating, "reviewCount": product.reviews_count };
     const script = document.createElement('script'); script.type = 'application/ld+json'; script.text = JSON.stringify(jsonLd); document.head.appendChild(script);
