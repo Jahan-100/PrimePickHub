@@ -299,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadDiscoveredProducts();
 });
 
-// ⭐ FIXED & ADDED: Manage Reviews Logic ⭐
+// ⭐ FIXED & ADDED: Manage Reviews Logic (Product Link) ⭐
 document.addEventListener('DOMContentLoaded', () => {
     const toggleReviewsBtn = document.getElementById('toggleReviewsBtn');
     const reviewsContainer = document.getElementById('reviewsContainer');
@@ -323,9 +323,10 @@ document.addEventListener('DOMContentLoaded', () => {
     window.loadAdminReviews = async function() {
         reviewsListBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Fetching reviews...</td></tr>';
         
+        // Join with products to get title and slug
         const { data: reviews, error } = await window.supabaseClient
             .from('product_reviews')
-            .select('*') 
+            .select('*, products(title, slug)') 
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -364,10 +365,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 actionBtns = `<button onclick="deleteFullReview('${r.id}')" style="background:#EF4444; color:white; padding:4px 8px; border:none; border-radius:4px; font-size:0.75rem; cursor:pointer; width:100%;">Delete Review</button>`;
             }
 
+            // Safe extraction of product title and slug
+            const productTitle = r.products?.title || 'Unknown Product';
+            const productSlug = r.products?.slug;
+            const productLink = productSlug ? `/product/${productSlug}` : '#';
+
             return `
                 <tr>
                     <td style="text-align:center;">${index + 1}</td>
-                    <td style="text-align:center; font-size:0.75rem;">${r.product_id.substring(0,8)}</td>
+                    <td style="text-align:center; font-size:0.75rem;">
+                        <a href="${productLink}" target="_blank" style="color:#2563eb; text-decoration:underline; font-weight:bold;" title="${escapeHTML(productTitle)}">
+                            ${escapeHTML(productTitle).substring(0, 20)}${productTitle.length > 20 ? '...' : ''}
+                        </a>
+                    </td>
                     <td style="text-align:center; font-weight:bold;">${escapeHTML(r.customer_name)}</td>
                     <td style="text-align:center; color:#F59E0B;">${r.rating} ★</td>
                     <td style="text-align:left; font-size:0.8rem; max-width:300px;">
