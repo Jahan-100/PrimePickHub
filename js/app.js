@@ -6,8 +6,6 @@
 if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
 }
-
-// Har click par position save karein taake back aane par wapis usi jagah aayein
 document.addEventListener('click', (e) => {
     const link = e.target.closest('a');
     if (link && link.href && !link.href.includes('#') && !link.href.includes('javascript:') && link.target !== '_blank') {
@@ -408,4 +406,67 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); }, 5000);
     document.addEventListener('click', function(e) { if (!e.target.closest('.notif-wrapper')) { const panel = document.getElementById('notifPanel'); if(panel) panel.style.display = 'none'; } });
     setTimeout(() => { if (typeof hideSplash === 'function') hideSplash(); }, 5000);
+
+    // Newsletter form handler (moved from inline script)
+    document.getElementById('newsletterForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const emailInput = document.getElementById('newsletterEmail');
+        const btn = document.getElementById('newsletterBtn');
+        const msg = document.getElementById('newsletterMsg');
+        const email = emailInput.value.trim();
+        if(!email) return;
+        btn.innerText = "Subscribing...";
+        btn.disabled = true;
+        msg.innerText = "";
+        try {
+            const { error } = await window.supabaseClient.from('newsletter_subscribers').insert([{ email: email }]);
+            if (error) {
+                if (error.code === '23505') { msg.style.color = "#FBBF24"; msg.innerText = "You are already subscribed!"; } 
+                else { throw error; }
+            } else {
+                msg.style.color = "#4ADE80"; msg.innerText = "Successfully subscribed! Check your inbox for deals."; emailInput.value = "";
+            }
+        } catch (err) {
+            console.error(err); msg.style.color = "#F87171"; msg.innerText = "Something went wrong. Please try again.";
+        } finally {
+            btn.innerText = "Subscribe"; btn.disabled = false;
+        }
+    });
+
+    // Contact form handler (floating)
+    document.getElementById('floatingContactForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const form = e.target;
+        const btn = document.getElementById('contactSubmitBtn');
+        const msg = document.getElementById('contactFormMsg');
+        const originalText = btn.innerText;
+        btn.innerText = "Sending..."; btn.disabled = true; msg.innerText = "";
+        const formData = new FormData(form);
+        const object = Object.fromEntries(formData);
+        const json = JSON.stringify(object);
+        try {
+            const res = await fetch('https://api.web3forms.com/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: json
+            });
+            const data = await res.json();
+            if (data.success) {
+                msg.style.color = "#16a34a"; msg.innerText = "Message sent successfully! We'll reply soon.";
+                form.reset();
+                setTimeout(() => { toggleContactForm(); msg.innerText = ""; }, 2000);
+            } else {
+                msg.style.color = "#EF4444"; msg.innerText = data.message || "Something went wrong.";
+            }
+        } catch (error) {
+            msg.style.color = "#EF4444"; msg.innerText = "Failed to send. Please try again.";
+        } finally {
+            btn.innerText = originalText; btn.disabled = false;
+        }
+    });
+
+    window.toggleContactForm = function() {
+        const panel = document.getElementById('contactFormPanel');
+        if(panel) panel.classList.toggle('open');
+    }
 });
