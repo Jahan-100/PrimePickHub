@@ -6,6 +6,7 @@
 if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
 }
+
 document.addEventListener('click', (e) => {
     const link = e.target.closest('a');
     if (link && link.href && !link.href.includes('#') && !link.href.includes('javascript:') && link.target !== '_blank') {
@@ -407,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', function(e) { if (!e.target.closest('.notif-wrapper')) { const panel = document.getElementById('notifPanel'); if(panel) panel.style.display = 'none'; } });
     setTimeout(() => { if (typeof hideSplash === 'function') hideSplash(); }, 5000);
 
-    // Newsletter form handler (moved from inline script)
+    // Newsletter form handler
     document.getElementById('newsletterForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const emailInput = document.getElementById('newsletterEmail');
