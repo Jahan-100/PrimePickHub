@@ -2,33 +2,29 @@
  * PrimePickHub Homepage Renderer + Realtime + Notifications + PWA + Tracking
  */
 
-// ⭐ MANUAL SCROLL RESTORATION (Back Button Fix) ⭐
+// ⭐ 1. SCROLL RESTORATION (SAVE POSITION) ⭐
 if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
 }
 
-window.addEventListener('beforeunload', () => {
-    if (window.location.pathname === '/' || window.location.pathname.includes('index.html')) {
-        sessionStorage.setItem('homeScrollY', window.scrollY);
-    }
-});
-
+// Har click par position save karein taake back aane par wapis usi jagah aayein
 document.addEventListener('click', (e) => {
     const link = e.target.closest('a');
-    if (link && link.href && !link.href.includes('#') && link.target !== '_blank' && !link.href.startsWith('javascript:')) {
+    if (link && link.href && !link.href.includes('#') && !link.href.includes('javascript:') && link.target !== '_blank') {
         if (window.location.pathname === '/' || window.location.pathname.includes('index.html')) {
             sessionStorage.setItem('homeScrollY', window.scrollY);
         }
     }
 }, { capture: true });
-// ⭐ ========================================= ⭐
+
+// ⭐ ==================================== ⭐
 
 function setCookie(name, value, days) { let expires = ""; if (days) { let date = new Date(); date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000)); expires = "; expires=" + date.toUTCString(); } document.cookie = name + "=" + (value || "") + expires + "; path=/; SameSite=Lax"; }
 function getCookie(name) { let nameEQ = name + "="; let ca = document.cookie.split(';'); for (let i = 0; i < ca.length; i++) { let c = ca[i]; while (c.charAt(0) == ' ') c = c.substring(1, c.length); if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length); } return null; }
 function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb; }
 
 window.handleImageLoad = function(imgElement) { if (imgElement.decode) { imgElement.decode().then(() => { imgElement.style.opacity = 1; }).catch(() => { imgElement.style.opacity = 1; }); } else { imgElement.style.opacity = 1; } };
-function hideSplash() { var splash = document.getElementById('splash-screen'); if (splash && splash.style.display !== 'none') { splash.classList.add('hidden'); document.body.classList.remove('app-loading'); setTimeout(() => { splash.style.display = 'none'; }, 800); sessionStorage.setItem('splashShown', 'true'); } }
+function hideSplash() { var splash = document.getElementById('splash-screen'); if (splash && splash.style.display !== 'none') { splash.classList.add('hidden'); document.body.classList.remove('app-loading'); setTimeout(() => { splash.style.display = 'none'; }, 300); sessionStorage.setItem('splashShown', 'true'); } }
 function getProductUrl(product) { if (!product) return '#'; if (product.slug) return `/product/${encodeURIComponent(product.slug)}`; if (product.id != null) return `/product.html?id=${encodeURIComponent(product.id)}`; return '#'; }
 
 function getPrimaryOffer(product) {
@@ -54,57 +50,21 @@ function getAllDescendantSlugs(parentSlug, allCats) {
         if (visited.has(norm)) return;
         visited.add(norm); slugs.add(norm);
         if (!Array.isArray(allCats)) return;
-        allCats.forEach(c => {
-            if (c && typeof c === 'object' && c.parent && typeof c.parent === 'string' && c.slug && typeof c.slug === 'string') {
-                if (c.parent.trim().toLowerCase() === norm) traverse(c.slug);
-            }
-        });
+        allCats.forEach(c => { if (c && typeof c === 'object' && c.parent && typeof c.parent === 'string' && c.slug && typeof c.slug === 'string') { if (c.parent.trim().toLowerCase() === norm) traverse(c.slug); } });
     }
     traverse(parentSlug); return Array.from(slugs);
 }
 
-// ⭐ FINAL SMART ICON LOGIC (Force loads images with cache buster) ⭐
+// ⭐ SMART ICON LOGIC ⭐
 function getCategoryIcon(cat) {
     if (!cat) return '📦';
-    
-    const name = (cat.name || '').toLowerCase().trim();
-    let slug = (cat.slug || '').toLowerCase().trim();
+    const name = (cat.name || '').toLowerCase().trim(); let slug = (cat.slug || '').toLowerCase().trim();
     if (name.includes('light')) slug = 'lights';
-    
-    if (cat.icon && (cat.icon.startsWith('http') || cat.icon.includes('assets/'))) {
-        const iconPath = cat.icon.startsWith('/') ? cat.icon : '/' + cat.icon;
-        return `<img src="${iconPath}" alt="${escapeHTML(cat.name)}" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff;">`;
-    }
-
+    if (cat.icon && (cat.icon.startsWith('http') || cat.icon.includes('assets/'))) { const iconPath = cat.icon.startsWith('/') ? cat.icon : '/' + cat.icon; return `<img src="${iconPath}" alt="${escapeHTML(cat.name)}" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff;">`; }
     let fallbackEmoji = '🏷️';
-    if (name.includes('bag') || name.includes('luggage')) fallbackEmoji = '👜';
-    else if (name.includes('jewel') || name.includes('watch')) fallbackEmoji = '💍';
-    else if (name.includes('electronic') || name.includes('tech')) fallbackEmoji = '📱';
-    else if (name.includes('cloth') || name.includes('fashion')) fallbackEmoji = '👗';
-    else if (name.includes('shoe')) fallbackEmoji = '👟';
-    else if (name.includes('light')) fallbackEmoji = '💡';
-    else if (name.includes('glass') || name.includes('eyewear')) fallbackEmoji = '🕶️';
-    else if (name.includes('beauty') || name.includes('makeup')) fallbackEmoji = '💄';
-    else if (name.includes('sport')) fallbackEmoji = '🏋️';
-    else if (name.includes('toy') || name.includes('game')) fallbackEmoji = '🧸';
-    else if (name.includes('car') || name.includes('auto')) fallbackEmoji = '🚗';
-    else if (name.includes('home') || name.includes('kitchen')) fallbackEmoji = '🛋️';
-    else if (name.includes('accessories')) fallbackEmoji = '💍';
-    else if (name.includes('belt')) fallbackEmoji = '🩱';
-
+    if (name.includes('bag') || name.includes('luggage')) fallbackEmoji = '👜'; else if (name.includes('jewel') || name.includes('watch')) fallbackEmoji = '💍'; else if (name.includes('electronic') || name.includes('tech')) fallbackEmoji = '📱'; else if (name.includes('cloth') || name.includes('fashion')) fallbackEmoji = '👗'; else if (name.includes('shoe')) fallbackEmoji = '👟'; else if (name.includes('light')) fallbackEmoji = '💡'; else if (name.includes('glass') || name.includes('eyewear')) fallbackEmoji = '🕶️'; else if (name.includes('beauty') || name.includes('makeup')) fallbackEmoji = '💄'; else if (name.includes('sport')) fallbackEmoji = '🏋️'; else if (name.includes('toy') || name.includes('game')) fallbackEmoji = '🧸'; else if (name.includes('car') || name.includes('auto')) fallbackEmoji = '🚗'; else if (name.includes('home') || name.includes('kitchen')) fallbackEmoji = '🛋️'; else if (name.includes('accessories')) fallbackEmoji = '💍'; else if (name.includes('belt')) fallbackEmoji = '🩱';
     const timestamp = new Date().getTime();
-    return `
-        <div style="width:100%; height:100%; position:relative; display:flex; align-items:center; justify-content:center;">
-            <img src="/assets/${slug}-icon.jpg?v=${timestamp}" alt="${escapeHTML(cat.name)}" 
-                 style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff; position:absolute; top:0; left:0;" 
-                 onerror="
-                    if(this.src.includes('.jpg')) { this.src = this.src.replace('.jpg', '.png'); }
-                    else if(this.src.includes('.png')) { this.src = this.src.replace('.png', '.jpeg'); }
-                    else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }
-                 ">
-            <span style="display:none; font-size:2.2rem; align-items:center; justify-content:center; height:100%; width:100%;">${fallbackEmoji}</span>
-        </div>
-    `;
+    return `<div style="width:100%; height:100%; position:relative; display:flex; align-items:center; justify-content:center;"><img src="/assets/${slug}-icon.jpg?v=${timestamp}" alt="${escapeHTML(cat.name)}" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff; position:absolute; top:0; left:0;" onerror="if(this.src.includes('.jpg')) { this.src = this.src.replace('.jpg', '.png'); } else if(this.src.includes('.png')) { this.src = this.src.replace('.png', '.jpeg'); } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }"><span style="display:none; font-size:2.2rem; align-items:center; justify-content:center; height:100%; width:100%;">${fallbackEmoji}</span></div>`;
 }
 
 let allCategoriesGlobal = []; let activeCategoriesSet = new Set(); let hoverTimeout;
@@ -116,14 +76,7 @@ async function fetchActiveCategories() {
         if (!error && data) {
             activeCategoriesSet.clear(); activeCategoriesSet.add('all');
             const productCats = new Set(data.map(p => p && p.category_slug && typeof p.category_slug === 'string' ? p.category_slug.trim().toLowerCase() : null).filter(Boolean));
-            productCats.forEach(slug => {
-                activeCategoriesSet.add(slug);
-                let currentSlug = slug;
-                while (currentSlug) {
-                    const cat = allCategoriesGlobal.find(c => c && c.slug && typeof c.slug === 'string' && c.slug.trim().toLowerCase() === currentSlug);
-                    if (cat && cat.parent && typeof cat.parent === 'string' && cat.parent !== 'all') { activeCategoriesSet.add(cat.parent.trim().toLowerCase()); currentSlug = cat.parent.trim().toLowerCase(); } else { break; }
-                }
-            });
+            productCats.forEach(slug => { activeCategoriesSet.add(slug); let currentSlug = slug; while (currentSlug) { const cat = allCategoriesGlobal.find(c => c && c.slug && typeof c.slug === 'string' && c.slug.trim().toLowerCase() === currentSlug); if (cat && cat.parent && typeof cat.parent === 'string' && cat.parent !== 'all') { activeCategoriesSet.add(cat.parent.trim().toLowerCase()); currentSlug = cat.parent.trim().toLowerCase(); } else { break; } } });
         }
     } catch (e) { console.warn("Failed to fetch active categories", e); }
 }
@@ -132,42 +85,16 @@ async function renderDynamicCategories() {
     try { allCategoriesGlobal = await API.getCategories(); } catch(e) { allCategoriesGlobal = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : []; }
     if (!allCategoriesGlobal || allCategoriesGlobal.length === 0) { allCategoriesGlobal = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : []; }
     await fetchActiveCategories();
-
     let topCats = allCategoriesGlobal.filter(c => { const isTop = !c.parent || c.parent.trim().toLowerCase() === 'all'; return isTop && activeCategoriesSet.has((c.slug || '').trim().toLowerCase()); });
-    activeCategoriesSet.forEach(slug => {
-        if (slug === 'all') return;
-        if (!allCategoriesGlobal.find(c => c && c.slug && c.slug.trim().toLowerCase() === slug)) {
-            const isSub = allCategoriesGlobal.some(c => c && c.parent && typeof c.parent === 'string' && c.parent.trim().toLowerCase() === slug);
-            if (!isSub) topCats.push({ slug: slug, name: slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), icon: null, parent: null });
-        }
-    });
-    
+    activeCategoriesSet.forEach(slug => { if (slug === 'all') return; if (!allCategoriesGlobal.find(c => c && c.slug && c.slug.trim().toLowerCase() === slug)) { const isSub = allCategoriesGlobal.some(c => c && c.parent && typeof c.parent === 'string' && c.parent.trim().toLowerCase() === slug); if (!isSub) topCats.push({ slug: slug, name: slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), icon: null, parent: null }); } });
     const catContainer = document.getElementById('categoryScrollContainer');
     if (catContainer) {
-        catContainer.innerHTML = topCats.map(c => `
-            <a href="javascript:void(0)" class="category-item ${c.slug.trim().toLowerCase() === 'all' ? 'active' : ''}" data-slug="${c.slug}">
-                <div class="cat-icon" style="overflow:hidden;" ${c.slug.trim().toLowerCase() === 'all' ? 'data-is-all="true"' : ''}>
-                    ${c.slug.trim().toLowerCase() === 'all' ? '<span style="color:#EF4444; font-size: 2.2rem; display:flex; align-items:center; justify-content:center; height:100%;">❤️</span>' : getCategoryIcon(c)}
-                </div>
-                <span>${c.name}</span>
-            </a>
-        `).join('');
-
+        catContainer.innerHTML = topCats.map(c => `<a href="javascript:void(0)" class="category-item ${c.slug.trim().toLowerCase() === 'all' ? 'active' : ''}" data-slug="${c.slug}"><div class="cat-icon" style="overflow:hidden;" ${c.slug.trim().toLowerCase() === 'all' ? 'data-is-all="true"' : ''}>${c.slug.trim().toLowerCase() === 'all' ? '<span style="color:#EF4444; font-size: 2.2rem; display:flex; align-items:center; justify-content:center; height:100%;">❤️</span>' : getCategoryIcon(c)}</div><span>${c.name}</span></a>`).join('');
         const isHoverDevice = window.matchMedia('(hover: hover)').matches;
         catContainer.querySelectorAll('.category-item').forEach(el => {
             if (isHoverDevice) { el.addEventListener('mouseenter', function(e) { clearTimeout(hoverTimeout); const catSlug = this.dataset.slug; document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active')); this.classList.add('active'); if (catSlug === 'all') { document.getElementById('categoryHoverPanel').style.display = 'none'; } else { renderHoverPanel(catSlug, this); } }); }
-            el.addEventListener('click', function(e) {
-                e.preventDefault(); const catSlug = this.dataset.slug; const panel = document.getElementById('categoryHoverPanel');
-                if (catSlug === 'all') { panel.style.display = 'none'; panel.dataset.activeSlug = ''; document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active')); this.classList.add('active'); loadCategoryProducts('all', 'For You'); return; }
-                const mainCat = allCategoriesGlobal.find(c => c.slug === catSlug);
-                const subCats = allCategoriesGlobal.filter(c => c.parent === catSlug && activeCategoriesSet.has(c.slug.toLowerCase()));
-                if (subCats.length > 0) {
-                    if (panel.style.display === 'flex' && panel.dataset.activeSlug === catSlug) { panel.style.display = 'none'; panel.dataset.activeSlug = ''; } 
-                    else { document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active')); this.classList.add('active'); renderHoverPanel(catSlug, this); panel.dataset.activeSlug = catSlug; }
-                } else { panel.style.display = 'none'; panel.dataset.activeSlug = ''; document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active')); this.classList.add('active'); loadCategoryProducts(catSlug, mainCat ? mainCat.name : catSlug); }
-            });
+            el.addEventListener('click', function(e) { e.preventDefault(); const catSlug = this.dataset.slug; const panel = document.getElementById('categoryHoverPanel'); if (catSlug === 'all') { panel.style.display = 'none'; panel.dataset.activeSlug = ''; document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active')); this.classList.add('active'); loadCategoryProducts('all', 'For You'); return; } const mainCat = allCategoriesGlobal.find(c => c.slug === catSlug); const subCats = allCategoriesGlobal.filter(c => c.parent === catSlug && activeCategoriesSet.has(c.slug.toLowerCase())); if (subCats.length > 0) { if (panel.style.display === 'flex' && panel.dataset.activeSlug === catSlug) { panel.style.display = 'none'; panel.dataset.activeSlug = ''; } else { document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active')); this.classList.add('active'); renderHoverPanel(catSlug, this); panel.dataset.activeSlug = catSlug; } } else { panel.style.display = 'none'; panel.dataset.activeSlug = ''; document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active')); this.classList.add('active'); loadCategoryProducts(catSlug, mainCat ? mainCat.name : catSlug); } });
         });
-
         if (isHoverDevice) { document.querySelector('.category-nav-wrapper').addEventListener('mouseleave', function(e) { hoverTimeout = setTimeout(() => { const panel = document.getElementById('categoryHoverPanel'); if (panel) panel.style.display = 'none'; document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active')); const defaultCat = document.querySelector('#categoryScrollContainer .category-item[data-slug="all"]'); if (defaultCat) defaultCat.classList.add('active'); }, 200); }); }
         document.addEventListener('click', function(e) { const panel = document.getElementById('categoryHoverPanel'); if (panel && panel.style.display === 'flex' && !e.target.closest('.category-item') && !e.target.closest('#categoryHoverPanel')) { panel.style.display = 'none'; panel.dataset.activeSlug = ''; } });
     }
@@ -369,6 +296,16 @@ async function loadHomepageProducts() {
                 return `<a href="${getProductUrl(p)}" class="special-deal-card"><div class="img-box"><img src="${escapeHTML(specialImg)}" alt="${escapeHTML(p.title)}" width="190" height="190" loading="lazy" decoding="async" style="opacity: 0; transition: opacity 0.4s;" onload="handleImageLoad(this)"></div><div class="info-box">${priceDisplay}<div class="title">${escapeHTML(p.title)}</div></div></a>`;
             }).join('');
         } else { section.style.display = 'none'; }
+
+        // ⭐ 2. RESTORE SCROLL POSITION AFTER RENDER ⭐
+        const savedScroll = sessionStorage.getItem('homeScrollY');
+        if (savedScroll && window.location.pathname === '/' || window.location.pathname.includes('index.html')) {
+            setTimeout(() => {
+                window.scrollTo({ top: parseInt(savedScroll, 10), behavior: 'instant' });
+            }, 100);
+        }
+        // ⭐ ==================================== ⭐
+
     } catch (err) { console.error('Load failed:', err); } finally { if (typeof hideSplash === 'function') hideSplash(); }
 }
 
