@@ -66,14 +66,33 @@ const API = {
             if (storedGeo) geo = JSON.parse(storedGeo);
         } catch (e) {}
 
-        window.supabaseClient.from('clicks').insert([{
+        // Added keepalive to prevent request cancellation on redirect
+        const clickData = {
             product_id: productId,
             store: String(store || '').slice(0, 50),
             sub_id: String(subId || '').slice(0, 100),
             referrer: String(document.referrer || '').slice(0, 200),
             country: geo.country || 'Unknown',
             city: geo.city || 'Unknown'
-        }]).then(({ error }) => { if (error) console.warn('Track error:', error); }).catch(() => {});
+        };
+
+        try {
+            window.supabaseClient.from('clicks').insert([clickData]).then(({ error }) => {
+                if (error) console.warn('Track error:', error);
+            }).catch(() => {});
+        } catch (e) {
+            // Fallback for visual redirects
+            fetch(`${CONFIG.supabaseUrl}/rest/v1/clicks`, {
+                method: 'POST',
+                headers: {
+                    'apikey': CONFIG.supabaseKey,
+                    'Authorization': `Bearer ${CONFIG.supabaseKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(clickData),
+                keepalive: true
+            }).catch(() => {});
+        }
     },
     async getCategories() {
         const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
@@ -94,12 +113,14 @@ const API = {
         }
 
         let merged = [...masterCats];
-        customCats.forEach(c => {
-            if (!c || !c.slug || typeof c.slug !== 'string') return;
-            const idx = merged.findIndex(m => m && m.slug && typeof m.slug === 'string' && m.slug.toLowerCase() === c.slug.toLowerCase());
-            if (idx > -1) merged[idx] = c; 
-            else merged.push(c); 
-        });
+        if (Array.isArray(customCats)) {
+            customCats.forEach(c => {
+                if (!c || !c.slug || typeof c.slug !== 'string') return;
+                const idx = merged.findIndex(m => m && m.slug && typeof m.slug === 'string' && m.slug.toLowerCase() === c.slug.toLowerCase());
+                if (idx > -1) merged[idx] = c; 
+                else merged.push(c); 
+            });
+        }
 
         return merged.filter(c => c.name !== '__DELETED__');
     }
