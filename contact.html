@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact Us - PrimePickHub</title>
-    <meta name="description" content="Contact PrimePickHub for partnership inquiries, product suggestions, or support.">
+    <meta name="description" content="Contact PrimePickHub (Jahan.co) for partnership inquiries, product suggestions, or support.">
     <link rel="icon" type="image/png" href="/assets/favicon.png?v=4">
     <link rel="stylesheet" href="css/main.css?v=18">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -20,10 +20,9 @@
     <main class="container" style="max-width:700px;padding:50px 20px;">
         <h1 style="color:var(--primary);margin-bottom:15px;">Contact Us</h1>
         <p style="color:var(--text-muted);margin-bottom:30px;line-height:1.7;">
-            Have a question, partnership inquiry, or product suggestion? Send us a message — we usually reply within 48 hours.
+            Have a question, partnership inquiry, or product suggestion? Send us a message — our team at Jahan.co usually replies within 48 hours.
         </p>
 
-        <!-- ⭐ FORM ID ADD KIYA HAI ⭐ -->
         <form id="mainContactForm" action="https://api.web3forms.com/submit" method="POST"
               style="background:#fff;padding:30px;border-radius:12px;border:1px solid var(--border);">
             <input type="hidden" name="access_key" value="59aca094-d044-44c9-b57e-5b19c9572270">
@@ -47,15 +46,22 @@
             </div>
             
             <button type="submit" id="mainSubmitBtn" class="btn-check-price" style="width:auto;padding:12px 30px;">Send Message</button>
-            <!-- Status Message Box -->
             <p id="formStatusMsg" style="display:none; margin-top:15px; font-weight:600; font-size:0.9rem;"></p>
         </form>
 
         <div style="margin-top:30px;padding:20px;background:#F1F5F9;border-radius:12px;">
-            <h3 style="margin-bottom:10px;">Direct Contact</h3>
+            <h3 style="margin-bottom:10px;">Direct Contact & Company Info</h3>
+            <p style="color:var(--text-muted);margin-bottom:6px;">
+                <i class="fa-solid fa-building" style="color:var(--accent);"></i>
+                <strong>Company:</strong> Jahan.co
+            </p>
             <p style="color:var(--text-muted);margin-bottom:6px;">
                 <i class="fa-solid fa-envelope" style="color:var(--accent);"></i>
                 <strong>Email:</strong> support.primepickhub@gmail.com
+            </p>
+            <p style="color:var(--text-muted);margin-bottom:6px;">
+                <i class="fa-solid fa-location-dot" style="color:var(--accent);"></i>
+                <strong>Location:</strong> Pakistan (Operating Globally)
             </p>
             <p style="color:var(--text-muted);">
                 <i class="fa-solid fa-clock" style="color:var(--accent);"></i>
@@ -72,10 +78,9 @@
             <a href="terms.html" style="color:#CBD5E1;">Terms</a> ·
             <a href="affiliate-disclosure.html" style="color:#CBD5E1;">Affiliate Disclosure</a>
         </p>
-        <div class="footer-disclaimer">PrimePickHub © 2026. All rights reserved.</div>
+        <div class="footer-disclaimer">PrimePickHub © 2026. All rights reserved. Operated by Jahan.co.</div>
     </footer>
     
-    <!-- ⭐ FORM CLEAR & SUCCESS MESSAGE SCRIPT ⭐ -->
     <script>
         document.getElementById('mainContactForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -107,7 +112,7 @@
                     msg.style.color = "#16a34a";
                     msg.innerText = "Message sent successfully! We'll reply soon.";
                     msg.style.display = 'block';
-                    form.reset(); // ⭐ YEH LINE FORM KO KHALI KAREGI ⭐
+                    form.reset(); 
                 } else {
                     msg.style.color = "#EF4444";
                     msg.innerText = data.message || "Something went wrong.";
