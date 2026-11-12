@@ -2,7 +2,7 @@ let allProducts = [];
 let builderState = { main: null, subs: [], minis: [] };
 let globalCategories = [];
 let currentGalleryFiles = []; 
-let currentAdminReviews = []; // ⭐ Edit function ke liye zaroori hai
+let currentAdminReviews = []; 
 
 async function uploadFileToSupabase(file) {
     const fileExt = file.name.split('.').pop();
@@ -48,6 +48,40 @@ window.handleMainColorUpload = async function(input) {
         renderColorPreviews(); 
         alert("Images uploaded successfully!\n\n⚠️ ZAROORI: Ab Color Name wale box mein exactly usi order mein naam likhein jis order mein aapne images select ki hain.");
     } catch (err) { alert('Upload failed: ' + err.message); fileNameSpan.innerText = 'Failed'; }
+};
+
+// ⭐ NEW: Variation Image Upload Logic ⭐
+window.handleVarColorUpload = async function(input) {
+    if (input.files.length === 0) return; 
+    const row = input.closest('.variation-row');
+    if (!row) return;
+    
+    const colorInput = row.querySelector('.var-color');
+    const uploadBtn = row.querySelector('.btn-upload');
+    const originalText = uploadBtn.innerText;
+    
+    uploadBtn.innerText = 'Uploading...'; 
+    uploadBtn.disabled = true;
+    
+    let urls = [];
+    try {
+        for (let i = 0; i < input.files.length; i++) { 
+            const url = await uploadFileToSupabase(input.files[i]); 
+            urls.push(url); 
+        }
+        
+        let existingVal = colorInput.value.trim();
+        if (existingVal && !existingVal.endsWith(',')) existingVal += ',';
+        colorInput.value = existingVal + urls.join(',');
+        
+        alert(`${urls.length} variation images uploaded successfully!`);
+    } catch (err) { 
+        alert('Upload failed: ' + err.message); 
+    } finally { 
+        uploadBtn.innerText = originalText; 
+        uploadBtn.disabled = false; 
+        input.value = ''; 
+    }
 };
 
 function renderColorPreviews() {
@@ -300,7 +334,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadDiscoveredProducts();
 });
 
-// ⭐ NEW: Manage Reviews Logic (Product Link & Edit) ⭐
 document.addEventListener('DOMContentLoaded', () => {
     const toggleReviewsBtn = document.getElementById('toggleReviewsBtn');
     const reviewsContainer = document.getElementById('reviewsContainer');
@@ -339,7 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        currentAdminReviews = reviews; // Store for editing
+        currentAdminReviews = reviews; 
 
         reviewsListBody.innerHTML = reviews.map((r, index) => {
             const statusBadge = r.status === 'approved' 
@@ -394,7 +427,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     }
 
-    // ⭐ NEW: Edit Review Functions ⭐
     window.openEditReviewModal = function(id) {
         const review = currentAdminReviews.find(r => r.id === id);
         if (!review) return;
@@ -402,7 +434,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('editReviewText').value = review.review_text;
         document.getElementById('editReviewModal').style.display = 'flex';
         
-        // Attach ID to the save button
         document.getElementById('saveEditReviewBtn').onclick = async function() {
             const newText = document.getElementById('editReviewText').value.trim();
             if (!newText) return alert("Review text cannot be empty.");
@@ -421,8 +452,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
     }
-
-    // ⭐ End Edit Review Functions ⭐
 
     window.approveReview = async function(id) {
         if (!confirm("Approve this review to show on the website?")) return;
