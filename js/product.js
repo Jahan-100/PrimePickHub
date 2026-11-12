@@ -39,15 +39,45 @@ async function compressImage(file, maxWidth = 1000, maxHeight = 1000, quality = 
     });
 }
 
-// ⭐ PHOTO PREVIEW FUNCTION FOR REVIEW FORM ⭐
-window.previewReviewImages = function(input) {
+// ⭐ NEW: CUSTOMER REVIEW IMAGE ARRAY & HANDLERS ⭐
+let reviewImagesArray = [];
+
+window.handleReviewImagesSelect = function(input) {
+    const files = Array.from(input.files);
+    
+    // Agar 3 se zyada images ho jayen
+    if (reviewImagesArray.length + files.length > 3) {
+        alert("Aap maximum 3 images upload kar sakte hain. Limit mukammal hai, pehle koi purani image delete karein.");
+        input.value = ''; // Reset input
+        return;
+    }
+    
+    // Purani images ke sath nayi images add karein
+    reviewImagesArray = reviewImagesArray.concat(files);
+    input.value = ''; // Input reset karein taake same file dobara select ho sake
+    
+    renderReviewImagePreviews();
+}
+
+window.removeReviewImage = function(index) {
+    // Array se specific image delete karein
+    reviewImagesArray.splice(index, 1);
+    renderReviewImagePreviews();
+}
+
+function renderReviewImagePreviews() {
     const container = document.getElementById('rvImagePreviewContainer');
     if (!container) return;
     container.innerHTML = '';
-    const files = Array.from(input.files).slice(0, 3); 
-    files.forEach(file => {
+    
+    reviewImagesArray.forEach((file, index) => {
         const reader = new FileReader();
         reader.onload = (e) => {
+            const div = document.createElement('div');
+            div.style.position = 'relative';
+            div.style.display = 'inline-block';
+            div.style.marginRight = '5px';
+            
             const img = document.createElement('img');
             img.src = e.target.result;
             img.style.width = '35px';
@@ -55,7 +85,30 @@ window.previewReviewImages = function(input) {
             img.style.objectFit = 'cover';
             img.style.borderRadius = '4px';
             img.style.border = '1px solid #CBD5E1';
-            container.appendChild(img);
+            
+            // Delete (X) Button
+            const btn = document.createElement('button');
+            btn.innerHTML = '&times;';
+            btn.style.position = 'absolute';
+            btn.style.top = '-5px';
+            btn.style.right = '-5px';
+            btn.style.background = 'red';
+            btn.style.color = 'white';
+            btn.style.border = 'none';
+            btn.style.borderRadius = '50%';
+            btn.style.width = '15px';
+            btn.style.height = '15px';
+            btn.style.fontSize = '12px';
+            btn.style.fontWeight = 'bold';
+            btn.style.cursor = 'pointer';
+            btn.style.display = 'flex';
+            btn.style.alignItems = 'center';
+            btn.style.justifyContent = 'center';
+            btn.onclick = () => window.removeReviewImage(index);
+            
+            div.appendChild(img);
+            div.appendChild(btn);
+            container.appendChild(div);
         };
         reader.readAsDataURL(file);
     });
@@ -217,7 +270,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     
                     <div style="margin-bottom: 12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
                         <label style="font-size:0.85rem; font-weight:bold; color:#475569;">Add Photos:</label>
-                        <input type="file" id="rvImages" accept="image/*" multiple style="font-size:0.85rem;" onchange="previewReviewImages(this)">
+                        <input type="file" id="rvImages" accept="image/*" multiple style="font-size:0.85rem;" onchange="handleReviewImagesSelect(this)">
                         <span style="font-size:0.75rem; color:#94A3B8;">(Max 3)</span>
                         <div id="rvImagePreviewContainer" style="display:flex; gap:5px;"></div>
                     </div>
@@ -368,16 +421,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const name = document.getElementById('rvName').value.trim();
         const text = document.getElementById('rvText').value.trim();
         const rating = parseInt(document.getElementById('rvRating').value);
-        const fileInput = document.getElementById('rvImages');
         
         if (!name || !text) return;
         btn.innerText = "Submitting..."; btn.disabled = true; msg.innerText = "";
 
         try {
             let uploadedUrls = [];
-            if (fileInput.files.length > 0) {
-                const filesToUpload = Array.from(fileInput.files).slice(0, 3); 
-                for (const file of filesToUpload) {
+            // Use the reviewImagesArray instead of input.files
+            if (reviewImagesArray.length > 0) {
+                for (const file of reviewImagesArray) {
                     const compressedFile = await compressImage(file);
                     const fileName = `rev-${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
                     const { data, error } = await window.supabaseClient.storage.from('customer-review-photos').upload(fileName, compressedFile);
@@ -401,7 +453,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             msg.style.color = "#16a34a"; msg.innerText = "Thank you! Your review is submitted.";
             document.getElementById('reviewForm').reset();
-            document.getElementById('rvImagePreviewContainer').innerHTML = '';
+            reviewImagesArray = []; // Reset array
+            renderReviewImagePreviews(); // Clear previews
         } catch (err) {
             msg.style.color = "#DC2626"; msg.innerText = "Error: " + err.message;
         } finally {
