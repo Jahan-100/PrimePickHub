@@ -2,6 +2,7 @@ let allProducts = [];
 let builderState = { main: null, subs: [], minis: [] };
 let globalCategories = [];
 let currentGalleryFiles = []; 
+let currentAdminReviews = []; // ⭐ Edit function ke liye zaroori hai
 
 async function uploadFileToSupabase(file) {
     const fileExt = file.name.split('.').pop();
@@ -299,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadDiscoveredProducts();
 });
 
-// ⭐ FIXED & ADDED: Manage Reviews Logic (Product Link) ⭐
+// ⭐ NEW: Manage Reviews Logic (Product Link & Edit) ⭐
 document.addEventListener('DOMContentLoaded', () => {
     const toggleReviewsBtn = document.getElementById('toggleReviewsBtn');
     const reviewsContainer = document.getElementById('reviewsContainer');
@@ -323,7 +324,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.loadAdminReviews = async function() {
         reviewsListBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Fetching reviews...</td></tr>';
         
-        // Join with products to get title and slug
         const { data: reviews, error } = await window.supabaseClient
             .from('product_reviews')
             .select('*, products(title, slug)') 
@@ -339,12 +339,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        currentAdminReviews = reviews; // Store for editing
+
         reviewsListBody.innerHTML = reviews.map((r, index) => {
             const statusBadge = r.status === 'approved' 
                 ? `<span style="background:#10B981; color:white; padding:2px 6px; border-radius:4px; font-size:0.75rem;">APPROVED</span>`
                 : `<span style="background:#F59E0B; color:white; padding:2px 6px; border-radius:4px; font-size:0.75rem;">PENDING</span>`;
 
-            // ⭐ Added onerror to prevent broken image icons
             const imagesHtml = r.images && r.images.length > 0 ? `
                 <div style="display:flex; gap:5px; flex-wrap:wrap; margin-top:5px;">
                     ${r.images.map((imgUrl, imgIdx) => `
@@ -356,17 +357,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             ` : '<span style="font-size:0.75rem; color:#94A3B8;">No Images</span>';
 
-            let actionBtns = '';
+            let actionBtns = `
+                <button onclick="openEditReviewModal('${r.id}')" style="background:#3B82F6; color:white; padding:4px 8px; border:none; border-radius:4px; font-size:0.75rem; margin-bottom:3px; cursor:pointer; width:100%;">Edit</button>
+            `;
+            
             if (r.status === 'pending') {
-                actionBtns = `
+                actionBtns += `
                     <button onclick="approveReview('${r.id}')" style="background:#10B981; color:white; padding:4px 8px; border:none; border-radius:4px; font-size:0.75rem; margin-bottom:3px; cursor:pointer; width:100%;">Approve</button>
-                    <button onclick="deleteFullReview('${r.id}')" style="background:#EF4444; color:white; padding:4px 8px; border:none; border-radius:4px; font-size:0.75rem; cursor:pointer; width:100%;">Reject/Delete</button>
                 `;
-            } else {
-                actionBtns = `<button onclick="deleteFullReview('${r.id}')" style="background:#EF4444; color:white; padding:4px 8px; border:none; border-radius:4px; font-size:0.75rem; cursor:pointer; width:100%;">Delete Review</button>`;
             }
+            
+            actionBtns += `<button onclick="deleteFullReview('${r.id}')" style="background:#EF4444; color:white; padding:4px 8px; border:none; border-radius:4px; font-size:0.75rem; cursor:pointer; width:100%;">Delete</button>`;
 
-            // Safe extraction of product title and slug
             const productTitle = r.products?.title || 'Unknown Product';
             const productSlug = r.products?.slug;
             const productLink = productSlug ? `/product/${productSlug}` : '#';
@@ -392,6 +394,36 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     }
 
+    // ⭐ NEW: Edit Review Functions ⭐
+    window.openEditReviewModal = function(id) {
+        const review = currentAdminReviews.find(r => r.id === id);
+        if (!review) return;
+        
+        document.getElementById('editReviewText').value = review.review_text;
+        document.getElementById('editReviewModal').style.display = 'flex';
+        
+        // Attach ID to the save button
+        document.getElementById('saveEditReviewBtn').onclick = async function() {
+            const newText = document.getElementById('editReviewText').value.trim();
+            if (!newText) return alert("Review text cannot be empty.");
+            
+            this.innerText = "Saving..."; this.disabled = true;
+            try {
+                const { error } = await window.supabaseClient.from('product_reviews').update({ review_text: newText }).eq('id', id);
+                if (error) throw error;
+                
+                document.getElementById('editReviewModal').style.display = 'none';
+                window.loadAdminReviews();
+            } catch (err) {
+                alert("Error saving review: " + err.message);
+            } finally {
+                this.innerText = "Save Changes"; this.disabled = false;
+            }
+        };
+    }
+
+    // ⭐ End Edit Review Functions ⭐
+
     window.approveReview = async function(id) {
         if (!confirm("Approve this review to show on the website?")) return;
         const { error } = await window.supabaseClient.from('product_reviews').update({ status: 'approved' }).eq('id', id);
@@ -415,15 +447,12 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) { alert("Error: " + err.message); }
     }
 
-    // ⭐ YAHAN FIX KIYA GAYA HAI: 'idx' ko 'imgIdx' kar diya hai ⭐
     window.deleteSingleReviewImage = async function(reviewId, imgUrl, imgIdx) {
         if (!confirm("Delete this specific image?")) return;
         try {
             const fileName = imgUrl.split('/').pop();
-            // Storage se delete karein (agar file pehle se nahi hai toh error ignore karein)
             await window.supabaseClient.storage.from('customer-review-photos').remove([fileName]).catch(()=>{});
 
-            // Database se array update karein
             const { data: rev } = await window.supabaseClient.from('product_reviews').select('images').eq('id', reviewId).single();
             if (rev && rev.images) {
                 const newImages = rev.images.filter((_, i) => i !== imgIdx);
