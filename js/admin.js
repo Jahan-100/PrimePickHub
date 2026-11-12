@@ -344,11 +344,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? `<span style="background:#10B981; color:white; padding:2px 6px; border-radius:4px; font-size:0.75rem;">APPROVED</span>`
                 : `<span style="background:#F59E0B; color:white; padding:2px 6px; border-radius:4px; font-size:0.75rem;">PENDING</span>`;
 
+            // ⭐ Added onerror to prevent broken image icons
             const imagesHtml = r.images && r.images.length > 0 ? `
                 <div style="display:flex; gap:5px; flex-wrap:wrap; margin-top:5px;">
                     ${r.images.map((imgUrl, imgIdx) => `
                         <div style="position:relative; display:inline-block;">
-                            <img src="${escapeHTML(imgUrl)}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; cursor:pointer;" onclick="window.open('${escapeHTML(imgUrl)}', '_blank')">
+                            <img src="${escapeHTML(imgUrl)}" onerror="this.src='/assets/icon-192.png?v=4'" style="width:40px; height:40px; object-fit:cover; border-radius:4px; cursor:pointer;" onclick="window.open('${escapeHTML(imgUrl)}', '_blank')">
                             <button onclick="deleteSingleReviewImage('${r.id}', '${escapeHTML(imgUrl)}', ${imgIdx})" style="position:absolute; top:-5px; right:-5px; background:red; color:white; border:none; border-radius:50%; width:15px; height:15px; font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center;" title="Delete Image">&times;</button>
                         </div>
                     `).join('')}
@@ -405,7 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (rev && rev.images && rev.images.length > 0) {
                 for (const imgUrl of rev.images) {
                     const fileName = imgUrl.split('/').pop(); 
-                    await window.supabaseClient.storage.from('customer-review-photos').remove([fileName]);
+                    await window.supabaseClient.storage.from('customer-review-photos').remove([fileName]).catch(()=>{});
                 }
             }
             const { error } = await window.supabaseClient.from('product_reviews').delete().eq('id', id);
@@ -414,15 +415,18 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) { alert("Error: " + err.message); }
     }
 
+    // ⭐ YAHAN FIX KIYA GAYA HAI: 'idx' ko 'imgIdx' kar diya hai ⭐
     window.deleteSingleReviewImage = async function(reviewId, imgUrl, imgIdx) {
         if (!confirm("Delete this specific image?")) return;
         try {
             const fileName = imgUrl.split('/').pop();
-            await window.supabaseClient.storage.from('customer-review-photos').remove([fileName]);
+            // Storage se delete karein (agar file pehle se nahi hai toh error ignore karein)
+            await window.supabaseClient.storage.from('customer-review-photos').remove([fileName]).catch(()=>{});
 
+            // Database se array update karein
             const { data: rev } = await window.supabaseClient.from('product_reviews').select('images').eq('id', reviewId).single();
             if (rev && rev.images) {
-                const newImages = rev.images.filter((_, i) => i !== idx);
+                const newImages = rev.images.filter((_, i) => i !== imgIdx);
                 await window.supabaseClient.from('product_reviews').update({ images: newImages }).eq('id', reviewId);
             }
             loadAdminReviews();
