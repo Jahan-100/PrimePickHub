@@ -74,6 +74,7 @@ window.handleVarColorUpload = async function(input) {
         if (existingVal && !existingVal.endsWith(',')) existingVal += ',';
         colorInput.value = existingVal + urls.join(',');
         
+        renderVarColorPreview(row); // Render preview after upload
         alert(`${urls.length} variation images uploaded successfully!`);
     } catch (err) { 
         alert('Upload failed: ' + err.message); 
@@ -83,6 +84,42 @@ window.handleVarColorUpload = async function(input) {
         input.value = ''; 
     }
 };
+
+// ⭐ NEW: Render Preview for Variations ⭐
+window.renderVarColorPreview = function(row) {
+    if (!row) return;
+    const colorInput = row.querySelector('.var-color');
+    const previewContainer = row.querySelector('.var-color-preview');
+    if (!colorInput || !previewContainer) return;
+    
+    const val = colorInput.value.trim();
+    if (!val) { previewContainer.innerHTML = ''; return; }
+    
+    const urls = val.split(',').map(u => u.trim()).filter(Boolean);
+    
+    previewContainer.innerHTML = urls.map((url, idx) => {
+        let bgStyle = '';
+        if (url.startsWith('http')) {
+            bgStyle = `background-image: url('${escapeHTML(url)}'); background-size: cover; background-position: center;`;
+        } else {
+            bgStyle = `background-color: ${escapeHTML(url)};`;
+        }
+        
+        return `<div style="position:relative; width:35px; height:35px; border-radius:4px; border:1px solid #CBD5E1; ${bgStyle} margin-bottom:2px;" title="${escapeHTML(url)}">
+                    <button type="button" onclick="removeVarColorUrl(this, ${idx})" style="position:absolute; top:-5px; right:-5px; background:#EF4444; color:white; border:1px solid #fff; width:16px; height:16px; border-radius:50%; font-size:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; font-weight:bold;">&times;</button>
+                </div>`;
+    }).join('');
+};
+
+window.removeVarColorUrl = function(btn, index) {
+    const row = btn.closest('.variation-row');
+    if (!row) return;
+    const colorInput = row.querySelector('.var-color');
+    let urls = colorInput.value.split(',').map(u => u.trim()).filter(Boolean);
+    urls.splice(index, 1);
+    colorInput.value = urls.join(',');
+    renderVarColorPreview(row);
+}
 
 function renderColorPreviews() {
     const container = document.getElementById('pMainColorPreview'); 
@@ -233,9 +270,33 @@ function renderTable() {
     }).join('');
 }
 window.addVariationRow = function(color = '', colorName = '', name = '', price = '', salePrice = '', commission = '', url = '') {
-    const container = document.getElementById('variationsContainer'); const div = document.createElement('div'); div.className = 'variation-row';
-    div.innerHTML = `<div style="flex: 1.5; min-width: 130px; display:flex; flex-direction:column; gap:4px;"><input type="text" placeholder="Color (Hex/URL)" value="${color}" class="var-color" style="width:100%;"><input type="file" class="var-color-file" accept="image/*" multiple style="display:none;" onchange="handleVarColorUpload(this)"><button type="button" class="btn-upload" style="padding:4px; font-size:0.75rem;" onclick="this.previousElementSibling.click()">📁 Upload Imgs</button></div><input type="text" placeholder="Color Name" value="${colorName}" class="var-color-name" style="flex: 1.2; min-width: 100px;"><input type="text" placeholder="Size/Qty" value="${name}" class="var-name" required style="flex: 1; min-width: 80px;"><input type="number" step="0.01" placeholder="Base Price" value="${price}" class="var-price" required style="flex: 1; min-width: 80px;"><input type="number" step="0.01" placeholder="Sale Price" value="${salePrice}" class="var-sale-price" style="flex: 1; min-width: 80px;"><input type="number" step="0.1" placeholder="Comm %" value="${commission}" class="var-comm" style="flex: 1; min-width: 80px;"><input type="url" placeholder="Aff URL" value="${url}" class="var-url" style="flex: 1; min-width: 80px;"><button type="button" class="btn-remove-var" onclick="this.parentElement.remove()">X</button>`;
+    const container = document.getElementById('variationsContainer'); 
+    const div = document.createElement('div'); 
+    div.className = 'variation-row';
+    
+    // ⭐ Updated HTML to include preview container ⭐
+    div.innerHTML = `
+        <div style="flex: 1.5; min-width: 150px; display:flex; flex-direction:column; gap:4px;">
+            <input type="text" placeholder="Color (Hex/URL)" value="${escapeHTML(color)}" class="var-color" style="width:100%;">
+            <input type="file" class="var-color-file" accept="image/*" multiple style="display:none;" onchange="handleVarColorUpload(this)">
+            <button type="button" class="btn-upload" style="padding:4px; font-size:0.75rem;" onclick="this.previousElementSibling.click()">📁 Upload Imgs</button>
+            <div class="var-color-preview" style="display:flex; flex-wrap:wrap; gap:5px; margin-top:4px;"></div>
+        </div>
+        <input type="text" placeholder="Color Name" value="${escapeHTML(colorName)}" class="var-color-name" style="flex: 1.2; min-width: 100px;">
+        <input type="text" placeholder="Size/Qty" value="${escapeHTML(name)}" class="var-name" required style="flex: 1; min-width: 80px;">
+        <input type="number" step="0.01" placeholder="Base Price" value="${escapeHTML(price)}" class="var-price" required style="flex: 1; min-width: 80px;">
+        <input type="number" step="0.01" placeholder="Sale Price" value="${escapeHTML(salePrice)}" class="var-sale-price" style="flex: 1; min-width: 80px;">
+        <input type="number" step="0.1" placeholder="Comm %" value="${escapeHTML(commission)}" class="var-comm" style="flex: 1; min-width: 80px;">
+        <input type="url" placeholder="Aff URL" value="${escapeHTML(url)}" class="var-url" style="flex: 1; min-width: 80px;">
+        <button type="button" class="btn-remove-var" onclick="this.parentElement.remove()">X</button>
+    `;
     container.appendChild(div);
+    
+    const colorInput = div.querySelector('.var-color');
+    if (colorInput) {
+        colorInput.addEventListener('input', () => renderVarColorPreview(div));
+    }
+    renderVarColorPreview(div);
 }
 document.getElementById('addVariationBtn')?.addEventListener('click', () => addVariationRow());
 window.editProduct = async function(id) {
