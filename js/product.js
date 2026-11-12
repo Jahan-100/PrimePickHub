@@ -47,7 +47,7 @@ window.handleReviewImagesSelect = function(input) {
     
     // Agar 3 se zyada images ho jayen
     if (reviewImagesArray.length + files.length > 3) {
-        alert("Aap maximum 3 images upload kar sakte hain. Limit mukammal hai, pehle koi purani image delete karein.");
+        alert("You can upload a maximum of 3 images. Limit reached, please delete an existing image first.");
         input.value = ''; // Reset input
         return;
     }
