@@ -24,15 +24,27 @@
     
     <meta name="mitgo-verification" content="e3f69518-ab0c-46db-a669-34aacd83fd21" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PrimePickHub - Compare & Click The Best Deals</title>
-    <meta name="description" content="Compare products across Daraz, Amazon, AliExpress & eBay. Check live prices instantly.">
+    
+    <!-- ⭐ SEO & GOOGLE VIRAL TAGS ⭐ -->
+    <title>PrimePickHub - Compare & Click The Best Deals (Amazon, AliExpress, Daraz)</title>
+    <meta name="description" content="Compare products across Daraz, Amazon, AliExpress & eBay. Check live prices instantly. Find the best deals, flash sales, and exclusive discounts on PrimePickHub.">
+    <meta name="keywords" content="price comparison, amazon deals, aliexpress deals, daraz sales, online shopping, flash sale, affiliate deals, best price">
 
+    <!-- Open Graph (Facebook / WhatsApp) -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="PrimePickHub - Compare & Click The Best Deals">
-    <meta property="og:description" content="Compare products across top stores. Live prices.">
-    <meta property="og:image" content="https://primepickhub.vercel.app/assets/og-image.jpg">
+    <meta property="og:description" content="Compare products across top stores. Live prices, flash deals & exclusive discounts.">
+    <meta property="og:image" content="https://primepickhub.vercel.app/assets/icon-512.png">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
     <meta property="og:url" content="https://primepickhub.vercel.app/">
     <meta property="og:site_name" content="PrimePickHub">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="PrimePickHub - Compare & Click The Best Deals">
+    <meta name="twitter:description" content="Compare products across top stores. Live prices.">
+    <meta name="twitter:image" content="https://primepickhub.vercel.app/assets/icon-512.png">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -52,7 +64,7 @@
     <link rel="canonical" href="https://primepickhub.vercel.app/">
     <link rel="icon" type="image/png" href="assets/favicon.png?v=5">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="css/main.css?v=41">
+    <link rel="stylesheet" href="css/main.css?v=42">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,800;0,900;1,800&family=Roboto:wght@400;700;900&family=Oswald:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Lobster&family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
@@ -82,135 +94,29 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         #floatingAppIcon {
-            position: fixed !important;
-            top: 50% !important;
-            right: 0 !important;
-            left: auto !important;
-            bottom: auto !important;
-            margin-top: 10px !important;
-            transform: none !important;
-            background: #10b981 !important;
-            color: #fff !important;
-            border: none !important;
-            border-radius: 15px 0 0 15px !important;
-            padding: 10px 6px !important;
-            display: none;
-            flex-direction: column !important;
-            align-items: center !important;
-            justify-content: center !important;
-            gap: 5px !important;
-            cursor: pointer !important;
-            box-shadow: -2px 2px 10px rgba(0,0,0,0.2) !important;
-            z-index: 999995 !important;
-            width: 36px !important;
-            height: auto !important;
-            box-sizing: border-box !important;
+            position: fixed !important; top: 50% !important; right: 0 !important; left: auto !important; bottom: auto !important;
+            margin-top: 10px !important; transform: none !important; background: #10b981 !important; color: #fff !important; border: none !important;
+            border-radius: 15px 0 0 15px !important; padding: 10px 6px !important; display: none;
+            flex-direction: column !important; align-items: center !important; justify-content: center !important; gap: 5px !important;
+            cursor: pointer !important; box-shadow: -2px 2px 10px rgba(0,0,0,0.2) !important; z-index: 999995 !important;
+            width: 36px !important; height: auto !important; box-sizing: border-box !important;
         }
-        #floatingAppIcon img {
-            width: 20px !important;
-            height: 20px !important;
-            max-width: 20px !important;
-            max-height: 20px !important;
-            object-fit: contain !important;
-            border-radius: 4px !important;
-            background: #fff !important;
-            padding: 2px !important;
-            margin: 0 !important;
-        }
-        #floatingAppIcon span {
-            writing-mode: vertical-rl !important;
-            text-orientation: mixed !important;
-            font-size: 0.75rem !important;
-            font-weight: bold !important;
-            letter-spacing: 1px !important;
-            color: #fff !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            line-height: 1 !important;
-        }
+        #floatingAppIcon img { width: 20px !important; height: 20px !important; max-width: 20px !important; max-height: 20px !important; object-fit: contain !important; border-radius: 4px !important; background: #fff !important; padding: 2px !important; margin: 0 !important; }
+        #floatingAppIcon span { writing-mode: vertical-rl !important; text-orientation: mixed !important; font-size: 0.75rem !important; font-weight: bold !important; letter-spacing: 1px !important; color: #fff !important; margin: 0 !important; padding: 0 !important; line-height: 1 !important; }
 
-        .category-nav-wrapper {
-            position: relative;
-        }
-        
-        #categoryHoverPanel {
-            display: none;
-            position: absolute;
-            background: #ffffff;
-            border-radius: 0 16px 16px 16px;
-            padding: 15px;
-            z-index: 99999;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
-            border: 1px solid #E2E8F0;
-            flex-wrap: wrap;
-            gap: 20px;
-            min-width: max-content;
-            max-width: 90vw;
-            margin-top: -2px;
-        }
-
-        .sub-cat-col {
-            display: flex;
-            flex-direction: column;
-            min-width: 140px;
-        }
-
-        .sub-cat-title {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: #1E1B4B;
-            margin-bottom: 8px;
-            padding-bottom: 6px;
-            border-bottom: 2px solid #F1F5F9;
-            cursor: pointer;
-            transition: color 0.2s;
-            text-decoration: none;
-        }
-        .sub-cat-title:hover {
-            color: #DC2626;
-        }
-
-        .mini-list {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .mini-item {
-            font-size: 0.85rem;
-            color: #475569;
-            text-decoration: none;
-            cursor: pointer;
-            padding: 6px 10px;
-            border-radius: 6px;
-            transition: all 0.2s;
-            display: block;
-        }
-        .mini-item:hover {
-            background: #F8FAFC;
-            color: #1E1B4B;
-            padding-left: 14px;
-            font-weight: 600;
-        }
+        .category-nav-wrapper { position: relative; }
+        #categoryHoverPanel { display: none; position: absolute; background: #ffffff; border-radius: 0 16px 16px 16px; padding: 15px; z-index: 99999; box-shadow: 0 15px 40px rgba(0,0,0,0.15); border: 1px solid #E2E8F0; flex-wrap: wrap; gap: 20px; min-width: max-content; max-width: 90vw; margin-top: -2px; }
+        .sub-cat-col { display: flex; flex-direction: column; min-width: 140px; }
+        .sub-cat-title { font-size: 0.95rem; font-weight: 700; color: #1E1B4B; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid #F1F5F9; cursor: pointer; transition: color 0.2s; text-decoration: none; }
+        .sub-cat-title:hover { color: #DC2626; }
+        .mini-list { display: flex; flex-direction: column; gap: 4px; }
+        .mini-item { font-size: 0.85rem; color: #475569; text-decoration: none; cursor: pointer; padding: 6px 10px; border-radius: 6px; transition: all 0.2s; display: block; }
+        .mini-item:hover { background: #F8FAFC; color: #1E1B4B; padding-left: 14px; font-weight: 600; }
 
         @media (max-width: 768px) {
-            #categoryHoverPanel {
-                overflow-x: auto;
-                flex-wrap: nowrap;
-                max-width: 95vw;
-            }
-            .category-item {
-                min-width: 80px;
-                flex-shrink: 0;
-            }
-            .category-item span {
-                font-size: 0.7rem;
-                white-space: normal;
-                text-align: center;
-                line-height: 1.2;
-                max-width: 85px;
-                word-break: break-word;
-            }
+            #categoryHoverPanel { overflow-x: auto; flex-wrap: nowrap; max-width: 95vw; }
+            .category-item { min-width: 80px; flex-shrink: 0; }
+            .category-item span { font-size: 0.7rem; white-space: normal; text-align: center; line-height: 1.2; max-width: 85px; word-break: break-word; }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
@@ -481,9 +387,9 @@
     </button>
 
     <script src="js/utils.js" defer></script>
-    <script src="js/config.js?v=6" defer></script>
-    <script src="js/api.js?v=12" defer></script> 
-    <script src="js/app.js?v=80" defer></script>
+    <script src="js/config.js?v=7" defer></script>
+    <script src="js/api.js?v=8" defer></script> 
+    <script src="js/app.js?v=81" defer></script>
     <script src="js/affiliate.js?v=6" defer></script>
     
     <script>
