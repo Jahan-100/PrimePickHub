@@ -353,7 +353,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p style="color:#475569; font-size:0.85rem; line-height:1.4; margin-bottom:5px;">${escapeHTML(r.review_text)}</p>
                 ${r.images && r.images.length > 0 ? `
                     <div style="display:flex; gap:5px; overflow-x:auto;">
-                        ${r.images.map(img => `<img src="${escapeHTML(img)}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; cursor:pointer;" onclick="window.open('${escapeHTML(img)}', '_blank')">`).join('')}
+                        ${r.images.map(img => `<img src="${escapeHTML(img)}" onerror="this.src='/assets/icon-192.png?v=4'" style="width:40px; height:40px; object-fit:cover; border-radius:4px; cursor:pointer;" onclick="window.open('${escapeHTML(img)}', '_blank')">`).join('')}
                     </div>
                 ` : ''}
                 <p style="font-size:0.7rem; color:#94A3B8; margin-top:4px;">${new Date(r.created_at).toLocaleDateString()}</p>
