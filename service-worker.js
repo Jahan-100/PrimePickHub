@@ -1,5 +1,5 @@
 // PrimePickHub Service Worker (PWA Caching)
-const CACHE_NAME = 'primepickhub-v1';
+const CACHE_NAME = 'primepickhub-v3'; // ⭐ Version changed to clear old cache ⭐
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -13,7 +13,6 @@ const ASSETS_TO_CACHE = [
   '/manifest.json'
 ];
 
-// Install Event - Cache Static Assets
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
@@ -23,7 +22,6 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate Event - Cleanup Old Caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keyList) => {
@@ -39,9 +37,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch Event - Serve from Cache, Fallback to Network
 self.addEventListener('fetch', (event) => {
-  // Bypass API calls and Admin pages (Always fetch fresh from network)
   if (event.request.url.includes('/api/') || event.request.url.includes('/admin.html') || event.request.url.includes('supabase.co')) {
     return;
   }
@@ -49,10 +45,9 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
-        return cachedResponse; // Return Cache
+        return cachedResponse;
       }
       return fetch(event.request).then((networkResponse) => {
-        // Cache new images/scripts dynamically
         if (networkResponse && networkResponse.status === 200 && event.request.method === 'GET') {
           const responseClone = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -62,7 +57,6 @@ self.addEventListener('fetch', (event) => {
         return networkResponse;
       });
     }).catch(() => {
-      // Fallback for offline (optional)
       if (event.request.mode === 'navigate') {
         return caches.match('/index.html');
       }
