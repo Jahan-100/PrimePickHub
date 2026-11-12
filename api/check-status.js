@@ -39,12 +39,19 @@ module.exports = async function handler(req, res) {
                     redirect: 'follow',
                     signal: AbortSignal.timeout(10000),
                     headers: {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                        'Accept-Language': 'en-US,en;q=0.9'
+                        // Better User Agent to avoid 403 Forbidden by Amazon/AliExpress
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                        'Accept-Language': 'en-US,en;q=0.5',
+                        'Sec-Fetch-Dest': 'document',
+                        'Sec-Fetch-Mode': 'navigate',
+                        'Sec-Fetch-Site': 'none',
+                        'Sec-Fetch-User': '?1',
+                        'Upgrade-Insecure-Requests': '1'
                     }
                 });
 
+                // Agar 403, 429 (Rate Limit), ya 503 aata hai, toh skip karein
                 if ([403, 429, 503].includes(response.status)) {
                     skippedCount++;
                     console.warn(`[SKIP] ${product.title} - HTTP ${response.status} (bot protection)`);
