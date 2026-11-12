@@ -1,6 +1,6 @@
 -- ============================================================
--- PrimePickHub — Complete Database Setup (SAFE VERSION v3.1)
--- Bar bar chala sakte hain, kuch delete nahi hoga.
+-- PrimePickHub — Complete Database Setup (SAFE VERSION v3.2)
+-- Run this in Supabase SQL Editor
 -- ============================================================
 
 -- ==================== PROFILES ====================
@@ -23,7 +23,6 @@ CREATE POLICY "admins read all profiles" ON public.profiles
   FOR SELECT TO authenticated
   USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
--- ⭐ DROP FIRST to avoid return type error
 DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
@@ -94,6 +93,8 @@ CREATE TABLE IF NOT EXISTS public.affiliate_offers (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   product_id UUID REFERENCES public.products(id) ON DELETE CASCADE,
   store_name TEXT NOT NULL,
+  product_color TEXT,
+  color_name TEXT,
   variation_name TEXT,
   affiliate_url TEXT NOT NULL,
   price NUMERIC(10,2) NOT NULL,
@@ -102,6 +103,8 @@ CREATE TABLE IF NOT EXISTS public.affiliate_offers (
   currency TEXT DEFAULT 'USD',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+ALTER TABLE public.affiliate_offers ADD COLUMN IF NOT EXISTS product_color TEXT;
+ALTER TABLE public.affiliate_offers ADD COLUMN IF NOT EXISTS color_name TEXT;
 ALTER TABLE public.affiliate_offers ADD COLUMN IF NOT EXISTS variation_name TEXT;
 ALTER TABLE public.affiliate_offers ADD COLUMN IF NOT EXISTS sale_price NUMERIC(10,2);
 ALTER TABLE public.affiliate_offers ADD COLUMN IF NOT EXISTS commission_rate NUMERIC(5,2) DEFAULT 0;
@@ -114,7 +117,30 @@ DROP POLICY IF EXISTS "admin write offers" ON public.affiliate_offers;
 CREATE POLICY "admin write offers" ON public.affiliate_offers FOR ALL TO authenticated
   USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
--- ==================== CLICKS (with country + city) ====================
+-- ==================== PRODUCT REVIEWS (NEW ⭐) ====================
+CREATE TABLE IF NOT EXISTS public.product_reviews (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  product_id UUID REFERENCES public.products(id) ON DELETE CASCADE,
+  customer_name TEXT NOT NULL,
+  rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  review_text TEXT NOT NULL,
+  images TEXT[] DEFAULT '{}',
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved')),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.product_reviews ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "public read approved reviews" ON public.product_reviews;
+CREATE POLICY "public read approved reviews" ON public.product_reviews FOR SELECT TO anon, authenticated USING (status = 'approved');
+
+DROP POLICY IF EXISTS "anon insert reviews" ON public.product_reviews;
+CREATE POLICY "anon insert reviews" ON public.product_reviews FOR INSERT TO anon, authenticated WITH CHECK (true);
+
+DROP POLICY IF EXISTS "admin all reviews" ON public.product_reviews;
+CREATE POLICY "admin all reviews" ON public.product_reviews FOR ALL TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+
+-- ==================== CLICKS ====================
 CREATE TABLE IF NOT EXISTS public.clicks (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   product_id UUID,
@@ -140,6 +166,7 @@ CREATE POLICY "admin read clicks" ON public.clicks FOR SELECT TO authenticated
 CREATE TABLE IF NOT EXISTS public.site_settings (
   id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
   show_app_download BOOLEAN DEFAULT true,
+  show_floating_app_btn BOOLEAN DEFAULT true,
   special_deal_title TEXT DEFAULT 'First order deal',
   title_font_family TEXT DEFAULT 'Poppins',
   title_font_size TEXT DEFAULT '2rem',
@@ -155,24 +182,12 @@ CREATE TABLE IF NOT EXISTS public.site_settings (
   sale_section_2_font_size TEXT DEFAULT '2rem',
   sale_section_2_font_weight TEXT DEFAULT '900',
   sale_section_2_font_style TEXT DEFAULT 'normal',
+  custom_categories JSONB,
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS show_app_download BOOLEAN DEFAULT true;
-ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS special_deal_title TEXT DEFAULT 'First order deal';
-ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS title_font_family TEXT DEFAULT 'Poppins';
-ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS title_font_size TEXT DEFAULT '2rem';
-ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS title_font_weight TEXT DEFAULT '800';
-ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS title_font_style TEXT DEFAULT 'normal';
-ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS flash_title_text TEXT DEFAULT 'Mega Sale 11.11';
-ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS flash_title_font_family TEXT DEFAULT 'Poppins';
-ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS flash_title_font_size TEXT DEFAULT '2rem';
-ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS flash_title_font_weight TEXT DEFAULT '900';
-ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS flash_title_font_style TEXT DEFAULT 'normal';
-ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS sale_section_2_title TEXT DEFAULT 'Winter Sale 2.2';
-ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS sale_section_2_font_family TEXT DEFAULT 'Poppins';
-ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS sale_section_2_font_size TEXT DEFAULT '2rem';
-ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS sale_section_2_font_weight TEXT DEFAULT '900';
-ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS sale_section_2_font_style TEXT DEFAULT 'normal';
+ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS show_floating_app_btn BOOLEAN DEFAULT true;
+ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS custom_categories JSONB;
 ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "public read settings" ON public.site_settings;
@@ -198,14 +213,13 @@ ALTER TABLE public.blogs ADD COLUMN IF NOT EXISTS is_published BOOLEAN DEFAULT f
 ALTER TABLE public.blogs ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "public read published blogs" ON public.blogs;
-CREATE POLICY "public read published blogs" ON public.blogs FOR SELECT TO anon, authenticated
-  USING (is_published = true);
+CREATE POLICY "public read published blogs" ON public.blogs FOR SELECT TO anon, authenticated USING (is_published = true);
 
 DROP POLICY IF EXISTS "admin all blogs" ON public.blogs;
 CREATE POLICY "admin all blogs" ON public.blogs FOR ALL TO authenticated
   USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
--- ==================== APP NOTIFICATIONS (with is_deleted) ====================
+-- ==================== OTHER TABLES (Notifications, Newsletter, Visitors, Installs) ====================
 CREATE TABLE IF NOT EXISTS public.app_notifications (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   title TEXT NOT NULL,
@@ -216,32 +230,23 @@ CREATE TABLE IF NOT EXISTS public.app_notifications (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE public.app_notifications ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT false;
-ALTER TABLE public.app_notifications ADD COLUMN IF NOT EXISTS product_slug TEXT;
 ALTER TABLE public.app_notifications ENABLE ROW LEVEL SECURITY;
-
 DROP POLICY IF EXISTS "public read notifications" ON public.app_notifications;
 CREATE POLICY "public read notifications" ON public.app_notifications FOR SELECT TO anon, authenticated USING (true);
-
 DROP POLICY IF EXISTS "admin insert notifications" ON public.app_notifications;
-CREATE POLICY "admin insert notifications" ON public.app_notifications FOR INSERT TO authenticated
-  WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+CREATE POLICY "admin insert notifications" ON public.app_notifications FOR INSERT TO authenticated WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
--- ==================== NEWSLETTER ====================
 CREATE TABLE IF NOT EXISTS public.newsletter_subscribers (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE public.newsletter_subscribers ENABLE ROW LEVEL SECURITY;
-
 DROP POLICY IF EXISTS "anyone can subscribe" ON public.newsletter_subscribers;
 CREATE POLICY "anyone can subscribe" ON public.newsletter_subscribers FOR INSERT TO anon, authenticated WITH CHECK (true);
-
 DROP POLICY IF EXISTS "admin read subscribers" ON public.newsletter_subscribers;
-CREATE POLICY "admin read subscribers" ON public.newsletter_subscribers FOR SELECT TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+CREATE POLICY "admin read subscribers" ON public.newsletter_subscribers FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
--- ==================== VISITORS (with referrer + device + geo) ====================
 CREATE TABLE IF NOT EXISTS public.website_visitors (
   visitor_id TEXT PRIMARY KEY,
   first_seen TIMESTAMPTZ DEFAULT NOW(),
@@ -251,17 +256,10 @@ CREATE TABLE IF NOT EXISTS public.website_visitors (
   country TEXT DEFAULT 'Unknown',
   city TEXT DEFAULT 'Unknown'
 );
-ALTER TABLE public.website_visitors ADD COLUMN IF NOT EXISTS referrer TEXT DEFAULT 'Direct';
-ALTER TABLE public.website_visitors ADD COLUMN IF NOT EXISTS device_type TEXT DEFAULT 'Unknown';
-ALTER TABLE public.website_visitors ADD COLUMN IF NOT EXISTS country TEXT DEFAULT 'Unknown';
-ALTER TABLE public.website_visitors ADD COLUMN IF NOT EXISTS city TEXT DEFAULT 'Unknown';
 ALTER TABLE public.website_visitors ENABLE ROW LEVEL SECURITY;
-
 DROP POLICY IF EXISTS "anon upsert visitors" ON public.website_visitors;
-CREATE POLICY "anon upsert visitors" ON public.website_visitors FOR ALL TO anon, authenticated
-  USING (true) WITH CHECK (true);
+CREATE POLICY "anon upsert visitors" ON public.website_visitors FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
 
--- ==================== APP INSTALLS (with geo + device_type) ====================
 CREATE TABLE IF NOT EXISTS public.active_app_installs (
   device_id TEXT PRIMARY KEY,
   first_active TIMESTAMPTZ DEFAULT NOW(),
@@ -270,79 +268,27 @@ CREATE TABLE IF NOT EXISTS public.active_app_installs (
   city TEXT DEFAULT 'Unknown',
   device_type TEXT DEFAULT 'Mobile'
 );
-ALTER TABLE public.active_app_installs ADD COLUMN IF NOT EXISTS country TEXT DEFAULT 'Unknown';
-ALTER TABLE public.active_app_installs ADD COLUMN IF NOT EXISTS city TEXT DEFAULT 'Unknown';
-ALTER TABLE public.active_app_installs ADD COLUMN IF NOT EXISTS device_type TEXT DEFAULT 'Mobile';
 ALTER TABLE public.active_app_installs ENABLE ROW LEVEL SECURITY;
-
 DROP POLICY IF EXISTS "anon upsert installs" ON public.active_app_installs;
-CREATE POLICY "anon upsert installs" ON public.active_app_installs FOR ALL TO anon, authenticated
-  USING (true) WITH CHECK (true);
+CREATE POLICY "anon upsert installs" ON public.active_app_installs FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
 
--- ==================== NOTIFICATION TRIGGERS ====================
-
--- 1. Special Deal trigger
-DROP FUNCTION IF EXISTS public.notify_special_deal() CASCADE;
-CREATE OR REPLACE FUNCTION public.notify_special_deal()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF NEW.is_special_deal = true AND (TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND (OLD.is_special_deal IS NULL OR OLD.is_special_deal = false))) THEN
-        INSERT INTO public.app_notifications (title, message, type, product_slug)
-        VALUES ('Special Deal Alert! 🌟', NEW.title || ' is now in the Special Deal section!', 'special_deal', NEW.slug);
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-DROP TRIGGER IF EXISTS on_product_special_deal ON public.products;
-CREATE TRIGGER on_product_special_deal
-  AFTER INSERT OR UPDATE ON public.products
-  FOR EACH ROW EXECUTE FUNCTION public.notify_special_deal();
-
--- 2. Flash Sale trigger
-DROP FUNCTION IF EXISTS public.notify_product_flash_sale() CASCADE;
-CREATE OR REPLACE FUNCTION public.notify_product_flash_sale()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF NEW.sale_end_date IS NOT NULL AND (OLD.sale_end_date IS NULL OR NEW.sale_end_date > OLD.sale_end_date) THEN
-        INSERT INTO public.app_notifications (title, message, type, product_slug)
-        VALUES ('Flash Sale Alert! ⚡', NEW.title || ' is now on Flash Sale!', 'flash_sale', NEW.slug);
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-DROP TRIGGER IF EXISTS on_product_flash_sale ON public.products;
-CREATE TRIGGER on_product_flash_sale
-  AFTER UPDATE ON public.products
-  FOR EACH ROW EXECUTE FUNCTION public.notify_product_flash_sale();
-
--- 3. Price Drop trigger
-DROP FUNCTION IF EXISTS public.notify_offer_update() CASCADE;
-CREATE OR REPLACE FUNCTION public.notify_offer_update()
-RETURNS TRIGGER AS $$
-DECLARE
-    prod_slug TEXT;
-    prod_title TEXT;
-BEGIN
-    IF NEW.sale_price IS NOT NULL AND (OLD.sale_price IS NULL OR NEW.sale_price < OLD.sale_price) THEN
-        SELECT slug, title INTO prod_slug, prod_title FROM public.products WHERE id = NEW.product_id;
-        IF prod_slug IS NOT NULL THEN
-            INSERT INTO public.app_notifications (title, message, type, product_slug)
-            VALUES ('Price Drop Alert! 🔥', prod_title || ' price has dropped!', 'price_drop', prod_slug);
-        END IF;
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-DROP TRIGGER IF EXISTS on_offer_updated ON public.affiliate_offers;
-CREATE TRIGGER on_offer_updated
-  AFTER UPDATE ON public.affiliate_offers
-  FOR EACH ROW EXECUTE FUNCTION public.notify_offer_update();
+CREATE TABLE IF NOT EXISTS public.discovered_products (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  asin_or_id TEXT UNIQUE NOT NULL,
+  title TEXT NOT NULL,
+  image_url TEXT,
+  original_url TEXT,
+  platform TEXT,
+  country TEXT,
+  category TEXT,
+  price NUMERIC(10,2),
+  sales_count INT,
+  rank_position INT,
+  status TEXT DEFAULT 'pending',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
 
 -- ==================== RPC FUNCTIONS ====================
--- ⭐ YAHAN DROP LAGAYA GAYA HAI ERROR FIX KARNE KE LIYE ⭐
 DROP FUNCTION IF EXISTS public.get_total_visitors();
 CREATE OR REPLACE FUNCTION public.get_total_visitors()
 RETURNS INTEGER LANGUAGE sql SECURITY DEFINER AS $$
@@ -363,31 +309,24 @@ CREATE INDEX IF NOT EXISTS idx_offers_product ON public.affiliate_offers(product
 CREATE INDEX IF NOT EXISTS idx_blogs_slug ON public.blogs(slug);
 CREATE INDEX IF NOT EXISTS idx_notifications_created ON public.app_notifications(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_clicks_created ON public.clicks(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_reviews_product ON public.product_reviews(product_id);
 
--- ==================== STORAGE BUCKET ====================
-INSERT INTO storage.buckets (id, name, public) VALUES ('product-images', 'product-images', true)
-ON CONFLICT (id) DO NOTHING;
+-- ==================== STORAGE BUCKETS ====================
+INSERT INTO storage.buckets (id, name, public) VALUES ('product-images', 'product-images', true) ON CONFLICT (id) DO NOTHING;
+INSERT INTO storage.buckets (id, name, public) VALUES ('customer-review-photos', 'customer-review-photos', true) ON CONFLICT (id) DO NOTHING;
 
+-- Storage Policies for Product Images
 DROP POLICY IF EXISTS "Public read product images" ON storage.objects;
-CREATE POLICY "Public read product images" ON storage.objects
-  FOR SELECT TO public USING (bucket_id = 'product-images');
-
+CREATE POLICY "Public read product images" ON storage.objects FOR SELECT TO public USING (bucket_id = 'product-images');
 DROP POLICY IF EXISTS "Admin upload product images" ON storage.objects;
-CREATE POLICY "Admin upload product images" ON storage.objects
-  FOR INSERT TO authenticated
-  WITH CHECK (bucket_id = 'product-images'
-    AND EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
-
-DROP POLICY IF EXISTS "Admin update product images" ON storage.objects;
-CREATE POLICY "Admin update product images" ON storage.objects
-  FOR UPDATE TO authenticated
-  USING (bucket_id = 'product-images'
-    AND EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
-
+CREATE POLICY "Admin upload product images" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'product-images' AND EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 DROP POLICY IF EXISTS "Admin delete product images" ON storage.objects;
-CREATE POLICY "Admin delete product images" ON storage.objects
-  FOR DELETE TO authenticated
-  USING (bucket_id = 'product-images'
-    AND EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+CREATE POLICY "Admin delete product images" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'product-images' AND EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
--- ==================== DONE ====================
+-- Storage Policies for Customer Review Photos
+DROP POLICY IF EXISTS "Public read review photos" ON storage.objects;
+CREATE POLICY "Public read review photos" ON storage.objects FOR SELECT TO public USING (bucket_id = 'customer-review-photos');
+DROP POLICY IF EXISTS "Anyone can upload review photos" ON storage.objects;
+CREATE POLICY "Anyone can upload review photos" ON storage.objects FOR INSERT TO anon, authenticated WITH CHECK (bucket_id = 'customer-review-photos');
+DROP POLICY IF EXISTS "Admin delete review photos" ON storage.objects;
+CREATE POLICY "Admin delete review photos" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'customer-review-photos' AND EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
