@@ -45,22 +45,19 @@ let reviewImagesArray = [];
 window.handleReviewImagesSelect = function(input) {
     const files = Array.from(input.files);
     
-    // Agar 3 se zyada images ho jayen
     if (reviewImagesArray.length + files.length > 3) {
         alert("You can upload a maximum of 3 images. Limit reached, please delete an existing image first.");
-        input.value = ''; // Reset input
+        input.value = ''; 
         return;
     }
     
-    // Purani images ke sath nayi images add karein
     reviewImagesArray = reviewImagesArray.concat(files);
-    input.value = ''; // Input reset karein taake same file dobara select ho sake
+    input.value = ''; 
     
     renderReviewImagePreviews();
 }
 
 window.removeReviewImage = function(index) {
-    // Array se specific image delete karein
     reviewImagesArray.splice(index, 1);
     renderReviewImagePreviews();
 }
@@ -86,7 +83,6 @@ function renderReviewImagePreviews() {
             img.style.borderRadius = '4px';
             img.style.border = '1px solid #CBD5E1';
             
-            // Delete (X) Button
             const btn = document.createElement('button');
             btn.innerHTML = '&times;';
             btn.style.position = 'absolute';
@@ -427,7 +423,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         try {
             let uploadedUrls = [];
-            // Use the reviewImagesArray instead of input.files
             if (reviewImagesArray.length > 0) {
                 for (const file of reviewImagesArray) {
                     const compressedFile = await compressImage(file);
@@ -453,8 +448,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             msg.style.color = "#16a34a"; msg.innerText = "Thank you! Your review is submitted.";
             document.getElementById('reviewForm').reset();
-            reviewImagesArray = []; // Reset array
-            renderReviewImagePreviews(); // Clear previews
+            reviewImagesArray = []; 
+            renderReviewImagePreviews(); 
         } catch (err) {
             msg.style.color = "#DC2626"; msg.innerText = "Error: " + err.message;
         } finally {
@@ -462,9 +457,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    const jsonLd = { "@context": "https://schema.org/", "@type": "Product", "name": product.title, "image": [getHighQualityImage(product.image_url, 800)].concat((product.gallery_images || []).map(u => getHighQualityImage(u, 800))).filter(Boolean), "description": product.description || product.title, "offers": allOffers.map(o => { const p = parseFloat(o.price) || 0; const sp = parseFloat(o.sale_price) || 0; const c = parseFloat(o.commission_rate) || 0; let finalP = sp > 0 ? sp : p; if (c > 0) finalP = finalP + (finalP * (c / 100)); return { "@type": "Offer", "url": o.affiliate_url, "priceCurrency": o.currency || "USD", "price": finalP.toFixed(2), "availability": "https://schema.org/InStock", "seller": { "@type": "Organization", "name": o.store_name } }; }) };
+    // ⭐ JSON-LD SCHEMA (SEO BOOST - Product + Breadcrumbs) ⭐
+    const jsonLd = { 
+        "@context": "https://schema.org/", 
+        "@type": "Product", 
+        "name": product.title, 
+        "image": [getHighQualityImage(product.image_url, 800)].concat((product.gallery_images || []).map(u => getHighQualityImage(u, 800))).filter(Boolean), 
+        "description": product.description || product.title, 
+        "offers": allOffers.map(o => { 
+            const p = parseFloat(o.price) || 0; 
+            const sp = parseFloat(o.sale_price) || 0; 
+            const c = parseFloat(o.commission_rate) || 0; 
+            let finalP = sp > 0 ? sp : p; 
+            if (c > 0) finalP = finalP + (finalP * (c / 100)); 
+            return { 
+                "@type": "Offer", 
+                "url": o.affiliate_url, 
+                "priceCurrency": o.currency || "USD", 
+                "price": finalP.toFixed(2), 
+                "availability": "https://schema.org/InStock", 
+                "seller": { "@type": "Organization", "name": o.store_name } 
+            }; 
+        }) 
+    };
     if (product.rating && product.reviews_count > 0) jsonLd.aggregateRating = { "@type": "AggregateRating", "ratingValue": product.rating, "reviewCount": product.reviews_count };
-    const script = document.createElement('script'); script.type = 'application/ld+json'; script.text = JSON.stringify(jsonLd); document.head.appendChild(script);
+    
+    const breadcrumbLd = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://primepickhub.vercel.app/" },
+            { "@type": "ListItem", "position": 2, "name": product.category_slug ? product.category_slug.replace(/-/g, ' ') : "Category", "item": `https://primepickhub.vercel.app/category/${product.category_slug || 'all'}` },
+            { "@type": "ListItem", "position": 3, "name": product.title, "item": window.location.href }
+        ]
+    };
+
+    const script1 = document.createElement('script'); script1.type = 'application/ld+json'; script1.text = JSON.stringify(jsonLd); document.head.appendChild(script1);
+    const script2 = document.createElement('script'); script2.type = 'application/ld+json'; script2.text = JSON.stringify(breadcrumbLd); document.head.appendChild(script2);
 });
 
 function getHexFromColorString(colorStr) {
