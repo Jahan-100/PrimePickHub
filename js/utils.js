@@ -19,7 +19,8 @@ function getHighQualityImage(url, size = 400) {
     if (!url || typeof url !== 'string') return url;
     let cleanUrl = url.trim();
 
-    // ⭐ FIX: Agar image Supabase se aa rahi hai toh usay BILKUL change na karein
+    // ⭐ CRITICAL FIX: Agar image Supabase se aa rahi hai toh usay BILKUL change na karein ⭐
+    // Is line ke hone se Supabase ki images kabhi break nahi hongi.
     if (cleanUrl.includes('supabase.co')) {
         return cleanUrl;
     }
