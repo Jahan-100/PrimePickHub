@@ -39,7 +39,6 @@ async function compressImage(file, maxWidth = 1000, maxHeight = 1000, quality = 
     });
 }
 
-// ⭐ NEW: CUSTOMER REVIEW IMAGE ARRAY & HANDLERS ⭐
 let reviewImagesArray = [];
 
 window.handleReviewImagesSelect = function(input) {
@@ -127,8 +126,46 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (!product) { container.innerHTML = '<h2 style="text-align:center;padding:40px;">Product not found. <a href="/index.html">Return Home</a></h2>'; return; }
 
-    const canonical = document.getElementById('canonicalLink'); if (canonical) canonical.href = window.location.href.split('?')[0];
-    document.title = `${product.title} - Best Price | PrimePickHub`;
+    // ⭐ DYNAMIC SEO & META TAGS UPDATE ⭐
+    const canonical = document.getElementById('canonicalLink'); 
+    if (canonical) canonical.href = window.location.href.split('?')[0];
+    
+    // Title
+    const finalTitle = product.meta_title || `${product.title} - Best Price | PrimePickHub`;
+    document.title = finalTitle;
+
+    // Description
+    let metaDescTag = document.querySelector('meta[name="description"]');
+    if (!metaDescTag) {
+        metaDescTag = document.createElement('meta');
+        metaDescTag.name = "description";
+        document.head.appendChild(metaDescTag);
+    }
+    metaDescTag.content = product.meta_description || product.description || product.title;
+
+    // Open Graph (WhatsApp/Facebook)
+    let ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) ogTitle.content = finalTitle;
+    let ogDesc = document.querySelector('meta[property="og:description"]');
+    if (ogDesc) ogDesc.content = product.meta_description || product.description || product.title;
+    let ogImg = document.querySelector('meta[property="og:image"]');
+    if (ogImg) ogImg.content = product.image_url;
+
+    // Keywords
+    let keywordsString = product.focus_keyword || '';
+    if (product.tags && product.tags.length > 0) {
+        keywordsString += (keywordsString ? ', ' : '') + product.tags.join(', ');
+    }
+    if (keywordsString) {
+        let metaKeywords = document.querySelector('meta[name="keywords"]');
+        if (!metaKeywords) {
+            metaKeywords = document.createElement('meta');
+            metaKeywords.name = "keywords";
+            document.head.appendChild(metaKeywords);
+        }
+        metaKeywords.content = keywordsString;
+    }
+    // ⭐ END SEO UPDATE ⭐
 
     const allOffers = product.affiliate_offers || [];
     const mainOffer = allOffers[0] || { price: '0', store_name: 'Store', currency: 'USD', commission_rate: 0, sale_price: null };
@@ -463,7 +500,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         "@type": "Product", 
         "name": product.title, 
         "image": [getHighQualityImage(product.image_url, 800)].concat((product.gallery_images || []).map(u => getHighQualityImage(u, 800))).filter(Boolean), 
-        "description": product.description || product.title, 
+        "description": product.meta_description || product.description || product.title, 
+        "sku": product.slug,
+        "brand": {
+            "@type": "Brand",
+            "name": product.affiliate_offers?.[0]?.store_name || "PrimePickHub"
+        },
         "offers": allOffers.map(o => { 
             const p = parseFloat(o.price) || 0; 
             const sp = parseFloat(o.sale_price) || 0; 
@@ -492,6 +534,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ]
     };
 
+    // Inject JSON-LD scripts
     const script1 = document.createElement('script'); script1.type = 'application/ld+json'; script1.text = JSON.stringify(jsonLd); document.head.appendChild(script1);
     const script2 = document.createElement('script'); script2.type = 'application/ld+json'; script2.text = JSON.stringify(breadcrumbLd); document.head.appendChild(script2);
 });
