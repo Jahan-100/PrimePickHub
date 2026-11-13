@@ -50,7 +50,6 @@ window.handleMainColorUpload = async function(input) {
     } catch (err) { alert('Upload failed: ' + err.message); fileNameSpan.innerText = 'Failed'; }
 };
 
-// ⭐ NEW: Variation Image Upload Logic ⭐
 window.handleVarColorUpload = async function(input) {
     if (input.files.length === 0) return; 
     const row = input.closest('.variation-row');
@@ -74,7 +73,7 @@ window.handleVarColorUpload = async function(input) {
         if (existingVal && !existingVal.endsWith(',')) existingVal += ',';
         colorInput.value = existingVal + urls.join(',');
         
-        renderVarColorPreview(row); // Render preview after upload
+        renderVarColorPreview(row); 
         alert(`${urls.length} variation images uploaded successfully!`);
     } catch (err) { 
         alert('Upload failed: ' + err.message); 
@@ -85,7 +84,6 @@ window.handleVarColorUpload = async function(input) {
     }
 };
 
-// ⭐ NEW: Render Preview for Variations ⭐
 window.renderVarColorPreview = function(row) {
     if (!row) return;
     const colorInput = row.querySelector('.var-color');
@@ -274,7 +272,6 @@ window.addVariationRow = function(color = '', colorName = '', name = '', price =
     const div = document.createElement('div'); 
     div.className = 'variation-row';
     
-    // ⭐ Updated HTML to include preview container ⭐
     div.innerHTML = `
         <div style="flex: 1.5; min-width: 150px; display:flex; flex-direction:column; gap:4px;">
             <input type="text" placeholder="Color (Hex/URL)" value="${escapeHTML(color)}" class="var-color" style="width:100%;">
@@ -304,6 +301,13 @@ window.editProduct = async function(id) {
         const { data: p, error } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').eq('id', id).maybeSingle(); if (error) throw error; if (!p) { alert("Product not found."); return; }
         const defaultOffer = p.affiliate_offers?.[0] || {};
         document.getElementById('pId').value = p.id; document.getElementById('pOfferId').value = defaultOffer.id || ''; document.getElementById('pTitle').value = p.title || ''; document.getElementById('pSlug').value = p.slug || ''; document.getElementById('pImg').value = p.image_url || ''; document.getElementById('pGallery').value = (p.gallery_images || []).join('\n'); document.getElementById('pVideo').value = p.video_url || ''; document.getElementById('pCategory').value = p.category_slug || 'electronics'; document.getElementById('pBadge').value = p.badge || ''; document.getElementById('pRating').value = p.rating || ''; document.getElementById('pReviewsCount').value = p.reviews_count || 0;
+        
+        // ⭐ SEO Fields Populate ⭐
+        document.getElementById('pFocusKeyword').value = p.focus_keyword || '';
+        document.getElementById('pMetaTitle').value = p.meta_title || '';
+        document.getElementById('pMetaDesc').value = p.meta_description || '';
+        document.getElementById('pTags').value = (p.tags || []).join(', ');
+
         document.getElementById('pEventName').value = p.event_name || ''; if(p.sale_end_date) { const d = new Date(p.sale_end_date); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); document.getElementById('pSaleEndDate').value = d.toISOString().slice(0,16); } else { document.getElementById('pSaleEndDate').value = ''; }
         document.getElementById('pEventName2').value = p.event_name_2 || ''; if(p.sale_end_date_2) { const d = new Date(p.sale_end_date_2); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); document.getElementById('pSaleEndDate2').value = d.toISOString().slice(0,16); } else { document.getElementById('pSaleEndDate2').value = ''; }
         document.getElementById('pStore').value = defaultOffer.store_name || ''; document.getElementById('pMainColor').value = defaultOffer.product_color || ''; document.getElementById('pMainColorName').value = defaultOffer.color_name || ''; document.getElementById('pMainVarName').value = defaultOffer.variation_name || ''; document.getElementById('pPrice').value = defaultOffer.price || ''; document.getElementById('pSalePrice').value = defaultOffer.sale_price || ''; document.getElementById('pCommission').value = (defaultOffer.commission_rate && defaultOffer.commission_rate > 0) ? defaultOffer.commission_rate : ''; document.getElementById('pCurrency').value = defaultOffer.currency || 'USD'; document.getElementById('pAffUrl').value = defaultOffer.affiliate_url || '';
@@ -327,6 +331,12 @@ function setupProductForm() {
     form.querySelectorAll('input, textarea, select').forEach(el => { el.addEventListener('input', function() { if (this.classList.contains('error-input')) { if (this.id === 'pImg') { const fileInput = document.getElementById('pImgFile'); if (this.value.trim() || fileInput.files.length > 0) this.classList.remove('error-input'); } else if (this.value.trim()) { this.classList.remove('error-input'); } } }); });
     cancelBtn.addEventListener('click', () => {
         form.reset(); document.getElementById('variationsContainer').innerHTML = ''; document.getElementById('pId').value = ''; document.getElementById('pOfferId').value = ''; document.getElementById('pImgFile').value = ''; document.getElementById('pGalleryFile').value = ''; document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen'; currentGalleryFiles = []; document.getElementById('pImgPreview').innerHTML = ''; document.getElementById('pGalleryPreview').innerHTML = ''; document.getElementById('pMainColorPreview').innerHTML = ''; document.getElementById('formTitle').innerText = "Add / Update Product"; document.getElementById('saveBtn').innerText = "Save Product"; cancelBtn.style.display = "none"; document.querySelectorAll('.error-input').forEach(el => el.classList.remove('error-input')); document.getElementById('addProductContainer').style.display = 'none'; const toggleBtn = document.getElementById('toggleAddProductBtn'); toggleBtn.textContent = 'Show Product Form'; toggleBtn.style.background = '#16a34a'; document.getElementById('pHidePrice').checked = false; document.getElementById('pPrice').readOnly = false; document.getElementById('pMainColorImgName').innerText = 'No files';
+        
+        // ⭐ Reset SEO Fields ⭐
+        document.getElementById('pFocusKeyword').value = '';
+        document.getElementById('pMetaTitle').value = '';
+        document.getElementById('pMetaDesc').value = '';
+        document.getElementById('pTags').value = '';
     });
     form.addEventListener('submit', async (e) => {
         e.preventDefault(); if (window.isSavingProduct) return; window.isSavingProduct = true;
@@ -340,7 +350,35 @@ function setupProductForm() {
             const commInput = document.getElementById('pCommission').value.trim(); const commission = commInput === '' ? 0 : (parseFloat(commInput) || 0); const price = parseFloat(document.getElementById('pPrice').value) || 0; const salePrice = document.getElementById('pSalePrice').value ? parseFloat(document.getElementById('pSalePrice').value) : null;
             let finalImageUrl = imgUrl.value.trim(); const primaryFileInput = imgFile; if (primaryFileInput.files.length > 0) { saveBtn.innerText = "Uploading Main Image..."; finalImageUrl = await uploadFileToSupabase(primaryFileInput.files[0]); }
             let finalGalleryUrls = document.getElementById('pGallery').value.trim() ? document.getElementById('pGallery').value.split('\n').map(u=>u.trim()).filter(Boolean) : []; if (currentGalleryFiles.length > 0) { saveBtn.innerText = `Uploading ${currentGalleryFiles.length} Images...`; const uploadPromises = currentGalleryFiles.map(file => uploadFileToSupabase(file)); const uploadedUrls = await Promise.all(uploadPromises); finalGalleryUrls = finalGalleryUrls.concat(uploadedUrls); }
-            const productData = { title: document.getElementById('pTitle').value.trim(), slug: document.getElementById('pSlug').value.trim(), image_url: finalImageUrl, category_slug: document.getElementById('pCategory').value, description: document.getElementById('pDesc').value.trim(), review_html: document.getElementById('pReview').value.trim(), is_featured: document.getElementById('pFeatured').checked, is_trending: document.getElementById('pTrending').checked, is_special_deal: document.getElementById('pSpecialDeal').checked, badge: document.getElementById('pBadge').value.trim() || null, rating: document.getElementById('pRating').value ? parseFloat(document.getElementById('pRating').value) : null, reviews_count: document.getElementById('pReviewsCount').value ? parseInt(document.getElementById('pReviewsCount').value) : 0, gallery_images: finalGalleryUrls, video_url: document.getElementById('pVideo').value.trim() || null, event_name: eventName || null, sale_end_date: saleEndDate ? new Date(saleEndDate).toISOString() : null, event_name_2: eventName2 || null, sale_end_date_2: saleEndDate2 ? new Date(saleEndDate2).toISOString() : null, is_available: true };
+            
+            const tagsArray = document.getElementById('pTags').value.split(',').map(t => t.trim()).filter(Boolean);
+            
+            const productData = { 
+                title: document.getElementById('pTitle').value.trim(), 
+                slug: document.getElementById('pSlug').value.trim(), 
+                image_url: finalImageUrl, 
+                category_slug: document.getElementById('pCategory').value, 
+                description: document.getElementById('pDesc').value.trim(), 
+                review_html: document.getElementById('pReview').value.trim(), 
+                is_featured: document.getElementById('pFeatured').checked, 
+                is_trending: document.getElementById('pTrending').checked, 
+                is_special_deal: document.getElementById('pSpecialDeal').checked, 
+                badge: document.getElementById('pBadge').value.trim() || null, 
+                rating: document.getElementById('pRating').value ? parseFloat(document.getElementById('pRating').value) : null, 
+                reviews_count: document.getElementById('pReviewsCount').value ? parseInt(document.getElementById('pReviewsCount').value) : 0, 
+                gallery_images: finalGalleryUrls, 
+                video_url: document.getElementById('pVideo').value.trim() || null, 
+                event_name: eventName || null, 
+                sale_end_date: saleEndDate ? new Date(saleEndDate).toISOString() : null, 
+                event_name_2: eventName2 || null, 
+                sale_end_date_2: saleEndDate2 ? new Date(saleEndDate2).toISOString() : null, 
+                is_available: true,
+                focus_keyword: document.getElementById('pFocusKeyword').value.trim() || null,
+                meta_title: document.getElementById('pMetaTitle').value.trim() || null,
+                meta_description: document.getElementById('pMetaDesc').value.trim() || null,
+                tags: tagsArray
+            };
+            
             const mainOfferData = { store_name: document.getElementById('pStore').value.trim().toLowerCase(), product_color: document.getElementById('pMainColor').value.trim() || null, color_name: document.getElementById('pMainColorName').value.trim() || null, variation_name: document.getElementById('pMainVarName').value.trim() || null, price: price, sale_price: salePrice, commission_rate: commission, currency: document.getElementById('pCurrency').value, affiliate_url: document.getElementById('pAffUrl').value.trim() };
             const variations = []; document.querySelectorAll('.variation-row').forEach(row => { const vColor = row.querySelector('.var-color').value.trim(); const vColorName = row.querySelector('.var-color-name').value.trim(); const vName = row.querySelector('.var-name').value.trim(); const vPrice = parseFloat(row.querySelector('.var-price').value); const vSalePrice = row.querySelector('.var-sale-price').value ? parseFloat(row.querySelector('.var-sale-price').value) : null; const vCommInput = row.querySelector('.var-comm').value.trim(); const vComm = vCommInput === '' ? commission : (parseFloat(vCommInput) || 0); const vUrl = row.querySelector('.var-url').value.trim() || mainOfferData.affiliate_url; if (vName && !isNaN(vPrice)) { variations.push({ ...mainOfferData, product_color: vColor || null, color_name: vColorName || null, variation_name: vName, price: vPrice, sale_price: vSalePrice, commission_rate: vComm, affiliate_url: vUrl }); } });
             let productId = id; if (isEditing) { const { error: prodErr } = await window.supabaseClient.from('products').update(productData).eq('id', id); if (prodErr) throw prodErr; await window.supabaseClient.from('affiliate_offers').delete().eq('product_id', id); } else { const { data: newProduct, error: prodErr } = await window.supabaseClient.from('products').insert([productData]).select().single(); if (prodErr) throw prodErr; productId = newProduct.id; }
@@ -348,7 +386,15 @@ function setupProductForm() {
             if (variations.length > 0) { variations.forEach(v => v.product_id = productId); const { error: varErr } = await window.supabaseClient.from('affiliate_offers').insert(variations); if (varErr) throw varErr; }
             const writeBlog = document.getElementById('pWriteBlog').checked; if (writeBlog) { const { data: existingBlog } = await window.supabaseClient.from('blogs').select('id').ilike('title', `Review: ${productData.title}%`); if (existingBlog && existingBlog.length > 0) { alert("Product saved! Note: A blog already exists for this product in the 'Blogs List'."); } else { await window.supabaseClient.from('products').update({ blog_status: 'pending' }).eq('id', productId); fetch('/api/process-queue', { method: 'POST' }).then(res => res.json()).then(data => { if(data.error) console.error("AI Blog Error:", data.error); else console.log("AI Blog Status:", data.message); }).catch(err => console.error("Fetch Error:", err)); alert("Product saved! AI is writing the blog in the background. It will appear in the 'Show / Hide Blogs List' section as a DRAFT in a few moments."); } }
             const sendNotif = document.getElementById('pSendNotification').checked; if (sendNotif) { try { const { data: settings } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).maybeSingle(); let spTitle = 'Special Deal'; let s1Title = 'Sale Section 1'; let s2Title = 'Sale Section 2'; if (settings) { if (settings.special_deal_title) spTitle = settings.special_deal_title; if (settings.flash_title_text) s1Title = settings.flash_title_text; if (settings.sale_section_2_title) s2Title = settings.sale_section_2_title; } let notifType = 'product'; let notifTitle = isEditing ? "Product Updated! 🛍️" : "New Product Added! 🛍️"; let notifMsg = `Check out ${productData.title}`; const now = new Date(); const isFlash1Active = eventName && saleEndDate && new Date(saleEndDate) > now; const isFlash2Active = eventName2 && saleEndDate2 && new Date(saleEndDate2) > now; const isSpecialActive = document.getElementById('pSpecialDeal').checked; if (isFlash1Active) { notifType = 'flash_sale'; notifTitle = `🔥 ${s1Title} Started!`; notifMsg = `${productData.title} is now in ${s1Title}!`; } else if (isFlash2Active) { notifType = 'flash_sale_2'; notifTitle = `🔥 ${s2Title} Started!`; notifMsg = `${productData.title} is now in ${s2Title}!`; } else if (isSpecialActive) { notifType = 'special_deal'; notifTitle = `🎁 ${spTitle} Alert!`; notifMsg = `${productData.title} is now in ${spTitle}!`; } const { data: existingNotifs } = await window.supabaseClient.from('app_notifications').select('id').eq('product_slug', productData.slug).eq('type', notifType); if (existingNotifs && existingNotifs.length > 0) { console.log("Notification blocked: Already sent for this product & type."); } else { await window.supabaseClient.from('app_notifications').insert([{ title: notifTitle, message: notifMsg, product_slug: productData.slug, type: notifType }]); } } catch (notifError) { console.warn("Notification send error:", notifError); } }
-            if (!writeBlog) alert(`"${productData.title}" saved successfully!`); form.reset(); document.getElementById('variationsContainer').innerHTML = ''; document.getElementById('pId').value = ''; document.getElementById('formTitle').innerText = "Add / Update Product"; cancelBtn.style.display = "none"; primaryFileInput.value = ''; document.getElementById('pGalleryFile').value = ''; document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen'; document.getElementById('pWriteBlog').checked = false; document.getElementById('addProductContainer').style.display = 'none'; const toggleBtn = document.getElementById('toggleAddProductBtn'); toggleBtn.textContent = 'Show Product Form'; toggleBtn.style.background = '#16a34a'; currentGalleryFiles = []; document.getElementById('pImgPreview').innerHTML = ''; document.getElementById('pGalleryPreview').innerHTML = ''; document.getElementById('pMainColorPreview').innerHTML = ''; await loadStats(); await loadProductsList();
+            if (!writeBlog) alert(`"${productData.title}" saved successfully!`); form.reset(); document.getElementById('variationsContainer').innerHTML = ''; document.getElementById('pId').value = ''; document.getElementById('formTitle').innerText = "Add / Update Product"; cancelBtn.style.display = "none"; primaryFileInput.value = ''; document.getElementById('pGalleryFile').value = ''; document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen'; document.getElementById('pWriteBlog').checked = false; document.getElementById('addProductContainer').style.display = 'none'; const toggleBtn = document.getElementById('toggleAddProductBtn'); toggleBtn.textContent = 'Show Product Form'; toggleBtn.style.background = '#16a34a'; currentGalleryFiles = []; document.getElementById('pImgPreview').innerHTML = ''; document.getElementById('pGalleryPreview').innerHTML = ''; document.getElementById('pMainColorPreview').innerHTML = ''; 
+            
+            // ⭐ Reset SEO fields after save ⭐
+            document.getElementById('pFocusKeyword').value = '';
+            document.getElementById('pMetaTitle').value = '';
+            document.getElementById('pMetaDesc').value = '';
+            document.getElementById('pTags').value = '';
+
+            await loadStats(); await loadProductsList();
         } catch (err) { alert('Error: ' + (err.message || 'Check RLS policies and Storage Bucket.')); } finally { saveBtn.innerText = originalBtnText; saveBtn.disabled = false; window.isSavingProduct = false; }
     });
     document.getElementById('logoutBtn')?.addEventListener('click', async () => { await API.signOut(); window.location.reload(); });
