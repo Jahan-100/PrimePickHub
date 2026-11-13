@@ -311,6 +311,28 @@
                                 </div>
                             </div>
 
+                            <!-- ⭐ ADVANCED SEO SETTINGS ADDED HERE ⭐ -->
+                            <div class="form-section-title" style="color: #2563eb; border-bottom-color: #bfdbfe;">Advanced SEO Settings (Optional)</div>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                                <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom:0;">
+                                    <label>Focus Keyword</label>
+                                    <input type="text" id="pFocusKeyword" placeholder="e.g. Women's Leather Jacket" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; background:#fff;">
+                                </div>
+                                <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom:0;">
+                                    <label>Tags (Comma separated)</label>
+                                    <input type="text" id="pTags" placeholder="Jackets, Fashion, Winter" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; background:#fff;">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Custom Meta Title (For Google Search)</label>
+                                <input type="text" id="pMetaTitle" placeholder="Women's Faux Leather Cropped Bomber Jacket" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; background:#fff;">
+                            </div>
+                            <div class="form-group">
+                                <label>Custom Meta Description (For Google Search)</label>
+                                <textarea id="pMetaDesc" rows="2" placeholder="Shop women's faux leather cropped bomber jackets with oversized fit..." style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; background:#fff;"></textarea>
+                            </div>
+                            <!-- ⭐ END OF SEO SETTINGS ⭐ -->
+
                             <div class="form-section-title">Main Offer Details</div>
                             <div class="form-group"><label>Store Name <span style="color: #EF4444;">*</span></label><input type="text" id="pStore" required placeholder="aliexpress, amazon, daraz" style="background:#fff; width: 100%;"></div>
                             <div class="form-group"><label>Affiliate URL <span style="color: #EF4444;">*</span></label><input type="url" id="pAffUrl" required style="background:#fff; width: 100%;"></div>
@@ -409,6 +431,8 @@
                     </div>
                 </div>
 
+                <!-- ... (Rest of the admin.html remains exactly the same: Special Deal, Sale Section 1 & 2, Blogs, AI Hunter, Manage Products, Manage Reviews, Modals, Scripts) ... -->
+                
                 <div class="admin-card box-special-deal">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h3 style="margin: 0;">Special Deal Section Customization</h3>
@@ -749,7 +773,6 @@
                     </div>
                 </div>
 
-                <!-- ⭐ NEW: Manage Customer Reviews ⭐ -->
                 <div class="admin-card box-manage-products" style="background: #f0fdf4; border-color: #bbf7d0;">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2 style="margin: 0; color: #166534 !important;">Manage Customer Reviews</h2>
@@ -791,7 +814,6 @@
         <button class="close-lightbox" onclick="closeImageLightbox(event)">Close Preview</button>
     </div>
 
-    <!-- ⭐ NEW: EDIT REVIEW MODAL ⭐ -->
     <div id="editReviewModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:9999999; align-items:center; justify-content:center;">
         <div style="background:#fff; padding:20px; border-radius:12px; width:90%; max-width:500px; box-shadow:0 10px 30px rgba(0,0,0,0.2);">
             <h3 style="margin-bottom:15px; color:#1E1B4B; font-size:1.2rem;">Edit Customer Review</h3>
