@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/product/:slug", "destination": "/product.html?slug=:slug" },
     { "source": "/category/:cat", "destination": "/category.html?cat=:cat" },
     { "source": "/api/geo", "destination": "/api/geo.js" }
