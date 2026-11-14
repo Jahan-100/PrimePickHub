@@ -10,16 +10,16 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { background-color: #f8fafc; padding: 20px; font-family: sans-serif; }
-        .container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .container { max-width: 1100px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #E2E8F0; padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .header h1 { margin: 0; color: #1E1B4B; font-size: 1.5rem; }
         .btn-back { background: #64748B; color: #fff; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.9rem; }
         .btn-back:hover { background: #475569; }
-        .filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .filters input, .filters select { padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; outline: none; }
+        .filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #E2E8F0; }
+        .filters input, .filters select { padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; outline: none; font-size: 0.9rem; }
         .filters input { width: 250px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #E2E8F0; padding: 12px; text-align: left; font-size: 0.9rem; }
+        th, td { border: 1px solid #E2E8F0; padding: 10px; text-align: left; font-size: 0.85rem; vertical-align: middle; }
         th { background: #F8FAFC; font-weight: 600; color: #1E1B4B; position: sticky; top: 0; z-index: 10; }
         tr:hover { background: #F1F5F9; }
         .clickable-row { cursor: pointer; font-weight: 600; color: #1E1B4B; }
@@ -33,6 +33,15 @@
         .table-wrapper { max-height: 65vh; overflow-y: auto; border: 1px solid #E2E8F0; border-radius: 8px; }
         .back-step-btn { background: #E2E8F0; color: #1E1B4B; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; display: none; margin-right: 10px; }
         .back-step-btn:hover { background: #CBD5E1; }
+        
+        /* Product Mini Card Style */
+        .product-cell { display: flex; align-items: center; gap: 10px; }
+        .product-cell img { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; border: 1px solid #E2E8F0; }
+        .product-cell span { font-weight: 600; color: #1E1B4B; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+        
+        .badge-device { padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
+        .badge-mobile { background: #e0f2fe; color: #0369a1; }
+        .badge-desktop { background: #f3e8ff; color: #6b21a8; }
     </style>
 </head>
 <body>
@@ -44,13 +53,23 @@
             </div>
             <a href="/admin.html" class="btn-back">← Back to Dashboard</a>
         </div>
+        
         <div class="filters">
-            <input type="text" id="searchInput" placeholder="Search by name or ID...">
+            <input type="text" id="searchInput" placeholder="Search by name, ID, or device...">
             <select id="filterSelect">
                 <option value="all">All Filters</option>
             </select>
+            <!-- ⭐ New Device Filter ⭐ -->
+            <select id="deviceFilter">
+                <option value="all">All Devices</option>
+                <option value="Mobile">Mobile</option>
+                <option value="Desktop">Desktop</option>
+                <option value="Unknown">Unknown</option>
+            </select>
         </div>
+        
         <div class="breadcrumb" id="breadcrumb"></div>
+        
         <div class="table-wrapper">
             <table id="analyticsTable">
                 <thead id="tableHead"></thead>
@@ -61,8 +80,8 @@
         </div>
     </div>
 
-    <script src="/js/config.js?v=6"></script>
-    <script src="/js/api.js?v=7"></script>
+    <script src="/js/config.js?v=7"></script>
+    <script src="/js/api.js?v=9"></script>
     <script>
         let rawData = [];
         let currentView = 'country'; 
@@ -70,7 +89,6 @@
         let selectedCity = null;
         let currentType = 'clicks';
 
-        // ⭐ UPDATED: Saare Countries ki mukammal list ⭐
         function formatCountryName(code) {
             if (!code || code === 'Unknown') return 'Unknown';
             const countryMap = {
@@ -89,6 +107,12 @@
             return countryMap[code.toUpperCase()] || code;
         }
 
+        function getDeviceBadge(device) {
+            if (!device || device === 'Unknown') return '<span class="badge-device" style="background:#f1f5f9; color:#64748b;">Unknown</span>';
+            if (device === 'Mobile') return '<span class="badge-device badge-mobile"><i class="fa-solid fa-mobile-screen"></i> Mobile</span>';
+            return '<span class="badge-device badge-desktop"><i class="fa-solid fa-desktop"></i> Desktop</span>';
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             if (!window.supabaseClient) { alert("Supabase not loaded!"); return; }
             const urlParams = new URLSearchParams(window.location.search);
@@ -96,14 +120,22 @@
             const titleEl = document.getElementById('pageTitle');
             const searchInput = document.getElementById('searchInput');
             const filterSelect = document.getElementById('filterSelect');
+            const deviceFilter = document.getElementById('deviceFilter');
 
             if (currentType === 'clicks') {
                 titleEl.innerText = "Affiliate Clicks Breakdown";
                 filterSelect.innerHTML = `<option value="all">All Stores</option>`;
-                const { data } = await window.supabaseClient.from('clicks').select('*').order('created_at', { ascending: false });
+                
+                // ⭐ Fetching Product Details using Join ⭐
+                const { data, error } = await window.supabaseClient
+                    .from('clicks')
+                    .select('*, products(title, image_url)') 
+                    .order('created_at', { ascending: false });
+                
                 rawData = data || [];
                 const stores = [...new Set(rawData.map(d => d.store))];
                 stores.forEach(s => filterSelect.innerHTML += `<option value="${s}">${s}</option>`);
+                
             } else if (currentType === 'visitors') {
                 titleEl.innerText = "Website Visitors Breakdown";
                 filterSelect.innerHTML = `<option value="all">All Sources</option><option value="Direct">Direct</option><option value="Google Search">Google Search</option><option value="Facebook">Facebook</option>`;
@@ -115,9 +147,11 @@
                 const { data } = await window.supabaseClient.from('active_app_installs').select('*').order('last_active', { ascending: false });
                 rawData = data || [];
             }
+            
             renderView();
             searchInput.addEventListener('input', () => renderView());
             filterSelect.addEventListener('change', () => renderView());
+            deviceFilter.addEventListener('change', () => renderView());
         });
 
         function renderView() {
@@ -126,21 +160,32 @@
             const breadcrumb = document.getElementById('breadcrumb');
             const searchVal = document.getElementById('searchInput').value.toLowerCase();
             const filterVal = document.getElementById('filterSelect').value;
+            const deviceVal = document.getElementById('deviceFilter').value;
             const stepBackBtn = document.getElementById('stepBackBtn');
 
-            // Breadcrumb UI update
             if (currentView === 'country') stepBackBtn.style.display = 'none';
             else stepBackBtn.style.display = 'inline-block';
 
             let filteredData = rawData.filter(item => {
-                const matchSearch = JSON.stringify(item).toLowerCase().includes(searchVal);
+                // Search Logic
+                const searchString = `${item.store || ''} ${item.product_id || ''} ${item.device_type || ''} ${item.products?.title || ''}`.toLowerCase();
+                const matchSearch = searchString.includes(searchVal);
+                
+                // Main Filter (Store/Source)
                 let matchFilter = true;
                 if (filterVal !== 'all') {
                     if (currentType === 'clicks') matchFilter = item.store === filterVal;
                     if (currentType === 'visitors') matchFilter = item.referrer === filterVal;
                     if (currentType === 'installs') matchFilter = item.device_type === filterVal;
                 }
-                return matchSearch && matchFilter;
+                
+                // ⭐ Device Filter Logic ⭐
+                let matchDevice = true;
+                if (deviceVal !== 'all') {
+                    matchDevice = (item.device_type === deviceVal);
+                }
+
+                return matchSearch && matchFilter && matchDevice;
             });
 
             breadcrumb.innerHTML = `<a onclick="goBack('country')">All Countries</a>`;
@@ -171,26 +216,52 @@
                 `).join('');
             } else if (currentView === 'details') {
                 if (currentType === 'clicks') {
-                    thead.innerHTML = `<tr><th>Sr. No.</th><th>Store</th><th>Product ID</th><th>Source</th><th>Date</th></tr>`;
+                    // ⭐ Showing Product Image, Title & Device ⭐
+                    thead.innerHTML = `<tr><th>Sr. No.</th><th>Product Info</th><th>Store</th><th>Device</th><th>Source</th><th>Date</th></tr>`;
                     const cityData = filteredData.filter(d => formatCountryName(d.country) === selectedCountry && (d.city || 'Unknown') === selectedCity);
-                    tbody.innerHTML = cityData.map((d, idx) => `
-                        <tr><td>${idx + 1}</td><td class="highlight">${d.store}</td><td style="font-size:0.8rem;">${d.product_id || 'N/A'}</td><td>${d.referrer || 'Direct'}</td><td>${new Date(d.created_at).toLocaleString()}</td></tr>
-                    `).join('');
+                    
+                    tbody.innerHTML = cityData.map((d, idx) => {
+                        const pTitle = d.products?.title || 'Unknown Product';
+                        const pImg = d.products?.image_url || '/assets/icon-192.png?v=4';
+                        return `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td>
+                                <div class="product-cell">
+                                    <img src="${escapeHTML(pImg)}" onerror="this.src='/assets/icon-192.png?v=4'">
+                                    <span title="${escapeHTML(pTitle)}">${escapeHTML(pTitle)}</span>
+                                </div>
+                            </td>
+                            <td class="highlight">${escapeHTML(d.store)}</td>
+                            <td>${getDeviceBadge(d.device_type)}</td>
+                            <td style="font-size:0.75rem; color:#64748B;">${d.referrer || 'Direct'}</td>
+                            <td>${new Date(d.created_at).toLocaleString()}</td>
+                        </tr>`;
+                    }).join('');
+                    
                 } else if (currentType === 'visitors') {
-                    thead.innerHTML = `<tr><th>Sr. No.</th><th>Source / Referrer</th><th>Device Type</th><th>Last Active</th></tr>`;
+                    // ⭐ Showing Visitor ID, Device & Source ⭐
+                    thead.innerHTML = `<tr><th>Sr. No.</th><th>Visitor ID</th><th>Source / Referrer</th><th>Device</th><th>Last Active</th></tr>`;
                     const cityData = filteredData.filter(d => formatCountryName(d.country) === selectedCountry && (d.city || 'Unknown') === selectedCity);
+                    
                     tbody.innerHTML = cityData.map((d, idx) => `
-                        <tr><td>${idx + 1}</td><td class="highlight">${d.referrer || 'Direct'}</td><td>${d.device_type || 'Unknown'}</td><td>${new Date(d.last_seen).toLocaleString()}</td></tr>
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td style="font-family:monospace; font-size:0.75rem;">${d.visitor_id.substring(0, 8)}...</td>
+                            <td class="highlight">${escapeHTML(d.referrer || 'Direct')}</td>
+                            <td>${getDeviceBadge(d.device_type)}</td>
+                            <td>${new Date(d.last_seen).toLocaleString()}</td>
+                        </tr>
                     `).join('');
                 } else if (currentType === 'installs') {
                     thead.innerHTML = `<tr><th>Sr. No.</th><th>Device ID</th><th>Device Type</th><th>Last Active</th></tr>`;
                     const cityData = filteredData.filter(d => formatCountryName(d.country) === selectedCountry && (d.city || 'Unknown') === selectedCity);
                     tbody.innerHTML = cityData.map((d, idx) => `
-                        <tr><td>${idx + 1}</td><td style="font-family:monospace;">${d.device_id}</td><td>${d.device_type || 'Unknown'}</td><td>${new Date(d.last_active).toLocaleString()}</td></tr>
+                        <tr><td>${idx + 1}</td><td style="font-family:monospace;">${d.device_id}</td><td>${getDeviceBadge(d.device_type)}</td><td>${new Date(d.last_active).toLocaleString()}</td></tr>
                     `).join('');
                 }
             }
-            if (tbody.innerHTML === '') tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 30px;">No data found for this selection.</td></tr>`;
+            if (tbody.innerHTML === '') tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px;">No data found for this selection.</td></tr>`;
         }
         
         window.drillDown = function(level, name) { 
@@ -205,7 +276,6 @@
             renderView(); 
         };
         
-        // Naya function: Step-by-step wapas jane ke liye
         window.stepBack = function() {
             if (currentView === 'details') {
                 selectedCity = null; currentView = 'city';
