@@ -77,7 +77,7 @@ const API = {
             referrer: String(document.referrer || '').slice(0, 200),
             country: geo.country || 'Unknown',
             city: geo.city || 'Unknown',
-            device_type: deviceType // ⭐ Naya Field
+            device_type: deviceType
         };
 
         try {
@@ -85,7 +85,6 @@ const API = {
                 if (error) console.warn('Track error:', error);
             }).catch(() => {});
         } catch (e) {
-            // Fallback for visual redirects
             fetch(`${CONFIG.supabaseUrl}/rest/v1/clicks`, {
                 method: 'POST',
                 headers: {
