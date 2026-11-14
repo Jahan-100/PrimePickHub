@@ -34,7 +34,6 @@
         .back-step-btn { background: #E2E8F0; color: #1E1B4B; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; display: none; margin-right: 10px; }
         .back-step-btn:hover { background: #CBD5E1; }
         
-        /* Product Mini Card Style */
         .product-cell { display: flex; align-items: center; gap: 10px; }
         .product-cell img { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; border: 1px solid #E2E8F0; }
         .product-cell span { font-weight: 600; color: #1E1B4B; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
@@ -59,7 +58,6 @@
             <select id="filterSelect">
                 <option value="all">All Filters</option>
             </select>
-            <!-- ⭐ New Device Filter ⭐ -->
             <select id="deviceFilter">
                 <option value="all">All Devices</option>
                 <option value="Mobile">Mobile</option>
@@ -80,6 +78,7 @@
         </div>
     </div>
 
+    <!-- Cache Buster added ?v=3 -->
     <script src="/js/config.js?v=7"></script>
     <script src="/js/api.js?v=9"></script>
     <script>
@@ -88,6 +87,7 @@
         let selectedCountry = null;
         let selectedCity = null;
         let currentType = 'clicks';
+        let productMap = {};
 
         function formatCountryName(code) {
             if (!code || code === 'Unknown') return 'Unknown';
@@ -126,13 +126,18 @@
                 titleEl.innerText = "Affiliate Clicks Breakdown";
                 filterSelect.innerHTML = `<option value="all">All Stores</option>`;
                 
-                // ⭐ Fetching Product Details using Join ⭐
-                const { data, error } = await window.supabaseClient
-                    .from('clicks')
-                    .select('*, products(title, image_url)') 
-                    .order('created_at', { ascending: false });
+                // Fetch clicks & products manually to avoid JOIN errors
+                const { data: clicksData } = await window.supabaseClient.from('clicks').select('*').order('created_at', { ascending: false });
+                const { data: productsData } = await window.supabaseClient.from('products').select('id, title, image_url');
                 
-                rawData = data || [];
+                if (productsData) { productsData.forEach(p => { productMap[p.id] = p; }); }
+
+                rawData = (clicksData || []).map(c => ({
+                    ...c,
+                    product_title: productMap[c.product_id]?.title || 'Unknown Product',
+                    product_image: productMap[c.product_id]?.image_url || '/assets/icon-192.png?v=4'
+                }));
+                
                 const stores = [...new Set(rawData.map(d => d.store))];
                 stores.forEach(s => filterSelect.innerHTML += `<option value="${s}">${s}</option>`);
                 
@@ -167,11 +172,9 @@
             else stepBackBtn.style.display = 'inline-block';
 
             let filteredData = rawData.filter(item => {
-                // Search Logic
-                const searchString = `${item.store || ''} ${item.product_id || ''} ${item.device_type || ''} ${item.products?.title || ''}`.toLowerCase();
+                const searchString = `${item.store || ''} ${item.product_title || ''} ${item.device_type || ''} ${item.visitor_id || ''}`.toLowerCase();
                 const matchSearch = searchString.includes(searchVal);
                 
-                // Main Filter (Store/Source)
                 let matchFilter = true;
                 if (filterVal !== 'all') {
                     if (currentType === 'clicks') matchFilter = item.store === filterVal;
@@ -179,7 +182,6 @@
                     if (currentType === 'installs') matchFilter = item.device_type === filterVal;
                 }
                 
-                // ⭐ Device Filter Logic ⭐
                 let matchDevice = true;
                 if (deviceVal !== 'all') {
                     matchDevice = (item.device_type === deviceVal);
@@ -192,6 +194,9 @@
             if (selectedCountry) breadcrumb.innerHTML += ` &gt; <a onclick="goBack('city')">${selectedCountry}</a>`;
             if (selectedCity) breadcrumb.innerHTML += ` &gt; <span>${selectedCity}</span>`;
 
+            // Clear previous data
+            tbody.innerHTML = '';
+
             if (currentView === 'country') {
                 thead.innerHTML = `<tr><th>Sr. No.</th><th>Country</th><th>Total Records</th><th>Details</th></tr>`;
                 const grouped = {};
@@ -199,69 +204,82 @@
                     const c = formatCountryName(d.country); 
                     grouped[c] = (grouped[c] || 0) + 1; 
                 });
-                tbody.innerHTML = Object.entries(grouped).map(([country, count], idx) => `
-                    <tr class="clickable-row" onclick="drillDown('city', '${country}')">
-                        <td>${idx + 1}</td><td>${country}</td><td>${count}</td><td style="color:#2563eb;">View Cities →</td>
-                    </tr>
-                `).join('');
+                if (Object.keys(grouped).length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 30px;">No data found.</td></tr>`;
+                } else {
+                    tbody.innerHTML = Object.entries(grouped).map(([country, count], idx) => `
+                        <tr class="clickable-row" onclick="drillDown('city', '${country}')">
+                            <td>${idx + 1}</td><td>${country}</td><td>${count}</td><td style="color:#2563eb;">View Cities →</td>
+                        </tr>
+                    `).join('');
+                }
             } else if (currentView === 'city') {
                 thead.innerHTML = `<tr><th>Sr. No.</th><th>City</th><th>Total Records</th><th>Details</th></tr>`;
                 const countryData = filteredData.filter(d => formatCountryName(d.country) === selectedCountry);
                 const grouped = {};
                 countryData.forEach(d => { const c = d.city || 'Unknown'; grouped[c] = (grouped[c] || 0) + 1; });
-                tbody.innerHTML = Object.entries(grouped).map(([city, count], idx) => `
-                    <tr class="clickable-row" onclick="drillDown('details', '${city}')">
-                        <td>${idx + 1}</td><td>${city}</td><td>${count}</td><td style="color:#2563eb;">View Details →</td>
-                    </tr>
-                `).join('');
-            } else if (currentView === 'details') {
-                if (currentType === 'clicks') {
-                    // ⭐ Showing Product Image, Title & Device ⭐
-                    thead.innerHTML = `<tr><th>Sr. No.</th><th>Product Info</th><th>Store</th><th>Device</th><th>Source</th><th>Date</th></tr>`;
-                    const cityData = filteredData.filter(d => formatCountryName(d.country) === selectedCountry && (d.city || 'Unknown') === selectedCity);
-                    
-                    tbody.innerHTML = cityData.map((d, idx) => {
-                        const pTitle = d.products?.title || 'Unknown Product';
-                        const pImg = d.products?.image_url || '/assets/icon-192.png?v=4';
-                        return `
-                        <tr>
-                            <td>${idx + 1}</td>
-                            <td>
-                                <div class="product-cell">
-                                    <img src="${escapeHTML(pImg)}" onerror="this.src='/assets/icon-192.png?v=4'">
-                                    <span title="${escapeHTML(pTitle)}">${escapeHTML(pTitle)}</span>
-                                </div>
-                            </td>
-                            <td class="highlight">${escapeHTML(d.store)}</td>
-                            <td>${getDeviceBadge(d.device_type)}</td>
-                            <td style="font-size:0.75rem; color:#64748B;">${d.referrer || 'Direct'}</td>
-                            <td>${new Date(d.created_at).toLocaleString()}</td>
-                        </tr>`;
-                    }).join('');
-                    
-                } else if (currentType === 'visitors') {
-                    // ⭐ Showing Visitor ID, Device & Source ⭐
-                    thead.innerHTML = `<tr><th>Sr. No.</th><th>Visitor ID</th><th>Source / Referrer</th><th>Device</th><th>Last Active</th></tr>`;
-                    const cityData = filteredData.filter(d => formatCountryName(d.country) === selectedCountry && (d.city || 'Unknown') === selectedCity);
-                    
-                    tbody.innerHTML = cityData.map((d, idx) => `
-                        <tr>
-                            <td>${idx + 1}</td>
-                            <td style="font-family:monospace; font-size:0.75rem;">${d.visitor_id.substring(0, 8)}...</td>
-                            <td class="highlight">${escapeHTML(d.referrer || 'Direct')}</td>
-                            <td>${getDeviceBadge(d.device_type)}</td>
-                            <td>${new Date(d.last_seen).toLocaleString()}</td>
+                
+                if (Object.keys(grouped).length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 30px;">No data found.</td></tr>`;
+                } else {
+                    tbody.innerHTML = Object.entries(grouped).map(([city, count], idx) => `
+                        <tr class="clickable-row" onclick="drillDown('details', '${city}')">
+                            <td>${idx + 1}</td><td>${city}</td><td>${count}</td><td style="color:#2563eb;">View Details →</td>
                         </tr>
                     `).join('');
-                } else if (currentType === 'installs') {
-                    thead.innerHTML = `<tr><th>Sr. No.</th><th>Device ID</th><th>Device Type</th><th>Last Active</th></tr>`;
-                    const cityData = filteredData.filter(d => formatCountryName(d.country) === selectedCountry && (d.city || 'Unknown') === selectedCity);
-                    tbody.innerHTML = cityData.map((d, idx) => `
-                        <tr><td>${idx + 1}</td><td style="font-family:monospace;">${d.device_id}</td><td>${getDeviceBadge(d.device_type)}</td><td>${new Date(d.last_active).toLocaleString()}</td></tr>
-                    `).join('');
+                }
+            } else if (currentView === 'details') {
+                const cityData = filteredData.filter(d => formatCountryName(d.country) === selectedCountry && (d.city || 'Unknown') === selectedCity);
+                
+                if (cityData.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px;">No detailed records found.</td></tr>`;
+                } else {
+                    if (currentType === 'clicks') {
+                        thead.innerHTML = `<tr><th>Sr. No.</th><th>Product Info</th><th>Store</th><th>Device</th><th>Source</th><th>Date</th></tr>`;
+                        tbody.innerHTML = cityData.map((d, idx) => {
+                            const pTitle = d.product_title || 'Unknown Product';
+                            const pImg = d.product_image || '/assets/icon-192.png?v=4';
+                            return `
+                            <tr>
+                                <td>${idx + 1}</td>
+                                <td>
+                                    <div class="product-cell">
+                                        <img src="${escapeHTML(pImg)}" onerror="this.src='/assets/icon-192.png?v=4'">
+                                        <span title="${escapeHTML(pTitle)}">${escapeHTML(pTitle)}</span>
+                                    </div>
+                                </td>
+                                <td class="highlight">${escapeHTML(d.store || 'N/A')}</td>
+                                <td>${getDeviceBadge(d.device_type)}</td>
+                                <td style="font-size:0.75rem; color:#64748B;">${d.referrer || 'Direct'}</td>
+                                <td>${new Date(d.created_at).toLocaleString()}</td>
+                            </tr>`;
+                        }).join('');
+                    } else if (currentType === 'visitors') {
+                        thead.innerHTML = `<tr><th>Sr. No.</th><th>Visitor ID</th><th>Source / Referrer</th><th>Device</th><th>Last Active</th></tr>`;
+                        tbody.innerHTML = cityData.map((d, idx) => {
+                            const vId = d.visitor_id ? String(d.visitor_id).substring(0, 8) + '...' : 'Unknown';
+                            return `
+                            <tr>
+                                <td>${idx + 1}</td>
+                                <td style="font-family:monospace; font-size:0.75rem;">${vId}</td>
+                                <td class="highlight">${escapeHTML(d.referrer || 'Direct')}</td>
+                                <td>${getDeviceBadge(d.device_type)}</td>
+                                <td>${new Date(d.last_seen).toLocaleString()}</td>
+                            </tr>`;
+                        }).join('');
+                    } else if (currentType === 'installs') {
+                        thead.innerHTML = `<tr><th>Sr. No.</th><th>Device ID</th><th>Device Type</th><th>Last Active</th></tr>`;
+                        tbody.innerHTML = cityData.map((d, idx) => `
+                            <tr>
+                                <td>${idx + 1}</td>
+                                <td style="font-family:monospace;">${d.device_id || 'Unknown'}</td>
+                                <td>${getDeviceBadge(d.device_type)}</td>
+                                <td>${new Date(d.last_active).toLocaleString()}</td>
+                            </tr>
+                        `).join('');
+                    }
                 }
             }
-            if (tbody.innerHTML === '') tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px;">No data found for this selection.</td></tr>`;
         }
         
         window.drillDown = function(level, name) { 
@@ -277,11 +295,8 @@
         };
         
         window.stepBack = function() {
-            if (currentView === 'details') {
-                selectedCity = null; currentView = 'city';
-            } else if (currentView === 'city') {
-                selectedCountry = null; currentView = 'country';
-            }
+            if (currentView === 'details') { selectedCity = null; currentView = 'city'; }
+            else if (currentView === 'city') { selectedCountry = null; currentView = 'country'; }
             renderView();
         };
     </script>
