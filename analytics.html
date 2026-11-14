@@ -78,11 +78,12 @@
         </div>
     </div>
 
-    <!-- Cache Buster added ?v=3 -->
-    <script src="/js/config.js?v=7"></script>
-    <script src="/js/api.js?v=9"></script>
+    <!-- Version updated to break cache -->
+    <script src="/js/config.js?v=8"></script>
+    <script src="/js/api.js?v=10"></script>
     <script>
         let rawData = [];
+        // Reset States on load (Fixes Refresh Issue)
         let currentView = 'country'; 
         let selectedCountry = null;
         let selectedCity = null;
@@ -126,7 +127,6 @@
                 titleEl.innerText = "Affiliate Clicks Breakdown";
                 filterSelect.innerHTML = `<option value="all">All Stores</option>`;
                 
-                // Fetch clicks & products manually to avoid JOIN errors
                 const { data: clicksData } = await window.supabaseClient.from('clicks').select('*').order('created_at', { ascending: false });
                 const { data: productsData } = await window.supabaseClient.from('products').select('id, title, image_url');
                 
@@ -194,7 +194,6 @@
             if (selectedCountry) breadcrumb.innerHTML += ` &gt; <a onclick="goBack('city')">${selectedCountry}</a>`;
             if (selectedCity) breadcrumb.innerHTML += ` &gt; <span>${selectedCity}</span>`;
 
-            // Clear previous data
             tbody.innerHTML = '';
 
             if (currentView === 'country') {
@@ -204,6 +203,7 @@
                     const c = formatCountryName(d.country); 
                     grouped[c] = (grouped[c] || 0) + 1; 
                 });
+                
                 if (Object.keys(grouped).length === 0) {
                     tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 30px;">No data found.</td></tr>`;
                 } else {
