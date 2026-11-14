@@ -78,11 +78,15 @@
         </div>
     </div>
 
-    <!-- ⭐ Yahan utils.js shamil kar diya gaya hai ⭐ -->
-    <script src="/js/utils.js?v=2"></script>
     <script src="/js/config.js?v=8"></script>
     <script src="/js/api.js?v=10"></script>
     <script>
+        // ⭐ LOCAL SAFE FUNCTION (No dependency on utils.js) ⭐
+        function escapeHTML(str) {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
         let rawData = [];
         let currentView = 'country'; 
         let selectedCountry = null;
