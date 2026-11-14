@@ -66,14 +66,18 @@ const API = {
             if (storedGeo) geo = JSON.parse(storedGeo);
         } catch (e) {}
 
-        // Added keepalive to prevent request cancellation on redirect
+        // Device Detect
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const deviceType = isMobile ? 'Mobile' : 'Desktop';
+
         const clickData = {
             product_id: productId,
             store: String(store || '').slice(0, 50),
             sub_id: String(subId || '').slice(0, 100),
             referrer: String(document.referrer || '').slice(0, 200),
             country: geo.country || 'Unknown',
-            city: geo.city || 'Unknown'
+            city: geo.city || 'Unknown',
+            device_type: deviceType // ⭐ Naya Field
         };
 
         try {
