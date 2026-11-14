@@ -78,12 +78,10 @@
         </div>
     </div>
 
-    <!-- Version updated to break cache -->
     <script src="/js/config.js?v=8"></script>
     <script src="/js/api.js?v=10"></script>
     <script>
         let rawData = [];
-        // Reset States on load (Fixes Refresh Issue)
         let currentView = 'country'; 
         let selectedCountry = null;
         let selectedCity = null;
@@ -171,6 +169,7 @@
             if (currentView === 'country') stepBackBtn.style.display = 'none';
             else stepBackBtn.style.display = 'inline-block';
 
+            // Filter Logic for List (Country / City)
             let filteredData = rawData.filter(item => {
                 const searchString = `${item.store || ''} ${item.product_title || ''} ${item.device_type || ''} ${item.visitor_id || ''}`.toLowerCase();
                 const matchSearch = searchString.includes(searchVal);
@@ -229,10 +228,16 @@
                     `).join('');
                 }
             } else if (currentView === 'details') {
-                const cityData = filteredData.filter(d => formatCountryName(d.country) === selectedCountry && (d.city || 'Unknown') === selectedCity);
+                // ⭐ FIXED: Using rawData instead of filteredData to show complete data on details page
+                const cityData = rawData.filter(d => {
+                    const matchCountry = formatCountryName(d.country) === selectedCountry;
+                    const itemCity = d.city || 'Unknown';
+                    const matchCity = String(itemCity).trim().toLowerCase() === String(selectedCity).trim().toLowerCase();
+                    return matchCountry && matchCity;
+                });
                 
                 if (cityData.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px;">No detailed records found.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px;">No detailed records found for this selection.</td></tr>`;
                 } else {
                     if (currentType === 'clicks') {
                         thead.innerHTML = `<tr><th>Sr. No.</th><th>Product Info</th><th>Store</th><th>Device</th><th>Source</th><th>Date</th></tr>`;
