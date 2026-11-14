@@ -78,6 +78,8 @@
         </div>
     </div>
 
+    <!-- ⭐ Yahan utils.js shamil kar diya gaya hai ⭐ -->
+    <script src="/js/utils.js?v=2"></script>
     <script src="/js/config.js?v=8"></script>
     <script src="/js/api.js?v=10"></script>
     <script>
@@ -169,7 +171,6 @@
             if (currentView === 'country') stepBackBtn.style.display = 'none';
             else stepBackBtn.style.display = 'inline-block';
 
-            // Filter Logic for List (Country / City)
             let filteredData = rawData.filter(item => {
                 const searchString = `${item.store || ''} ${item.product_title || ''} ${item.device_type || ''} ${item.visitor_id || ''}`.toLowerCase();
                 const matchSearch = searchString.includes(searchVal);
@@ -228,7 +229,6 @@
                     `).join('');
                 }
             } else if (currentView === 'details') {
-                // ⭐ FIXED: Using rawData instead of filteredData to show complete data on details page
                 const cityData = rawData.filter(d => {
                     const matchCountry = formatCountryName(d.country) === selectedCountry;
                     const itemCity = d.city || 'Unknown';
