@@ -9,42 +9,48 @@
     <link rel="stylesheet" href="/css/main.css?v=15">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background-color: #f8fafc; padding: 20px; font-family: sans-serif; }
-        .container { max-width: 1200px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        /* Body & Container Setup (Fixed left space issue) */
+        body { background-color: #f8fafc; padding: 20px; font-family: sans-serif; margin: 0; box-sizing: border-box; }
+        .container { max-width: 100%; width: 98%; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box; }
+        
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #E2E8F0; padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .header h1 { margin: 0; color: #1E1B4B; font-size: 1.5rem; }
         .btn-back { background: #64748B; color: #fff; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.9rem; }
         .btn-back:hover { background: #475569; }
+        
         .filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #E2E8F0; }
         .filters input, .filters select { padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; outline: none; font-size: 0.9rem; }
         .filters input { width: 250px; }
         
-        .table-responsive { overflow-x: auto; width: 100%; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 900px; }
-        th, td { border: 1px solid #E2E8F0; padding: 10px; text-align: left; font-size: 0.85rem; vertical-align: middle; word-break: break-all; }
-        th { background: #F8FAFC; font-weight: 600; color: #1E1B4B; position: sticky; top: 0; z-index: 10; }
+        /* Table Styling */
+        .table-responsive { overflow-x: auto; width: 100%; border: 1px solid #E2E8F0; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th, td { border: 1px solid #E2E8F0; padding: 10px; text-align: left; font-size: 0.85rem; vertical-align: middle; }
+        th { background: #F8FAFC; font-weight: 600; color: #1E1B4B; position: sticky; top: 0; z-index: 10; white-space: nowrap; }
         tr:hover { background: #F1F5F9; }
         
         /* Column Widths */
-        .col-sr { width: 40px; text-align: center !important; }
-        .col-id { width: 220px; font-family: monospace; font-size: 0.75rem; color: #475569; }
-        .col-date { width: 150px; }
+        .col-sr { width: 70px; min-width: 70px; text-align: center !important; }
+        .col-id { width: 30%; min-width: 250px; font-family: monospace; font-size: 0.75rem; color: #475569; word-break: break-all; }
+        .col-date { width: 180px; min-width: 180px; }
         
         .clickable-row { cursor: pointer; font-weight: 600; color: #1E1B4B; }
         .clickable-row:hover { background: #E2E8F0; }
         .clickable-row td { color: #1E1B4B; }
         .highlight { color: #DC2626; font-weight: bold; }
+        
         .breadcrumb { display: flex; gap: 8px; align-items: center; font-size: 0.95rem; margin-bottom: 15px; color: #64748B; background: #f1f5f9; padding: 10px 15px; border-radius: 8px; }
         .breadcrumb a { color: #2563eb; text-decoration: none; font-weight: bold; cursor: pointer; }
         .breadcrumb a:hover { text-decoration: underline; }
         .breadcrumb span { font-weight: bold; color: #1E1B4B; }
-        .table-wrapper { max-height: 65vh; overflow-y: auto; border: 1px solid #E2E8F0; border-radius: 8px; }
+        
+        .table-wrapper { max-height: 70vh; overflow-y: auto; }
         .back-step-btn { background: #E2E8F0; color: #1E1B4B; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; display: none; margin-right: 10px; }
         .back-step-btn:hover { background: #CBD5E1; }
         
         .product-cell { display: flex; align-items: center; gap: 10px; }
         .product-cell img { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; border: 1px solid #E2E8F0; }
-        .product-cell span { font-weight: 600; color: #1E1B4B; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+        .product-cell span { font-weight: 600; color: #1E1B4B; max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
         
         .badge-device { padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; white-space: nowrap; }
         .badge-mobile { background: #e0f2fe; color: #0369a1; }
@@ -258,8 +264,7 @@
                     tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 30px;">No detailed records found for this selection.</td></tr>`;
                 } else {
                     if (currentType === 'clicks') {
-                        // Added Device ID
-                        thead.innerHTML = `<tr><th class="col-sr">Sr. No.</th><th>Product Info</th><th>Store</th><th>Device</th><th class="col-id">Device ID</th><th>Source</th><th class="col-date">Date</th></tr>`;
+                        thead.innerHTML = `<tr><th class="col-sr">Sr. No.</th><th>Product Info</th><th style="width:12%">Store</th><th style="width:10%">Device</th><th class="col-id">Device ID</th><th style="width:15%">Source</th><th class="col-date">Date</th></tr>`;
                         tbody.innerHTML = cityData.map((d, idx) => {
                             const pTitle = d.product_title || 'Unknown Product';
                             const pImg = d.product_image || '/assets/icon-192.png?v=4';
@@ -275,13 +280,12 @@
                                 <td class="highlight">${escapeHTML(d.store || 'N/A')}</td>
                                 <td>${getDeviceBadge(d.device_type)}</td>
                                 <td class="col-id">${escapeHTML(d.visitor_id || 'N/A')}</td>
-                                <td style="font-size:0.75rem; color:#64748B;">${d.referrer || 'Direct'}</td>
+                                <td style="font-size:0.75rem; color:#64748B; word-break:break-all;">${d.referrer || 'Direct'}</td>
                                 <td class="col-date">${safeDate(d.created_at)}</td>
                             </tr>`;
                         }).join('');
                     } else if (currentType === 'visitors') {
-                        // Full Visitor ID (No truncation)
-                        thead.innerHTML = `<tr><th class="col-sr">Sr. No.</th><th class="col-id">Visitor ID</th><th>Source / Referrer</th><th>Device</th><th class="col-date">Last Active</th></tr>`;
+                        thead.innerHTML = `<tr><th class="col-sr">Sr. No.</th><th class="col-id">Visitor ID</th><th style="width:25%">Source / Referrer</th><th style="width:12%">Device</th><th class="col-date">Last Active</th></tr>`;
                         tbody.innerHTML = cityData.map((d, idx) => {
                             return `
                             <tr>
@@ -293,7 +297,7 @@
                             </tr>`;
                         }).join('');
                     } else if (currentType === 'installs') {
-                        thead.innerHTML = `<tr><th class="col-sr">Sr. No.</th><th class="col-id">Device ID</th><th>Device Type</th><th class="col-date">Last Active</th></tr>`;
+                        thead.innerHTML = `<tr><th class="col-sr">Sr. No.</th><th class="col-id">Device ID</th><th style="width:20%">Device Type</th><th class="col-date">Last Active</th></tr>`;
                         tbody.innerHTML = cityData.map((d, idx) => `
                             <tr>
                                 <td class="col-sr">${idx + 1}</td>
