@@ -1,3 +1,15 @@
+// ⭐ Helper: Get Cookie ⭐
+function getCookie(name) {
+    let nameEQ = name + "=";
+    let ca = document.cookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+}
+
 const API = {
     async signIn(email, password) {
         const { data, error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
@@ -66,9 +78,9 @@ const API = {
             if (storedGeo) geo = JSON.parse(storedGeo);
         } catch (e) {}
 
-        // Device Detect
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         const deviceType = isMobile ? 'Mobile' : 'Desktop';
+        const visitorId = getCookie('visitor_id') || getCookie('device_id') || 'Unknown';
 
         const clickData = {
             product_id: productId,
@@ -77,7 +89,8 @@ const API = {
             referrer: String(document.referrer || '').slice(0, 200),
             country: geo.country || 'Unknown',
             city: geo.city || 'Unknown',
-            device_type: deviceType
+            device_type: deviceType,
+            visitor_id: visitorId // ⭐ Ab Device ID bhi save hogi ⭐
         };
 
         try {
