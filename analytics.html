@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { background-color: #f8fafc; padding: 20px; font-family: sans-serif; }
-        .container { max-width: 1100px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .container { max-width: 1200px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #E2E8F0; padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .header h1 { margin: 0; color: #1E1B4B; font-size: 1.5rem; }
         .btn-back { background: #64748B; color: #fff; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.9rem; }
@@ -18,10 +18,18 @@
         .filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #E2E8F0; }
         .filters input, .filters select { padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; outline: none; font-size: 0.9rem; }
         .filters input { width: 250px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #E2E8F0; padding: 10px; text-align: left; font-size: 0.85rem; vertical-align: middle; }
+        
+        .table-responsive { overflow-x: auto; width: 100%; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 900px; }
+        th, td { border: 1px solid #E2E8F0; padding: 10px; text-align: left; font-size: 0.85rem; vertical-align: middle; word-break: break-all; }
         th { background: #F8FAFC; font-weight: 600; color: #1E1B4B; position: sticky; top: 0; z-index: 10; }
         tr:hover { background: #F1F5F9; }
+        
+        /* Column Widths */
+        .col-sr { width: 40px; text-align: center !important; }
+        .col-id { width: 220px; font-family: monospace; font-size: 0.75rem; color: #475569; }
+        .col-date { width: 150px; }
+        
         .clickable-row { cursor: pointer; font-weight: 600; color: #1E1B4B; }
         .clickable-row:hover { background: #E2E8F0; }
         .clickable-row td { color: #1E1B4B; }
@@ -38,7 +46,7 @@
         .product-cell img { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; border: 1px solid #E2E8F0; }
         .product-cell span { font-weight: 600; color: #1E1B4B; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
         
-        .badge-device { padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
+        .badge-device { padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; white-space: nowrap; }
         .badge-mobile { background: #e0f2fe; color: #0369a1; }
         .badge-desktop { background: #f3e8ff; color: #6b21a8; }
     </style>
@@ -68,25 +76,24 @@
         
         <div class="breadcrumb" id="breadcrumb"></div>
         
-        <div class="table-wrapper">
+        <div class="table-wrapper table-responsive">
             <table id="analyticsTable">
                 <thead id="tableHead"></thead>
                 <tbody id="tableBody">
-                    <tr><td style="text-align:center; padding: 30px;">Fetching data...</td></tr>
+                    <tr><td style="text-align:center; padding: 30px;" colspan="7">Fetching data...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
     <script src="/js/config.js?v=8"></script>
-    <script src="/js/api.js?v=10"></script>
+    <script src="/js/api.js?v=11"></script>
     <script>
         function escapeHTML(str) {
             if (str === null || str === undefined) return '';
             return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
         }
 
-        // ⭐ Safe Date Formatter (Prevents Crashes) ⭐
         function safeDate(dateStr) {
             if (!dateStr) return 'N/A';
             const d = new Date(dateStr);
@@ -208,7 +215,7 @@
             tbody.innerHTML = '';
 
             if (currentView === 'country') {
-                thead.innerHTML = `<tr><th>Sr. No.</th><th>Country</th><th>Total Records</th><th>Details</th></tr>`;
+                thead.innerHTML = `<tr><th class="col-sr">Sr. No.</th><th>Country</th><th>Total Records</th><th>Details</th></tr>`;
                 const grouped = {};
                 filteredData.forEach(d => { 
                     const c = formatCountryName(d.country); 
@@ -220,12 +227,12 @@
                 } else {
                     tbody.innerHTML = Object.entries(grouped).map(([country, count], idx) => `
                         <tr class="clickable-row" onclick="drillDown('city', '${country}')">
-                            <td>${idx + 1}</td><td>${country}</td><td>${count}</td><td style="color:#2563eb;">View Cities →</td>
+                            <td class="col-sr">${idx + 1}</td><td>${country}</td><td>${count}</td><td style="color:#2563eb;">View Cities →</td>
                         </tr>
                     `).join('');
                 }
             } else if (currentView === 'city') {
-                thead.innerHTML = `<tr><th>Sr. No.</th><th>City</th><th>Total Records</th><th>Details</th></tr>`;
+                thead.innerHTML = `<tr><th class="col-sr">Sr. No.</th><th>City</th><th>Total Records</th><th>Details</th></tr>`;
                 const countryData = filteredData.filter(d => formatCountryName(d.country) === selectedCountry);
                 const grouped = {};
                 countryData.forEach(d => { const c = d.city || 'Unknown'; grouped[c] = (grouped[c] || 0) + 1; });
@@ -235,12 +242,11 @@
                 } else {
                     tbody.innerHTML = Object.entries(grouped).map(([city, count], idx) => `
                         <tr class="clickable-row" onclick="drillDown('details', '${city}')">
-                            <td>${idx + 1}</td><td>${city}</td><td>${count}</td><td style="color:#2563eb;">View Details →</td>
+                            <td class="col-sr">${idx + 1}</td><td>${city}</td><td>${count}</td><td style="color:#2563eb;">View Details →</td>
                         </tr>
                     `).join('');
                 }
             } else if (currentView === 'details') {
-                // ⭐ FIXED: Using filteredData instead of rawData so filters apply to details too
                 const cityData = filteredData.filter(d => {
                     const matchCountry = formatCountryName(d.country) === selectedCountry;
                     const itemCity = d.city || 'Unknown';
@@ -249,16 +255,17 @@
                 });
                 
                 if (cityData.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px;">No detailed records found for this selection.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 30px;">No detailed records found for this selection.</td></tr>`;
                 } else {
                     if (currentType === 'clicks') {
-                        thead.innerHTML = `<tr><th>Sr. No.</th><th>Product Info</th><th>Store</th><th>Device</th><th>Source</th><th>Date</th></tr>`;
+                        // Added Device ID
+                        thead.innerHTML = `<tr><th class="col-sr">Sr. No.</th><th>Product Info</th><th>Store</th><th>Device</th><th class="col-id">Device ID</th><th>Source</th><th class="col-date">Date</th></tr>`;
                         tbody.innerHTML = cityData.map((d, idx) => {
                             const pTitle = d.product_title || 'Unknown Product';
                             const pImg = d.product_image || '/assets/icon-192.png?v=4';
                             return `
                             <tr>
-                                <td>${idx + 1}</td>
+                                <td class="col-sr">${idx + 1}</td>
                                 <td>
                                     <div class="product-cell">
                                         <img src="${escapeHTML(pImg)}" onerror="this.src='/assets/icon-192.png?v=4'">
@@ -267,31 +274,32 @@
                                 </td>
                                 <td class="highlight">${escapeHTML(d.store || 'N/A')}</td>
                                 <td>${getDeviceBadge(d.device_type)}</td>
+                                <td class="col-id">${escapeHTML(d.visitor_id || 'N/A')}</td>
                                 <td style="font-size:0.75rem; color:#64748B;">${d.referrer || 'Direct'}</td>
-                                <td>${safeDate(d.created_at)}</td>
+                                <td class="col-date">${safeDate(d.created_at)}</td>
                             </tr>`;
                         }).join('');
                     } else if (currentType === 'visitors') {
-                        thead.innerHTML = `<tr><th>Sr. No.</th><th>Visitor ID</th><th>Source / Referrer</th><th>Device</th><th>Last Active</th></tr>`;
+                        // Full Visitor ID (No truncation)
+                        thead.innerHTML = `<tr><th class="col-sr">Sr. No.</th><th class="col-id">Visitor ID</th><th>Source / Referrer</th><th>Device</th><th class="col-date">Last Active</th></tr>`;
                         tbody.innerHTML = cityData.map((d, idx) => {
-                            const vId = d.visitor_id ? String(d.visitor_id).substring(0, 8) + '...' : 'Unknown';
                             return `
                             <tr>
-                                <td>${idx + 1}</td>
-                                <td style="font-family:monospace; font-size:0.75rem;">${vId}</td>
+                                <td class="col-sr">${idx + 1}</td>
+                                <td class="col-id">${escapeHTML(d.visitor_id || 'Unknown')}</td>
                                 <td class="highlight">${escapeHTML(d.referrer || 'Direct')}</td>
                                 <td>${getDeviceBadge(d.device_type)}</td>
-                                <td>${safeDate(d.last_seen)}</td>
+                                <td class="col-date">${safeDate(d.last_seen)}</td>
                             </tr>`;
                         }).join('');
                     } else if (currentType === 'installs') {
-                        thead.innerHTML = `<tr><th>Sr. No.</th><th>Device ID</th><th>Device Type</th><th>Last Active</th></tr>`;
+                        thead.innerHTML = `<tr><th class="col-sr">Sr. No.</th><th class="col-id">Device ID</th><th>Device Type</th><th class="col-date">Last Active</th></tr>`;
                         tbody.innerHTML = cityData.map((d, idx) => `
                             <tr>
-                                <td>${idx + 1}</td>
-                                <td style="font-family:monospace;">${d.device_id || 'Unknown'}</td>
+                                <td class="col-sr">${idx + 1}</td>
+                                <td class="col-id">${escapeHTML(d.device_id || 'Unknown')}</td>
                                 <td>${getDeviceBadge(d.device_type)}</td>
-                                <td>${safeDate(d.last_active)}</td>
+                                <td class="col-date">${safeDate(d.last_active)}</td>
                             </tr>
                         `).join('');
                     }
