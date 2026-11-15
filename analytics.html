@@ -9,9 +9,9 @@
     <link rel="stylesheet" href="/css/main.css?v=15">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* Body & Container Setup (Fixed left space issue) */
-        body { background-color: #f8fafc; padding: 20px; font-family: sans-serif; margin: 0; box-sizing: border-box; }
-        .container { max-width: 100%; width: 98%; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box; }
+        /* ⭐ Full Width Container (No Left Space) ⭐ */
+        body { background-color: #f8fafc; padding: 10px; font-family: sans-serif; margin: 0; box-sizing: border-box; }
+        .container { max-width: 100%; width: 100%; margin: 0; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box; }
         
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #E2E8F0; padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .header h1 { margin: 0; color: #1E1B4B; font-size: 1.5rem; }
@@ -29,19 +29,19 @@
             width: 100%; 
             border-collapse: collapse; 
             min-width: 900px; 
-            table-layout: fixed; /* ⭐ Yeh line columns ko fix karti hai ⭐ */
+            table-layout: fixed; /* ⭐ Fixed Layout is the key ⭐ */
         }
         
-        th, td { border: 1px solid #E2E8F0; padding: 10px; text-align: left; font-size: 0.85rem; vertical-align: middle; }
-        th { background: #F8FAFC; font-weight: 600; color: #1E1B4B; position: sticky; top: 0; z-index: 10; white-space: nowrap; }
+        th, td { border: 1px solid #E2E8F0; padding: 10px; text-align: left; font-size: 0.85rem; vertical-align: middle; white-space: nowrap; }
+        th { background: #F8FAFC; font-weight: 600; color: #1E1B4B; position: sticky; top: 0; z-index: 10; }
         tr:hover { background: #F1F5F9; }
         
-        /* ⭐ Column Widths Fixed ⭐ */
-        .col-sr { width: 70px; min-width: 70px; text-align: center !important; }
-        .col-id { width: 30%; word-break: break-all; font-family: monospace; font-size: 0.75rem; color: #475569; }
-        .col-source { width: 15%; font-size: 0.75rem; color: #64748B; word-break: break-all; }
-        .col-device { width: 12%; }
-        .col-date { width: 18%; }
+        /* ⭐ Exact Column Widths ⭐ */
+        .col-sr { width: 80px !important; text-align: center !important; }
+        .col-id { width: 35% !important; word-break: break-all; font-family: monospace; font-size: 0.75rem; color: #475569; white-space: normal !important; }
+        .col-source { width: 15% !important; font-size: 0.75rem; color: #64748B; white-space: normal !important; word-break: break-all; }
+        .col-device { width: 12% !important; }
+        .col-date { width: 18% !important; }
         
         .clickable-row { cursor: pointer; font-weight: 600; color: #1E1B4B; }
         .clickable-row:hover { background: #E2E8F0; }
