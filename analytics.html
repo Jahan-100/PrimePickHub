@@ -9,9 +9,9 @@
     <link rel="stylesheet" href="/css/main.css?v=15">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ⭐ Full Width Container (No Left Space) ⭐ */
-        body { background-color: #f8fafc; padding: 10px; font-family: sans-serif; margin: 0; box-sizing: border-box; }
-        .container { max-width: 100%; width: 100%; margin: 0; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box; }
+        /* ⭐ Body & Container Setup (No left space, full width) ⭐ */
+        html, body { margin: 0 !important; padding: 0 !important; background-color: #f8fafc; font-family: sans-serif; box-sizing: border-box; }
+        .container { max-width: 100%; width: 100%; margin: 0; background: #fff; padding: 20px; min-height: 100vh; box-sizing: border-box; }
         
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #E2E8F0; padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .header h1 { margin: 0; color: #1E1B4B; font-size: 1.5rem; }
@@ -29,18 +29,29 @@
             width: 100%; 
             border-collapse: collapse; 
             min-width: 900px; 
-            table-layout: fixed; /* ⭐ Fixed Layout is the key ⭐ */
+            table-layout: fixed; 
         }
         
-        th, td { border: 1px solid #E2E8F0; padding: 10px; text-align: left; font-size: 0.85rem; vertical-align: middle; white-space: nowrap; }
+        th, td { border: 1px solid #E2E8F0; padding: 10px; text-align: left; font-size: 0.9rem; vertical-align: middle; white-space: nowrap; }
         th { background: #F8FAFC; font-weight: 600; color: #1E1B4B; position: sticky; top: 0; z-index: 10; }
         tr:hover { background: #F1F5F9; }
         
-        /* ⭐ Exact Column Widths ⭐ */
-        .col-sr { width: 80px !important; text-align: center !important; }
-        .col-id { width: 35% !important; word-break: break-all; font-family: monospace; font-size: 0.75rem; color: #475569; white-space: normal !important; }
-        .col-source { width: 15% !important; font-size: 0.75rem; color: #64748B; white-space: normal !important; word-break: break-all; }
-        .col-device { width: 12% !important; }
+        /* ⭐ Exact Column Widths (Fixing the sizing) ⭐ */
+        .col-sr { width: 60px !important; text-align: center !important; }
+        
+        /* Visitor ID Column (Bada font aur clear) */
+        .col-id { 
+            width: 40% !important; 
+            font-family: monospace; 
+            font-size: 1.1rem !important; /* Font size barha diya */
+            color: #1E1B4B !important; 
+            font-weight: bold;
+            word-break: break-all; 
+            white-space: normal !important; 
+        }
+        
+        .col-source { width: 15% !important; font-size: 0.85rem; color: #64748B; white-space: normal !important; word-break: break-all; }
+        .col-device { width: 10% !important; }
         .col-date { width: 18% !important; }
         
         .clickable-row { cursor: pointer; font-weight: 600; color: #1E1B4B; }
@@ -53,7 +64,7 @@
         .breadcrumb a:hover { text-decoration: underline; }
         .breadcrumb span { font-weight: bold; color: #1E1B4B; }
         
-        .table-wrapper { max-height: 70vh; overflow-y: auto; }
+        .table-wrapper { max-height: 75vh; overflow-y: auto; }
         .back-step-btn { background: #E2E8F0; color: #1E1B4B; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; display: none; margin-right: 10px; }
         .back-step-btn:hover { background: #CBD5E1; }
         
@@ -273,7 +284,7 @@
                     tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 30px;">No detailed records found for this selection.</td></tr>`;
                 } else {
                     if (currentType === 'clicks') {
-                        thead.innerHTML = `<tr><th class="col-sr">Sr. No.</th><th style="width:25%">Product Info</th><th class="col-source">Store</th><th class="col-device">Device</th><th class="col-id">Device ID</th><th class="col-source">Source</th><th class="col-date">Date</th></tr>`;
+                        thead.innerHTML = `<tr><th class="col-sr">Sr. No.</th><th style="width:22%">Product Info</th><th class="col-source">Store</th><th class="col-device">Device</th><th class="col-id">Device ID</th><th class="col-source">Source</th><th class="col-date">Date</th></tr>`;
                         tbody.innerHTML = cityData.map((d, idx) => {
                             const pTitle = d.product_title || 'Unknown Product';
                             const pImg = d.product_image || '/assets/icon-192.png?v=4';
@@ -294,7 +305,7 @@
                             </tr>`;
                         }).join('');
                     } else if (currentType === 'visitors') {
-                        thead.innerHTML = `<tr><th class="col-sr">Sr. No.</th><th class="col-id" style="width:40%">Visitor ID</th><th class="col-source" style="width:20%">Source / Referrer</th><th class="col-device">Device</th><th class="col-date">Last Active</th></tr>`;
+                        thead.innerHTML = `<tr><th class="col-sr">Sr. No.</th><th class="col-id" style="width:45%">Visitor ID</th><th class="col-source" style="width:20%">Source / Referrer</th><th class="col-device">Device</th><th class="col-date">Last Active</th></tr>`;
                         tbody.innerHTML = cityData.map((d, idx) => {
                             return `
                             <tr>
