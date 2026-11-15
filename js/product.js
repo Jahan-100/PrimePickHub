@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     let uniqueColors = [];
     allVariations.forEach(v => {
-        if (v.product_color) {
+        if (v.product_color && v.product_color.trim() !== '') {
             const colorValues = v.product_color.split(',').map(c => c.trim()).filter(Boolean);
             const colorNames = (v.color_name || '').split(',').map(n => n.trim());
             colorValues.forEach((val, idx) => {
@@ -187,9 +187,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     let activeColorName = uniqueColors.length > 0 ? uniqueColors[0].name : '';
     let activeOfferIndex = 0;
     let activeSize = null;
-    if (activeColor) { const idx = allVariations.findIndex(v => v.product_color && v.product_color.includes(activeColor)); if (idx !== -1) activeOfferIndex = idx; }
     
-    const initialOffersForColor = activeColor ? allVariations.filter(v => v.product_color && v.product_color.includes(activeColor)) : allVariations;
+    const initialOffersForColor = allVariations.filter(v => {
+        if (!activeColor) return true;
+        const vColor = (v.product_color || '').trim();
+        if (!vColor) return activeColor === uniqueColors[0].value;
+        return vColor.includes(activeColor);
+    });
+
     let initialAvailableSizes = [];
     initialOffersForColor.forEach(o => { if (o.variation_name) { o.variation_name.split(',').map(s => s.trim()).filter(Boolean).forEach(s => { if (!initialAvailableSizes.includes(s)) initialAvailableSizes.push(s); }); } });
     if (initialAvailableSizes.length > 0) activeSize = initialAvailableSizes[0];
@@ -216,8 +221,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             html += `</div></div>`;
         }
-        const offersForColor = activeColor ? allVariations.filter(v => v.product_color && v.product_color.includes(activeColor)) : allVariations;
-        let availableSizes = []; offersForColor.forEach(o => { if (o.variation_name) { o.variation_name.split(',').map(s => s.trim()).filter(Boolean).forEach(s => { if (!availableSizes.includes(s)) availableSizes.push(s); }); } });
+        
+        // ⭐ FIX: Include variations with no color if activeColor is the main default color
+        const offersForColor = allVariations.filter(v => {
+            if (!activeColor) return true;
+            const vColor = (v.product_color || '').trim();
+            if (!vColor) return activeColor === uniqueColors[0].value; 
+            return vColor.includes(activeColor);
+        });
+
+        let availableSizes = []; 
+        offersForColor.forEach(o => { 
+            if (o.variation_name) { 
+                o.variation_name.split(',').map(s => s.trim()).filter(Boolean).forEach(s => { 
+                    if (!availableSizes.includes(s)) availableSizes.push(s); 
+                }); 
+            } 
+        });
+        
         if (availableSizes.length > 0) {
             if (!activeSize || !availableSizes.includes(activeSize)) activeSize = availableSizes[0];
             html += `<div style="margin-bottom: 15px;"><p style="font-weight:bold; margin-bottom:8px;">Size:</p><div style="display:flex; gap:10px; flex-wrap:wrap;">`;
@@ -383,10 +404,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.selectColor = function(colorValue, colorName) {
         activeColor = colorValue; activeColorName = colorName;
-        const offersForColor = allVariations.filter(v => v.product_color && v.product_color.includes(colorValue));
-        let idxExact = allVariations.findIndex(v => v.product_color && v.product_color.includes(colorValue) && (activeSize ? v.variation_name && v.variation_name.trim() === activeSize : true));
-        let idxPartial = allVariations.findIndex(v => v.product_color && v.product_color.includes(colorValue) && (activeSize ? v.variation_name && v.variation_name.split(',').map(s=>s.trim()).includes(activeSize) : true));
-        if (idxExact !== -1) activeOfferIndex = idxExact; else if (idxPartial !== -1) activeOfferIndex = idxPartial; else if (offersForColor.length > 0) activeOfferIndex = allVariations.indexOf(offersForColor[0]);
+        
+        const offersForColor = allVariations.filter(v => {
+            const vColor = (v.product_color || '').trim();
+            return vColor ? vColor.includes(colorValue) : (colorValue === uniqueColors[0].value);
+        });
+
+        let idxExact = allVariations.findIndex(v => {
+            const vColor = (v.product_color || '').trim();
+            const matchesColor = vColor ? vColor.includes(colorValue) : (colorValue === uniqueColors[0].value);
+            const matchesSize = activeSize ? (v.variation_name && v.variation_name.trim() === activeSize) : true;
+            return matchesColor && matchesSize;
+        });
+
+        let idxPartial = allVariations.findIndex(v => {
+            const vColor = (v.product_color || '').trim();
+            const matchesColor = vColor ? vColor.includes(colorValue) : (colorValue === uniqueColors[0].value);
+            const matchesSize = activeSize ? (v.variation_name && v.variation_name.split(',').map(s=>s.trim()).includes(activeSize)) : true;
+            return matchesColor && matchesSize;
+        });
+
+        if (idxExact !== -1) activeOfferIndex = idxExact; 
+        else if (idxPartial !== -1) activeOfferIndex = idxPartial; 
+        else if (offersForColor.length > 0) activeOfferIndex = allVariations.indexOf(offersForColor[0]);
+        
         activeOffer = allVariations[activeOfferIndex];
         const cleanColor = (colorName || '').toLowerCase().replace(/[^a-z0-9]/g, ''); let targetIndex = -1;
         if (cleanColor.length > 2) { for (let i = 0; i < galleryImages.length; i++) { const cleanUrl = galleryImages[i].toLowerCase().replace(/[^a-z0-9]/g, ''); if (cleanUrl.includes(cleanColor)) { targetIndex = i; break; } } }
@@ -396,9 +437,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.selectSize = function(size) {
         activeSize = size;
-        let idxExact = allVariations.findIndex(v => v.variation_name && v.variation_name.trim() === size && (!activeColor || (v.product_color && v.product_color.includes(activeColor))));
-        let idxPartial = allVariations.findIndex(v => v.variation_name && v.variation_name.split(',').map(s=>s.trim()).includes(size) && (!activeColor || (v.product_color && v.product_color.includes(activeColor))));
-        if (idxExact !== -1) activeOfferIndex = idxExact; else if (idxPartial !== -1) activeOfferIndex = idxPartial;
+        
+        let idxExact = allVariations.findIndex(v => {
+            if (v.variation_name !== size) return false;
+            if (!activeColor) return true;
+            const vColor = (v.product_color || '').trim();
+            return vColor ? vColor.includes(activeColor) : (activeColor === uniqueColors[0].value);
+        });
+
+        let idxPartial = allVariations.findIndex(v => {
+            if (!v.variation_name || !v.variation_name.split(',').map(s=>s.trim()).includes(size)) return false;
+            if (!activeColor) return true;
+            const vColor = (v.product_color || '').trim();
+            return vColor ? vColor.includes(activeColor) : (activeColor === uniqueColors[0].value);
+        });
+
+        if (idxExact !== -1) activeOfferIndex = idxExact; 
+        else if (idxPartial !== -1) activeOfferIndex = idxPartial;
+        
         activeOffer = allVariations[activeOfferIndex];
         document.getElementById('variationContainer').innerHTML = generateVariationUI(); updateUI(currencySelector.value);
     };
@@ -534,7 +590,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         ]
     };
 
-    // Inject JSON-LD scripts
     const script1 = document.createElement('script'); script1.type = 'application/ld+json'; script1.text = JSON.stringify(jsonLd); document.head.appendChild(script1);
     const script2 = document.createElement('script'); script2.type = 'application/ld+json'; script2.text = JSON.stringify(breadcrumbLd); document.head.appendChild(script2);
 });
