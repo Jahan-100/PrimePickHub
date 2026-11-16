@@ -74,8 +74,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100));
         }
 
+        // ⭐ FIX: Hidden price ($0.00) issue ⭐
         let priceDisplay = '';
-        if (salePrice > 0) {
+        if (basePrice === 0 && salePrice === 0) {
+            priceDisplay = `<div style="font-weight:bold; color:#FF5A3C; margin: 5px 0 10px 0; font-size:1.1rem;">Check Price</div>`;
+        } else if (salePrice > 0) {
             priceDisplay = `
                 <div style="margin: 5px 0 10px 0; display:flex; align-items:center; gap:8px;">
                     <span style="text-decoration:line-through; color:#64748B; font-size:0.9rem;">${offerSymbol}${finalBasePrice.toFixed(2)}</span>
@@ -97,7 +100,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="card-body">
                     <a href="${pUrl}" class="card-title">${escapeHTML(p.title)}</a>
                     ${priceDisplay}
-                    <a href="${escapeHTML(affUrl)}" target="_blank" rel="noopener noreferrer sponsored"
+                    <a href="${escapeHTML(affUrl)}" target="_blank" rel="noopener sponsored"
                        class="btn-check-price js-affiliate-link"
                        style="background-color:${bg};color:${fg};"
                        data-store="${escapeHTML(storeName)}"
