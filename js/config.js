@@ -12,7 +12,15 @@ const CONFIG = {
         aliexpress: { name: 'AliExpress', brandColor: '#FF4747', textColor: '#FFFFFF' },
         daraz:      { name: 'Daraz',      brandColor: '#F57224', textColor: '#FFFFFF' },
         ebay:       { name: 'eBay',       brandColor: '#E53238', textColor: '#FFFFFF' },
-        walmart:    { name: 'Walmart',    brandColor: '#0071CE', textColor: '#FFFFFF' }
+        walmart:    { name: 'Walmart',    brandColor: '#0071CE', textColor: '#FFFFFF' },
+        
+        // ⭐ New Networks Added ⭐
+        "allegra k":{ name: 'Allegra K', brandColor: '#2563eb', textColor: '#FFFFFF' },
+        "hacoo":    { name: 'Hacoo',     brandColor: '#2563eb', textColor: '#FFFFFF' },
+        "govee":    { name: 'Govee',     brandColor: '#2563eb', textColor: '#FFFFFF' },
+        "chicme":   { name: 'ChicMe',    brandColor: '#2563eb', textColor: '#FFFFFF' },
+        "stylewe":  { name: 'Stylewe',   brandColor: '#2563eb', textColor: '#FFFFFF' },
+        "lenovo":   { name: 'Lenovo',    brandColor: '#E2231A', textColor: '#FFFFFF' }
     },
 
     categories: [
