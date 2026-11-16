@@ -1,15 +1,3 @@
-// ⭐ Helper: Get Cookie ⭐
-function getCookie(name) {
-    let nameEQ = name + "=";
-    let ca = document.cookie.split(';');
-    for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
-    }
-    return null;
-}
-
 const API = {
     async signIn(email, password) {
         const { data, error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
@@ -25,7 +13,14 @@ const API = {
     },
     async getHomepageProducts() {
         if (!window.supabaseClient) return { featured: [], trending: [], latest: [] };
-        const { data, error } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').order('created_at', { ascending: false }).limit(100);
+        
+        // ⭐ SPEED FIX: select('*') hata kar specific columns fetch kiye hain ⭐
+        const { data, error } = await window.supabaseClient
+            .from('products')
+            .select('id, title, slug, image_url, rating, reviews_count, is_featured, is_trending, is_special_deal, category_slug, badge, sale_end_date, sale_end_date_2, event_name, event_name_2, is_available, affiliate_offers(id, store_name, affiliate_url, price, sale_price, commission_rate, currency, product_color, color_name, variation_name)')
+            .order('created_at', { ascending: false })
+            .limit(100);
+            
         if (error || !data) return { featured: [], trending: [], latest: [] };
         return { featured: data.filter(p => p.is_featured), trending: data.filter(p => p.is_trending), latest: data.slice(0, 100) };
     },
@@ -90,7 +85,7 @@ const API = {
             country: geo.country || 'Unknown',
             city: geo.city || 'Unknown',
             device_type: deviceType,
-            visitor_id: visitorId // ⭐ Ab Device ID bhi save hogi ⭐
+            visitor_id: visitorId
         };
 
         try {
