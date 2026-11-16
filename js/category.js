@@ -1,8 +1,3 @@
-/**
- * Category Page Renderer
- * NOTE: escapeHTML() and getHighQualityImage() come from /js/utils.js
- */
-
 document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(window.location.search);
     const categorySlug = params.get('cat') || params.get('category');
@@ -17,10 +12,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (titleEl) titleEl.innerText = `${title} Products`;
     if (bcEl) bcEl.innerText = title;
 
+    // ⭐ Meta Tags Inject ⭐
+    if (document.getElementById('ogTitle')) document.getElementById('ogTitle').content = document.title;
+    if (document.getElementById('metaDesc')) document.getElementById('metaDesc').content = `Shop top deals in ${title} on PrimePickHub. Compare prices and save.`;
+    if (document.getElementById('ogDesc')) document.getElementById('ogDesc').content = `Shop top deals in ${title} on PrimePickHub. Compare prices and save.`;
+
     grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;padding:40px;">Loading...</p>';
 
-    const rawProducts = await API.searchProducts({ category: categorySlug });
-    const products = (rawProducts || []).filter(p => p.is_available !== false);
+    // ⭐ Speed Optimization: Using specific columns ⭐
+    const { data, error } = await window.supabaseClient
+        .from('products')
+        .select('id, title, slug, image_url, rating, reviews_count, badge, affiliate_offers(store_name, affiliate_url, price, sale_price, commission_rate, currency)')
+        .eq('category_slug', categorySlug)
+        .eq('is_available', true)
+        .order('created_at', { ascending: false });
+
+    const products = data || [];
 
     if (!products || products.length === 0) {
         grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;">
