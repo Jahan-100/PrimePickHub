@@ -3,6 +3,7 @@
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/product/:slug", "destination": "/product.html?slug=:slug" },
     { "source": "/category/:cat", "destination": "/category.html?cat=:cat" },
+    { "source": "/blog/:slug", "destination": "/article.html?slug=:slug" },
     { "source": "/api/geo", "destination": "/api/geo.js" }
   ],
   "crons": [
