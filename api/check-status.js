@@ -1,4 +1,3 @@
-// api/check-status.js
 const { createClient } = require('@supabase/supabase-js');
 
 module.exports = async function handler(req, res) {
@@ -6,6 +5,20 @@ module.exports = async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     if (req.method === 'OPTIONS') return res.status(200).end();
 
+    // ⭐ 1. ADMIN AUTHENTICATION CHECK ⭐
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
+    const token = authHeader.split(' ')[1];
+    
+    const supabaseAuth = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, { global: { headers: { Authorization: `Bearer ${token}` } } });
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+    if (authError || !user) return res.status(401).json({ error: 'Invalid token' });
+
+    const supabaseAdmin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+    const { data: profile } = await supabaseAdmin.from('profiles').select('role').eq('id', user.id).single();
+    if (profile?.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
+
+    // ⭐ 2. MAIN LOGIC ⭐
     try {
         const supabaseUrl = process.env.SUPABASE_URL || 'https://smxjiwywepeaybhekrck.supabase.co';
         const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -39,7 +52,6 @@ module.exports = async function handler(req, res) {
                     redirect: 'follow',
                     signal: AbortSignal.timeout(10000),
                     headers: {
-                        // Better User Agent to avoid 403 Forbidden by Amazon/AliExpress
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
                         'Accept-Language': 'en-US,en;q=0.5',
@@ -51,7 +63,6 @@ module.exports = async function handler(req, res) {
                     }
                 });
 
-                // Agar 403, 429 (Rate Limit), ya 503 aata hai, toh skip karein
                 if ([403, 429, 503].includes(response.status)) {
                     skippedCount++;
                     console.warn(`[SKIP] ${product.title} - HTTP ${response.status} (bot protection)`);
