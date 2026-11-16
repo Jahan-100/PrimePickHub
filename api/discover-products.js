@@ -1,11 +1,24 @@
 const { createClient } = require('@supabase/supabase-js');
 
 module.exports = async function handler(req, res) {
+    // ⭐ 1. ADMIN AUTHENTICATION CHECK ⭐
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
+    const token = authHeader.split(' ')[1];
+    
+    const supabaseAuth = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, { global: { headers: { Authorization: `Bearer ${token}` } } });
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+    if (authError || !user) return res.status(401).json({ error: 'Invalid token' });
+
+    const supabaseAdmin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+    const { data: profile } = await supabaseAdmin.from('profiles').select('role').eq('id', user.id).single();
+    if (profile?.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
+
+    // ⭐ 2. MAIN LOGIC ⭐
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
     const apiKey = process.env.OPENROUTER_API_KEY;
     const apifyToken = process.env.APIFY_API_TOKEN;
-    
     const keyword = req.body && req.body.keyword ? req.body.keyword.trim() : '';
 
     if (!apiKey || !apifyToken) return res.status(500).json({ error: 'API keys missing in Vercel.' });
@@ -16,35 +29,30 @@ module.exports = async function handler(req, res) {
         console.log("Starting multi-platform fetch...");
         const searchQuery = keyword ? encodeURIComponent(keyword) : 'best-selling';
 
-        // Admitad ke tamam joined brands ki list
         const admitadBrands = [
             "Hacoo", "Redmagic", "AliExpress", "Alibaba", "Govee", 
             "Lenovo", "ChicMe", "MEShology", "Turbo VPN", "Stylewe", 
             "Gshopper", "JustFashionNow", "Noracora", "Openhagen", "Italo"
         ];
 
-        // 1. Amazon Scraper
         const fetchAmazon = fetch(`https://api.apify.com/v2/acts/rel8ble~amazon-bestsellers-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ categoryIds: ["electronics", "fashion", "home"], maxItems: 10 })
         }).then(r => r.json()).catch(e => []);
 
-        // 2. AliExpress Scraper
         const fetchAli = fetch(`https://api.apify.com/v2/acts/epctex~aliexpress-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ startUrls: [{ url: `https://www.aliexpress.com/w/wholesale-${searchQuery}.html` }], maxItems: 10 })
         }).then(r => r.json()).catch(e => []);
 
-        // 3. Alibaba Scraper
         const fetchAlibaba = fetch(`https://api.apify.com/v2/acts/epctex~alibaba-scraper/run-sync-get-dataset-items?token=${apifyToken}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ keyword: keyword || "hot selling products", maxItems: 10 })
         }).then(r => r.json()).catch(e => []);
 
-        // 4. Admitad ke brands ke liye generic search (Hum top 5 random brands uthayenge har dafa)
         const shuffledBrands = admitadBrands.sort(() => 0.5 - Math.random());
         const selectedBrands = shuffledBrands.slice(0, 5); 
         
@@ -59,7 +67,6 @@ module.exports = async function handler(req, res) {
             }).catch(e => []);
         });
 
-        // Sab data ek sath fetch karein (Parallel)
         const [amazonData, aliData, alibabaData, ...brandsData] = await Promise.all([fetchAmazon, fetchAli, fetchAlibaba, ...brandFetches]);
 
         let amazonProducts = [];
@@ -77,11 +84,9 @@ module.exports = async function handler(req, res) {
             return res.status(500).json({ error: "No data found from Apify. Check Apify limits." });
         }
 
-        // Shuffle aur mix karein taake AI ke paas variety ho
         let mixedRawProducts = [...amazonProducts.slice(0, 10), ...otherProducts.slice(0, 15)];
         mixedRawProducts = mixedRawProducts.sort(() => 0.5 - Math.random());
 
-        // Data ko AI ke liye clean karein
         const cleanDataForAI = mixedRawProducts.map(p => ({
             title: p.title || p.name,
             url: p.url || p.link || p.productUrl,
@@ -90,7 +95,6 @@ module.exports = async function handler(req, res) {
             source: p.source
         }));
 
-        // AI Prompt (Flexible diversity rule)
         const prompt = `You are a JSON API. Select the top 8 best-selling products for US, UK, Europe, Australia from this raw data.
         ${keyword ? `The user is specifically searching for: "${keyword}".` : 'Select globally trending items.'}
 
@@ -154,7 +158,6 @@ module.exports = async function handler(req, res) {
             return res.status(500).json({ error: "AI failed to generate a valid list. Please try again." });
         }
 
-        // Emoji sirf Auto Search (Cron Job) par add hoga
         const isAutoSearch = req.headers['x-vercel-cron'] === '1';
         const insertData = finalProducts.map(p => {
             let finalTitle = p.title;
