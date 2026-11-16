@@ -2,16 +2,12 @@
  * PrimePickHub Homepage Renderer + Realtime + Notifications + PWA + Tracking
  */
 
-if ('scrollRestoration' in history) {
-    history.scrollRestoration = 'manual';
-}
+if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
 
 document.addEventListener('click', (e) => {
     const link = e.target.closest('a');
     if (link && link.href && !link.href.includes('#') && !link.href.includes('javascript:') && link.target !== '_blank') {
-        if (window.location.pathname === '/' || window.location.pathname.includes('index.html')) {
-            sessionStorage.setItem('homeScrollY', window.scrollY);
-        }
+        if (window.location.pathname === '/' || window.location.pathname.includes('index.html')) { sessionStorage.setItem('homeScrollY', window.scrollY); }
     }
 }, { capture: true });
 
@@ -51,6 +47,7 @@ function getAllDescendantSlugs(parentSlug, allCats) {
     traverse(parentSlug); return Array.from(slugs);
 }
 
+// ⭐ FIX: Removed ?v=timestamp from icons to save bandwidth ⭐
 function getCategoryIcon(cat) {
     if (!cat) return '📦';
     const name = (cat.name || '').toLowerCase().trim(); let slug = (cat.slug || '').toLowerCase().trim();
@@ -58,8 +55,9 @@ function getCategoryIcon(cat) {
     if (cat.icon && (cat.icon.startsWith('http') || cat.icon.includes('assets/'))) { const iconPath = cat.icon.startsWith('/') ? cat.icon : '/' + cat.icon; return `<img src="${iconPath}" alt="${escapeHTML(cat.name)}" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff;">`; }
     let fallbackEmoji = '🏷️';
     if (name.includes('bag') || name.includes('luggage')) fallbackEmoji = '👜'; else if (name.includes('jewel') || name.includes('watch')) fallbackEmoji = '💍'; else if (name.includes('electronic') || name.includes('tech')) fallbackEmoji = '📱'; else if (name.includes('cloth') || name.includes('fashion')) fallbackEmoji = '👗'; else if (name.includes('shoe')) fallbackEmoji = '👟'; else if (name.includes('light')) fallbackEmoji = '💡'; else if (name.includes('glass') || name.includes('eyewear')) fallbackEmoji = '🕶️'; else if (name.includes('beauty') || name.includes('makeup')) fallbackEmoji = '💄'; else if (name.includes('sport')) fallbackEmoji = '🏋️'; else if (name.includes('toy') || name.includes('game')) fallbackEmoji = '🧸'; else if (name.includes('car') || name.includes('auto')) fallbackEmoji = '🚗'; else if (name.includes('home') || name.includes('kitchen')) fallbackEmoji = '🛋️'; else if (name.includes('accessories')) fallbackEmoji = '💍'; else if (name.includes('belt')) fallbackEmoji = '🩱';
-    const timestamp = new Date().getTime();
-    return `<div style="width:100%; height:100%; position:relative; display:flex; align-items:center; justify-content:center;"><img src="/assets/${slug}-icon.jpg?v=${timestamp}" alt="${escapeHTML(cat.name)}" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff; position:absolute; top:0; left:0;" onerror="if(this.src.includes('.jpg')) { this.src = this.src.replace('.jpg', '.png'); } else if(this.src.includes('.png')) { this.src = this.src.replace('.png', '.jpeg'); } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }"><span style="display:none; font-size:2.2rem; align-items:center; justify-content:center; height:100%; width:100%;">${fallbackEmoji}</span></div>`;
+    
+    // Now using .webp instead of .jpg and removed timestamp
+    return `<div style="width:100%; height:100%; position:relative; display:flex; align-items:center; justify-content:center;"><img src="/assets/${slug}-icon.webp" alt="${escapeHTML(cat.name)}" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff; position:absolute; top:0; left:0;" onerror="if(this.src.includes('.webp')) { this.src = this.src.replace('.webp', '.jpg'); } else if(this.src.includes('.jpg')) { this.src = this.src.replace('.jpg', '.png'); } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }"><span style="display:none; font-size:2.2rem; align-items:center; justify-content:center; height:100%; width:100%;">${fallbackEmoji}</span></div>`;
 }
 
 let allCategoriesGlobal = []; let activeCategoriesSet = new Set(); let hoverTimeout;
@@ -141,14 +139,14 @@ function renderProductCard(product, isPriority = false) {
         let bg = safeColor(cfg.brandColor, '#2563eb'); if (bg === '#FF4747') bg = '#DC2626'; const fg = safeColor(cfg.textColor, '#ffffff'); const storeName = escapeHTML(cfg.name || primaryOffer.store_name || 'Store');
         const affUrl = escapeHTML(primaryOffer.affiliate_url || '#'); const pid = escapeHTML(String(product.id ?? ''));
         const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' }; const offerCurrency = (primaryOffer.currency || 'USD').toUpperCase(); const offerSymbol = currencySymbols[offerCurrency] || offerCurrency + ' ';
-        const basePrice = parseFloat(primaryOffer.price) || 0; const salePrice = parseFloat(primaryOffer.sale_price) || 0; const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
-        let finalBasePrice = basePrice; let finalSalePrice = salePrice;
-        if (commissionRate > 0) { finalBasePrice = basePrice + (basePrice * (commissionRate / 100)); if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100)); }
+        const basePrice = parseFloat(primaryOffer.price) || 0; const salePrice = parseFloat(primaryOffer.sale_price) || 0;
+        
+        // ⭐ FIX: Removed commission multiplier from display ⭐
         let priceDisplay = '';
         if (basePrice === 0 && salePrice === 0) { priceDisplay = `<div style="font-weight:bold; color:#FF5A3C; margin-bottom:5px; font-size:1.05rem;">Check Price on ${storeName}</div>`; } 
-        else if (salePrice > 0) { priceDisplay = `<div style="margin-bottom:5px; display:flex; align-items:center; gap:8px;"><span style="text-decoration:line-through; color:#64748B; font-size:0.9rem;">${offerSymbol}${finalBasePrice.toFixed(2)}</span><span style="font-weight:bold; color:#DC2626; font-size:1.2rem;">${offerSymbol}${finalSalePrice.toFixed(2)}</span></div>`; } 
-        else { priceDisplay = `<div style="font-weight:bold; color:#1E1B4B; margin-bottom:5px;">${offerSymbol}${finalBasePrice.toFixed(2)}</div>`; }
-        // ⭐ FIX: Removed noreferrer ⭐
+        else if (salePrice > 0) { priceDisplay = `<div style="margin-bottom:5px; display:flex; align-items:center; gap:8px;"><span style="text-decoration:line-through; color:#64748B; font-size:0.9rem;">${offerSymbol}${basePrice.toFixed(2)}</span><span style="font-weight:bold; color:#DC2626; font-size:1.2rem;">${offerSymbol}${salePrice.toFixed(2)}</span></div>`; } 
+        else { priceDisplay = `<div style="font-weight:bold; color:#1E1B4B; margin-bottom:5px;">${offerSymbol}${basePrice.toFixed(2)}</div>`; }
+        
         cta = `${priceDisplay}<a href="${affUrl}" target="_blank" rel="noopener sponsored" class="btn-check-price js-affiliate-link" style="background-color:${bg};color:${fg};" data-store="${storeName}" data-product-id="${pid}" data-url="${affUrl}">Check Price on ${storeName}</a>`;
     } else { cta = `<a href="${productUrl}" ${disabledAttr} class="btn-check-price" style="background:#64748B;">View Details</a>`; }
     const badge = product.badge ? `<span class="card-badge">${escapeHTML(product.badge)}</span>` : '';
@@ -160,13 +158,14 @@ function renderFlashCard(product, section = 1) {
     const imageSrc = isValidURL(product.image_url) ? escapeHTML(getHighQualityImage(product.image_url, 200)) : 'assets/icon-192.png?v=4';
     const primaryOffer = getPrimaryOffer(product) || {};
     const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' }; const sym = currencySymbols[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
-    const basePrice = parseFloat(primaryOffer.price) || 0; const salePrice = parseFloat(primaryOffer.sale_price) || 0; const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
-    let finalBasePrice = basePrice; let finalSalePrice = salePrice;
-    if (commissionRate > 0) { finalBasePrice = basePrice + (basePrice * (commissionRate / 100)); if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100)); }
+    const basePrice = parseFloat(primaryOffer.price) || 0; const salePrice = parseFloat(primaryOffer.sale_price) || 0;
+    
+    // ⭐ FIX: Removed commission multiplier ⭐
     let priceDisplay = '';
     if (basePrice === 0 && salePrice === 0) { priceDisplay = `<div style="font-weight:bold; color:#FF5A3C; font-size:0.95rem;">Check Price</div>`; } 
-    else if (salePrice > 0) { priceDisplay = `<div style="display:flex; flex-direction:column; justify-content:center; align-items:center; width: 100%;"><div style="display:flex; align-items:center; gap:4px;"><span style="text-decoration:line-through; color:#64748B; font-size:0.75rem;">${sym}${finalBasePrice.toFixed(2)}</span><span style="font-weight:bold; color:#DC2626; font-size:0.95rem;">${sym}${finalSalePrice.toFixed(2)}</span></div></div>`; } 
-    else { priceDisplay = `<div class="price" style="font-size:0.95rem;">${sym}${finalBasePrice.toFixed(2)}</div>`; }
+    else if (salePrice > 0) { priceDisplay = `<div style="display:flex; flex-direction:column; justify-content:center; align-items:center; width: 100%;"><div style="display:flex; align-items:center; gap:4px;"><span style="text-decoration:line-through; color:#64748B; font-size:0.75rem;">${sym}${basePrice.toFixed(2)}</span><span style="font-weight:bold; color:#DC2626; font-size:0.95rem;">${sym}${salePrice.toFixed(2)}</span></div></div>`; } 
+    else { priceDisplay = `<div class="price" style="font-size:0.95rem;">${sym}${basePrice.toFixed(2)}</div>`; }
+    
     const endTime = section === 1 ? product.sale_end_date : product.sale_end_date_2;
     return `<a href="${productUrl}" class="special-deal-card flash-card"><div class="img-box"><img src="${imageSrc}" alt="${title}" width="190" height="190" loading="lazy" decoding="async" style="opacity: 0; transition: opacity 0.4s ease-in-out;" onload="handleImageLoad(this)"></div><div class="info-box">${priceDisplay}<div class="title">${title}</div><div class="card-timer" data-endtime="${endTime}">⏳ Calculating...</div></div></a>`;
 }
@@ -282,13 +281,14 @@ async function loadHomepageProducts() {
             container.innerHTML = specialProducts.map(p => {
                 const primaryOffer = getPrimaryOffer(p) || {};
                 const sym = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' }[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
-                const basePrice = parseFloat(primaryOffer.price) || 0; const salePrice = parseFloat(primaryOffer.sale_price) || 0; const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
-                let finalBasePrice = basePrice; let finalSalePrice = salePrice;
-                if (commissionRate > 0) { finalBasePrice = basePrice + (basePrice * (commissionRate / 100)); if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100)); }
+                const basePrice = parseFloat(primaryOffer.price) || 0; const salePrice = parseFloat(primaryOffer.sale_price) || 0;
+                
+                // ⭐ FIX: Removed commission multiplier ⭐
                 let priceDisplay = '';
                 if (basePrice === 0 && salePrice === 0) { priceDisplay = `<div style="font-weight:bold; color:#FF5A3C; font-size:0.85rem;">Check Price</div>`; } 
-                else if (salePrice > 0) { priceDisplay = `<div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;"><span style="text-decoration:line-through; color:#64748B; font-size:0.75rem;">${sym}${finalBasePrice.toFixed(2)}</span><span class="price" style="margin-bottom:0;">${sym}${finalSalePrice.toFixed(2)}</span></div>`; } 
-                else { priceDisplay = `<div class="price">${sym}${finalBasePrice.toFixed(2)}</div>`; }
+                else if (salePrice > 0) { priceDisplay = `<div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;"><span style="text-decoration:line-through; color:#64748B; font-size:0.75rem;">${sym}${basePrice.toFixed(2)}</span><span class="price" style="margin-bottom:0;">${sym}${salePrice.toFixed(2)}</span></div>`; } 
+                else { priceDisplay = `<div class="price">${sym}${basePrice.toFixed(2)}</div>`; }
+                
                 const specialImg = getHighQualityImage(p.image_url, 200) || '/assets/icon-192.png?v=4';
                 return `<a href="${getProductUrl(p)}" class="special-deal-card"><div class="img-box"><img src="${escapeHTML(specialImg)}" alt="${escapeHTML(p.title)}" width="190" height="190" loading="lazy" decoding="async" style="opacity: 0; transition: opacity 0.4s;" onload="handleImageLoad(this)"></div><div class="info-box">${priceDisplay}<div class="title">${escapeHTML(p.title)}</div></div></a>`;
             }).join('');
@@ -360,7 +360,6 @@ window.toggleAppPopup = function() {
         popup.style.display = 'block'; overlay.style.display = 'block';
     } else { popup.style.display = 'none'; overlay.style.display = 'none'; }
 }
-// ⭐ FIX: App IDs updated ⭐
 function redirectToStore() { 
     const userAgent = navigator.userAgent || navigator.vendor || window.opera; 
     const playStoreLink = 'https://play.google.com/store/apps/details?id=com.primepickhub'; 
