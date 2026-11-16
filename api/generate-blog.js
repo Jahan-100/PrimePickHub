@@ -2,6 +2,25 @@
 const { createClient } = require('@supabase/supabase-js');
 
 module.exports = async function handler(req, res) {
+    // ⭐ 1. ADMIN AUTHENTICATION CHECK ⭐
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Unauthorized: Missing token' });
+    }
+    const token = authHeader.split(' ')[1];
+    
+    const supabaseAuth = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
+        global: { headers: { Authorization: `Bearer ${token}` } }
+    });
+    
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+    if (authError || !user) return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+
+    const supabaseAdmin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+    const { data: profile } = await supabaseAdmin.from('profiles').select('role').eq('id', user.id).single();
+    if (profile?.role !== 'admin') return res.status(403).json({ error: 'Forbidden: Admin access required' });
+
+    // ⭐ 2. MAIN LOGIC ⭐
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
     const { productId, title, description, storeName, affiliateUrl, imageUrl } = req.body;
@@ -11,9 +30,8 @@ module.exports = async function handler(req, res) {
 
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-    // ⭐ LATEST FREE MODELS (Updated list) ⭐
     const models = [
-        "openrouter/free",                          // Smart router: automatically picks a free model
+        "openrouter/free",                          
         "openai/gpt-oss-120b:free",
         "google/gemini-2.0-flash-exp:free",
         "meta-llama/llama-3.3-70b-instruct:free",
@@ -46,35 +64,24 @@ module.exports = async function handler(req, res) {
 
     for (const model of models) {
         try {
-            console.log(`Trying model: ${model}`);
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
                 headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    model: model,
-                    messages: [{ role: "user", content: prompt }]
-                })
+                body: JSON.stringify({ model: model, messages: [{ role: "user", content: prompt }] })
             });
 
             const aiData = await response.json();
-            if (aiData.error) {
-                console.warn(`❌ Model ${model} failed: ${aiData.error.message}`);
-                continue;
-            }
+            if (aiData.error) { continue; }
 
             if (aiData.choices && aiData.choices[0]?.message?.content) {
                 generatedContent = aiData.choices[0].message.content;
                 usedModel = model;
                 break;
             }
-        } catch (err) {
-            console.warn(`❌ Model ${model} crashed:`, err.message);
-        }
+        } catch (err) { console.warn(`❌ Model ${model} crashed:`, err.message); }
     }
 
-    if (!generatedContent) {
-        return res.status(500).json({ error: "All AI models failed. Please try again later." });
-    }
+    if (!generatedContent) return res.status(500).json({ error: "All AI models failed. Please try again later." });
 
     const cleanContent = generatedContent.replace(/```html/g, '').replace(/```/g, '').trim();
 
@@ -90,7 +97,6 @@ module.exports = async function handler(req, res) {
         }]);
 
         if (error) throw error;
-
         return res.status(200).json({ success: true, message: "Draft Blog Generated", model: usedModel });
     } catch (err) {
         return res.status(500).json({ error: err.message });
