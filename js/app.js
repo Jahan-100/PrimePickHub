@@ -148,7 +148,8 @@ function renderProductCard(product, isPriority = false) {
         if (basePrice === 0 && salePrice === 0) { priceDisplay = `<div style="font-weight:bold; color:#FF5A3C; margin-bottom:5px; font-size:1.05rem;">Check Price on ${storeName}</div>`; } 
         else if (salePrice > 0) { priceDisplay = `<div style="margin-bottom:5px; display:flex; align-items:center; gap:8px;"><span style="text-decoration:line-through; color:#64748B; font-size:0.9rem;">${offerSymbol}${finalBasePrice.toFixed(2)}</span><span style="font-weight:bold; color:#DC2626; font-size:1.2rem;">${offerSymbol}${finalSalePrice.toFixed(2)}</span></div>`; } 
         else { priceDisplay = `<div style="font-weight:bold; color:#1E1B4B; margin-bottom:5px;">${offerSymbol}${finalBasePrice.toFixed(2)}</div>`; }
-        cta = `${priceDisplay}<a href="${affUrl}" target="_blank" rel="noopener noreferrer sponsored" class="btn-check-price js-affiliate-link" style="background-color:${bg};color:${fg};" data-store="${storeName}" data-product-id="${pid}" data-url="${affUrl}">Check Price on ${storeName}</a>`;
+        // ⭐ FIX: Removed noreferrer ⭐
+        cta = `${priceDisplay}<a href="${affUrl}" target="_blank" rel="noopener sponsored" class="btn-check-price js-affiliate-link" style="background-color:${bg};color:${fg};" data-store="${storeName}" data-product-id="${pid}" data-url="${affUrl}">Check Price on ${storeName}</a>`;
     } else { cta = `<a href="${productUrl}" ${disabledAttr} class="btn-check-price" style="background:#64748B;">View Details</a>`; }
     const badge = product.badge ? `<span class="card-badge">${escapeHTML(product.badge)}</span>` : '';
     return `<div class="product-card">${badge}<div class="card-img-wrap"><a href="${productUrl}" ${disabledAttr}><img src="${imageSrc}" alt="${title}" width="200" height="200" ${loadingAttr} ${imgPriority} decoding="async" class="product-thumb" style="opacity: 0; transition: opacity 0.4s ease-in-out;" onload="handleImageLoad(this)"></a></div><div class="card-body"><a href="${productUrl}" ${disabledAttr} class="card-title">${title}</a><div class="card-rating">${escapeHTML(ratingText)}</div>${timerHtml}${cta}</div></div>`;
@@ -359,7 +360,16 @@ window.toggleAppPopup = function() {
         popup.style.display = 'block'; overlay.style.display = 'block';
     } else { popup.style.display = 'none'; overlay.style.display = 'none'; }
 }
-function redirectToStore() { const userAgent = navigator.userAgent || navigator.vendor || window.opera; const playStoreLink = 'https://play.google.com/store/apps/details?id=your.package.name'; const appStoreLink = 'https://apps.apple.com/app/idYOUR_APP_ID'; const appGalleryLink = 'https://appgallery.huawei.com/app/CYOUR_APP_ID'; if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) window.location.href = appStoreLink; else if (/Huawei|HONOR/i.test(userAgent)) window.location.href = appGalleryLink; else window.location.href = playStoreLink; }
+// ⭐ FIX: App IDs updated ⭐
+function redirectToStore() { 
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera; 
+    const playStoreLink = 'https://play.google.com/store/apps/details?id=com.primepickhub'; 
+    const appStoreLink = 'https://apps.apple.com/app/id000000000'; 
+    const appGalleryLink = 'https://appgallery.huawei.com/app/C000000000'; 
+    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) window.location.href = appStoreLink; 
+    else if (/Huawei|HONOR/i.test(userAgent)) window.location.href = appGalleryLink; 
+    else window.location.href = playStoreLink; 
+}
 
 let realtimeTimeout; function triggerRealtimeUpdate(payload) { clearTimeout(realtimeTimeout); realtimeTimeout = setTimeout(() => { loadHomepageProducts(); loadLatestBlog(); }, 500); }
 async function setupRealtime() {
@@ -394,9 +404,6 @@ document.addEventListener('DOMContentLoaded', () => {
     trackVisitor(); trackActiveApp(); loadHomepageProducts(); loadLatestBlog(); setupRealtime(); loadNotifications();
     if (!getCookie('cookie_consent')) { setTimeout(() => { const banner = document.getElementById('cookie-consent-banner'); if (banner) banner.style.display = 'flex'; }, 2000); }
     
-    // ⭐ AUTO-REFRESH REMOVED ⭐
-    // setInterval wala code hata diya gaya hai kyunki Supabase Realtime pehle se live updates de raha hai.
-
     if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('/service-worker.js').then(registration => console.log('✅ Service Worker registered! PWA is ready.')).catch(err => console.log('❌ Service Worker failed:', err)); }); }
     const btn = document.getElementById('searchBtn'); const input = document.getElementById('searchInput'); if (btn) btn.addEventListener('click', handleSearch); if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') handleSearch(); });
     const catBtn = document.getElementById('categoryDropdownBtn'); const catMenu = document.getElementById('categoryDropdownMenu'); if (catBtn && catMenu && typeof toggleCatDropdown === 'undefined') { catBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); catMenu.style.display = catMenu.style.display === 'block' ? 'none' : 'block'; }); }
