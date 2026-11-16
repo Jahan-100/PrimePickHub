@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (titleEl) titleEl.innerText = `${title} Products`;
     if (bcEl) bcEl.innerText = title;
 
+    // ⭐ Meta Tags Inject ⭐
     if (document.getElementById('ogTitle')) document.getElementById('ogTitle').content = document.title;
     if (document.getElementById('metaDesc')) document.getElementById('metaDesc').content = `Shop top deals in ${title} on PrimePickHub. Compare prices and save.`;
     if (document.getElementById('ogDesc')) document.getElementById('ogDesc').content = `Shop top deals in ${title} on PrimePickHub. Compare prices and save.`;
@@ -49,26 +50,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const basePrice = parseFloat(primaryOffer.price) || 0;
         const salePrice = parseFloat(primaryOffer.sale_price) || 0;
-        const commissionRate = parseFloat(primaryOffer.commission_rate) || 0;
-        let finalBasePrice = basePrice;
-        let finalSalePrice = salePrice;
-        if (commissionRate > 0) {
-            finalBasePrice = basePrice + (basePrice * (commissionRate / 100));
-            if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100));
-        }
-
-        // ⭐ FIX: Hidden price ($0.00) issue ⭐
+        
+        // ⭐ FIX: Commission logic completely removed. Displaying exact store price. ⭐
         let priceDisplay = '';
         if (basePrice === 0 && salePrice === 0) {
             priceDisplay = `<div style="font-weight:bold; color:#FF5A3C; margin: 5px 0 10px 0; font-size:1.1rem;">Check Price</div>`;
         } else if (salePrice > 0) {
             priceDisplay = `
                 <div style="margin: 5px 0 10px 0; display:flex; align-items:center; gap:8px;">
-                    <span style="text-decoration:line-through; color:#64748B; font-size:0.9rem;">${offerSymbol}${finalBasePrice.toFixed(2)}</span>
-                    <span style="font-weight:bold; color:#FF5A3C; font-size:1.1rem;">${offerSymbol}${finalSalePrice.toFixed(2)}</span>
+                    <span style="text-decoration:line-through; color:#64748B; font-size:0.9rem;">${offerSymbol}${basePrice.toFixed(2)}</span>
+                    <span style="font-weight:bold; color:#FF5A3C; font-size:1.1rem;">${offerSymbol}${salePrice.toFixed(2)}</span>
                 </div>`;
         } else {
-            priceDisplay = `<div style="font-weight:bold; color:#1E1B4B; margin: 5px 0 10px 0; font-size:1.1rem;">${offerSymbol}${finalBasePrice.toFixed(2)}</div>`;
+            priceDisplay = `<div style="font-weight:bold; color:#1E1B4B; margin: 5px 0 10px 0; font-size:1.1rem;">${offerSymbol}${basePrice.toFixed(2)}</div>`;
         }
 
         const pUrl = p.slug ? `/product/${encodeURIComponent(p.slug)}` : (p.id ? `/product.html?id=${encodeURIComponent(p.id)}` : '#');
