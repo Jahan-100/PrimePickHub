@@ -12,14 +12,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (titleEl) titleEl.innerText = `${title} Products`;
     if (bcEl) bcEl.innerText = title;
 
-    // ⭐ Meta Tags Inject ⭐
     if (document.getElementById('ogTitle')) document.getElementById('ogTitle').content = document.title;
     if (document.getElementById('metaDesc')) document.getElementById('metaDesc').content = `Shop top deals in ${title} on PrimePickHub. Compare prices and save.`;
     if (document.getElementById('ogDesc')) document.getElementById('ogDesc').content = `Shop top deals in ${title} on PrimePickHub. Compare prices and save.`;
 
     grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;padding:40px;">Loading...</p>';
 
-    // ⭐ Speed Optimization: Using specific columns ⭐
     const { data, error } = await window.supabaseClient
         .from('products')
         .select('id, title, slug, image_url, rating, reviews_count, badge, affiliate_offers(store_name, affiliate_url, price, sale_price, commission_rate, currency)')
@@ -59,8 +57,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100));
         }
 
+        // ⭐ FIX: Hidden price ($0.00) issue ⭐
         let priceDisplay = '';
-        if (salePrice > 0) {
+        if (basePrice === 0 && salePrice === 0) {
+            priceDisplay = `<div style="font-weight:bold; color:#FF5A3C; margin: 5px 0 10px 0; font-size:1.1rem;">Check Price</div>`;
+        } else if (salePrice > 0) {
             priceDisplay = `
                 <div style="margin: 5px 0 10px 0; display:flex; align-items:center; gap:8px;">
                     <span style="text-decoration:line-through; color:#64748B; font-size:0.9rem;">${offerSymbol}${finalBasePrice.toFixed(2)}</span>
@@ -84,7 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <a href="${pUrl}" class="card-title">${escapeHTML(p.title)}</a>
                     <div class="card-rating">★ ${p.rating || '—'} (${p.reviews_count || 0})</div>
                     ${priceDisplay}
-                    <a href="${escapeHTML(affUrl)}" target="_blank" rel="noopener noreferrer sponsored"
+                    <a href="${escapeHTML(affUrl)}" target="_blank" rel="noopener sponsored"
                        class="btn-check-price js-affiliate-link"
                        style="background-color:${bg};color:${fg};"
                        data-store="${escapeHTML(storeName)}"
