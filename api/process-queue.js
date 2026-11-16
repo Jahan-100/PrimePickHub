@@ -1,14 +1,27 @@
-// api/process-queue.js
 const { createClient } = require('@supabase/supabase-js');
 
 module.exports = async function handler(req, res) {
-    if (process.env.CRON_SECRET) {
-        const auth = req.headers.authorization || '';
-        if (auth !== `Bearer ${process.env.CRON_SECRET}` && req.headers['x-vercel-cron'] !== '1') {
-            return res.status(401).json({ error: 'Unauthorized' });
+    // ⭐ 1. DUAL AUTH CHECK (Admin ya Cron) ⭐
+    const authHeader = req.headers.authorization;
+    const isCron = req.headers['x-vercel-cron'] === '1';
+    
+    if (!isCron) {
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'Unauthorized: Missing token' });
         }
+        const token = authHeader.split(' ')[1];
+        const supabaseAuth = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
+            global: { headers: { Authorization: `Bearer ${token}` } }
+        });
+        const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+        if (authError || !user) return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+
+        const supabaseAdmin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+        const { data: profile } = await supabaseAdmin.from('profiles').select('role').eq('id', user.id).single();
+        if (profile?.role !== 'admin') return res.status(403).json({ error: 'Forbidden: Admin access required' });
     }
 
+    // ⭐ 2. MAIN LOGIC ⭐
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
         console.error("❌ OPENROUTER_API_KEY missing in Vercel env.");
@@ -40,7 +53,6 @@ module.exports = async function handler(req, res) {
             .from('affiliate_offers').select('*').eq('product_id', product.id).limit(1);
         const offer = offers?.[0] || { store_name: 'Store', affiliate_url: '#' };
 
-        // ⭐ LATEST FREE MODELS (Updated list) ⭐
         const models = [
             "openrouter/free",
             "openai/gpt-oss-120b:free",
