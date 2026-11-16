@@ -2,7 +2,6 @@
  * PrimePickHub Homepage Renderer + Realtime + Notifications + PWA + Tracking
  */
 
-// ⭐ 1. SCROLL RESTORATION (SAVE POSITION) ⭐
 if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
 }
@@ -15,8 +14,6 @@ document.addEventListener('click', (e) => {
         }
     }
 }, { capture: true });
-
-// ⭐ ==================================== ⭐
 
 function setCookie(name, value, days) { let expires = ""; if (days) { let date = new Date(); date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000)); expires = "; expires=" + date.toUTCString(); } document.cookie = name + "=" + (value || "") + expires + "; path=/; SameSite=Lax"; }
 function getCookie(name) { let nameEQ = name + "="; let ca = document.cookie.split(';'); for (let i = 0; i < ca.length; i++) { let c = ca[i]; while (c.charAt(0) == ' ') c = c.substring(1, c.length); if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length); } return null; }
@@ -54,7 +51,6 @@ function getAllDescendantSlugs(parentSlug, allCats) {
     traverse(parentSlug); return Array.from(slugs);
 }
 
-// ⭐ SMART ICON LOGIC ⭐
 function getCategoryIcon(cat) {
     if (!cat) return '📦';
     const name = (cat.name || '').toLowerCase().trim(); let slug = (cat.slug || '').toLowerCase().trim();
@@ -218,6 +214,7 @@ async function loadLatestBlog() {
         document.getElementById('latestBlogImg').src = getHighQualityImage(blog.image_url, 300) || 'assets/icon-192.png?v=4';
         document.getElementById('latestBlogTitle').innerText = blog.title;
         document.getElementById('latestBlogDate').innerText = `Published on: ${new Date(blog.created_at).toLocaleDateString()}`;
+        document.getElementById('latestBlogLink').href = `/blog/${blog.slug}`;
         section.style.display = 'block'; section.style.visibility = 'visible'; section.style.opacity = '1';
     } catch (err) { console.warn('Error loading latest blog:', err); }
 }
@@ -296,14 +293,10 @@ async function loadHomepageProducts() {
             }).join('');
         } else { section.style.display = 'none'; }
 
-        // ⭐ 2. RESTORE SCROLL POSITION AFTER RENDER ⭐
         const savedScroll = sessionStorage.getItem('homeScrollY');
         if (savedScroll && window.location.pathname === '/' || window.location.pathname.includes('index.html')) {
-            setTimeout(() => {
-                window.scrollTo({ top: parseInt(savedScroll, 10), behavior: 'instant' });
-            }, 100);
+            setTimeout(() => { window.scrollTo({ top: parseInt(savedScroll, 10), behavior: 'instant' }); }, 100);
         }
-        // ⭐ ==================================== ⭐
 
     } catch (err) { console.error('Load failed:', err); } finally { if (typeof hideSplash === 'function') hideSplash(); }
 }
@@ -400,7 +393,10 @@ window.acceptCookies = function() { setCookie('cookie_consent', 'accepted', 365)
 document.addEventListener('DOMContentLoaded', () => {
     trackVisitor(); trackActiveApp(); loadHomepageProducts(); loadLatestBlog(); setupRealtime(); loadNotifications();
     if (!getCookie('cookie_consent')) { setTimeout(() => { const banner = document.getElementById('cookie-consent-banner'); if (banner) banner.style.display = 'flex'; }, 2000); }
-    setInterval(() => { const popup = document.getElementById('appDownloadPopup'); if (document.getElementById('productGrid') && (!popup || popup.style.display !== 'block')) { const activeCat = document.querySelector('#categoryScrollContainer .category-item.active'); if (!activeCat || activeCat.dataset.slug === 'all') { loadHomepageProducts(); } loadLatestBlog(); } }, 60000); 
+    
+    // ⭐ AUTO-REFRESH REMOVED ⭐
+    // setInterval wala code hata diya gaya hai kyunki Supabase Realtime pehle se live updates de raha hai.
+
     if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('/service-worker.js').then(registration => console.log('✅ Service Worker registered! PWA is ready.')).catch(err => console.log('❌ Service Worker failed:', err)); }); }
     const btn = document.getElementById('searchBtn'); const input = document.getElementById('searchInput'); if (btn) btn.addEventListener('click', handleSearch); if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') handleSearch(); });
     const catBtn = document.getElementById('categoryDropdownBtn'); const catMenu = document.getElementById('categoryDropdownMenu'); if (catBtn && catMenu && typeof toggleCatDropdown === 'undefined') { catBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); catMenu.style.display = catMenu.style.display === 'block' ? 'none' : 'block'; }); }
@@ -408,7 +404,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', function(e) { if (!e.target.closest('.notif-wrapper')) { const panel = document.getElementById('notifPanel'); if(panel) panel.style.display = 'none'; } });
     setTimeout(() => { if (typeof hideSplash === 'function') hideSplash(); }, 5000);
 
-    // Newsletter form handler
     document.getElementById('newsletterForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const emailInput = document.getElementById('newsletterEmail');
@@ -416,9 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const msg = document.getElementById('newsletterMsg');
         const email = emailInput.value.trim();
         if(!email) return;
-        btn.innerText = "Subscribing...";
-        btn.disabled = true;
-        msg.innerText = "";
+        btn.innerText = "Subscribing..."; btn.disabled = true; msg.innerText = "";
         try {
             const { error } = await window.supabaseClient.from('newsletter_subscribers').insert([{ email: email }]);
             if (error) {
@@ -427,47 +420,22 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 msg.style.color = "#4ADE80"; msg.innerText = "Successfully subscribed! Check your inbox for deals."; emailInput.value = "";
             }
-        } catch (err) {
-            console.error(err); msg.style.color = "#F87171"; msg.innerText = "Something went wrong. Please try again.";
-        } finally {
-            btn.innerText = "Subscribe"; btn.disabled = false;
-        }
+        } catch (err) { console.error(err); msg.style.color = "#F87171"; msg.innerText = "Something went wrong. Please try again."; } 
+        finally { btn.innerText = "Subscribe"; btn.disabled = false; }
     });
 
-    // Contact form handler (floating)
     document.getElementById('floatingContactForm')?.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const form = e.target;
-        const btn = document.getElementById('contactSubmitBtn');
-        const msg = document.getElementById('contactFormMsg');
-        const originalText = btn.innerText;
+        e.preventDefault(); const form = e.target; const btn = document.getElementById('contactSubmitBtn'); const msg = document.getElementById('contactFormMsg'); const originalText = btn.innerText;
         btn.innerText = "Sending..."; btn.disabled = true; msg.innerText = "";
-        const formData = new FormData(form);
-        const object = Object.fromEntries(formData);
-        const json = JSON.stringify(object);
+        const formData = new FormData(form); const object = Object.fromEntries(formData); const json = JSON.stringify(object);
         try {
-            const res = await fetch('https://api.web3forms.com/submit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: json
-            });
+            const res = await fetch('https://api.web3forms.com/submit', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: json });
             const data = await res.json();
-            if (data.success) {
-                msg.style.color = "#16a34a"; msg.innerText = "Message sent successfully! We'll reply soon.";
-                form.reset();
-                setTimeout(() => { toggleContactForm(); msg.innerText = ""; }, 2000);
-            } else {
-                msg.style.color = "#EF4444"; msg.innerText = data.message || "Something went wrong.";
-            }
-        } catch (error) {
-            msg.style.color = "#EF4444"; msg.innerText = "Failed to send. Please try again.";
-        } finally {
-            btn.innerText = originalText; btn.disabled = false;
-        }
+            if (data.success) { msg.style.color = "#16a34a"; msg.innerText = "Message sent successfully! We'll reply soon."; form.reset(); setTimeout(() => { toggleContactForm(); msg.innerText = ""; }, 2000); } 
+            else { msg.style.color = "#EF4444"; msg.innerText = data.message || "Something went wrong."; }
+        } catch (error) { msg.style.color = "#EF4444"; msg.innerText = "Failed to send. Please try again."; } 
+        finally { btn.innerText = originalText; btn.disabled = false; }
     });
 
-    window.toggleContactForm = function() {
-        const panel = document.getElementById('contactFormPanel');
-        if(panel) panel.classList.toggle('open');
-    }
+    window.toggleContactForm = function() { const panel = document.getElementById('contactFormPanel'); if(panel) panel.classList.toggle('open'); }
 });
