@@ -4,12 +4,15 @@ let globalCategories = [];
 let currentGalleryFiles = []; 
 let currentAdminReviews = []; 
 
-// ⭐ Security: Token Helper for API calls ⭐
+// ⭐ Security: Helper to get token for API calls ⭐
 async function getAuthToken() {
     const { data: { session } } = await window.supabaseClient.auth.getSession();
     return session ? session.access_token : null;
 }
 
+// ==========================================
+// IMAGE UPLOAD & PREVIEW FUNCTIONS
+// ==========================================
 async function uploadFileToSupabase(file) {
     const fileExt = file.name.split('.').pop();
     const safeName = file.name.replace(/\.[^/.]+$/, "").toLowerCase().replace(/[^a-z0-9]/g, '-');
@@ -87,20 +90,15 @@ document.getElementById('pMainColor')?.addEventListener('input', renderColorPrev
 window.openImageLightbox = function(src) { document.getElementById('lightboxImg').src = src; document.getElementById('imageLightbox').style.display = 'flex'; }
 window.closeImageLightbox = function(e) { if (e) e.stopPropagation(); document.getElementById('imageLightbox').style.display = 'none'; }
 
+
+// ==========================================
+// CATEGORY MANAGER & BUILDER
+// ==========================================
 async function syncCategoriesFromDB() {
     const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
     const { data, error } = await window.supabaseClient.from('site_settings').select('custom_categories').eq('id', 1).maybeSingle();
     let customCats = []; if (!error && data && data.custom_categories) { customCats = typeof data.custom_categories === 'string' ? JSON.parse(data.custom_categories) : data.custom_categories; }
     let merged = [...masterCats]; customCats.forEach(c => { const idx = merged.findIndex(m => m.slug === c.slug); if (idx > -1) merged[idx] = c; else merged.push(c); }); globalCategories = merged;
-}
-
-window.loadBlogList = async function() {
-    const tbody = document.getElementById('blogListBody'); if (!tbody) return; tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading...</td></tr>';
-    const { data: blogs, error } = await window.supabaseClient.from('blogs').select('*').order('created_at', { ascending: false });
-    if (error || !blogs || blogs.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No blog posts found.</td></tr>'; const countEl = document.getElementById('totalBlogsCount'); if (countEl) countEl.innerText = 0; const draftCountEl = document.getElementById('totalDraftsCount'); if (draftCountEl) draftCountEl.innerText = 0; return; }
-    const publishedBlogs = blogs.filter(b => b.is_published === true); const draftBlogs = blogs.filter(b => b.is_published !== true);
-    const countEl = document.getElementById('totalBlogsCount'); if (countEl) countEl.innerText = publishedBlogs.length; const draftCountEl = document.getElementById('totalDraftsCount'); if (draftCountEl) draftCountEl.innerText = draftBlogs.length;
-    tbody.innerHTML = blogs.map((b, index) => { const isPublished = b.is_published !== false; const statusBadge = isPublished ? '' : `<span style="background:#F59E0B; color:white; padding:2px 6px; border-radius:4px; font-size:0.65rem; margin-left:5px;">🤖 AI DRAFT</span>`; let actionBtns = `<button class="btn-edit" onclick="editBlog('${b.id}', '${b.title.replace(/'/g, "\\'")}', '${b.slug}', '${b.image_url || ''}')">Edit</button><button class="btn-delete" onclick="deleteBlog('${b.id}')">Delete</button>`; if (!isPublished) actionBtns = `<button onclick="publishBlog('${b.id}')" style="background:#10B981; color:white; padding:6px 10px; border:none; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">Publish</button>` + actionBtns; return `<tr><td style="text-align: center; font-weight: bold;">${index + 1}</td><td style="text-align: center;"><img src="${b.image_url || '/assets/icon-192.png?v=4'}" class="table-img"></td><td style="text-align: left; font-weight: 500;">${escapeHTML(b.title)} ${statusBadge}</td><td style="text-align:center;">${new Date(b.created_at).toLocaleDateString()}</td><td><div class="action-btns">${actionBtns}</div></td></tr>`; }).join('');
 }
 
 function loadCategoriesToDropdown(selectedSlug = null) { const allCats = globalCategories; const addCategorySelect = document.getElementById('pCategory'); if (addCategorySelect) { let sortedCats = []; const addWithIndent = (parent, level) => { allCats.filter(c => c.parent === parent || (parent === null && !c.parent)).forEach(c => { const indent = '&nbsp;&nbsp;&nbsp;&nbsp;'.repeat(level); sortedCats.push({ ...c, display: indent + (level > 0 ? '↳ ' : '') + c.name }); addWithIndent(c.slug, level + 1); }); }; addWithIndent(null, 0); addWithIndent('all', 0); addCategorySelect.innerHTML = sortedCats.map(c => `<option value="${c.slug}">${c.display}</option>`).join(''); if(selectedSlug) addCategorySelect.value = selectedSlug; } }
@@ -124,6 +122,25 @@ function updateBuilderUI() {
 window.saveBuilderData = async function() { if (!builderState.main) return alert("Please set a Main Category first."); const { data } = await window.supabaseClient.from('site_settings').select('custom_categories').eq('id', 1).maybeSingle(); let customCats = (data && data.custom_categories) ? (typeof data.custom_categories === 'string' ? JSON.parse(data.custom_categories) : data.custom_categories) : []; const upsertCat = (catObj) => { const idx = customCats.findIndex(c => c.slug === catObj.slug); if (idx > -1) customCats[idx] = catObj; else customCats.push(catObj); }; upsertCat(builderState.main); builderState.subs.forEach(sub => upsertCat(sub)); builderState.minis.forEach(mini => upsertCat(mini)); await window.supabaseClient.from('site_settings').update({ custom_categories: customCats }).eq('id', 1); alert("✅ All categories added successfully to the database!"); resetBuilder(); await syncCategoriesFromDB(); renderCategoryManagementTable(); loadCategoriesToDropdown(); }
 window.resetBuilder = function() { builderState = { main: null, subs: [], minis: [] }; document.getElementById('bMainInput').value = ''; document.getElementById('bSubInput').value = ''; document.getElementById('bMiniInput').value = ''; document.getElementById('bActiveMainDisplay').innerHTML = ''; updateBuilderUI(); }
 
+
+// ==========================================
+// BLOGS LIST (XSS SECURED)
+// ==========================================
+window.loadBlogList = async function() {
+    const tbody = document.getElementById('blogListBody'); if (!tbody) return; tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading...</td></tr>';
+    const { data: blogs, error } = await window.supabaseClient.from('blogs').select('*').order('created_at', { ascending: false });
+    if (error || !blogs || blogs.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No blog posts found.</td></tr>'; const countEl = document.getElementById('totalBlogsCount'); if (countEl) countEl.innerText = 0; const draftCountEl = document.getElementById('totalDraftsCount'); if (draftCountEl) draftCountEl.innerText = 0; return; }
+    const publishedBlogs = blogs.filter(b => b.is_published === true); const draftBlogs = blogs.filter(b => b.is_published !== true);
+    const countEl = document.getElementById('totalBlogsCount'); if (countEl) countEl.innerText = publishedBlogs.length; const draftCountEl = document.getElementById('totalDraftsCount'); if (draftCountEl) draftCountEl.innerText = draftBlogs.length;
+    
+    // ⭐ escapeHTML applied on blog title to prevent XSS ⭐
+    tbody.innerHTML = blogs.map((b, index) => { const isPublished = b.is_published !== false; const statusBadge = isPublished ? '' : `<span style="background:#F59E0B; color:white; padding:2px 6px; border-radius:4px; font-size:0.65rem; margin-left:5px;">🤖 AI DRAFT</span>`; let actionBtns = `<button class="btn-edit" onclick="editBlog('${b.id}', '${b.title.replace(/'/g, "\\'")}', '${b.slug}', '${b.image_url || ''}')">Edit</button><button class="btn-delete" onclick="deleteBlog('${b.id}')">Delete</button>`; if (!isPublished) actionBtns = `<button onclick="publishBlog('${b.id}')" style="background:#10B981; color:white; padding:6px 10px; border:none; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">Publish</button>` + actionBtns; return `<tr><td style="text-align: center; font-weight: bold;">${index + 1}</td><td style="text-align: center;"><img src="${b.image_url || '/assets/icon-192.png?v=4'}" class="table-img"></td><td style="text-align: left; font-weight: 500;">${escapeHTML(b.title)} ${statusBadge}</td><td style="text-align:center;">${new Date(b.created_at).toLocaleDateString()}</td><td><div class="action-btns">${actionBtns}</div></td></tr>`; }).join('');
+}
+
+
+// ==========================================
+// INITIALIZATION & DASHBOARD LOGIC
+// ==========================================
 document.addEventListener('DOMContentLoaded', async () => {
     if (typeof API === 'undefined' || !API.getCurrentUser) { alert('API not loaded. Refresh the page.'); return; }
     const auth = await API.getCurrentUser(); if (!auth) return showLogin(); if (auth.role !== 'admin') { alert('Access denied. Admin only.'); await API.signOut(); return showLogin(); }
@@ -183,6 +200,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderCategoryManagementTable(); updateBuilderUI();
 });
 
+
+// ==========================================
+// TOGGLE & SETTINGS HELPERS
+// ==========================================
 function setupToggleAddProduct() { const toggleBtn = document.getElementById('toggleAddProductBtn'); const formContainer = document.getElementById('addProductContainer'); if (toggleBtn && formContainer) { toggleBtn.addEventListener('click', () => { if (formContainer.style.display === 'none') { formContainer.style.display = 'block'; toggleBtn.textContent = 'Hide Product Form'; toggleBtn.style.background = '#EF4444'; } else { formContainer.style.display = 'none'; toggleBtn.textContent = 'Show Product Form'; toggleBtn.style.background = '#16a34a'; } }); } }
 function setupToggleSpecialDeal() { const toggleBtn = document.getElementById('toggleSpecialDealBtn'); const container = document.getElementById('specialDealContainer'); if (toggleBtn && container) { toggleBtn.addEventListener('click', () => { if (container.style.display === 'none') { container.style.display = 'block'; toggleBtn.textContent = 'Hide Settings'; toggleBtn.style.background = '#EF4444'; } else { container.style.display = 'none'; toggleBtn.textContent = 'Show Settings'; toggleBtn.style.background = '#d946ef'; } }); } }
 function setupToggleFlashSale() { const toggleBtn = document.getElementById('toggleFlashSaleBtn'); const container = document.getElementById('flashSaleContainer'); if (toggleBtn && container) { toggleBtn.addEventListener('click', () => { if (container.style.display === 'none') { container.style.display = 'block'; toggleBtn.textContent = 'Hide Settings'; toggleBtn.style.background = '#EF4444'; } else { container.style.display = 'none'; toggleBtn.textContent = 'Show Settings'; toggleBtn.style.background = '#ea580c'; } }); } }
@@ -201,6 +222,11 @@ function setupToggleList() { const toggleBtn = document.getElementById('togglePr
 function showLogin() { const loginContainer = document.getElementById('loginContainer'); const loginForm = document.getElementById('loginForm'); const dashEl = document.getElementById('dashboard'); if (loginContainer) loginContainer.style.display = 'block'; if (dashEl) dashEl.style.display = 'none'; loginForm?.addEventListener('submit', async (e) => { e.preventDefault(); const email = document.getElementById('loginEmail').value.trim(); const password = document.getElementById('loginPassword').value; const errorEl = document.getElementById('loginError'); try { await API.signIn(email, password); window.location.reload(); } catch (err) { if (errorEl) errorEl.innerText = err.message || 'Login failed'; else alert('Login failed: ' + err.message); } }); }
 function showDashboard() { const loginContainer = document.getElementById('loginContainer'); const dashEl = document.getElementById('dashboard'); if (loginContainer) loginContainer.style.display = 'none'; if (dashEl) dashEl.style.display = 'block'; }
 async function loadStats() { try { const stats = await API.getAdminStats(); const p = document.getElementById('statProducts'); const c = document.getElementById('statClicks'); if (p) p.innerText = stats.totalProducts; if (c) c.innerText = stats.totalClicks; const { data: visitors } = await window.supabaseClient.rpc('get_total_visitors'); const { data: installs } = await window.supabaseClient.rpc('get_active_app_installs'); const vEl = document.getElementById('statVisitors'); const iEl = document.getElementById('statAppInstalls'); if (vEl) vEl.innerText = visitors || 0; if (iEl) iEl.innerText = installs || 0; } catch (err) { console.warn('Stats error:', err); } }
+
+
+// ==========================================
+// PRODUCTS LIST & TABLE
+// ==========================================
 async function loadProductsList() {
     const tbody = document.getElementById('productListBody'); if (!tbody) return;
     try {
@@ -257,6 +283,11 @@ function renderTable() {
         return `<tr class="${rowClass}"><td style="text-align: center; font-weight: bold;">${index + 1}</td><td style="text-align: center;"><span style="background:#f0fdf4; color:#166534; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:600; white-space:nowrap; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis;">${displayStoreName}</span></td><td style="text-align: center;"><span style="background:#e2e8f0; color:#1e293b; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:600; white-space:nowrap; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis;">${catName}</span></td><td style="text-align: center;"><img src="${p.image_url}" class="table-img" onerror="this.src='/assets/icon-192.png?v=4'"></td><td style="text-align: left; font-weight: 500;">${escapeHTML(p.title)} ${statusBadge}</td><td style="text-align: center;">${priceStr}</td><td><div class="action-btns"><button class="btn-edit" onclick="editProduct('${p.id}')">Edit</button><button class="btn-delete" onclick="deleteProduct('${p.id}')">Delete</button></div></td></tr>`;
     }).join('');
 }
+
+
+// ==========================================
+// PRODUCT FORM & VARIATIONS
+// ==========================================
 window.addVariationRow = function(color = '', colorName = '', name = '', price = '', salePrice = '', commission = '', url = '') {
     const container = document.getElementById('variationsContainer'); 
     const div = document.createElement('div'); 
@@ -286,6 +317,7 @@ window.addVariationRow = function(color = '', colorName = '', name = '', price =
     renderVarColorPreview(div);
 }
 document.getElementById('addVariationBtn')?.addEventListener('click', () => addVariationRow());
+
 window.editProduct = async function(id) {
     try {
         const { data: p, error } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').eq('id', id).maybeSingle(); if (error) throw error; if (!p) { alert("Product not found."); return; }
@@ -372,8 +404,28 @@ function setupProductForm() {
             let productId = id; if (isEditing) { const { error: prodErr } = await window.supabaseClient.from('products').update(productData).eq('id', id); if (prodErr) throw prodErr; await window.supabaseClient.from('affiliate_offers').delete().eq('product_id', id); } else { const { data: newProduct, error: prodErr } = await window.supabaseClient.from('products').insert([productData]).select().single(); if (prodErr) throw prodErr; productId = newProduct.id; }
             if (price > 0 || variations.length === 0) { mainOfferData.product_id = productId; await window.supabaseClient.from('affiliate_offers').insert([mainOfferData]); }
             if (variations.length > 0) { variations.forEach(v => v.product_id = productId); const { error: varErr } = await window.supabaseClient.from('affiliate_offers').insert(variations); if (varErr) throw varErr; }
-            const writeBlog = document.getElementById('pWriteBlog').checked; if (writeBlog) { const { data: existingBlog } = await window.supabaseClient.from('blogs').select('id').ilike('title', `Review: ${productData.title}%`); if (existingBlog && existingBlog.length > 0) { alert("Product saved! Note: A blog already exists for this product in the 'Blogs List'."); } else { await window.supabaseClient.from('products').update({ blog_status: 'pending' }).eq('id', productId); fetch('/api/process-queue', { method: 'POST' }).then(res => res.json()).then(data => { if(data.error) console.error("AI Blog Error:", data.error); else console.log("AI Blog Status:", data.message); }).catch(err => console.error("Fetch Error:", err)); alert("Product saved! AI is writing the blog in the background. It will appear in the 'Show / Hide Blogs List' section as a DRAFT in a few moments."); } }
+            
+            // ⭐ API CALL WITH TOKEN (Process Queue / AI Blog) ⭐
+            const writeBlog = document.getElementById('pWriteBlog').checked; if (writeBlog) { 
+                const { data: existingBlog } = await window.supabaseClient.from('blogs').select('id').ilike('title', `Review: ${productData.title}%`); 
+                if (existingBlog && existingBlog.length > 0) { alert("Product saved! Note: A blog already exists for this product in the 'Blogs List'."); } 
+                else { 
+                    await window.supabaseClient.from('products').update({ blog_status: 'pending' }).eq('id', productId); 
+                    getAuthToken().then(token => {
+                        fetch('/api/process-queue', { 
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        }).then(res => res.json()).then(data => { 
+                            if(data.error) console.error("AI Blog Error:", data.error); 
+                            else console.log("AI Blog Status:", data.message); 
+                        }).catch(err => console.error("Fetch Error:", err));
+                    });
+                    alert("Product saved! AI is writing the blog in the background. It will appear in the 'Show / Hide Blogs List' section as a DRAFT in a few moments."); 
+                } 
+            }
+            
             const sendNotif = document.getElementById('pSendNotification').checked; if (sendNotif) { try { const { data: settings } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).maybeSingle(); let spTitle = 'Special Deal'; let s1Title = 'Sale Section 1'; let s2Title = 'Sale Section 2'; if (settings) { if (settings.special_deal_title) spTitle = settings.special_deal_title; if (settings.flash_title_text) s1Title = settings.flash_title_text; if (settings.sale_section_2_title) s2Title = settings.sale_section_2_title; } let notifType = 'product'; let notifTitle = isEditing ? "Product Updated! 🛍️" : "New Product Added! 🛍️"; let notifMsg = `Check out ${productData.title}`; const now = new Date(); const isFlash1Active = eventName && saleEndDate && new Date(saleEndDate) > now; const isFlash2Active = eventName2 && saleEndDate2 && new Date(saleEndDate2) > now; const isSpecialActive = document.getElementById('pSpecialDeal').checked; if (isFlash1Active) { notifType = 'flash_sale'; notifTitle = `🔥 ${s1Title} Started!`; notifMsg = `${productData.title} is now in ${s1Title}!`; } else if (isFlash2Active) { notifType = 'flash_sale_2'; notifTitle = `🔥 ${s2Title} Started!`; notifMsg = `${productData.title} is now in ${s2Title}!`; } else if (isSpecialActive) { notifType = 'special_deal'; notifTitle = `🎁 ${spTitle} Alert!`; notifMsg = `${productData.title} is now in ${spTitle}!`; } const { data: existingNotifs } = await window.supabaseClient.from('app_notifications').select('id').eq('product_slug', productData.slug).eq('type', notifType); if (existingNotifs && existingNotifs.length > 0) { console.log("Notification blocked: Already sent for this product & type."); } else { await window.supabaseClient.from('app_notifications').insert([{ title: notifTitle, message: notifMsg, product_slug: productData.slug, type: notifType }]); } } catch (notifError) { console.warn("Notification send error:", notifError); } }
+            
             if (!writeBlog) alert(`"${productData.title}" saved successfully!`); form.reset(); document.getElementById('variationsContainer').innerHTML = ''; document.getElementById('pId').value = ''; document.getElementById('formTitle').innerText = "Add / Update Product"; cancelBtn.style.display = "none"; primaryFileInput.value = ''; document.getElementById('pGalleryFile').value = ''; document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen'; document.getElementById('pWriteBlog').checked = false; document.getElementById('addProductContainer').style.display = 'none'; const toggleBtn = document.getElementById('toggleAddProductBtn'); toggleBtn.textContent = 'Show Product Form'; toggleBtn.style.background = '#16a34a'; currentGalleryFiles = []; document.getElementById('pImgPreview').innerHTML = ''; document.getElementById('pGalleryPreview').innerHTML = ''; document.getElementById('pMainColorPreview').innerHTML = ''; 
             
             document.getElementById('pFocusKeyword').value = '';
@@ -386,6 +438,11 @@ function setupProductForm() {
     });
     document.getElementById('logoutBtn')?.addEventListener('click', async () => { await API.signOut(); window.location.reload(); });
 }
+
+
+// ==========================================
+// BLOG FORM LOGIC
+// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     if (!document.getElementById('blogForm')) return;
     const toggleFormBtn = document.getElementById('toggleBlogFormBtn'); const formContainer = document.getElementById('blogFormContainer'); const toggleListBtn = document.getElementById('toggleBlogListBtn'); const listContainer = document.getElementById('blogListContainer'); const blogForm = document.getElementById('blogForm'); const cancelBtn = document.getElementById('cancelBlogBtn');
@@ -400,6 +457,11 @@ document.addEventListener('DOMContentLoaded', () => {
         try { const id = document.getElementById('bId').value; const blogData = { title: document.getElementById('bTitle').value.trim(), slug: document.getElementById('bSlug').value.trim(), image_url: document.getElementById('bImg').value.trim() || null, content_html: document.getElementById('bContent').value.trim(), is_published: true }; if (id) { const { error } = await window.supabaseClient.from('blogs').update(blogData).eq('id', id); if (error) throw error; } else { const { error } = await window.supabaseClient.from('blogs').insert([blogData]); if (error) throw error; } alert("Blog Post Saved Successfully!"); blogForm.reset(); document.getElementById('bId').value = ''; document.getElementById('blogFormTitle').innerText = "Add New Blog Post"; document.getElementById('saveBlogBtn').innerText = "Publish Post"; cancelBtn.style.display = 'none'; formContainer.style.display = 'none'; toggleFormBtn.textContent = 'Show Manual Form'; toggleFormBtn.style.background = '#d946ef'; if(listContainer.style.display === 'block') window.loadBlogList(); } catch (err) { alert("Error: " + err.message); } finally { saveBtn.innerText = originalText; saveBtn.disabled = false; }
     });
 });
+
+
+// ==========================================
+// AI HUNTER / DISCOVERED PRODUCTS
+// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     function setupScrollButtons(upBtnId, downBtnId, wrapperId) { const upBtn = document.getElementById(upBtnId); const downBtn = document.getElementById(downBtnId); const wrapper = document.getElementById(wrapperId); if (!upBtn || !downBtn || !wrapper) return; let scrollInterval; const startScroll = (direction) => { scrollInterval = setInterval(() => { if (direction === 'up') wrapper.scrollTop -= 10; else wrapper.scrollTop += 10; }, 20); }; const stopScroll = () => clearInterval(scrollInterval); upBtn.addEventListener('mousedown', () => startScroll('up')); upBtn.addEventListener('mouseup', stopScroll); upBtn.addEventListener('mouseleave', stopScroll); downBtn.addEventListener('mousedown', () => startScroll('down')); downBtn.addEventListener('mouseup', stopScroll); downBtn.addEventListener('mouseleave', stopScroll); }
     setupScrollButtons('scrollUpBtnAI', 'scrollDownBtnAI', 'tableScrollWrapperAI'); setupScrollButtons('scrollUpBtnProducts', 'scrollDownBtnProducts', 'tableScrollWrapperProducts');
@@ -445,6 +507,10 @@ document.addEventListener('DOMContentLoaded', () => {
     loadDiscoveredProducts();
 });
 
+
+// ==========================================
+// CUSTOMER REVIEWS LOGIC
+// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     const toggleReviewsBtn = document.getElementById('toggleReviewsBtn');
     const reviewsContainer = document.getElementById('reviewsContainer');
