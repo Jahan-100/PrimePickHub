@@ -9,69 +9,39 @@
     <link rel="stylesheet" href="/css/main.css?v=15">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ⭐ Body & Container Setup (No left space, full width) ⭐ */
         html, body { margin: 0 !important; padding: 0 !important; background-color: #f8fafc; font-family: sans-serif; box-sizing: border-box; }
         .container { max-width: 100%; width: 100%; margin: 0; background: #fff; padding: 20px; min-height: 100vh; box-sizing: border-box; }
-        
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #E2E8F0; padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .header h1 { margin: 0; color: #1E1B4B; font-size: 1.5rem; }
         .btn-back { background: #64748B; color: #fff; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.9rem; }
         .btn-back:hover { background: #475569; }
-        
         .filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #E2E8F0; }
         .filters input, .filters select { padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; outline: none; font-size: 0.9rem; }
         .filters input { width: 250px; }
-        
-        /* Table Styling */
         .table-responsive { overflow-x: auto; width: 100%; border: 1px solid #E2E8F0; border-radius: 8px; }
-        
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            min-width: 900px; 
-            table-layout: fixed; 
-        }
-        
+        table { width: 100%; border-collapse: collapse; min-width: 900px; table-layout: fixed; }
         th, td { border: 1px solid #E2E8F0; padding: 10px; text-align: left; font-size: 0.9rem; vertical-align: middle; white-space: nowrap; }
         th { background: #F8FAFC; font-weight: 600; color: #1E1B4B; position: sticky; top: 0; z-index: 10; }
         tr:hover { background: #F1F5F9; }
-        
-        /* ⭐ Exact Column Widths (Fixing the sizing) ⭐ */
         .col-sr { width: 60px !important; text-align: center !important; }
-        
-        /* Visitor ID Column (Bada font aur clear) */
-        .col-id { 
-            width: 40% !important; 
-            font-family: monospace; 
-            font-size: 1.1rem !important; /* Font size barha diya */
-            color: #1E1B4B !important; 
-            font-weight: bold;
-            word-break: break-all; 
-            white-space: normal !important; 
-        }
-        
+        .col-id { width: 40% !important; font-family: monospace; font-size: 1.1rem !important; color: #1E1B4B !important; font-weight: bold; word-break: break-all; white-space: normal !important; }
         .col-source { width: 15% !important; font-size: 0.85rem; color: #64748B; white-space: normal !important; word-break: break-all; }
         .col-device { width: 10% !important; }
         .col-date { width: 18% !important; }
-        
         .clickable-row { cursor: pointer; font-weight: 600; color: #1E1B4B; }
         .clickable-row:hover { background: #E2E8F0; }
         .clickable-row td { color: #1E1B4B; }
         .highlight { color: #DC2626; font-weight: bold; }
-        
         .breadcrumb { display: flex; gap: 8px; align-items: center; font-size: 0.95rem; margin-bottom: 15px; color: #64748B; background: #f1f5f9; padding: 10px 15px; border-radius: 8px; }
         .breadcrumb a { color: #2563eb; text-decoration: none; font-weight: bold; cursor: pointer; }
         .breadcrumb a:hover { text-decoration: underline; }
         .breadcrumb span { font-weight: bold; color: #1E1B4B; }
-        
         .table-wrapper { max-height: 75vh; overflow-y: auto; }
         .back-step-btn { background: #E2E8F0; color: #1E1B4B; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; display: none; margin-right: 10px; }
         .back-step-btn:hover { background: #CBD5E1; }
-        
         .product-cell { display: flex; align-items: center; gap: 10px; }
         .product-cell img { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; border: 1px solid #E2E8F0; }
         .product-cell span { font-weight: 600; color: #1E1B4B; max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
-        
         .badge-device { padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; white-space: nowrap; }
         .badge-mobile { background: #e0f2fe; color: #0369a1; }
         .badge-desktop { background: #f3e8ff; color: #6b21a8; }
@@ -86,28 +56,16 @@
             </div>
             <a href="/admin.html" class="btn-back">← Back to Dashboard</a>
         </div>
-        
         <div class="filters">
             <input type="text" id="searchInput" placeholder="Search by name, ID, or device...">
-            <select id="filterSelect">
-                <option value="all">All Filters</option>
-            </select>
-            <select id="deviceFilter">
-                <option value="all">All Devices</option>
-                <option value="Mobile">Mobile</option>
-                <option value="Desktop">Desktop</option>
-                <option value="Unknown">Unknown</option>
-            </select>
+            <select id="filterSelect"><option value="all">All Filters</option></select>
+            <select id="deviceFilter"><option value="all">All Devices</option><option value="Mobile">Mobile</option><option value="Desktop">Desktop</option><option value="Unknown">Unknown</option></select>
         </div>
-        
         <div class="breadcrumb" id="breadcrumb"></div>
-        
         <div class="table-wrapper table-responsive">
             <table id="analyticsTable">
                 <thead id="tableHead"></thead>
-                <tbody id="tableBody">
-                    <tr><td style="text-align:center; padding: 30px;" colspan="7">Fetching data...</td></tr>
-                </tbody>
+                <tbody id="tableBody"><tr><td style="text-align:center; padding: 30px;" colspan="7">Fetching data...</td></tr></tbody>
             </table>
         </div>
     </div>
@@ -119,235 +77,90 @@
             if (str === null || str === undefined) return '';
             return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
         }
-
         function safeDate(dateStr) {
             if (!dateStr) return 'N/A';
             const d = new Date(dateStr);
             if (isNaN(d.getTime())) return 'N/A';
             return d.toLocaleString();
         }
-
-        let rawData = [];
-        let currentView = 'country'; 
-        let selectedCountry = null;
-        let selectedCity = null;
-        let currentType = 'clicks';
-        let productMap = {};
-
+        let rawData = []; let currentView = 'country'; let selectedCountry = null; let selectedCity = null; let currentType = 'clicks'; let productMap = {};
         function formatCountryName(code) {
             if (!code || code === 'Unknown') return 'Unknown';
-            const countryMap = {
-                'US': 'United States', 'PK': 'Pakistan', 'GB': 'United Kingdom', 'UK': 'United Kingdom',
-                'IN': 'India', 'AE': 'United Arab Emirates', 'SA': 'Saudi Arabia', 'CA': 'Canada',
-                'AU': 'Australia', 'DE': 'Germany', 'FR': 'France', 'CN': 'China', 'JP': 'Japan',
-                'BR': 'Brazil', 'RU': 'Russia', 'ZA': 'South Africa', 'NG': 'Nigeria', 'EG': 'Egypt',
-                'TR': 'Turkey', 'MY': 'Malaysia', 'ID': 'Indonesia', 'BD': 'Bangladesh', 'LK': 'Sri Lanka',
-                'BE': 'Belgium', 'FI': 'Finland', 'NL': 'Netherlands', 'ES': 'Spain', 'IT': 'Italy', 
-                'SE': 'Sweden', 'PL': 'Poland', 'CH': 'Switzerland', 'AT': 'Austria', 'IE': 'Ireland', 
-                'DK': 'Denmark', 'NO': 'Norway', 'PT': 'Portugal', 'GR': 'Greece', 'CZ': 'Czech Republic', 
-                'RO': 'Romania', 'HU': 'Hungary', 'NZ': 'New Zealand', 'SG': 'Singapore', 'PH': 'Philippines', 
-                'TH': 'Thailand', 'VN': 'Vietnam', 'KR': 'South Korea', 'MX': 'Mexico', 'AR': 'Argentina', 
-                'CL': 'Chile', 'CO': 'Colombia', 'PE': 'Peru', 'UA': 'Ukraine', 'IL': 'Israel'
-            };
+            const countryMap = { 'US': 'United States', 'PK': 'Pakistan', 'GB': 'United Kingdom', 'UK': 'United Kingdom', 'IN': 'India', 'AE': 'United Arab Emirates', 'SA': 'Saudi Arabia', 'CA': 'Canada', 'AU': 'Australia', 'DE': 'Germany', 'FR': 'France', 'CN': 'China', 'JP': 'Japan', 'BR': 'Brazil', 'RU': 'Russia', 'ZA': 'South Africa', 'NG': 'Nigeria', 'EG': 'Egypt', 'TR': 'Turkey', 'MY': 'Malaysia', 'ID': 'Indonesia', 'BD': 'Bangladesh', 'LK': 'Sri Lanka', 'BE': 'Belgium', 'FI': 'Finland', 'NL': 'Netherlands', 'ES': 'Spain', 'IT': 'Italy', 'SE': 'Sweden', 'PL': 'Poland', 'CH': 'Switzerland', 'AT': 'Austria', 'IE': 'Ireland', 'DK': 'Denmark', 'NO': 'Norway', 'PT': 'Portugal', 'GR': 'Greece', 'CZ': 'Czech Republic', 'RO': 'Romania', 'HU': 'Hungary', 'NZ': 'New Zealand', 'SG': 'Singapore', 'PH': 'Philippines', 'TH': 'Thailand', 'VN': 'Vietnam', 'KR': 'South Korea', 'MX': 'Mexico', 'AR': 'Argentina', 'CL': 'Chile', 'CO': 'Colombia', 'PE': 'Peru', 'UA': 'Ukraine', 'IL': 'Israel' };
             return countryMap[code.toUpperCase()] || code;
         }
-
         function getDeviceBadge(device) {
-            if (!device || device === 'Unknown') return '<span class="badge-device" style="background:#f1f5f9; color:#64748b;">Unknown</span>';
-            if (device === 'Mobile') return '<span class="badge-device badge-mobile"><i class="fa-solid fa-mobile-screen"></i> Mobile</span>';
+            const safeDevice = escapeHTML(device);
+            if (!safeDevice || safeDevice === 'Unknown') return '<span class="badge-device" style="background:#f1f5f9; color:#64748b;">Unknown</span>';
+            if (safeDevice === 'Mobile') return '<span class="badge-device badge-mobile"><i class="fa-solid fa-mobile-screen"></i> Mobile</span>';
             return '<span class="badge-device badge-desktop"><i class="fa-solid fa-desktop"></i> Desktop</span>';
         }
-
         document.addEventListener('DOMContentLoaded', async () => {
             if (!window.supabaseClient) { alert("Supabase not loaded!"); return; }
             const urlParams = new URLSearchParams(window.location.search);
             currentType = urlParams.get('type') || 'clicks';
-            const titleEl = document.getElementById('pageTitle');
-            const searchInput = document.getElementById('searchInput');
-            const filterSelect = document.getElementById('filterSelect');
-            const deviceFilter = document.getElementById('deviceFilter');
-
+            const titleEl = document.getElementById('pageTitle'); const searchInput = document.getElementById('searchInput'); const filterSelect = document.getElementById('filterSelect'); const deviceFilter = document.getElementById('deviceFilter');
             if (currentType === 'clicks') {
-                titleEl.innerText = "Affiliate Clicks Breakdown";
-                filterSelect.innerHTML = `<option value="all">All Stores</option>`;
-                
+                titleEl.innerText = "Affiliate Clicks Breakdown"; filterSelect.innerHTML = `<option value="all">All Stores</option>`;
                 const { data: clicksData } = await window.supabaseClient.from('clicks').select('*').order('created_at', { ascending: false });
                 const { data: productsData } = await window.supabaseClient.from('products').select('id, title, image_url');
-                
                 if (productsData) { productsData.forEach(p => { productMap[p.id] = p; }); }
-
-                rawData = (clicksData || []).map(c => ({
-                    ...c,
-                    product_title: productMap[c.product_id]?.title || 'Unknown Product',
-                    product_image: productMap[c.product_id]?.image_url || '/assets/icon-192.png?v=4'
-                }));
-                
-                const stores = [...new Set(rawData.map(d => d.store))];
-                stores.forEach(s => filterSelect.innerHTML += `<option value="${s}">${s}</option>`);
-                
+                rawData = (clicksData || []).map(c => ({ ...c, product_title: productMap[c.product_id]?.title || 'Unknown Product', product_image: productMap[c.product_id]?.image_url || '/assets/icon-192.png?v=4' }));
+                const stores = [...new Set(rawData.map(d => d.store))]; stores.forEach(s => filterSelect.innerHTML += `<option value="${escapeHTML(s)}">${escapeHTML(s)}</option>`);
             } else if (currentType === 'visitors') {
-                titleEl.innerText = "Website Visitors Breakdown";
-                filterSelect.innerHTML = `<option value="all">All Sources</option><option value="Direct">Direct</option><option value="Google Search">Google Search</option><option value="Facebook">Facebook</option>`;
-                const { data } = await window.supabaseClient.from('website_visitors').select('*').order('last_seen', { ascending: false });
-                rawData = data || [];
+                titleEl.innerText = "Website Visitors Breakdown"; filterSelect.innerHTML = `<option value="all">All Sources</option><option value="Direct">Direct</option><option value="Google Search">Google Search</option><option value="Facebook">Facebook</option>`;
+                const { data } = await window.supabaseClient.from('website_visitors').select('*').order('last_seen', { ascending: false }); rawData = data || [];
             } else if (currentType === 'installs') {
-                titleEl.innerText = "App Installs Breakdown";
-                filterSelect.innerHTML = `<option value="all">All Devices</option><option value="Mobile">Mobile</option><option value="Desktop">Desktop</option>`;
-                const { data } = await window.supabaseClient.from('active_app_installs').select('*').order('last_active', { ascending: false });
-                rawData = data || [];
+                titleEl.innerText = "App Installs Breakdown"; filterSelect.innerHTML = `<option value="all">All Devices</option><option value="Mobile">Mobile</option><option value="Desktop">Desktop</option>`;
+                const { data } = await window.supabaseClient.from('active_app_installs').select('*').order('last_active', { ascending: false }); rawData = data || [];
             }
-            
             renderView();
-            searchInput.addEventListener('input', () => renderView());
-            filterSelect.addEventListener('change', () => renderView());
-            deviceFilter.addEventListener('change', () => renderView());
+            searchInput.addEventListener('input', () => renderView()); filterSelect.addEventListener('change', () => renderView()); deviceFilter.addEventListener('change', () => renderView());
         });
-
         function renderView() {
-            const thead = document.getElementById('tableHead');
-            const tbody = document.getElementById('tableBody');
-            const breadcrumb = document.getElementById('breadcrumb');
-            const searchVal = document.getElementById('searchInput').value.toLowerCase();
-            const filterVal = document.getElementById('filterSelect').value;
-            const deviceVal = document.getElementById('deviceFilter').value;
-            const stepBackBtn = document.getElementById('stepBackBtn');
-
-            if (currentView === 'country') stepBackBtn.style.display = 'none';
-            else stepBackBtn.style.display = 'inline-block';
-
+            const thead = document.getElementById('tableHead'); const tbody = document.getElementById('tableBody'); const breadcrumb = document.getElementById('breadcrumb');
+            const searchVal = document.getElementById('searchInput').value.toLowerCase(); const filterVal = document.getElementById('filterSelect').value; const deviceVal = document.getElementById('deviceFilter').value; const stepBackBtn = document.getElementById('stepBackBtn');
+            if (currentView === 'country') stepBackBtn.style.display = 'none'; else stepBackBtn.style.display = 'inline-block';
             let filteredData = rawData.filter(item => {
-                const searchString = `${item.store || ''} ${item.product_title || ''} ${item.device_type || ''} ${item.visitor_id || ''}`.toLowerCase();
-                const matchSearch = searchString.includes(searchVal);
-                
-                let matchFilter = true;
-                if (filterVal !== 'all') {
-                    if (currentType === 'clicks') matchFilter = item.store === filterVal;
-                    if (currentType === 'visitors') matchFilter = item.referrer === filterVal;
-                    if (currentType === 'installs') matchFilter = item.device_type === filterVal;
-                }
-                
-                let matchDevice = true;
-                if (deviceVal !== 'all') {
-                    matchDevice = (item.device_type === deviceVal);
-                }
-
+                const searchString = `${item.store || ''} ${item.product_title || ''} ${item.device_type || ''} ${item.visitor_id || ''}`.toLowerCase(); const matchSearch = searchString.includes(searchVal);
+                let matchFilter = true; if (filterVal !== 'all') { if (currentType === 'clicks') matchFilter = item.store === filterVal; if (currentType === 'visitors') matchFilter = item.referrer === filterVal; if (currentType === 'installs') matchFilter = item.device_type === filterVal; }
+                let matchDevice = true; if (deviceVal !== 'all') { matchDevice = (item.device_type === deviceVal); }
                 return matchSearch && matchFilter && matchDevice;
             });
-
             breadcrumb.innerHTML = `<a onclick="goBack('country')">All Countries</a>`;
-            if (selectedCountry) breadcrumb.innerHTML += ` &gt; <a onclick="goBack('city')">${selectedCountry}</a>`;
-            if (selectedCity) breadcrumb.innerHTML += ` &gt; <span>${selectedCity}</span>`;
-
+            if (selectedCountry) breadcrumb.innerHTML += ` &gt; <a onclick="goBack('city')">${escapeHTML(selectedCountry)}</a>`;
+            if (selectedCity) breadcrumb.innerHTML += ` &gt; <span>${escapeHTML(selectedCity)}</span>`;
             tbody.innerHTML = '';
-
             if (currentView === 'country') {
                 thead.innerHTML = `<tr><th class="col-sr">Sr. No.</th><th style="width:40%">Country</th><th style="width:20%">Total Records</th><th>Details</th></tr>`;
-                const grouped = {};
-                filteredData.forEach(d => { 
-                    const c = formatCountryName(d.country); 
-                    grouped[c] = (grouped[c] || 0) + 1; 
-                });
-                
-                if (Object.keys(grouped).length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 30px;">No data found.</td></tr>`;
-                } else {
-                    tbody.innerHTML = Object.entries(grouped).map(([country, count], idx) => `
-                        <tr class="clickable-row" onclick="drillDown('city', '${country}')">
-                            <td class="col-sr">${idx + 1}</td><td>${country}</td><td>${count}</td><td style="color:#2563eb;">View Cities →</td>
-                        </tr>
-                    `).join('');
-                }
+                const grouped = {}; filteredData.forEach(d => { const c = formatCountryName(d.country); grouped[c] = (grouped[c] || 0) + 1; });
+                if (Object.keys(grouped).length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 30px;">No data found.</td></tr>`; } 
+                else { tbody.innerHTML = Object.entries(grouped).map(([country, count], idx) => `<tr class="clickable-row" onclick="drillDown('city', '${escapeHTML(country)}')"><td class="col-sr">${idx + 1}</td><td>${escapeHTML(country)}</td><td>${count}</td><td style="color:#2563eb;">View Cities →</td></tr>`).join(''); }
             } else if (currentView === 'city') {
                 thead.innerHTML = `<tr><th class="col-sr">Sr. No.</th><th style="width:40%">City</th><th style="width:20%">Total Records</th><th>Details</th></tr>`;
-                const countryData = filteredData.filter(d => formatCountryName(d.country) === selectedCountry);
-                const grouped = {};
-                countryData.forEach(d => { const c = d.city || 'Unknown'; grouped[c] = (grouped[c] || 0) + 1; });
-                
-                if (Object.keys(grouped).length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 30px;">No data found.</td></tr>`;
-                } else {
-                    tbody.innerHTML = Object.entries(grouped).map(([city, count], idx) => `
-                        <tr class="clickable-row" onclick="drillDown('details', '${city}')">
-                            <td class="col-sr">${idx + 1}</td><td>${city}</td><td>${count}</td><td style="color:#2563eb;">View Details →</td>
-                        </tr>
-                    `).join('');
-                }
+                const countryData = filteredData.filter(d => formatCountryName(d.country) === selectedCountry); const grouped = {}; countryData.forEach(d => { const c = d.city || 'Unknown'; grouped[c] = (grouped[c] || 0) + 1; });
+                if (Object.keys(grouped).length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 30px;">No data found.</td></tr>`; } 
+                else { tbody.innerHTML = Object.entries(grouped).map(([city, count], idx) => `<tr class="clickable-row" onclick="drillDown('details', '${escapeHTML(city)}')"><td class="col-sr">${idx + 1}</td><td>${escapeHTML(city)}</td><td>${count}</td><td style="color:#2563eb;">View Details →</td></tr>`).join(''); }
             } else if (currentView === 'details') {
-                const cityData = filteredData.filter(d => {
-                    const matchCountry = formatCountryName(d.country) === selectedCountry;
-                    const itemCity = d.city || 'Unknown';
-                    const matchCity = String(itemCity).trim().toLowerCase() === String(selectedCity).trim().toLowerCase();
-                    return matchCountry && matchCity;
-                });
-                
-                if (cityData.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 30px;">No detailed records found for this selection.</td></tr>`;
-                } else {
+                const cityData = filteredData.filter(d => { const matchCountry = formatCountryName(d.country) === selectedCountry; const itemCity = d.city || 'Unknown'; const matchCity = String(itemCity).trim().toLowerCase() === String(selectedCity).trim().toLowerCase(); return matchCountry && matchCity; });
+                if (cityData.length === 0) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 30px;">No detailed records found for this selection.</td></tr>`; } 
+                else {
                     if (currentType === 'clicks') {
                         thead.innerHTML = `<tr><th class="col-sr">Sr. No.</th><th style="width:22%">Product Info</th><th class="col-source">Store</th><th class="col-device">Device</th><th class="col-id">Device ID</th><th class="col-source">Source</th><th class="col-date">Date</th></tr>`;
-                        tbody.innerHTML = cityData.map((d, idx) => {
-                            const pTitle = d.product_title || 'Unknown Product';
-                            const pImg = d.product_image || '/assets/icon-192.png?v=4';
-                            return `
-                            <tr>
-                                <td class="col-sr">${idx + 1}</td>
-                                <td>
-                                    <div class="product-cell">
-                                        <img src="${escapeHTML(pImg)}" onerror="this.src='/assets/icon-192.png?v=4'">
-                                        <span title="${escapeHTML(pTitle)}">${escapeHTML(pTitle)}</span>
-                                    </div>
-                                </td>
-                                <td class="highlight">${escapeHTML(d.store || 'N/A')}</td>
-                                <td class="col-device">${getDeviceBadge(d.device_type)}</td>
-                                <td class="col-id">${escapeHTML(d.visitor_id || 'N/A')}</td>
-                                <td class="col-source">${d.referrer || 'Direct'}</td>
-                                <td class="col-date">${safeDate(d.created_at)}</td>
-                            </tr>`;
-                        }).join('');
+                        tbody.innerHTML = cityData.map((d, idx) => { const pTitle = d.product_title || 'Unknown Product'; const pImg = d.product_image || '/assets/icon-192.png?v=4'; return `<tr><td class="col-sr">${idx + 1}</td><td><div class="product-cell"><img src="${escapeHTML(pImg)}" onerror="this.src='/assets/icon-192.png?v=4'"><span title="${escapeHTML(pTitle)}">${escapeHTML(pTitle)}</span></div></td><td class="highlight">${escapeHTML(d.store || 'N/A')}</td><td class="col-device">${getDeviceBadge(d.device_type)}</td><td class="col-id">${escapeHTML(d.visitor_id || 'N/A')}</td><td class="col-source">${escapeHTML(d.referrer || 'Direct')}</td><td class="col-date">${safeDate(d.created_at)}</td></tr>`; }).join('');
                     } else if (currentType === 'visitors') {
                         thead.innerHTML = `<tr><th class="col-sr">Sr. No.</th><th class="col-id" style="width:45%">Visitor ID</th><th class="col-source" style="width:20%">Source / Referrer</th><th class="col-device">Device</th><th class="col-date">Last Active</th></tr>`;
-                        tbody.innerHTML = cityData.map((d, idx) => {
-                            return `
-                            <tr>
-                                <td class="col-sr">${idx + 1}</td>
-                                <td class="col-id">${escapeHTML(d.visitor_id || 'Unknown')}</td>
-                                <td class="highlight">${escapeHTML(d.referrer || 'Direct')}</td>
-                                <td class="col-device">${getDeviceBadge(d.device_type)}</td>
-                                <td class="col-date">${safeDate(d.last_seen)}</td>
-                            </tr>`;
-                        }).join('');
+                        tbody.innerHTML = cityData.map((d, idx) => `<tr><td class="col-sr">${idx + 1}</td><td class="col-id">${escapeHTML(d.visitor_id || 'Unknown')}</td><td class="highlight">${escapeHTML(d.referrer || 'Direct')}</td><td class="col-device">${getDeviceBadge(d.device_type)}</td><td class="col-date">${safeDate(d.last_seen)}</td></tr>`).join('');
                     } else if (currentType === 'installs') {
                         thead.innerHTML = `<tr><th class="col-sr">Sr. No.</th><th class="col-id" style="width:50%">Device ID</th><th class="col-device" style="width:20%">Device Type</th><th class="col-date">Last Active</th></tr>`;
-                        tbody.innerHTML = cityData.map((d, idx) => `
-                            <tr>
-                                <td class="col-sr">${idx + 1}</td>
-                                <td class="col-id">${escapeHTML(d.device_id || 'Unknown')}</td>
-                                <td class="col-device">${getDeviceBadge(d.device_type)}</td>
-                                <td class="col-date">${safeDate(d.last_active)}</td>
-                            </tr>
-                        `).join('');
+                        tbody.innerHTML = cityData.map((d, idx) => `<tr><td class="col-sr">${idx + 1}</td><td class="col-id">${escapeHTML(d.device_id || 'Unknown')}</td><td class="col-device">${getDeviceBadge(d.device_type)}</td><td class="col-date">${safeDate(d.last_active)}</td></tr>`).join('');
                     }
                 }
             }
         }
-        
-        window.drillDown = function(level, name) { 
-            if (level === 'city') { selectedCountry = name; currentView = 'city'; } 
-            if (level === 'details') { selectedCity = name; currentView = 'details'; } 
-            renderView(); 
-        };
-        
-        window.goBack = function(level) { 
-            if (level === 'country') { selectedCountry = null; selectedCity = null; currentView = 'country'; } 
-            if (level === 'city') { selectedCity = null; currentView = 'city'; } 
-            renderView(); 
-        };
-        
-        window.stepBack = function() {
-            if (currentView === 'details') { selectedCity = null; currentView = 'city'; }
-            else if (currentView === 'city') { selectedCountry = null; currentView = 'country'; }
-            renderView();
-        };
+        window.drillDown = function(level, name) { if (level === 'city') { selectedCountry = name; currentView = 'city'; } if (level === 'details') { selectedCity = name; currentView = 'details'; } renderView(); };
+        window.goBack = function(level) { if (level === 'country') { selectedCountry = null; selectedCity = null; currentView = 'country'; } if (level === 'city') { selectedCity = null; currentView = 'city'; } renderView(); };
+        window.stepBack = function() { if (currentView === 'details') { selectedCity = null; currentView = 'city'; } else if (currentView === 'city') { selectedCountry = null; currentView = 'country'; } renderView(); };
     </script>
 </body>
 </html>
