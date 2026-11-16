@@ -1,4 +1,3 @@
-// api/generate-blog.js
 const { createClient } = require('@supabase/supabase-js');
 
 module.exports = async function handler(req, res) {
