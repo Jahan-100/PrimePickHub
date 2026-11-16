@@ -1,48 +1,31 @@
+// api/generate-blog.js
 const { createClient } = require('@supabase/supabase-js');
 
 module.exports = async function handler(req, res) {
-    // ⭐ 1. ADMIN AUTHENTICATION CHECK ⭐
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Unauthorized: Missing token' });
-    }
+    if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
     const token = authHeader.split(' ')[1];
-    
-    const supabaseAuth = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
-        global: { headers: { Authorization: `Bearer ${token}` } }
-    });
-    
+    const supabaseAuth = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, { global: { headers: { Authorization: `Bearer ${token}` } } });
     const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
-    if (authError || !user) return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+    if (authError || !user) return res.status(401).json({ error: 'Invalid token' });
 
     const supabaseAdmin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
     const { data: profile } = await supabaseAdmin.from('profiles').select('role').eq('id', user.id).single();
-    if (profile?.role !== 'admin') return res.status(403).json({ error: 'Forbidden: Admin access required' });
+    if (profile?.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
 
-    // ⭐ 2. MAIN LOGIC ⭐
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
     const { productId, title, description, storeName, affiliateUrl, imageUrl } = req.body;
     const apiKey = process.env.OPENROUTER_API_KEY;
-    
-    if (!apiKey) return res.status(500).json({ error: "OPENROUTER_API_KEY missing in Vercel" });
+    if (!apiKey) return res.status(500).json({ error: "OPENROUTER_API_KEY missing" });
 
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-    const models = [
-        "openrouter/free",                          
-        "openai/gpt-oss-120b:free",
-        "google/gemini-2.0-flash-exp:free",
-        "meta-llama/llama-3.3-70b-instruct:free",
-        "deepseek/deepseek-r1:free",
-        "mistralai/mistral-7b-instruct:free",
-        "google/gemma-2-9b-it:free",
-        "meta-llama/llama-3.1-8b-instruct:free",
-        "qwen/qwen3-235b-a22b:free",
-        "meta-llama/llama-4-scout:free"
-    ];
+    const models = [ "openrouter/free", "openai/gpt-oss-120b:free", "google/gemini-2.0-flash-exp:free" ];
 
-    const prompt = `You are an expert SEO Copywriter. Write a highly detailed, 600-word review blog post in HTML for the following product to help it rank on Google.
+    // ⭐ FIXED PROMPT: Removed "to help it rank" & asked for original human review ⭐
+    const prompt = `You are an expert copywriter writing an honest product review. 
+    Write a detailed 600-word blog post in HTML for the following product.
     
     Product Details:
     - Title: ${title}
@@ -53,10 +36,11 @@ module.exports = async function handler(req, res) {
     
     Instructions:
     1. Use HTML tags like <h2>, <h3>, <p>, <ul>, <li>.
-    2. Use an engaging tone.
+    2. Write like a human who actually used the product. Add realistic pros, cons, and an honest verdict.
     3. Include a "Pros & Cons" section.
     4. Include the affiliate link at least 2 times with text "Check Price on ${storeName}".
-    5. Return ONLY the HTML content, no markdown blocks, no extra text.`;
+    5. Do NOT promise miracles. Be realistic about what the product can do.
+    6. Return ONLY the HTML content, no markdown blocks.`;
 
     let generatedContent = null;
     let usedModel = "";
@@ -68,16 +52,14 @@ module.exports = async function handler(req, res) {
                 headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ model: model, messages: [{ role: "user", content: prompt }] })
             });
-
             const aiData = await response.json();
-            if (aiData.error) { continue; }
-
+            if (aiData.error) continue;
             if (aiData.choices && aiData.choices[0]?.message?.content) {
                 generatedContent = aiData.choices[0].message.content;
                 usedModel = model;
                 break;
             }
-        } catch (err) { console.warn(`❌ Model ${model} crashed:`, err.message); }
+        } catch (err) { console.warn(`❌ Model ${model} crashed`); }
     }
 
     if (!generatedContent) return res.status(500).json({ error: "All AI models failed. Please try again later." });
@@ -86,7 +68,6 @@ module.exports = async function handler(req, res) {
 
     try {
         const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Math.floor(Math.random() * 1000);
-        
         const { error } = await supabase.from('blogs').insert([{
             title: `Review: ${title} - Is It Worth Buying?`,
             slug: slug,
@@ -94,7 +75,6 @@ module.exports = async function handler(req, res) {
             image_url: imageUrl,
             is_published: false
         }]);
-
         if (error) throw error;
         return res.status(200).json({ success: true, message: "Draft Blog Generated", model: usedModel });
     } catch (err) {
