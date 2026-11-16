@@ -4,6 +4,12 @@ let globalCategories = [];
 let currentGalleryFiles = []; 
 let currentAdminReviews = []; 
 
+// ⭐ Security: Token Helper for API calls ⭐
+async function getAuthToken() {
+    const { data: { session } } = await window.supabaseClient.auth.getSession();
+    return session ? session.access_token : null;
+}
+
 async function uploadFileToSupabase(file) {
     const fileExt = file.name.split('.').pop();
     const safeName = file.name.replace(/\.[^/.]+$/, "").toLowerCase().replace(/[^a-z0-9]/g, '-');
@@ -38,99 +44,43 @@ document.getElementById('pGallery')?.addEventListener('input', renderGalleryPrev
 
 window.handleMainColorUpload = async function(input) {
     if (input.files.length === 0) return; 
-    const fileNameSpan = document.getElementById('pMainColorImgName'); 
-    fileNameSpan.innerText = 'Uploading...'; 
-    let urls = [];
-    try {
-        for (let i = 0; i < input.files.length; i++) { const url = await uploadFileToSupabase(input.files[i]); urls.push(url); }
-        document.getElementById('pMainColor').value = urls.join(',');
-        fileNameSpan.innerText = `${urls.length} images uploaded`; 
-        renderColorPreviews(); 
+    const fileNameSpan = document.getElementById('pMainColorImgName'); fileNameSpan.innerText = 'Uploading...'; let urls = [];
+    try { for (let i = 0; i < input.files.length; i++) { const url = await uploadFileToSupabase(input.files[i]); urls.push(url); }
+        document.getElementById('pMainColor').value = urls.join(','); fileNameSpan.innerText = `${urls.length} images uploaded`; renderColorPreviews(); 
         alert("Images uploaded successfully!\n\n⚠️ ZAROORI: Ab Color Name wale box mein exactly usi order mein naam likhein jis order mein aapne images select ki hain.");
     } catch (err) { alert('Upload failed: ' + err.message); fileNameSpan.innerText = 'Failed'; }
 };
 
 window.handleVarColorUpload = async function(input) {
-    if (input.files.length === 0) return; 
-    const row = input.closest('.variation-row');
-    if (!row) return;
-    
-    const colorInput = row.querySelector('.var-color');
-    const uploadBtn = row.querySelector('.btn-upload');
-    const originalText = uploadBtn.innerText;
-    
-    uploadBtn.innerText = 'Uploading...'; 
-    uploadBtn.disabled = true;
-    
-    let urls = [];
+    if (input.files.length === 0) return; const row = input.closest('.variation-row'); if (!row) return;
+    const colorInput = row.querySelector('.var-color'); const uploadBtn = row.querySelector('.btn-upload'); const originalText = uploadBtn.innerText;
+    uploadBtn.innerText = 'Uploading...'; uploadBtn.disabled = true; let urls = [];
     try {
-        for (let i = 0; i < input.files.length; i++) { 
-            const url = await uploadFileToSupabase(input.files[i]); 
-            urls.push(url); 
-        }
-        
-        let existingVal = colorInput.value.trim();
-        if (existingVal && !existingVal.endsWith(',')) existingVal += ',';
-        colorInput.value = existingVal + urls.join(',');
-        
-        renderVarColorPreview(row); 
-        alert(`${urls.length} variation images uploaded successfully!`);
-    } catch (err) { 
-        alert('Upload failed: ' + err.message); 
-    } finally { 
-        uploadBtn.innerText = originalText; 
-        uploadBtn.disabled = false; 
-        input.value = ''; 
-    }
+        for (let i = 0; i < input.files.length; i++) { const url = await uploadFileToSupabase(input.files[i]); urls.push(url); }
+        let existingVal = colorInput.value.trim(); if (existingVal && !existingVal.endsWith(',')) existingVal += ',';
+        colorInput.value = existingVal + urls.join(','); renderVarColorPreview(row); alert(`${urls.length} variation images uploaded successfully!`);
+    } catch (err) { alert('Upload failed: ' + err.message); } finally { uploadBtn.innerText = originalText; uploadBtn.disabled = false; input.value = ''; }
 };
 
 window.renderVarColorPreview = function(row) {
-    if (!row) return;
-    const colorInput = row.querySelector('.var-color');
-    const previewContainer = row.querySelector('.var-color-preview');
-    if (!colorInput || !previewContainer) return;
-    
-    const val = colorInput.value.trim();
-    if (!val) { previewContainer.innerHTML = ''; return; }
-    
+    if (!row) return; const colorInput = row.querySelector('.var-color'); const previewContainer = row.querySelector('.var-color-preview'); if (!colorInput || !previewContainer) return;
+    const val = colorInput.value.trim(); if (!val) { previewContainer.innerHTML = ''; return; }
     const urls = val.split(',').map(u => u.trim()).filter(Boolean);
-    
     previewContainer.innerHTML = urls.map((url, idx) => {
-        let bgStyle = '';
-        if (url.startsWith('http')) {
-            bgStyle = `background-image: url('${escapeHTML(url)}'); background-size: cover; background-position: center;`;
-        } else {
-            bgStyle = `background-color: ${escapeHTML(url)};`;
-        }
-        
-        return `<div style="position:relative; width:35px; height:35px; border-radius:4px; border:1px solid #CBD5E1; ${bgStyle} margin-bottom:2px;" title="${escapeHTML(url)}">
-                    <button type="button" onclick="removeVarColorUrl(this, ${idx})" style="position:absolute; top:-5px; right:-5px; background:#EF4444; color:white; border:1px solid #fff; width:16px; height:16px; border-radius:50%; font-size:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; font-weight:bold;">&times;</button>
-                </div>`;
+        let bgStyle = ''; if (url.startsWith('http')) { bgStyle = `background-image: url('${escapeHTML(url)}'); background-size: cover; background-position: center;`; } else { bgStyle = `background-color: ${escapeHTML(url)};`; }
+        return `<div style="position:relative; width:35px; height:35px; border-radius:4px; border:1px solid #CBD5E1; ${bgStyle} margin-bottom:2px;" title="${escapeHTML(url)}"><button type="button" onclick="removeVarColorUrl(this, ${idx})" style="position:absolute; top:-5px; right:-5px; background:#EF4444; color:white; border:1px solid #fff; width:16px; height:16px; border-radius:50%; font-size:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; font-weight:bold;">&times;</button></div>`;
     }).join('');
 };
 
 window.removeVarColorUrl = function(btn, index) {
-    const row = btn.closest('.variation-row');
-    if (!row) return;
-    const colorInput = row.querySelector('.var-color');
-    let urls = colorInput.value.split(',').map(u => u.trim()).filter(Boolean);
-    urls.splice(index, 1);
-    colorInput.value = urls.join(',');
-    renderVarColorPreview(row);
+    const row = btn.closest('.variation-row'); if (!row) return; const colorInput = row.querySelector('.var-color');
+    let urls = colorInput.value.split(',').map(u => u.trim()).filter(Boolean); urls.splice(index, 1); colorInput.value = urls.join(','); renderVarColorPreview(row);
 }
 
 function renderColorPreviews() {
-    const container = document.getElementById('pMainColorPreview'); 
-    const val = document.getElementById('pMainColor').value.trim(); 
-    if(!val) { container.innerHTML = ''; return; }
+    const container = document.getElementById('pMainColorPreview'); const val = document.getElementById('pMainColor').value.trim(); if(!val) { container.innerHTML = ''; return; }
     const urls = val.split(',').map(u => u.trim()).filter(Boolean);
-    container.innerHTML = urls.map((url, idx) => { 
-        if(url.startsWith('http')) { 
-            return `<div class="preview-item"><img src="${escapeHTML(url)}" onclick="openImageLightbox('${escapeHTML(url)}')" title="Click to view"><button class="preview-remove" onclick="removeColorUrl(${idx})" title="Remove Image">X</button></div>`; 
-        } else { 
-            return `<div class="preview-item" style="background:${escapeHTML(url)};"><button class="preview-remove" onclick="removeColorUrl(${idx})" title="Remove Color">X</button></div>`; 
-        } 
-    }).join('');
+    container.innerHTML = urls.map((url, idx) => { if(url.startsWith('http')) { return `<div class="preview-item"><img src="${escapeHTML(url)}" onclick="openImageLightbox('${escapeHTML(url)}')" title="Click to view"><button class="preview-remove" onclick="removeColorUrl(${idx})" title="Remove Image">X</button></div>`; } else { return `<div class="preview-item" style="background:${escapeHTML(url)};"><button class="preview-remove" onclick="removeColorUrl(${idx})" title="Remove Color">X</button></div>`; } }).join('');
 }
 window.removeColorUrl = function(index) { const input = document.getElementById('pMainColor'); let urls = input.value.split(',').map(u => u.trim()).filter(Boolean); urls.splice(index, 1); input.value = urls.join(','); renderColorPreviews(); }
 document.getElementById('pMainColor')?.addEventListener('input', renderColorPreviews);
@@ -143,14 +93,16 @@ async function syncCategoriesFromDB() {
     let customCats = []; if (!error && data && data.custom_categories) { customCats = typeof data.custom_categories === 'string' ? JSON.parse(data.custom_categories) : data.custom_categories; }
     let merged = [...masterCats]; customCats.forEach(c => { const idx = merged.findIndex(m => m.slug === c.slug); if (idx > -1) merged[idx] = c; else merged.push(c); }); globalCategories = merged;
 }
+
 window.loadBlogList = async function() {
     const tbody = document.getElementById('blogListBody'); if (!tbody) return; tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading...</td></tr>';
     const { data: blogs, error } = await window.supabaseClient.from('blogs').select('*').order('created_at', { ascending: false });
     if (error || !blogs || blogs.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No blog posts found.</td></tr>'; const countEl = document.getElementById('totalBlogsCount'); if (countEl) countEl.innerText = 0; const draftCountEl = document.getElementById('totalDraftsCount'); if (draftCountEl) draftCountEl.innerText = 0; return; }
     const publishedBlogs = blogs.filter(b => b.is_published === true); const draftBlogs = blogs.filter(b => b.is_published !== true);
     const countEl = document.getElementById('totalBlogsCount'); if (countEl) countEl.innerText = publishedBlogs.length; const draftCountEl = document.getElementById('totalDraftsCount'); if (draftCountEl) draftCountEl.innerText = draftBlogs.length;
-    tbody.innerHTML = blogs.map((b, index) => { const isPublished = b.is_published !== false; const statusBadge = isPublished ? '' : `<span style="background:#F59E0B; color:white; padding:2px 6px; border-radius:4px; font-size:0.65rem; margin-left:5px;">🤖 AI DRAFT</span>`; let actionBtns = `<button class="btn-edit" onclick="editBlog('${b.id}', '${b.title.replace(/'/g, "\\'")}', '${b.slug}', '${b.image_url || ''}')">Edit</button><button class="btn-delete" onclick="deleteBlog('${b.id}')">Delete</button>`; if (!isPublished) actionBtns = `<button onclick="publishBlog('${b.id}')" style="background:#10B981; color:white; padding:6px 10px; border:none; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">Publish</button>` + actionBtns; return `<tr><td style="text-align: center; font-weight: bold;">${index + 1}</td><td style="text-align: center;"><img src="${b.image_url || '/assets/icon-192.png?v=4'}" class="table-img"></td><td style="text-align: left; font-weight: 500;">${b.title} ${statusBadge}</td><td style="text-align:center;">${new Date(b.created_at).toLocaleDateString()}</td><td><div class="action-btns">${actionBtns}</div></td></tr>`; }).join('');
+    tbody.innerHTML = blogs.map((b, index) => { const isPublished = b.is_published !== false; const statusBadge = isPublished ? '' : `<span style="background:#F59E0B; color:white; padding:2px 6px; border-radius:4px; font-size:0.65rem; margin-left:5px;">🤖 AI DRAFT</span>`; let actionBtns = `<button class="btn-edit" onclick="editBlog('${b.id}', '${b.title.replace(/'/g, "\\'")}', '${b.slug}', '${b.image_url || ''}')">Edit</button><button class="btn-delete" onclick="deleteBlog('${b.id}')">Delete</button>`; if (!isPublished) actionBtns = `<button onclick="publishBlog('${b.id}')" style="background:#10B981; color:white; padding:6px 10px; border:none; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">Publish</button>` + actionBtns; return `<tr><td style="text-align: center; font-weight: bold;">${index + 1}</td><td style="text-align: center;"><img src="${b.image_url || '/assets/icon-192.png?v=4'}" class="table-img"></td><td style="text-align: left; font-weight: 500;">${escapeHTML(b.title)} ${statusBadge}</td><td style="text-align:center;">${new Date(b.created_at).toLocaleDateString()}</td><td><div class="action-btns">${actionBtns}</div></td></tr>`; }).join('');
 }
+
 function loadCategoriesToDropdown(selectedSlug = null) { const allCats = globalCategories; const addCategorySelect = document.getElementById('pCategory'); if (addCategorySelect) { let sortedCats = []; const addWithIndent = (parent, level) => { allCats.filter(c => c.parent === parent || (parent === null && !c.parent)).forEach(c => { const indent = '&nbsp;&nbsp;&nbsp;&nbsp;'.repeat(level); sortedCats.push({ ...c, display: indent + (level > 0 ? '↳ ' : '') + c.name }); addWithIndent(c.slug, level + 1); }); }; addWithIndent(null, 0); addWithIndent('all', 0); addCategorySelect.innerHTML = sortedCats.map(c => `<option value="${c.slug}">${c.display}</option>`).join(''); if(selectedSlug) addCategorySelect.value = selectedSlug; } }
 function renderCategoryManagementTable() { const tbody = document.getElementById('categoryManagementBody'); if(!tbody) return; const allCats = globalCategories; let sortedCats = []; const addWithIndent = (parent, level) => { allCats.filter(c => c.parent === parent || (parent === null && !c.parent)).forEach(c => { const indent = '&nbsp;&nbsp;&nbsp;&nbsp;'.repeat(level); sortedCats.push({ ...c, display: indent + (level > 0 ? '↳ ' : '') + c.name }); addWithIndent(c.slug, level + 1); }); }; addWithIndent(null, 0); addWithIndent('all', 0); tbody.innerHTML = sortedCats.map(c => `<tr><td style="text-align:left; font-weight:600;">${c.display}</td><td>${c.slug}</td><td>${c.parent || 'None'}</td><td><div class="action-btns"><button class="btn-edit" onclick="editCategory('${c.slug}')">Edit</button><button class="btn-delete" onclick="deleteCategory('${c.slug}')">Delete</button></div></td></tr>`).join(''); }
 window.editCategory = async function(slug) { const cat = globalCategories.find(c => c.slug === slug); if(!cat) return; const newName = prompt("Edit Category Name:", cat.name); if(!newName || newName.trim() === "") return; const { data } = await window.supabaseClient.from('site_settings').select('custom_categories').eq('id', 1).maybeSingle(); let customCats = (data && data.custom_categories) ? (typeof data.custom_categories === 'string' ? JSON.parse(data.custom_categories) : data.custom_categories) : []; const existingIdx = customCats.findIndex(c => c.slug === slug); if (existingIdx > -1) { customCats[existingIdx].name = newName.trim(); } else { customCats.push({ slug: slug, name: newName.trim(), parent: cat.parent || null }); } await window.supabaseClient.from('site_settings').update({ custom_categories: customCats }).eq('id', 1); await syncCategoriesFromDB(); renderCategoryManagementTable(); loadCategoriesToDropdown(); alert("Category name updated successfully! Website will update automatically."); }
@@ -184,10 +136,48 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('saveTitleBtn')?.addEventListener('click', async function() { const newTitle = document.getElementById('specialDealTitleInput').value.trim(); const fontFamily = document.getElementById('titleFontFamily').value; const fontSize = document.getElementById('titleFontSize').value.trim() || '2.2rem'; const fontWeight = document.getElementById('titleFontWeight').value; const fontStyle = document.getElementById('titleFontStyle').value; if(!newTitle) return alert("Title cannot be empty"); const { error } = await window.supabaseClient.from('site_settings').update({ special_deal_title: newTitle, title_font_family: fontFamily, title_font_size: fontSize, title_font_weight: fontWeight, title_font_style: fontStyle }).eq('id', 1); if (error) alert("Error: " + error.message); else { alert("Special Deal Design updated successfully!"); document.getElementById('specialDealContainer').style.display = 'none'; const btn = document.getElementById('toggleSpecialDealBtn'); btn.textContent = 'Show Settings'; btn.style.background = '#d946ef'; } });
     document.getElementById('saveFlashSettingsBtn')?.addEventListener('click', async function() { const newTitle = document.getElementById('flashTitleText').value.trim(); const fontFamily = document.getElementById('flashTitleFontFamily').value; const fontSize = document.getElementById('flashTitleFontSize').value.trim() || '2rem'; const fontWeight = document.getElementById('flashTitleFontWeight').value; const fontStyle = document.getElementById('flashTitleFontStyle').value; if(!newTitle) return alert("Sale Section 1 Title cannot be empty"); const { error } = await window.supabaseClient.from('site_settings').update({ flash_title_text: newTitle, flash_title_font_family: fontFamily, flash_title_font_size: fontSize, flash_title_font_weight: fontWeight, flash_title_font_style: fontStyle }).eq('id', 1); if (error) alert("Error: " + error.message); else { alert("Sale Section 1 Design updated successfully!"); document.getElementById('flashSaleContainer').style.display = 'none'; const btn = document.getElementById('toggleFlashSaleBtn'); btn.textContent = 'Show Settings'; btn.style.background = '#ea580c'; } });
     document.getElementById('saveSale2SettingsBtn')?.addEventListener('click', async function() { const newTitle = document.getElementById('sale2TitleText').value.trim(); const fontFamily = document.getElementById('sale2TitleFontFamily').value; const fontSize = document.getElementById('sale2TitleFontSize').value.trim() || '2rem'; const fontWeight = document.getElementById('sale2TitleFontWeight').value; const fontStyle = document.getElementById('sale2TitleFontStyle').value; if(!newTitle) return alert("Sale Section 2 Title cannot be empty"); const { error } = await window.supabaseClient.from('site_settings').update({ sale_section_2_title: newTitle, sale_section_2_font_family: fontFamily, sale_section_2_font_size: fontSize, sale_section_2_font_weight: fontWeight, sale_section_2_font_style: fontStyle }).eq('id', 1); if (error) alert("Error: " + error.message); else { alert("Sale Section 2 Design updated successfully!"); document.getElementById('sale2Container').style.display = 'none'; const btn = document.getElementById('toggleSale2Btn'); btn.textContent = 'Show Settings'; btn.style.background = '#10b981'; } });
-    document.getElementById('checkAvailabilityBtn')?.addEventListener('click', async function() { const btn = this; const originalText = btn.innerText; btn.innerText = "Checking... Please Wait (1-2 mins)"; btn.disabled = true; try { const res = await fetch('/api/check-status'); const data = await res.json(); if (data.success) { alert(`Check Complete!\n${data.message}`); await loadProductsList(); } else { alert('Error checking status: ' + (data.error || 'Unknown error')); } } catch (err) { alert('Failed to check. Make sure Vercel API is deployed.'); } finally { btn.innerText = originalText; btn.disabled = false; } });
+    
+    // ⭐ API CALL WITH TOKEN (Check Availability) ⭐
+    document.getElementById('checkAvailabilityBtn')?.addEventListener('click', async function() { 
+        const token = await getAuthToken();
+        const btn = this; const originalText = btn.innerText; btn.innerText = "Checking... Please Wait (1-2 mins)"; btn.disabled = true; 
+        try { 
+            const res = await fetch('/api/check-status', { headers: { 'Authorization': `Bearer ${token}` } }); 
+            const data = await res.json(); 
+            if (data.success) { alert(`Check Complete!\n${data.message}`); await loadProductsList(); } 
+            else { alert('Error checking status: ' + (data.error || 'Unknown error')); } 
+        } catch (err) { alert('Failed to check. Make sure Vercel API is deployed.'); } 
+        finally { btn.innerText = originalText; btn.disabled = false; } 
+    });
+
     document.getElementById('cancelOfferBtn')?.addEventListener('click', () => { document.getElementById('pEventName').value = ''; document.getElementById('pSaleEndDate').value = ''; alert('Offer 1 details cleared. Save product to confirm cancellation.'); });
     document.getElementById('cancelOffer2Btn')?.addEventListener('click', () => { document.getElementById('pEventName2').value = ''; document.getElementById('pSaleEndDate2').value = ''; alert('Offer 2 details cleared. Save product to confirm cancellation.'); });
-    document.getElementById('quickGenerateBlogBtn')?.addEventListener('click', async function() { const urlInput = document.getElementById('quickBlogUrlInput').value.trim(); if (!urlInput) return alert('Please paste a product URL.'); let slug = ''; try { if (urlInput.includes('/product/')) { slug = urlInput.split('/product/')[1].split('?')[0].split('/')[0]; } else if (urlInput.includes('slug=')) { const urlParams = new URLSearchParams(urlInput.split('?')[1]); slug = urlParams.get('slug'); } else { slug = urlInput; } } catch (e) { return alert('Invalid URL format. Make sure it is a valid product link.'); } if (!slug) return alert('Could not find a valid product slug in the URL.'); const btn = this; const originalText = btn.innerText; btn.innerText = "⏳ Generating... (Please wait)"; btn.disabled = true; try { const { data: product, error: pErr } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').eq('slug', slug).maybeSingle(); if (pErr || !product) throw new Error('Product not found in database. Check the URL.'); const offer = product.affiliate_offers?.[0] || { store_name: 'Store', affiliate_url: '#' }; const res = await fetch('/api/generate-blog', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId: product.id, title: product.title, description: product.description || 'N/A', storeName: offer.store_name, affiliateUrl: offer.affiliate_url, imageUrl: product.image_url }) }); const result = await res.json(); if (!res.ok) throw new Error(result.error || "API failed to generate blog."); alert("✅ Blog generated successfully! It is now in the list below as an 'AI DRAFT'. Please review and publish."); document.getElementById('quickBlogUrlInput').value = ''; document.getElementById('blogListContainer').style.display = 'block'; window.loadBlogList(); } catch (err) { alert("Error: " + err.message); } finally { btn.innerText = originalText; btn.disabled = false; } });
+    
+    // ⭐ API CALL WITH TOKEN (Generate Blog) ⭐
+    document.getElementById('quickGenerateBlogBtn')?.addEventListener('click', async function() { 
+        const token = await getAuthToken();
+        const urlInput = document.getElementById('quickBlogUrlInput').value.trim(); if (!urlInput) return alert('Please paste a product URL.'); 
+        let slug = ''; try { if (urlInput.includes('/product/')) { slug = urlInput.split('/product/')[1].split('?')[0].split('/')[0]; } else if (urlInput.includes('slug=')) { const urlParams = new URLSearchParams(urlInput.split('?')[1]); slug = urlParams.get('slug'); } else { slug = urlInput; } } catch (e) { return alert('Invalid URL format.'); } 
+        if (!slug) return alert('Could not find a valid product slug in the URL.'); 
+        const btn = this; const originalText = btn.innerText; btn.innerText = "⏳ Generating... (Please wait)"; btn.disabled = true; 
+        try { 
+            const { data: product, error: pErr } = await window.supabaseClient.from('products').select('*, affiliate_offers(*)').eq('slug', slug).maybeSingle(); 
+            if (pErr || !product) throw new Error('Product not found in database. Check the URL.'); 
+            const offer = product.affiliate_offers?.[0] || { store_name: 'Store', affiliate_url: '#' }; 
+            const res = await fetch('/api/generate-blog', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+                body: JSON.stringify({ productId: product.id, title: product.title, description: product.description || 'N/A', storeName: offer.store_name, affiliateUrl: offer.affiliate_url, imageUrl: product.image_url }) 
+            }); 
+            const result = await res.json(); 
+            if (!res.ok) throw new Error(result.error || "API failed to generate blog."); 
+            alert("✅ Blog generated successfully! It is now in the list below as an 'AI DRAFT'. Please review and publish."); 
+            document.getElementById('quickBlogUrlInput').value = ''; 
+            document.getElementById('blogListContainer').style.display = 'block'; 
+            window.loadBlogList(); 
+        } catch (err) { alert("Error: " + err.message); } finally { btn.innerText = originalText; btn.disabled = false; } 
+    });
+
     function setupScrollButtons(upBtnId, downBtnId, wrapperId) { const upBtn = document.getElementById(upBtnId); const downBtn = document.getElementById(downBtnId); const wrapper = document.getElementById(wrapperId); if (!upBtn || !downBtn || !wrapper) return; let scrollInterval; const startScroll = (direction) => { scrollInterval = setInterval(() => { if (direction === 'up') wrapper.scrollTop -= 10; else wrapper.scrollTop += 10; }, 20); }; const stopScroll = () => clearInterval(scrollInterval); upBtn.addEventListener('mousedown', () => startScroll('up')); upBtn.addEventListener('mouseup', stopScroll); upBtn.addEventListener('mouseleave', stopScroll); downBtn.addEventListener('mousedown', () => startScroll('down')); downBtn.addEventListener('mouseup', stopScroll); downBtn.addEventListener('mouseleave', stopScroll); }
     setupScrollButtons('scrollUpBtnAI', 'scrollDownBtnAI', 'tableScrollWrapperAI'); setupScrollButtons('scrollUpBtnProducts', 'scrollDownBtnProducts', 'tableScrollWrapperProducts'); setupScrollButtons('scrollUpBtnBlogs', 'scrollDownBtnBlogs', 'tableScrollWrapperBlogs'); 
     renderCategoryManagementTable(); updateBuilderUI();
@@ -264,7 +254,7 @@ function renderTable() {
         const storeName = defaultOffer.store_name || 'N/A';
         const displayStoreName = storeName === 'N/A' ? 'N/A' : storeName.charAt(0).toUpperCase() + storeName.slice(1);
 
-        return `<tr class="${rowClass}"><td style="text-align: center; font-weight: bold;">${index + 1}</td><td style="text-align: center;"><span style="background:#f0fdf4; color:#166534; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:600; white-space:nowrap; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis;">${displayStoreName}</span></td><td style="text-align: center;"><span style="background:#e2e8f0; color:#1e293b; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:600; white-space:nowrap; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis;">${catName}</span></td><td style="text-align: center;"><img src="${p.image_url}" class="table-img" onerror="this.src='/assets/icon-192.png?v=4'"></td><td style="text-align: left; font-weight: 500;">${p.title} ${statusBadge}</td><td style="text-align: center;">${priceStr}</td><td><div class="action-btns"><button class="btn-edit" onclick="editProduct('${p.id}')">Edit</button><button class="btn-delete" onclick="deleteProduct('${p.id}')">Delete</button></div></td></tr>`;
+        return `<tr class="${rowClass}"><td style="text-align: center; font-weight: bold;">${index + 1}</td><td style="text-align: center;"><span style="background:#f0fdf4; color:#166534; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:600; white-space:nowrap; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis;">${displayStoreName}</span></td><td style="text-align: center;"><span style="background:#e2e8f0; color:#1e293b; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:600; white-space:nowrap; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis;">${catName}</span></td><td style="text-align: center;"><img src="${p.image_url}" class="table-img" onerror="this.src='/assets/icon-192.png?v=4'"></td><td style="text-align: left; font-weight: 500;">${escapeHTML(p.title)} ${statusBadge}</td><td style="text-align: center;">${priceStr}</td><td><div class="action-btns"><button class="btn-edit" onclick="editProduct('${p.id}')">Edit</button><button class="btn-delete" onclick="deleteProduct('${p.id}')">Delete</button></div></td></tr>`;
     }).join('');
 }
 window.addVariationRow = function(color = '', colorName = '', name = '', price = '', salePrice = '', commission = '', url = '') {
@@ -302,7 +292,6 @@ window.editProduct = async function(id) {
         const defaultOffer = p.affiliate_offers?.[0] || {};
         document.getElementById('pId').value = p.id; document.getElementById('pOfferId').value = defaultOffer.id || ''; document.getElementById('pTitle').value = p.title || ''; document.getElementById('pSlug').value = p.slug || ''; document.getElementById('pImg').value = p.image_url || ''; document.getElementById('pGallery').value = (p.gallery_images || []).join('\n'); document.getElementById('pVideo').value = p.video_url || ''; document.getElementById('pCategory').value = p.category_slug || 'electronics'; document.getElementById('pBadge').value = p.badge || ''; document.getElementById('pRating').value = p.rating || ''; document.getElementById('pReviewsCount').value = p.reviews_count || 0;
         
-        // ⭐ SEO Fields Populate ⭐
         document.getElementById('pFocusKeyword').value = p.focus_keyword || '';
         document.getElementById('pMetaTitle').value = p.meta_title || '';
         document.getElementById('pMetaDesc').value = p.meta_description || '';
@@ -332,7 +321,6 @@ function setupProductForm() {
     cancelBtn.addEventListener('click', () => {
         form.reset(); document.getElementById('variationsContainer').innerHTML = ''; document.getElementById('pId').value = ''; document.getElementById('pOfferId').value = ''; document.getElementById('pImgFile').value = ''; document.getElementById('pGalleryFile').value = ''; document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen'; currentGalleryFiles = []; document.getElementById('pImgPreview').innerHTML = ''; document.getElementById('pGalleryPreview').innerHTML = ''; document.getElementById('pMainColorPreview').innerHTML = ''; document.getElementById('formTitle').innerText = "Add / Update Product"; document.getElementById('saveBtn').innerText = "Save Product"; cancelBtn.style.display = "none"; document.querySelectorAll('.error-input').forEach(el => el.classList.remove('error-input')); document.getElementById('addProductContainer').style.display = 'none'; const toggleBtn = document.getElementById('toggleAddProductBtn'); toggleBtn.textContent = 'Show Product Form'; toggleBtn.style.background = '#16a34a'; document.getElementById('pHidePrice').checked = false; document.getElementById('pPrice').readOnly = false; document.getElementById('pMainColorImgName').innerText = 'No files';
         
-        // ⭐ Reset SEO Fields ⭐
         document.getElementById('pFocusKeyword').value = '';
         document.getElementById('pMetaTitle').value = '';
         document.getElementById('pMetaDesc').value = '';
@@ -388,7 +376,6 @@ function setupProductForm() {
             const sendNotif = document.getElementById('pSendNotification').checked; if (sendNotif) { try { const { data: settings } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).maybeSingle(); let spTitle = 'Special Deal'; let s1Title = 'Sale Section 1'; let s2Title = 'Sale Section 2'; if (settings) { if (settings.special_deal_title) spTitle = settings.special_deal_title; if (settings.flash_title_text) s1Title = settings.flash_title_text; if (settings.sale_section_2_title) s2Title = settings.sale_section_2_title; } let notifType = 'product'; let notifTitle = isEditing ? "Product Updated! 🛍️" : "New Product Added! 🛍️"; let notifMsg = `Check out ${productData.title}`; const now = new Date(); const isFlash1Active = eventName && saleEndDate && new Date(saleEndDate) > now; const isFlash2Active = eventName2 && saleEndDate2 && new Date(saleEndDate2) > now; const isSpecialActive = document.getElementById('pSpecialDeal').checked; if (isFlash1Active) { notifType = 'flash_sale'; notifTitle = `🔥 ${s1Title} Started!`; notifMsg = `${productData.title} is now in ${s1Title}!`; } else if (isFlash2Active) { notifType = 'flash_sale_2'; notifTitle = `🔥 ${s2Title} Started!`; notifMsg = `${productData.title} is now in ${s2Title}!`; } else if (isSpecialActive) { notifType = 'special_deal'; notifTitle = `🎁 ${spTitle} Alert!`; notifMsg = `${productData.title} is now in ${spTitle}!`; } const { data: existingNotifs } = await window.supabaseClient.from('app_notifications').select('id').eq('product_slug', productData.slug).eq('type', notifType); if (existingNotifs && existingNotifs.length > 0) { console.log("Notification blocked: Already sent for this product & type."); } else { await window.supabaseClient.from('app_notifications').insert([{ title: notifTitle, message: notifMsg, product_slug: productData.slug, type: notifType }]); } } catch (notifError) { console.warn("Notification send error:", notifError); } }
             if (!writeBlog) alert(`"${productData.title}" saved successfully!`); form.reset(); document.getElementById('variationsContainer').innerHTML = ''; document.getElementById('pId').value = ''; document.getElementById('formTitle').innerText = "Add / Update Product"; cancelBtn.style.display = "none"; primaryFileInput.value = ''; document.getElementById('pGalleryFile').value = ''; document.getElementById('pImgFileName').innerText = 'No file chosen'; document.getElementById('pGalleryFileName').innerText = 'No files chosen'; document.getElementById('pWriteBlog').checked = false; document.getElementById('addProductContainer').style.display = 'none'; const toggleBtn = document.getElementById('toggleAddProductBtn'); toggleBtn.textContent = 'Show Product Form'; toggleBtn.style.background = '#16a34a'; currentGalleryFiles = []; document.getElementById('pImgPreview').innerHTML = ''; document.getElementById('pGalleryPreview').innerHTML = ''; document.getElementById('pMainColorPreview').innerHTML = ''; 
             
-            // ⭐ Reset SEO fields after save ⭐
             document.getElementById('pFocusKeyword').value = '';
             document.getElementById('pMetaTitle').value = '';
             document.getElementById('pMetaDesc').value = '';
@@ -435,7 +422,24 @@ document.addEventListener('DOMContentLoaded', () => {
     filterPlatform.addEventListener('change', renderDiscoveredTable); filterCountry.addEventListener('change', renderDiscoveredTable); filterCategory.addEventListener('change', renderDiscoveredTable); sortSales.addEventListener('change', renderDiscoveredTable);
     window.toggleDiscoveredSelection = (id, isChecked) => { if (isChecked) selectedIds.add(id); else selectedIds.delete(id); const checkboxes = document.querySelectorAll('.disc-checkbox'); if (selectAllCheckbox) selectAllCheckbox.checked = Array.from(checkboxes).every(cb => cb.checked); };
     rejectSelectedBtn.addEventListener('click', async () => { if (selectedIds.size === 0) return alert("Please select at least one product to reject."); if (!confirm(`Are you sure you want to reject ${selectedIds.size} products?`)) return; rejectSelectedBtn.innerText = "Rejecting..."; rejectSelectedBtn.disabled = true; try { const idsToDelete = Array.from(selectedIds); const { error } = await window.supabaseClient.from('discovered_products').delete().in('id', idsToDelete); if (error) throw error; selectedIds.clear(); if(selectAllCheckbox) selectAllCheckbox.checked = false; await loadDiscoveredProducts(); } catch (err) { alert("Error: " + err.message); } finally { rejectSelectedBtn.innerText = "Reject Selected"; rejectSelectedBtn.disabled = false; } });
-    discoverBtn.addEventListener('click', async () => { const keyword = aiSearchKeyword.value.trim(); const originalText = discoverBtn.innerText; discoverBtn.innerText = keyword ? `⏳ Searching "${keyword}"...` : "⏳ Scraping... (1-2 Mins)"; discoverBtn.disabled = true; try { const res = await fetch('/api/discover-products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keyword: keyword }) }); const result = await res.json(); if (result.success) { alert(result.message); await loadDiscoveredProducts(); if (listContainer.style.display === 'none') { listContainer.style.display = 'block'; toggleBtn.innerText = 'Hide List'; toggleBtn.style.background = '#EF4444'; } } else { alert("Error: " + result.error); } } catch (err) { alert("Failed to connect to API. Check console for errors."); } finally { discoverBtn.innerText = originalText; discoverBtn.disabled = false; } });
+    
+    // ⭐ API CALL WITH TOKEN (Discover Products) ⭐
+    discoverBtn.addEventListener('click', async () => { 
+        const token = await getAuthToken();
+        const keyword = aiSearchKeyword.value.trim(); const originalText = discoverBtn.innerText; discoverBtn.innerText = keyword ? `⏳ Searching "${keyword}"...` : "⏳ Scraping... (1-2 Mins)"; discoverBtn.disabled = true; 
+        try { 
+            const res = await fetch('/api/discover-products', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+                body: JSON.stringify({ keyword: keyword }) 
+            }); 
+            const result = await res.json(); 
+            if (result.success) { alert(result.message); await loadDiscoveredProducts(); if (listContainer.style.display === 'none') { listContainer.style.display = 'block'; toggleBtn.innerText = 'Hide List'; toggleBtn.style.background = '#EF4444'; } } 
+            else { alert("Error: " + result.error); } 
+        } catch (err) { alert("Failed to connect to API. Check console for errors."); } 
+        finally { discoverBtn.innerText = originalText; discoverBtn.disabled = false; } 
+    });
+
     window.approveDiscovered = function(id) { const product = allDiscovered.find(p => p.id === id); if (!product) return; document.getElementById('pTitle').value = product.title; document.getElementById('pImg').value = product.image_url; document.getElementById('pAffUrl').value = product.original_url; document.getElementById('pStore').value = (product.platform || product.source || 'amazon').toLowerCase(); document.getElementById('pDesc').value = `Top selling product in ${product.country} on ${product.platform || product.source}.`; document.getElementById('pCurrency').value = 'USD'; if (product.price) document.getElementById('pPrice').value = product.price; const formContainer = document.getElementById('addProductContainer'); const toggleProductBtn = document.getElementById('toggleAddProductBtn'); if (formContainer.style.display === 'none') { formContainer.style.display = 'block'; toggleProductBtn.textContent = 'Hide Product Form'; toggleProductBtn.style.background = '#EF4444'; } document.getElementById('productForm').scrollIntoView({ behavior: 'smooth' }); document.getElementById('pAffUrl').focus(); };
     window.rejectDiscovered = async function(id) { if(!confirm("Remove this product from the list?")) return; const { error } = await window.supabaseClient.from('discovered_products').delete().eq('id', id); if (!error) { selectedIds.delete(id); await loadDiscoveredProducts(); } };
     loadDiscoveredProducts();
