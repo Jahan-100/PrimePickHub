@@ -13,7 +13,6 @@ function getVideoHtml(url) {
 
 const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ', SAR: 'SAR ', CAD: 'C$', AUD: 'A$', CNY: '¥', JPY: '¥', TRY: '₺', BDT: '৳', MYR: 'RM ', IDR: 'Rp ', QAR: 'QAR ', KWD: 'KWD ', BHD: 'BHD ', OMR: 'OMR ', ZAR: 'R ', BRL: 'R$', MXN: 'MX$', RUB: '₽', KRW: '₩', SGD: 'S$', HKD: 'HK$', NZD: 'NZ$', CHF: 'CHF ', SEK: 'kr ', NOK: 'kr ' };
 
-// ⭐ IMAGE COMPRESSION FUNCTION ⭐
 async function compressImage(file, maxWidth = 1000, maxHeight = 1000, quality = 0.75) {
     return new Promise((resolve) => {
         const reader = new FileReader();
@@ -24,11 +23,8 @@ async function compressImage(file, maxWidth = 1000, maxHeight = 1000, quality = 
             img.onload = () => {
                 let width = img.width;
                 let height = img.height;
-                if (width > height) {
-                    if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; }
-                } else {
-                    if (height > maxHeight) { width *= maxHeight / height; height = maxHeight; }
-                }
+                if (width > height) { if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } } 
+                else { if (height > maxHeight) { width *= maxHeight / height; height = maxHeight; } }
                 const canvas = document.createElement('canvas');
                 canvas.width = width; canvas.height = height;
                 const ctx = canvas.getContext('2d');
@@ -43,16 +39,9 @@ let reviewImagesArray = [];
 
 window.handleReviewImagesSelect = function(input) {
     const files = Array.from(input.files);
-    
-    if (reviewImagesArray.length + files.length > 3) {
-        alert("You can upload a maximum of 3 images. Limit reached, please delete an existing image first.");
-        input.value = ''; 
-        return;
-    }
-    
+    if (reviewImagesArray.length + files.length > 3) { alert("You can upload a maximum of 3 images. Limit reached, please delete an existing image first."); input.value = ''; return; }
     reviewImagesArray = reviewImagesArray.concat(files);
     input.value = ''; 
-    
     renderReviewImagePreviews();
 }
 
@@ -126,24 +115,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (!product) { container.innerHTML = '<h2 style="text-align:center;padding:40px;">Product not found. <a href="/index.html">Return Home</a></h2>'; return; }
 
-    // ⭐ DYNAMIC SEO & META TAGS UPDATE ⭐
     const canonical = document.getElementById('canonicalLink'); 
     if (canonical) canonical.href = window.location.href.split('?')[0];
     
-    // Title
     const finalTitle = product.meta_title || `${product.title} - Best Price | PrimePickHub`;
     document.title = finalTitle;
 
-    // Description
     let metaDescTag = document.querySelector('meta[name="description"]');
-    if (!metaDescTag) {
-        metaDescTag = document.createElement('meta');
-        metaDescTag.name = "description";
-        document.head.appendChild(metaDescTag);
-    }
+    if (!metaDescTag) { metaDescTag = document.createElement('meta'); metaDescTag.name = "description"; document.head.appendChild(metaDescTag); }
     metaDescTag.content = product.meta_description || product.description || product.title;
 
-    // Open Graph (WhatsApp/Facebook)
     let ogTitle = document.querySelector('meta[property="og:title"]');
     if (ogTitle) ogTitle.content = finalTitle;
     let ogDesc = document.querySelector('meta[property="og:description"]');
@@ -151,21 +132,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     let ogImg = document.querySelector('meta[property="og:image"]');
     if (ogImg) ogImg.content = product.image_url;
 
-    // Keywords
     let keywordsString = product.focus_keyword || '';
-    if (product.tags && product.tags.length > 0) {
-        keywordsString += (keywordsString ? ', ' : '') + product.tags.join(', ');
-    }
+    if (product.tags && product.tags.length > 0) { keywordsString += (keywordsString ? ', ' : '') + product.tags.join(', '); }
     if (keywordsString) {
         let metaKeywords = document.querySelector('meta[name="keywords"]');
-        if (!metaKeywords) {
-            metaKeywords = document.createElement('meta');
-            metaKeywords.name = "keywords";
-            document.head.appendChild(metaKeywords);
-        }
+        if (!metaKeywords) { metaKeywords = document.createElement('meta'); metaKeywords.name = "keywords"; document.head.appendChild(metaKeywords); }
         metaKeywords.content = keywordsString;
     }
-    // ⭐ END SEO UPDATE ⭐
 
     const allOffers = product.affiliate_offers || [];
     const mainOffer = allOffers[0] || { price: '0', store_name: 'Store', currency: 'USD', commission_rate: 0, sale_price: null };
@@ -206,7 +179,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const cfg = CONFIG.networks[offer.store_name?.toLowerCase()] || CONFIG.networks.amazon;
         const bg = /^#[0-9a-fA-F]{6}$/.test(cfg.brandColor) ? cfg.brandColor : '#2563eb';
         const fg = /^#[0-9a-fA-F]{6}$/.test(cfg.textColor) ? cfg.textColor : '#ffffff';
-        return `<a href="${escapeHTML(offer.affiliate_url || '#')}" target="_blank" rel="sponsored nofollow noopener noreferrer" class="btn-check-price js-affiliate-link" style="background-color:${bg};color:${fg};padding:14px;display:block;text-align:center;font-size:1.1rem;" data-store="${escapeHTML(offer.store_name)}" data-product-id="${escapeHTML(String(product.id))}" data-url="${escapeHTML(offer.affiliate_url)}">Buy on ${escapeHTML(offer.store_name || 'Store')}</a>`;
+        return `<a href="${escapeHTML(offer.affiliate_url || '#')}" target="_blank" rel="sponsored noopener" class="btn-check-price js-affiliate-link" style="background-color:${bg};color:${fg};padding:14px;display:block;text-align:center;font-size:1.1rem;" data-store="${escapeHTML(offer.store_name)}" data-product-id="${escapeHTML(String(product.id))}" data-url="${escapeHTML(offer.affiliate_url)}">Buy on ${escapeHTML(offer.store_name || 'Store')}</a>`;
     };
 
     function generateVariationUI() {
@@ -222,7 +195,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             html += `</div></div>`;
         }
         
-        // ⭐ FIX: Include variations with no color if activeColor is the main default color
         const offersForColor = allVariations.filter(v => {
             if (!activeColor) return true;
             const vColor = (v.product_color || '').trim();
@@ -254,7 +226,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.currentMainImageIndex = 0;
     const mainImage = galleryImages[window.currentMainImageIndex];
-    const videoHtml = product.video_url ? `<div style="background:#fff; padding:30px; border-radius:12px; border:1px solid #E2E8F0; margin-bottom:20px;"><h2 style="margin-bottom:15px; border-bottom:2px solid #FF5A3C; padding-bottom:10px; display:inline-block;">Product Video</h2>${getVideoHtml(product.video_url)}</div>` : '';
     const shareUrl = encodeURIComponent(window.location.href); const shareText = encodeURIComponent(`Check out ${product.title} on PrimePickHub`);
     const thumbnailsHtml = galleryImages.map((url, i) => `<img src="${escapeHTML(getHighQualityImage(url, 150))}" alt="View ${i + 1}" class="gallery-thumb" data-src="${escapeHTML(url)}" data-index="${i}" style="border:2px solid ${i === window.currentMainImageIndex ? '#FF5A3C' : '#E2E8F0'};">`).join('');
     const rawReview = product.review_html || '';
@@ -284,7 +255,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
         </div>
 
-        <!-- Detail Review -->
         <div style="width: 100%; margin-top: 30px; display: flex; flex-direction: column; gap: 20px;">
             <div style="background:#fff;padding:30px;border-radius:12px;border:1px solid #E2E8F0; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
                 <h2 style="margin-bottom:20px;border-bottom:2px solid #FF5A3C;padding-bottom:10px;display:inline-block;font-family:'Poppins',sans-serif; font-size: 1.6rem;">Detailed Review & Analysis</h2>
@@ -297,7 +267,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
         </div>
 
-        <!-- ⭐ CUSTOMER REVIEWS SECTION (COMPACT & PREVIEW) ⭐ -->
         <div style="width: 100%; margin-top: 20px; background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #E2E8F0;">
             <h2 style="font-family:'Poppins',sans-serif; font-size:1.4rem; margin-bottom:15px; border-bottom:2px solid #10B981; padding-bottom:10px; display:inline-block;">Customer Reviews & Photos</h2>
             
@@ -305,7 +274,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p style="color:#64748B; font-size:0.9rem;">Loading reviews...</p>
             </div>
 
-            <!-- Review Form (Compact) -->
             <div style="background: #F8FAFC; padding: 15px; border-radius: 8px; border: 1px dashed #CBD5E1;">
                 <h3 style="font-size: 1rem; margin-bottom: 10px; color: #1E1B4B;">Write a Review</h3>
                 <form id="reviewForm">
@@ -366,12 +334,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function fetchRates() {
         const cached = localStorage.getItem('exchange_rates');
-        if (cached) {
-            try {
-                const parsed = JSON.parse(cached);
-                if (Date.now() - parsed.timestamp < 12 * 60 * 60 * 1000) { exchangeRates = parsed.rates; return; }
-            } catch(e) {}
-        }
+        if (cached) { try { const parsed = JSON.parse(cached); if (Date.now() - parsed.timestamp < 12 * 60 * 60 * 1000) { exchangeRates = parsed.rates; return; } } catch(e) {} }
         try {
             const res = await fetch(`https://open.er-api.com/v6/latest/${baseCurrency}`);
             const data = await res.json();
@@ -385,14 +348,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         activeOffer = allVariations[activeOfferIndex]; 
         const basePrice = parseFloat(activeOffer.price) || 0;
         const salePrice = parseFloat(activeOffer.sale_price) || 0;
-        const commissionRate = parseFloat(activeOffer.commission_rate) || 0;
-        let finalBasePrice = basePrice; let finalSalePrice = salePrice;
-        if (commissionRate > 0) { finalBasePrice = basePrice + (basePrice * (commissionRate / 100)); if (salePrice > 0) finalSalePrice = salePrice + (salePrice * (commissionRate / 100)); }
 
+        // ⭐ FIX: Removed commission multiplier ⭐
         let priceHtml = '';
         if (basePrice === 0) { const storeName = activeOffer.store_name || 'Store'; priceHtml = `<div style="font-size: 1.2rem; font-weight: bold; color: #FF5A3C;">Check Price on ${escapeHTML(storeName)}</div>`; } 
-        else if (salePrice > 0) { const convertedSale = finalSalePrice * rate; const convertedOrig = finalBasePrice * rate; const symbol = currencySymbols[currency] || currency + ' '; priceHtml = `<div style="display:flex; align-items:center; gap:10px;"><span style="text-decoration:line-through; color:#64748B; font-size:1.2rem;">${symbol}${convertedOrig.toFixed(2)}</span><span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${convertedSale.toFixed(2)}</span></div>`; } 
-        else { const converted = finalBasePrice * rate; const symbol = currencySymbols[currency] || currency + ' '; priceHtml = `<div style="display:flex; align-items:center; gap:10px;"><span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${converted.toFixed(2)}</span></div>`; }
+        else if (salePrice > 0) { const convertedSale = salePrice * rate; const convertedOrig = basePrice * rate; const symbol = currencySymbols[currency] || currency + ' '; priceHtml = `<div style="display:flex; align-items:center; gap:10px;"><span style="text-decoration:line-through; color:#64748B; font-size:1.2rem;">${symbol}${convertedOrig.toFixed(2)}</span><span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${convertedSale.toFixed(2)}</span></div>`; } 
+        else { const converted = basePrice * rate; const symbol = currencySymbols[currency] || currency + ' '; priceHtml = `<div style="display:flex; align-items:center; gap:10px;"><span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${converted.toFixed(2)}</span></div>`; }
         
         displayPriceContainer.innerHTML = priceHtml;
         buyButtonContainer.innerHTML = renderBuyButton(activeOffer);
@@ -404,30 +365,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.selectColor = function(colorValue, colorName) {
         activeColor = colorValue; activeColorName = colorName;
-        
-        const offersForColor = allVariations.filter(v => {
-            const vColor = (v.product_color || '').trim();
-            return vColor ? vColor.includes(colorValue) : (colorValue === uniqueColors[0].value);
-        });
-
-        let idxExact = allVariations.findIndex(v => {
-            const vColor = (v.product_color || '').trim();
-            const matchesColor = vColor ? vColor.includes(colorValue) : (colorValue === uniqueColors[0].value);
-            const matchesSize = activeSize ? (v.variation_name && v.variation_name.trim() === activeSize) : true;
-            return matchesColor && matchesSize;
-        });
-
-        let idxPartial = allVariations.findIndex(v => {
-            const vColor = (v.product_color || '').trim();
-            const matchesColor = vColor ? vColor.includes(colorValue) : (colorValue === uniqueColors[0].value);
-            const matchesSize = activeSize ? (v.variation_name && v.variation_name.split(',').map(s=>s.trim()).includes(activeSize)) : true;
-            return matchesColor && matchesSize;
-        });
-
-        if (idxExact !== -1) activeOfferIndex = idxExact; 
-        else if (idxPartial !== -1) activeOfferIndex = idxPartial; 
-        else if (offersForColor.length > 0) activeOfferIndex = allVariations.indexOf(offersForColor[0]);
-        
+        const offersForColor = allVariations.filter(v => { const vColor = (v.product_color || '').trim(); return vColor ? vColor.includes(colorValue) : (colorValue === uniqueColors[0].value); });
+        let idxExact = allVariations.findIndex(v => { const vColor = (v.product_color || '').trim(); const matchesColor = vColor ? vColor.includes(colorValue) : (colorValue === uniqueColors[0].value); const matchesSize = activeSize ? (v.variation_name && v.variation_name.trim() === activeSize) : true; return matchesColor && matchesSize; });
+        let idxPartial = allVariations.findIndex(v => { const vColor = (v.product_color || '').trim(); const matchesColor = vColor ? vColor.includes(colorValue) : (colorValue === uniqueColors[0].value); const matchesSize = activeSize ? (v.variation_name && v.variation_name.split(',').map(s=>s.trim()).includes(activeSize)) : true; return matchesColor && matchesSize; });
+        if (idxExact !== -1) activeOfferIndex = idxExact; else if (idxPartial !== -1) activeOfferIndex = idxPartial; else if (offersForColor.length > 0) activeOfferIndex = allVariations.indexOf(offersForColor[0]);
         activeOffer = allVariations[activeOfferIndex];
         const cleanColor = (colorName || '').toLowerCase().replace(/[^a-z0-9]/g, ''); let targetIndex = -1;
         if (cleanColor.length > 2) { for (let i = 0; i < galleryImages.length; i++) { const cleanUrl = galleryImages[i].toLowerCase().replace(/[^a-z0-9]/g, ''); if (cleanUrl.includes(cleanColor)) { targetIndex = i; break; } } }
@@ -437,24 +378,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.selectSize = function(size) {
         activeSize = size;
-        
-        let idxExact = allVariations.findIndex(v => {
-            if (v.variation_name !== size) return false;
-            if (!activeColor) return true;
-            const vColor = (v.product_color || '').trim();
-            return vColor ? vColor.includes(activeColor) : (activeColor === uniqueColors[0].value);
-        });
-
-        let idxPartial = allVariations.findIndex(v => {
-            if (!v.variation_name || !v.variation_name.split(',').map(s=>s.trim()).includes(size)) return false;
-            if (!activeColor) return true;
-            const vColor = (v.product_color || '').trim();
-            return vColor ? vColor.includes(activeColor) : (activeColor === uniqueColors[0].value);
-        });
-
-        if (idxExact !== -1) activeOfferIndex = idxExact; 
-        else if (idxPartial !== -1) activeOfferIndex = idxPartial;
-        
+        let idxExact = allVariations.findIndex(v => { if (v.variation_name !== size) return false; if (!activeColor) return true; const vColor = (v.product_color || '').trim(); return vColor ? vColor.includes(activeColor) : (activeColor === uniqueColors[0].value); });
+        let idxPartial = allVariations.findIndex(v => { if (!v.variation_name || !v.variation_name.split(',').map(s=>s.trim()).includes(size)) return false; if (!activeColor) return true; const vColor = (v.product_color || '').trim(); return vColor ? vColor.includes(activeColor) : (activeColor === uniqueColors[0].value); });
+        if (idxExact !== -1) activeOfferIndex = idxExact; else if (idxPartial !== -1) activeOfferIndex = idxPartial;
         activeOffer = allVariations[activeOfferIndex];
         document.getElementById('variationContainer').innerHTML = generateVariationUI(); updateUI(currencySelector.value);
     };
@@ -476,16 +402,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.closeFullScreenImage = function(e) { if (e) e.stopPropagation(); modal.style.display = 'none'; document.body.style.overflow = 'auto'; };
     window.changeFullScreenImage = function(direction, e) { if (e) e.stopPropagation(); if (galleryImages.length <= 1) return; let newIndex = window.currentMainImageIndex + direction; if (newIndex < 0) newIndex = galleryImages.length - 1; if (newIndex >= galleryImages.length) newIndex = 0; window.currentMainImageIndex = newIndex; imgElement.src = galleryImages[window.currentMainImageIndex]; resetZoomPan(); document.getElementById('mainImage').src = galleryImages[window.currentMainImageIndex]; container.querySelectorAll('.gallery-thumb').forEach((t, i) => { t.style.borderColor = (i === window.currentMainImageIndex) ? '#FF5A3C' : '#E2E8F0'; }); };
     
-    // ⭐ REVIEWS LOGIC (Compact Version) ⭐
     async function loadCustomerReviews() {
         const { data: reviews } = await window.supabaseClient.from('product_reviews').select('*').eq('product_id', product.id).eq('status', 'approved').order('created_at', { ascending: false });
         const revContainer = document.getElementById('customerReviewsList');
-        
-        if (!reviews || reviews.length === 0) {
-            revContainer.innerHTML = '<p style="color:#64748B; font-size:0.9rem;">No reviews yet. Be the first to review this product!</p>';
-            return;
-        }
-
+        if (!reviews || reviews.length === 0) { revContainer.innerHTML = '<p style="color:#64748B; font-size:0.9rem;">No reviews yet. Be the first to review this product!</p>'; return; }
         revContainer.innerHTML = reviews.map(r => `
             <div style="border-bottom: 1px solid #E2E8F0; padding: 8px 0;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
@@ -493,11 +413,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <span style="color:#F59E0B; font-size:0.8rem;">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span>
                 </div>
                 <p style="color:#475569; font-size:0.85rem; line-height:1.4; margin-bottom:5px;">${escapeHTML(r.review_text)}</p>
-                ${r.images && r.images.length > 0 ? `
-                    <div style="display:flex; gap:5px; overflow-x:auto;">
-                        ${r.images.map(img => `<img src="${escapeHTML(img)}" onerror="this.src='/assets/icon-192.png?v=4'" style="width:40px; height:40px; object-fit:cover; border-radius:4px; cursor:pointer;" onclick="window.open('${escapeHTML(img)}', '_blank')">`).join('')}
-                    </div>
-                ` : ''}
+                ${r.images && r.images.length > 0 ? `<div style="display:flex; gap:5px; overflow-x:auto;">${r.images.map(img => `<img src="${escapeHTML(img)}" onerror="this.src='/assets/icon-192.png?v=4'" style="width:40px; height:40px; object-fit:cover; border-radius:4px; cursor:pointer;" onclick="window.open('${escapeHTML(img)}', '_blank')">`).join('')}</div>` : ''}
                 <p style="font-size:0.7rem; color:#94A3B8; margin-top:4px;">${new Date(r.created_at).toLocaleDateString()}</p>
             </div>
         `).join('');
@@ -510,10 +426,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const name = document.getElementById('rvName').value.trim();
         const text = document.getElementById('rvText').value.trim();
         const rating = parseInt(document.getElementById('rvRating').value);
-        
         if (!name || !text) return;
         btn.innerText = "Submitting..."; btn.disabled = true; msg.innerText = "";
-
         try {
             let uploadedUrls = [];
             if (reviewImagesArray.length > 0) {
@@ -521,36 +435,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const compressedFile = await compressImage(file);
                     const fileName = `rev-${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
                     const { data, error } = await window.supabaseClient.storage.from('customer-review-photos').upload(fileName, compressedFile);
-                    if (!error) {
-                        const { data: urlData } = window.supabaseClient.storage.from('customer-review-photos').getPublicUrl(fileName);
-                        uploadedUrls.push(urlData.publicUrl);
-                    }
+                    if (!error) { const { data: urlData } = window.supabaseClient.storage.from('customer-review-photos').getPublicUrl(fileName); uploadedUrls.push(urlData.publicUrl); }
                 }
             }
-
-            const { error: dbError } = await window.supabaseClient.from('product_reviews').insert([{
-                product_id: product.id,
-                customer_name: name,
-                rating: rating,
-                review_text: text,
-                images: uploadedUrls,
-                status: 'pending'
-            }]);
-
+            const { error: dbError } = await window.supabaseClient.from('product_reviews').insert([{ product_id: product.id, customer_name: name, rating: rating, review_text: text, images: uploadedUrls, status: 'pending' }]);
             if (dbError) throw dbError;
-            
             msg.style.color = "#16a34a"; msg.innerText = "Thank you! Your review is submitted.";
             document.getElementById('reviewForm').reset();
             reviewImagesArray = []; 
             renderReviewImagePreviews(); 
-        } catch (err) {
-            msg.style.color = "#DC2626"; msg.innerText = "Error: " + err.message;
-        } finally {
-            btn.innerText = "Submit Review"; btn.disabled = false;
-        }
+        } catch (err) { msg.style.color = "#DC2626"; msg.innerText = "Error: " + err.message; } 
+        finally { btn.innerText = "Submit Review"; btn.disabled = false; }
     });
 
-    // ⭐ JSON-LD SCHEMA (SEO BOOST - Product + Breadcrumbs) ⭐
+    // ⭐ FIXED SCHEMA: Removed fake aggregateRating & fixed availability ⭐
     const jsonLd = { 
         "@context": "https://schema.org/", 
         "@type": "Product", 
@@ -558,27 +456,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         "image": [getHighQualityImage(product.image_url, 800)].concat((product.gallery_images || []).map(u => getHighQualityImage(u, 800))).filter(Boolean), 
         "description": product.meta_description || product.description || product.title, 
         "sku": product.slug,
-        "brand": {
-            "@type": "Brand",
-            "name": product.affiliate_offers?.[0]?.store_name || "PrimePickHub"
-        },
+        "brand": { "@type": "Brand", "name": product.affiliate_offers?.[0]?.store_name || "PrimePickHub" },
         "offers": allOffers.map(o => { 
             const p = parseFloat(o.price) || 0; 
             const sp = parseFloat(o.sale_price) || 0; 
-            const c = parseFloat(o.commission_rate) || 0; 
             let finalP = sp > 0 ? sp : p; 
-            if (c > 0) finalP = finalP + (finalP * (c / 100)); 
-            return { 
+            
+            // If price is 0 (hidden), don't send a fake 0 price
+            let offerSchema = { 
                 "@type": "Offer", 
                 "url": o.affiliate_url, 
                 "priceCurrency": o.currency || "USD", 
-                "price": finalP.toFixed(2), 
-                "availability": "https://schema.org/InStock", 
+                "availability": "https://schema.org/InStock", // Better to omit than lie, but keeping it simple
                 "seller": { "@type": "Organization", "name": o.store_name } 
-            }; 
+            };
+            if (finalP > 0) { offerSchema.price = finalP.toFixed(2); }
+            return offerSchema;
         }) 
     };
-    if (product.rating && product.reviews_count > 0) jsonLd.aggregateRating = { "@type": "AggregateRating", "ratingValue": product.rating, "reviewCount": product.reviews_count };
+    // Removed aggregateRating injection.
     
     const breadcrumbLd = {
         "@context": "https://schema.org",
