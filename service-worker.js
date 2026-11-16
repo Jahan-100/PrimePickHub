@@ -1,5 +1,5 @@
-// PrimePickHub Service Worker (PWA Caching)
-const CACHE_NAME = 'primepickhub-v3'; // ⭐ Version changed to clear old cache ⭐
+// PrimePickHub Service Worker (Network-First for fresh content)
+const CACHE_NAME = 'primepickhub-v4';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -42,24 +42,18 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // ⭐ NETWORK-FIRST STRATEGY ⭐
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
+    fetch(event.request).then((networkResponse) => {
+      if (networkResponse && networkResponse.status === 200 && event.request.method === 'GET') {
+        const responseClone = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseClone);
+        });
       }
-      return fetch(event.request).then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200 && event.request.method === 'GET') {
-          const responseClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
-        }
-        return networkResponse;
-      });
+      return networkResponse;
     }).catch(() => {
-      if (event.request.mode === 'navigate') {
-        return caches.match('/index.html');
-      }
+      return caches.match(event.request);
     })
   );
 });
