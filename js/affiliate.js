@@ -39,10 +39,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (btn.tagName.toLowerCase() === 'a') {
                 if (!btn.getAttribute('target')) btn.setAttribute('target', '_blank');
-                btn.setAttribute('rel', 'noopener noreferrer sponsored');
+                // ⭐ FIX: Removed noreferrer ⭐
+                btn.setAttribute('rel', 'noopener sponsored');
             } else {
                 e.preventDefault();
-                window.open(u.toString(), '_blank', 'noopener,noreferrer');
+                window.open(u.toString(), '_blank', 'noopener');
             }
         } catch (err) {
             console.warn('URL build failed:', err);
