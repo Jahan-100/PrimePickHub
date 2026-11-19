@@ -30,9 +30,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         let slug = params.get('slug');
         
-        // ⭐ FIX: Agar URL /blog/slug-name jaisa hai toh path se slug nikaalein ⭐
+        // ⭐ Robust Slug Extraction ⭐
         if (!slug && path.includes('/blog/')) {
-            slug = path.split('/blog/')[1].split('/')[0];
+            // URL is like /blog/my-slug-name
+            slug = path.split('/blog/')[1].split('?')[0].split('#')[0].split('/')[0];
         }
         // Fallback for old /article.html?slug=... format
         if (!slug && path.includes('article.html')) {
