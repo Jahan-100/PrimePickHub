@@ -26,8 +26,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ⭐ ARTICLE PAGE (Meta Tags + Schema Injection) ⭐
     if (artTitle) {
         const params = new URLSearchParams(window.location.search);
-        const slug = params.get('slug');
-        if (!slug) { window.location.href = '/blog.html'; return; }
+        const path = window.location.pathname;
+        
+        let slug = params.get('slug');
+        
+        // ⭐ FIX: Agar URL /blog/slug-name jaisa hai toh path se slug nikaalein ⭐
+        if (!slug && path.includes('/blog/')) {
+            slug = path.split('/blog/')[1].split('/')[0];
+        }
+        // Fallback for old /article.html?slug=... format
+        if (!slug && path.includes('article.html')) {
+            slug = params.get('slug');
+        }
+
+        if (!slug) { 
+            document.getElementById('artContent').innerHTML = "<p>Article not found. <a href='/blog.html'>Return to Blog</a></p>";
+            return; 
+        }
 
         const { data: blog, error } = await window.supabaseClient.from('blogs').select('*').eq('slug', slug).eq('is_published', true).single();
         
@@ -42,21 +57,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         artTitle.innerText = blog.title;
         document.getElementById('artDate').innerText = `Published on: ${new Date(blog.created_at).toLocaleDateString()}`;
         
-        // ⭐ Meta Tags Update ⭐
-        document.getElementById('ogTitle').content = finalTitle;
-        document.getElementById('metaDesc').content = `Read our review: ${blog.title}. Detailed analysis and buying guide on PrimePickHub.`;
-        document.getElementById('ogDesc').content = `Read our review: ${blog.title}. Detailed analysis and buying guide on PrimePickHub.`;
+        // ⭐ Meta Tags Update for Social Sharing ⭐
+        if (document.getElementById('ogTitle')) document.getElementById('ogTitle').content = finalTitle;
+        if (document.getElementById('metaDesc')) document.getElementById('metaDesc').content = `Read our review: ${blog.title}. Detailed analysis and buying guide on PrimePickHub.`;
+        if (document.getElementById('ogDesc')) document.getElementById('ogDesc').content = `Read our review: ${blog.title}. Detailed analysis and buying guide on PrimePickHub.`;
         
         if (blog.image_url) {
             const img = document.getElementById('artImg');
             img.src = blog.image_url;
             img.style.display = 'block';
-            document.getElementById('ogImg').content = blog.image_url;
+            if (document.getElementById('ogImg')) document.getElementById('ogImg').content = blog.image_url;
         }
         
         document.getElementById('artContent').innerHTML = blog.content_html;
 
-        // ⭐ Article Schema ⭐
+        // ⭐ Article Schema Injection ⭐
         const articleSchema = {
             "@context": "https://schema.org",
             "@type": "Article",
