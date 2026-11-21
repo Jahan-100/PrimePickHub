@@ -1,9 +1,47 @@
-/**
- * PrimePickHub — Common Utility Functions
- * Load this file BEFORE app.js, product.js, category.js, search.js
- */
+// js/utils.js — SHARED HELPERS (works on all pages)
+// NOTE: If your existing utils.js has escapeHTML/getHighQualityImage/isValidURL,
+//       keep those AND paste the cookie + URL helpers below.
 
-// ✅ XSS-safe text renderer
+/* ---------- Cookie Helpers (used by api.js, affiliate.js) ---------- */
+function setCookie(name, value, days) {
+    let expires = "";
+    if (days) {
+        const date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/; SameSite=Lax";
+}
+
+function getCookie(name) {
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+}
+
+/* ---------- Safe URL check ---------- */
+function isValidURL(str) {
+    if (!str || typeof str !== 'string') return false;
+    try {
+        const u = new URL(str, window.location.origin);
+        return u.protocol === 'https:' || u.protocol === 'http:';
+    } catch { return false; }
+}
+
+/* ---------- High-quality image (WebP/AVIF resize via wsrv.nl) ---------- */
+function getHighQualityImage(url, width) {
+    if (!url || typeof url !== 'string') return url;
+    if (!/^https?:\/\//i.test(url)) return url;
+    // Use wsrv.nl free CDN for resizing — speeds up page load massively
+    return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=${width || 300}&output=webp&q=80`;
+}
+
+/* ---------- XSS-safe HTML escape ---------- */
 function escapeHTML(str) {
     if (str === null || str === undefined) return '';
     return String(str)
@@ -14,56 +52,24 @@ function escapeHTML(str) {
         .replace(/'/g, '&#039;');
 }
 
-// ✅ Smart Image Optimizer (Amazon, AliExpress, Daraz, eBay, Shopify)
-function getHighQualityImage(url, size = 400) {
-    if (!url || typeof url !== 'string') return url;
-    let cleanUrl = url.trim();
-
-    // ⭐ CRITICAL FIX: Agar image Supabase se aa rahi hai toh usay BILKUL change na karein ⭐
-    // Is line ke hone se Supabase ki images kabhi break nahi hongi.
-    if (cleanUrl.includes('supabase.co')) {
-        return cleanUrl;
-    }
-
-    if (cleanUrl.includes('aliexpress') || cleanUrl.includes('daraz') || cleanUrl.includes('alicdn') || cleanUrl.includes('alibaba')) {
-        const qIdx = cleanUrl.indexOf('?');
-        if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
-        cleanUrl = cleanUrl.replace(/(\.(?:jpg|jpeg|png|webp))(?:_[^.?]*)?(?:\.(?:jpg|jpeg|png|webp|avif))?$/i, `$1_${size}x${size}q80.jpg`);
-    } else if (cleanUrl.includes('amazon') || cleanUrl.includes('media-amazon')) {
-        const qIdx = cleanUrl.indexOf('?');
-        if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
-        if (/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i.test(cleanUrl)) {
-            cleanUrl = cleanUrl.replace(/\._[A-Z0-9_,]+_\.(jpg|jpeg|png|webp)/i, `._AC_SL${size}_.$1`);
-        } else {
-            cleanUrl = cleanUrl.replace(/(\.(?:jpg|jpeg|png|webp))$/i, `._AC_SL${size}_$1`);
+/* ---------- Ensure visitor cookie exists on every page ---------- */
+(function ensureVisitorCookie() {
+    try {
+        if (!getCookie('visitor_id')) {
+            const id = (crypto.randomUUID && crypto.randomUUID()) ||
+                ('v-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10));
+            setCookie('visitor_id', id, 365);
         }
-    } else if (cleanUrl.includes('ebayimg.com')) {
-        cleanUrl = cleanUrl.replace(/\/s-l\d+\.(jpg|jpeg|png|webp)/i, `/s-l${size}.$1`);
-    } else if (cleanUrl.includes('shopify') || cleanUrl.includes('govee') || cleanUrl.includes('allegra-k.com') || cleanUrl.includes('cdn.shopify')) {
-        const qIdx = cleanUrl.indexOf('?');
-        if (qIdx > -1) cleanUrl = cleanUrl.slice(0, qIdx);
-        cleanUrl = cleanUrl.replace(/_(small|medium|large|\d+x\d*|\d*x\d+)(\.(jpg|jpeg|png|webp))/i, '$2');
-        cleanUrl = cleanUrl + `?width=${size}`;
-    } else {
-        cleanUrl = cleanUrl.replace(/[_-]\d+x\d+(?=\.(jpg|jpeg|png|webp|avif))/i, '');
-        cleanUrl = cleanUrl.replace(/_\d+x(?=\.(jpg|jpeg|png|webp|avif))/i, '');
-    }
-    return cleanUrl;
-}
+    } catch (e) { /* ignore */ }
+})();
 
-// ✅ URL Validators (used in app.js, product.js, affiliate.js)
-function isValidExternalURL(url) {
-    if (typeof url !== 'string') return false;
+/* ---------- Cache geo data once per session ---------- */
+(function cacheGeoData() {
     try {
-        const p = new URL(url, window.location.origin);
-        return p.protocol === 'https:' || p.protocol === 'http:';
-    } catch { return false; }
-}
-
-function isValidURL(url) {
-    if (!url || typeof url !== 'string') return false;
-    try {
-        const p = new URL(url, window.location.origin);
-        return p.protocol === 'http:' || p.protocol === 'https:';
-    } catch { return false; }
-}
+        if (localStorage.getItem('geo_data')) return;
+        fetch('/api/geo')
+            .then(r => r.json())
+            .then(d => localStorage.setItem('geo_data', JSON.stringify(d)))
+            .catch(() => {});
+    } catch (e) { /* ignore */ }
+})();
