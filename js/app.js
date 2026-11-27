@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer — v86 (Notifications Fixed)
+ * PrimePickHub Homepage Renderer — v87 (Images & Notifications Fixed)
  */
 
 if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
@@ -297,7 +297,10 @@ function renderProductCard(product, isPriority = false) {
     const productUrl = getProductUrl(product);
     const hasLink = productUrl !== '#';
     const disabledAttr = hasLink ? '' : 'aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:0.6;"';
-    const imageSrc = isValidURL(product.image_url) ? escapeHTML(getHighQualityImage(product.image_url, 300)) : 'assets/icon-192.png?v=4';
+    
+    // ⭐ FIX: Use original image URL directly to prevent broken links ⭐
+    const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png?v=4';
+    
     const imgPriority = isPriority ? 'fetchpriority="high"' : '';
     const loadingAttr = isPriority ? 'loading="eager"' : 'loading="lazy"';
     const r = Number(product.rating); const rating = Number.isFinite(r) && r > 0 && r <= 5 ? r : null;
@@ -338,7 +341,9 @@ function renderProductCard(product, isPriority = false) {
 function renderFlashCard(product, section = 1) {
     const title = escapeHTML(product.title || 'Untitled');
     const productUrl = getProductUrl(product);
-    const imageSrc = isValidURL(product.image_url) ? escapeHTML(getHighQualityImage(product.image_url, 200)) : 'assets/icon-192.png?v=4';
+    // ⭐ FIX: Use original image URL directly ⭐
+    const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png?v=4';
+    
     const primaryOffer = getPrimaryOffer(product) || {};
     const symbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
     const sym = symbols[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
@@ -422,7 +427,8 @@ function renderAdFallback(products) {
     const html = selected.map(p => {
         const title = escapeHTML(p.title || 'Product');
         const productUrl = getProductUrl(p);
-        const imageSrc = isValidURL(p.image_url) ? escapeHTML(getHighQualityImage(p.image_url, 200)) : 'assets/icon-192.png?v=4';
+        // ⭐ FIX: Use original image URL directly ⭐
+        const imageSrc = isValidURL(p.image_url) ? escapeHTML(p.image_url) : 'assets/icon-192.png?v=4';
         const primaryOffer = getPrimaryOffer(p) || {};
         const sym = symbols[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
         const price = parseFloat(primaryOffer.sale_price) || parseFloat(primaryOffer.price) || 0;
