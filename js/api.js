@@ -1,26 +1,22 @@
+// js/api.js — v10
 const API = {
     async signIn(email, password) {
         const { data, error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        return data;
+        if (error) throw error; return data;
     },
     async signOut() { await window.supabaseClient.auth.signOut(); },
     async getCurrentUser() {
         const { data: { user } } = await window.supabaseClient.auth.getUser();
         if (!user) return null;
-        const { data: profile } = await window.supabaseClient.from('profiles').select('role').eq('id', user.id).maybeSingle(); 
+        const { data: profile } = await window.supabaseClient.from('profiles').select('role').eq('id', user.id).maybeSingle();
         return { user, role: profile?.role || 'user' };
     },
     async getHomepageProducts() {
         if (!window.supabaseClient) return { featured: [], trending: [], latest: [] };
-        
-        // ⭐ SPEED FIX: select('*') hata kar specific columns fetch kiye hain ⭐
         const { data, error } = await window.supabaseClient
             .from('products')
             .select('id, title, slug, image_url, rating, reviews_count, is_featured, is_trending, is_special_deal, category_slug, badge, sale_end_date, sale_end_date_2, event_name, event_name_2, is_available, affiliate_offers(id, store_name, affiliate_url, price, sale_price, commission_rate, currency, product_color, color_name, variation_name)')
-            .order('created_at', { ascending: false })
-            .limit(100);
-            
+            .order('created_at', { ascending: false }).limit(100);
         if (error || !data) return { featured: [], trending: [], latest: [] };
         return { featured: data.filter(p => p.is_featured), trending: data.filter(p => p.is_trending), latest: data.slice(0, 100) };
     },
@@ -32,31 +28,24 @@ const API = {
     async searchProducts({ query = '', category = '' }) {
         try {
             if (!window.supabaseClient) return [];
-            let req = window.supabaseClient.from('products').select('*, affiliate_offers(*)').limit(500);
-            
+            let req = window.supabaseClient.from('products')
+                .select('id, title, slug, image_url, rating, reviews_count, category_slug, is_available, badge, sale_end_date, sale_end_date_2, affiliate_offers(id, store_name, affiliate_url, price, sale_price, commission_rate, currency, product_color, color_name, variation_name)')
+                .limit(500);
             if (query) req = req.ilike('title', `%${query}%`);
-            
             const { data, error } = await req;
             if (error) return [];
-            
             let results = Array.isArray(data) ? data : [];
-            
             if (category) {
                 const cats = Array.isArray(category) ? category : [category];
                 const lowerCats = cats.map(c => c && typeof c === 'string' ? c.trim().toLowerCase() : '').filter(Boolean);
                 results = results.filter(p => p && p.category_slug && typeof p.category_slug === 'string' && lowerCats.includes(p.category_slug.trim().toLowerCase()));
             }
-            
             return results;
-        } catch (e) {
-            console.error("Search API Error:", e);
-            return [];
-        }
+        } catch (e) { console.error("Search API Error:", e); return []; }
     },
     async addProduct(data) {
         const { data: result, error } = await window.supabaseClient.from('products').insert([data]).select();
-        if (error) throw error;
-        return result;
+        if (error) throw error; return result;
     },
     async getAdminStats() {
         if (!window.supabaseClient) return { totalProducts: 0, totalClicks: 0 };
@@ -66,17 +55,14 @@ const API = {
     },
     recordClick(productId, store, subId) {
         if (!window.supabaseClient || !productId) return;
-        
+        function readCookie(name) {
+            if (typeof getCookie === 'function') return getCookie(name);
+            const m = document.cookie.match(new RegExp('(^|;\\s*)' + name + '=([^;]+)'));
+            return m ? decodeURIComponent(m[2]) : null;
+        }
         let geo = { country: 'Unknown', city: 'Unknown' };
-        try {
-            const storedGeo = localStorage.getItem('geo_data');
-            if (storedGeo) geo = JSON.parse(storedGeo);
-        } catch (e) {}
-
+        try { const s = localStorage.getItem('geo_data'); if (s) geo = JSON.parse(s); } catch (e) {}
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        const deviceType = isMobile ? 'Mobile' : 'Desktop';
-        const visitorId = getCookie('visitor_id') || getCookie('device_id') || 'Unknown';
-
         const clickData = {
             product_id: productId,
             store: String(store || '').slice(0, 50),
@@ -84,31 +70,26 @@ const API = {
             referrer: String(document.referrer || '').slice(0, 200),
             country: geo.country || 'Unknown',
             city: geo.city || 'Unknown',
-            device_type: deviceType,
-            visitor_id: visitorId
+            device_type: isMobile ? 'Mobile' : 'Desktop',
+            visitor_id: readCookie('visitor_id') || readCookie('device_id') || 'Unknown'
         };
-
         try {
-            window.supabaseClient.from('clicks').insert([clickData]).then(({ error }) => {
-                if (error) console.warn('Track error:', error);
-            }).catch(() => {});
+            window.supabaseClient.from('clicks').insert([clickData])
+                .then(({ error }) => { if (error) console.warn('Click track warning:', error.message); })
+                .catch(() => {});
         } catch (e) {
-            fetch(`${CONFIG.supabaseUrl}/rest/v1/clicks`, {
-                method: 'POST',
-                headers: {
-                    'apikey': CONFIG.supabaseKey,
-                    'Authorization': `Bearer ${CONFIG.supabaseKey}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(clickData),
-                keepalive: true
-            }).catch(() => {});
+            try {
+                fetch(`${CONFIG.supabaseUrl}/rest/v1/clicks`, {
+                    method: 'POST',
+                    headers: { 'apikey': CONFIG.supabaseKey, 'Authorization': `Bearer ${CONFIG.supabaseKey}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+                    body: JSON.stringify(clickData), keepalive: true
+                }).catch(() => {});
+            } catch (e2) {}
         }
     },
     async getCategories() {
         const masterCats = (typeof CONFIG !== 'undefined' && CONFIG.categories) ? CONFIG.categories : [];
         let customCats = [];
-        
         try {
             if (window.supabaseClient) {
                 const { data, error } = await window.supabaseClient.from('site_settings').select('custom_categories').eq('id', 1).maybeSingle();
@@ -122,17 +103,15 @@ const API = {
         } catch (e) {
             try { customCats = JSON.parse(localStorage.getItem('cached_categories') || '[]'); } catch(e) {}
         }
-
         let merged = [...masterCats];
         if (Array.isArray(customCats)) {
             customCats.forEach(c => {
                 if (!c || !c.slug || typeof c.slug !== 'string') return;
                 const idx = merged.findIndex(m => m && m.slug && typeof m.slug === 'string' && m.slug.toLowerCase() === c.slug.toLowerCase());
-                if (idx > -1) merged[idx] = c; 
-                else merged.push(c); 
+                if (idx > -1) merged[idx] = c; else merged.push(c);
             });
         }
-
         return merged.filter(c => c.name !== '__DELETED__');
     }
 };
+window.API = API;
