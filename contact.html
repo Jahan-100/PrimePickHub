@@ -1,10 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<script src="/js/utils.js?v=10"></script>
-<script src="/js/config.js?v=8"></script>
-<script src="/js/api.js?v=11"></script>
-<script src="/js/affiliate.js?v=8"></script>
-    <head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact Us - PrimePickHub</title>
@@ -12,6 +8,10 @@
     <link rel="icon" type="image/png" href="/assets/favicon.png?v=4">
     <link rel="stylesheet" href="css/main.css?v=18">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/js/utils.js?v=10" defer></script>
+    <script src="/js/config.js?v=8" defer></script>
+    <script src="/js/api.js?v=11" defer></script>
+    <script src="/js/affiliate.js?v=8" defer></script>
 </head>
 <body>
     <header class="header">
@@ -27,26 +27,22 @@
             Have a question, partnership inquiry, or product suggestion? Send us a message — our team at Jahan.co usually replies within 48 hours.
         </p>
 
-        <form id="mainContactForm" action="https://api.web3forms.com/submit" method="POST"
-              style="background:#fff;padding:30px;border-radius:12px;border:1px solid var(--border);">
+        <form id="mainContactForm" action="https://api.web3forms.com/submit" method="POST" style="background:#fff;padding:30px;border-radius:12px;border:1px solid var(--border);">
             <input type="hidden" name="access_key" value="59aca094-d044-44c9-b57e-5b19c9572270">
             <input type="hidden" name="subject" value="New Message from PrimePickHub Contact Form">
             <input type="hidden" name="from_name" value="PrimePickHub Website">
             
             <div style="margin-bottom:15px;">
                 <label style="display:block;font-weight:600;margin-bottom:6px;">Your Name</label>
-                <input type="text" name="name" required
-                       style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;">
+                <input type="text" name="name" required style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;">
             </div>
             <div style="margin-bottom:15px;">
                 <label style="display:block;font-weight:600;margin-bottom:6px;">Email Address</label>
-                <input type="email" name="email" required
-                       style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;">
+                <input type="email" name="email" required style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;">
             </div>
             <div style="margin-bottom:20px;">
                 <label style="display:block;font-weight:600;margin-bottom:6px;">Message</label>
-                <textarea name="message" rows="5" required
-                          style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;"></textarea>
+                <textarea name="message" rows="5" required style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;"></textarea>
             </div>
             
             <button type="submit" id="mainSubmitBtn" class="btn-check-price" style="width:auto;padding:12px 30px;">Send Message</button>
@@ -56,20 +52,16 @@
         <div style="margin-top:30px;padding:20px;background:#F1F5F9;border-radius:12px;">
             <h3 style="margin-bottom:10px;">Direct Contact & Company Info</h3>
             <p style="color:var(--text-muted);margin-bottom:6px;">
-                <i class="fa-solid fa-building" style="color:var(--accent);"></i>
-                <strong>Company:</strong> Jahan.co
+                <i class="fa-solid fa-building" style="color:var(--accent);"></i> <strong>Company:</strong> Jahan.co
             </p>
             <p style="color:var(--text-muted);margin-bottom:6px;">
-                <i class="fa-solid fa-envelope" style="color:var(--accent);"></i>
-                <strong>Email:</strong> support.primepickhub@gmail.com
+                <i class="fa-solid fa-envelope" style="color:var(--accent);"></i> <strong>Email:</strong> support.primepickhub@gmail.com
             </p>
             <p style="color:var(--text-muted);margin-bottom:6px;">
-                <i class="fa-solid fa-location-dot" style="color:var(--accent);"></i>
-                <strong>Location:</strong> Pakistan (Operating Globally)
+                <i class="fa-solid fa-location-dot" style="color:var(--accent);"></i> <strong>Location:</strong> Pakistan (Operating Globally)
             </p>
             <p style="color:var(--text-muted);">
-                <i class="fa-solid fa-clock" style="color:var(--accent);"></i>
-                <strong>Response time:</strong> 24–48 hours (Mon–Fri)
+                <i class="fa-solid fa-clock" style="color:var(--accent);"></i> <strong>Response time:</strong> 24–48 hours (Mon–Fri)
             </p>
         </div>
     </main>
@@ -132,7 +124,6 @@
             }
         });
     </script>
-    
-    <script src="js/floating-widgets.js?v=2"></script>
+    <script src="js/floating-widgets.js?v=2" defer></script>
 </body>
 </html>
