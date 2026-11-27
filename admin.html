@@ -1,7 +1,3 @@
-<script src="/js/utils.js?v=10"></script>
-<script src="/js/config.js?v=8"></script>
-<script src="/js/api.js?v=11"></script>
-<script src="/js/affiliate.js?v=8"></script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,6 +9,10 @@
     <link rel="stylesheet" href="/css/main.css?v=15">
     <link rel="stylesheet" href="/css/admin.css?v=5">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/utils.js?v=10" defer></script>
+    <script src="/js/config.js?v=8" defer></script>
+    <script src="/js/api.js?v=11" defer></script>
+    <script src="/js/affiliate.js?v=8" defer></script>
     <style>
         .admin-layout { display: flex; width: 100%; max-width: 100vw; overflow-x: hidden; }
         .admin-sidebar { width: 180px; padding: 15px 10px; }
@@ -151,7 +151,6 @@
             </div>
 
             <div id="dashboard" style="display:none;">
-                
                 <h1>Platform Overview</h1>
                 <br>
                 <div class="stats-grid">
@@ -179,17 +178,14 @@
                 <div style="background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 20px; padding: 15px; border-radius: 8px; display: inline-flex; flex-direction: column; gap: 5px; width: fit-content;">
                     <h3 style="margin: 0; color: #166534; font-size: 1rem; font-weight: 700; line-height: 1.2;">App Download Settings</h3>
                     <p style="margin: 0; font-size: 0.8rem; color: #15803d; line-height: 1.2;">(Control Popup and Floating Button separately)</p>
-                    
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: #1E1B4B; margin-top: 8px; line-height: 1.2;">
                         <input type="checkbox" id="showAppPopupToggle" style="width: 18px; height: 18px; margin: 0; cursor: pointer;">
                         Show App Download Popup (QR/Install)
                     </label>
-                    
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: #1E1B4B; margin-top: 4px; line-height: 1.2;">
                         <input type="checkbox" id="showFloatingBtnToggle" style="width: 18px; height: 18px; margin: 0; cursor: pointer;">
                         Show Floating App Button (Side Icon)
                     </label>
-
                     <button type="button" id="saveAppSettingsBtn" style="width: auto; padding: 8px 15px; background: #16a34a; color: white; border: none; border-radius: 4px; font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 12px; box-shadow: 0 2px 4px rgba(22,163,74,0.2); align-self: flex-start;">Update Settings</button>
                 </div>
 
@@ -217,7 +213,6 @@
 
                     <div id="categoryBuilderContainer" style="display: none; margin-top: 20px; background: #fff; padding: 20px; border-radius: 8px; border: 2px dashed #10b981;">
                         <h3 style="color: #047857; margin-bottom: 15px;">Step-by-Step Category Builder</h3>
-                        
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
                             <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0;">
                                 <h4 style="margin-top:0; color:#166534;">1. Main Category</h4>
@@ -226,7 +221,6 @@
                                 <button type="button" onclick="setBuilderMain()" style="width:100%; padding:8px; background:#166534; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Set Main Category</button>
                                 <div id="bActiveMainDisplay" style="margin-top:10px; font-weight:bold; color:#166534; font-size:0.9rem;"></div>
                             </div>
-
                             <div style="background: #eff6ff; padding: 15px; border-radius: 8px; border: 1px solid #bfdbfe;">
                                 <h4 style="margin-top:0; color:#1e3a8a;">2. Sub Category</h4>
                                 <select id="bSubSelect" style="width:100%; padding:8px; margin-bottom:8px; border-radius:4px; border:1px solid #ccc;"><option value="">-- Select Existing --</option></select>
@@ -234,7 +228,6 @@
                                 <button type="button" onclick="addBuilderSub()" style="width:100%; padding:8px; background:#1e3a8a; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Add Sub Category</button>
                                 <ul id="bSubList" style="margin-top:10px; padding-left:15px; font-size:0.85rem; color:#1e3a8a; max-height:100px; overflow-y:auto;"></ul>
                             </div>
-
                             <div style="background: #fef2f2; padding: 15px; border-radius: 8px; border: 1px solid #fecaca;">
                                 <h4 style="margin-top:0; color:#991b1b;">3. Mini-Sub Category</h4>
                                 <select id="bMiniParentSelect" style="width:100%; padding:8px; margin-bottom:8px; border-radius:4px; border:1px solid #ccc;"><option value="">-- Select Parent Sub-Cat --</option></select>
@@ -244,12 +237,10 @@
                                 <ul id="bMiniList" style="margin-top:10px; padding-left:15px; font-size:0.85rem; color:#991b1b; max-height:100px; overflow-y:auto;"></ul>
                             </div>
                         </div>
-
                         <div style="margin-top: 20px; border-top: 2px solid #E2E8F0; padding-top: 15px;">
                             <h4 style="color: #1E1B4B;">Preview of New Categories to be Saved:</h4>
                             <ul id="builderPreviewList" style="background: #F8FAFC; padding: 15px; border-radius: 8px; font-size: 0.9rem; max-height: 200px; overflow-y: auto; list-style-type: none; margin: 0; border: 1px solid #E2E8F0;"></ul>
                         </div>
-
                         <div style="margin-top: 20px; display: flex; gap: 10px;">
                             <button type="button" onclick="saveBuilderData()" style="padding:12px 30px; background:#10b981; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold; font-size:1rem;">Final Add & Save All Categories</button>
                             <button type="button" onclick="resetBuilder()" style="padding:12px 30px; background:#64748B; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold; font-size:1rem;">Reset Builder</button>
@@ -267,7 +258,6 @@
                         <form id="productForm" novalidate>
                             <input type="hidden" id="pId" value="">
                             <input type="hidden" id="pOfferId" value="">
-
                             <div class="form-section-title">Basic Info</div>
                             <div class="form-group"><label>Product Title <span style="color: #EF4444;">*</span></label><input type="text" id="pTitle" required style="background:#fff; width: 100%;"></div>
                             <div class="form-group"><label>URL Slug <span style="color: #EF4444;">*</span></label><input type="text" id="pSlug" required pattern="[a-z0-9\-]+" style="background:#fff; width: 100%;"></div>
@@ -315,7 +305,6 @@
                                 </div>
                             </div>
 
-                            <!-- ⭐ ADVANCED SEO SETTINGS ADDED HERE ⭐ -->
                             <div class="form-section-title" style="color: #2563eb; border-bottom-color: #bfdbfe;">Advanced SEO Settings (Optional)</div>
                             <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
                                 <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom:0;">
@@ -335,7 +324,6 @@
                                 <label>Custom Meta Description (For Google Search)</label>
                                 <textarea id="pMetaDesc" rows="2" placeholder="Shop women's faux leather cropped bomber jackets with oversized fit..." style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; background:#fff;"></textarea>
                             </div>
-                            <!-- ⭐ END OF SEO SETTINGS ⭐ -->
 
                             <div class="form-section-title">Main Offer Details</div>
                             <div class="form-group"><label>Store Name <span style="color: #EF4444;">*</span></label><input type="text" id="pStore" required placeholder="aliexpress, amazon, daraz" style="background:#fff; width: 100%;"></div>
@@ -435,8 +423,6 @@
                     </div>
                 </div>
 
-                <!-- ... (Rest of the admin.html remains exactly the same: Special Deal, Sale Section 1 & 2, Blogs, AI Hunter, Manage Products, Manage Reviews, Modals, Scripts) ... -->
-                
                 <div class="admin-card box-special-deal">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h3 style="margin: 0;">Special Deal Section Customization</h3>
@@ -599,12 +585,10 @@
                     <div id="blogFormContainer" style="display: none; margin-top: 20px; background: #fff; padding: 20px; border-radius: 8px;">
                         <form id="blogForm" novalidate>
                             <input type="hidden" id="bId" value="">
-                            
                             <div class="form-group"><label>Blog Title *</label><input type="text" id="bTitle" required style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
                             <div class="form-group"><label>URL Slug * (e.g. best-winter-coats)</label><input type="text" id="bSlug" required pattern="[a-z0-9\-]+" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
                             <div class="form-group"><label>Cover Image URL (Optional)</label><input type="url" id="bImg" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></div>
                             <div class="form-group"><label>Article Content (HTML allowed) *</label><textarea id="bContent" rows="10" required placeholder="<h2>Heading</h2><p>Paragraph...</p>" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></textarea></div>
-                            
                             <div style="display: flex; gap: 10px; margin-top: 15px;">
                                 <button type="submit" id="saveBlogBtn" class="btn-check-price" style="width:auto; padding:10px 20px; background:#0d9488;">Publish Post</button>
                                 <button type="button" id="cancelBlogBtn" class="btn-check-price" style="width:auto; padding:10px 20px; background:#64748B; display:none;">Cancel</button>
@@ -624,7 +608,6 @@
                         <div class="table-scroll-outer">
                             <button type="button" id="scrollUpBtnBlogs" class="scroll-ctrl-btn scroll-up">▲</button>
                             <button type="button" id="scrollDownBtnBlogs" class="scroll-ctrl-btn scroll-down">▼</button>
-
                             <div class="table-scroll-wrapper" id="tableScrollWrapperBlogs">
                                 <div class="table-responsive-mobile">
                                     <table class="admin-table">
@@ -645,7 +628,6 @@
                         </div>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <input type="text" id="aiSearchKeyword" placeholder="e.g., iPhone, Shoes..." style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; width: 200px; outline: none;">
-                            
                             <button type="button" id="discoverProductsBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#16a34a; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
                                 🤖 Search Now
                             </button>
@@ -658,7 +640,6 @@
                     <div id="discoveredListContainer" style="display: none; margin-top: 20px; background: #fff; padding: 15px; border-radius: 8px;">
                         <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center; background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
                             <strong style="color: #166534; margin-right: 10px;">Total: <span id="discoveredCount" style="background: #dcfce7; padding: 2px 8px; border-radius: 12px;">0</span></strong>
-                            
                             <select id="filterPlatform" class="filter-input" style="padding:6px; border-radius:4px; border:1px solid #cbd5e1;">
                                 <option value="all">All Platforms</option>
                                 <option value="Amazon">Amazon</option>
@@ -701,7 +682,6 @@
                                 <option value="price-high-low">Price: High to Low</option>
                                 <option value="price-low-high">Price: Low to High</option>
                             </select>
-                            
                             <button type="button" id="rejectSelectedBtn" style="background:#EF4444; color:white; padding:6px 12px; border:none; border-radius:4px; font-weight:bold; cursor:pointer; margin-left: auto;">
                                 Reject Selected
                             </button>
@@ -710,7 +690,6 @@
                         <div class="table-scroll-outer">
                             <button type="button" id="scrollUpBtnAI" class="scroll-ctrl-btn scroll-up">▲</button>
                             <button type="button" id="scrollDownBtnAI" class="scroll-ctrl-btn scroll-down">▼</button>
-                            
                             <div class="table-scroll-wrapper" id="tableScrollWrapperAI">
                                 <div class="table-responsive-mobile">
                                     <table class="admin-table" style="margin-top: 0;">
@@ -748,11 +727,9 @@
                     </div>
 
                     <div id="productListContainer" style="display: none; margin-top: 20px; background: #fff; padding: 15px; border-radius: 8px;">
-                        
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px;">
                             <h4 style="margin: 0; color: #92400e; font-size: 1rem;">Total Products: <span id="totalProductsCount" style="background: #fde68a; padding: 2px 10px; border-radius: 12px; font-size: 0.85rem; color: #78350f;">0</span></h4>
                         </div>
-
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                                 <select id="adminCategoryFilter" style="padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; outline: none;"><option value="all">All Categories</option></select>
@@ -760,11 +737,9 @@
                                 <input type="text" id="adminSearchInput" placeholder="Search products..." style="padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; outline: none; width: 200px;">
                             </div>
                         </div>
-                        
                         <div class="table-scroll-outer">
                             <button type="button" id="scrollUpBtnProducts" class="scroll-ctrl-btn scroll-up">▲</button>
                             <button type="button" id="scrollDownBtnProducts" class="scroll-ctrl-btn scroll-down">▼</button>
-                            
                             <div class="table-scroll-wrapper" id="tableScrollWrapperProducts">
                                 <div class="table-responsive-mobile">
                                     <table class="admin-table">
@@ -782,7 +757,6 @@
                         <h2 style="margin: 0; color: #166534 !important;">Manage Customer Reviews</h2>
                         <button type="button" id="toggleReviewsBtn" class="btn-check-price" style="width:auto; padding:8px 15px; background:#16a34a; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Show Pending & Approved Reviews</button>
                     </div>
-
                     <div id="reviewsContainer" style="display: none; margin-top: 20px; background: #fff; padding: 15px; border-radius: 8px;">
                         <div class="table-scroll-outer">
                             <div class="table-scroll-wrapper">
@@ -808,7 +782,6 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -828,10 +801,6 @@
             </div>
         </div>
     </div>
-
-    <script src="/js/utils.js"></script>
-    <script src="/js/config.js?v=6"></script>
-    <script src="/js/api.js?v=7"></script>
-    <script src="/js/admin.js?v=33"></script>
+    <script src="/js/admin.js?v=33" defer></script>
 </body>
 </html>
