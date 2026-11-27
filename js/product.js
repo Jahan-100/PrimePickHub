@@ -224,17 +224,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     galleryImages = galleryImages.filter(url => typeof url === 'string' && url.startsWith('http')).map(url => getHighQualityImage(url, 800));
     if (galleryImages.length === 0) galleryImages = ['/assets/icon-192.png'];
 
+    // ⭐ PRELOAD ALL GALLERY IMAGES TO FIX DELAY ⭐
+    galleryImages.forEach(src => { const img = new Image(); img.src = src; });
+
     window.currentMainImageIndex = 0;
     const mainImage = galleryImages[window.currentMainImageIndex];
     const shareUrl = encodeURIComponent(window.location.href); const shareText = encodeURIComponent(`Check out ${product.title} on PrimePickHub`);
-    const thumbnailsHtml = galleryImages.map((url, i) => `<img src="${escapeHTML(getHighQualityImage(url, 150))}" alt="View ${i + 1}" class="gallery-thumb" data-src="${escapeHTML(url)}" data-index="${i}" style="border:2px solid ${i === window.currentMainImageIndex ? '#FF5A3C' : '#E2E8F0'};">`).join('');
+    
+    // Added onerror to hide broken thumbnails
+    const thumbnailsHtml = galleryImages.map((url, i) => `<img src="${escapeHTML(getHighQualityImage(url, 150))}" onerror="this.style.display='none'" alt="View ${i + 1}" class="gallery-thumb" data-src="${escapeHTML(url)}" data-index="${i}" style="border:2px solid ${i === window.currentMainImageIndex ? '#FF5A3C' : '#E2E8F0'};">`).join('');
+    
     const rawReview = product.review_html || '';
 
     container.innerHTML = `
         <div class="product-layout">
             <div class="product-thumbnails-section"><button class="scroll-arrow up-arrow" onclick="scrollThumbnails('up')" aria-label="Scroll Up"><i class="fa-solid fa-chevron-up"></i></button><div id="thumbnailContainer" class="thumbnail-scroll-wrapper">${thumbnailsHtml}</div><button class="scroll-arrow down-arrow" onclick="scrollThumbnails('down')" aria-label="Scroll Down"><i class="fa-solid fa-chevron-down"></i></button></div>
             
-            <div class="product-image-section"><div id="mainImageWrapper" style="background:#F8FAFC;border-radius:12px;padding:15px;display:flex;align-items:center;justify-content:center;position:relative; height: 100%; overflow: hidden;"><img id="mainImage" src="${escapeHTML(mainImage)}" alt="${escapeHTML(product.title)}" style="width:100%;height:auto;max-height:800px;object-fit:contain;border-radius:8px;cursor:zoom-in;"><button class="main-arrow left" onclick="event.stopPropagation(); changeMainImage(-1)" aria-label="Previous Image"><i class="fa-solid fa-chevron-left"></i></button><button class="main-arrow right" onclick="event.stopPropagation(); changeMainImage(1)" aria-label="Next Image"><i class="fa-solid fa-chevron-right"></i></button></div></div>
+            <div class="product-image-section"><div id="mainImageWrapper" style="background:#F8FAFC;border-radius:12px;padding:15px;display:flex;align-items:center;justify-content:center;position:relative; height: 100%; overflow: hidden;"><img id="mainImage" src="${escapeHTML(mainImage)}" alt="${escapeHTML(product.title)}" style="width:100%;height:auto;max-height:800px;object-fit:contain;border-radius:8px;cursor:zoom-in; transition: opacity 0.3s;"><button class="main-arrow left" onclick="event.stopPropagation(); changeMainImage(-1)" aria-label="Previous Image"><i class="fa-solid fa-chevron-left"></i></button><button class="main-arrow right" onclick="event.stopPropagation(); changeMainImage(1)" aria-label="Next Image"><i class="fa-solid fa-chevron-right"></i></button></div></div>
             
             <div class="product-info-section">
                 <h1 style="font-size:1.8rem;margin-bottom:10px;">${escapeHTML(product.title)}</h1>
@@ -349,7 +355,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const basePrice = parseFloat(activeOffer.price) || 0;
         const salePrice = parseFloat(activeOffer.sale_price) || 0;
 
-        // ⭐ FIX: Removed commission multiplier ⭐
         let priceHtml = '';
         if (basePrice === 0) { const storeName = activeOffer.store_name || 'Store'; priceHtml = `<div style="font-size: 1.2rem; font-weight: bold; color: #FF5A3C;">Check Price on ${escapeHTML(storeName)}</div>`; } 
         else if (salePrice > 0) { const convertedSale = salePrice * rate; const convertedOrig = basePrice * rate; const symbol = currencySymbols[currency] || currency + ' '; priceHtml = `<div style="display:flex; align-items:center; gap:10px;"><span style="text-decoration:line-through; color:#64748B; font-size:1.2rem;">${symbol}${convertedOrig.toFixed(2)}</span><span style="font-size: 1.6rem; font-weight: bold; color: #FF5A3C;">${symbol}${convertedSale.toFixed(2)}</span></div>`; } 
@@ -363,16 +368,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     fetchRates().then(() => updateUI(currencySelector.value));
     currencySelector.addEventListener('change', (e) => updateUI(e.target.value));
 
+    // Helper to change image instantly without blink
+    function setMainImage(src, targetIndex) {
+        const imgEl = document.getElementById('mainImage');
+        imgEl.style.opacity = '0.5';
+        // Temporary Image object to preload
+        const tempImg = new Image();
+        tempImg.src = src;
+        tempImg.onload = () => {
+            imgEl.src = src;
+            imgEl.style.opacity = '1';
+        };
+        window.currentMainImageIndex = targetIndex;
+        container.querySelectorAll('.gallery-thumb').forEach((t, i) => { t.style.borderColor = (i === targetIndex) ? '#FF5A3C' : '#E2E8F0'; });
+        const activeThumb = container.querySelector(`.gallery-thumb[data-index="${targetIndex}"]`); 
+        if (activeThumb) { activeThumb.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+    }
+
     window.selectColor = function(colorValue, colorName) {
         activeColor = colorValue; activeColorName = colorName;
         const offersForColor = allVariations.filter(v => { const vColor = (v.product_color || '').trim(); return vColor ? vColor.includes(colorValue) : (colorValue === uniqueColors[0].value); });
         let idxExact = allVariations.findIndex(v => { const vColor = (v.product_color || '').trim(); const matchesColor = vColor ? vColor.includes(colorValue) : (colorValue === uniqueColors[0].value); const matchesSize = activeSize ? (v.variation_name && v.variation_name.trim() === activeSize) : true; return matchesColor && matchesSize; });
         let idxPartial = allVariations.findIndex(v => { const vColor = (v.product_color || '').trim(); const matchesColor = vColor ? vColor.includes(colorValue) : (colorValue === uniqueColors[0].value); const matchesSize = activeSize ? (v.variation_name && v.variation_name.split(',').map(s=>s.trim()).includes(activeSize)) : true; return matchesColor && matchesSize; });
         if (idxExact !== -1) activeOfferIndex = idxExact; else if (idxPartial !== -1) activeOfferIndex = idxPartial; else if (offersForColor.length > 0) activeOfferIndex = allVariations.indexOf(offersForColor[0]);
+        
         activeOffer = allVariations[activeOfferIndex];
         const cleanColor = (colorName || '').toLowerCase().replace(/[^a-z0-9]/g, ''); let targetIndex = -1;
         if (cleanColor.length > 2) { for (let i = 0; i < galleryImages.length; i++) { const cleanUrl = galleryImages[i].toLowerCase().replace(/[^a-z0-9]/g, ''); if (cleanUrl.includes(cleanColor)) { targetIndex = i; break; } } }
-        if (targetIndex !== -1) { window.currentMainImageIndex = targetIndex; document.getElementById('mainImage').src = galleryImages[targetIndex]; container.querySelectorAll('.gallery-thumb').forEach((t, i) => { t.style.borderColor = (i === targetIndex) ? '#FF5A3C' : '#E2E8F0'; }); const activeThumb = container.querySelector(`.gallery-thumb[data-index="${targetIndex}"]`); if (activeThumb) { activeThumb.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }
+        
+        if (targetIndex !== -1) { 
+            setMainImage(galleryImages[targetIndex], targetIndex);
+        }
+        
         document.getElementById('variationContainer').innerHTML = generateVariationUI(); updateUI(currencySelector.value);
     };
 
@@ -386,7 +413,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     window.scrollThumbnails = function(direction) { const container = document.getElementById('thumbnailContainer'); const scrollAmount = 150; if (window.innerWidth > 1023) { if (direction === 'up') container.scrollBy({ top: -scrollAmount, behavior: 'smooth' }); else container.scrollBy({ top: scrollAmount, behavior: 'smooth' }); } else { if (direction === 'up') container.scrollBy({ left: -scrollAmount, behavior: 'smooth' }); else container.scrollBy({ left: scrollAmount, behavior: 'smooth' }); } };
-    window.changeMainImage = function(indexOrDirection, isDirection = true) { if (isDirection) { let newIndex = window.currentMainImageIndex + indexOrDirection; if (newIndex < 0) newIndex = galleryImages.length - 1; if (newIndex >= galleryImages.length) newIndex = 0; window.currentMainImageIndex = newIndex; } else { window.currentMainImageIndex = indexOrDirection; } document.getElementById('mainImage').src = galleryImages[window.currentMainImageIndex]; container.querySelectorAll('.gallery-thumb').forEach((t, i) => { t.style.borderColor = (i === window.currentMainImageIndex) ? '#FF5A3C' : '#E2E8F0'; }); };
+    
+    window.changeMainImage = function(indexOrDirection, isDirection = true) { 
+        let newIndex;
+        if (isDirection) { newIndex = window.currentMainImageIndex + indexOrDirection; if (newIndex < 0) newIndex = galleryImages.length - 1; if (newIndex >= galleryImages.length) newIndex = 0; } 
+        else { newIndex = indexOrDirection; }
+        setMainImage(galleryImages[newIndex], newIndex);
+    };
 
     let mainTouchStart = 0; const mainWrapper = document.getElementById('mainImageWrapper');
     mainWrapper.addEventListener('touchstart', e => { mainTouchStart = e.changedTouches[0].screenX; }, { passive: true });
@@ -448,7 +481,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         finally { btn.innerText = "Submit Review"; btn.disabled = false; }
     });
 
-    // ⭐ FIXED SCHEMA: Removed fake aggregateRating & fixed availability ⭐
     const jsonLd = { 
         "@context": "https://schema.org/", 
         "@type": "Product", 
@@ -462,19 +494,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             const sp = parseFloat(o.sale_price) || 0; 
             let finalP = sp > 0 ? sp : p; 
             
-            // If price is 0 (hidden), don't send a fake 0 price
             let offerSchema = { 
                 "@type": "Offer", 
                 "url": o.affiliate_url, 
                 "priceCurrency": o.currency || "USD", 
-                "availability": "https://schema.org/InStock", // Better to omit than lie, but keeping it simple
+                "availability": "https://schema.org/InStock",
                 "seller": { "@type": "Organization", "name": o.store_name } 
             };
             if (finalP > 0) { offerSchema.price = finalP.toFixed(2); }
             return offerSchema;
         }) 
     };
-    // Removed aggregateRating injection.
     
     const breadcrumbLd = {
         "@context": "https://schema.org",
