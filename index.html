@@ -1,12 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
-<script src="/js/utils.js?v=10"></script>
-<script src="/js/config.js?v=8"></script>
-<script src="/js/api.js?v=11"></script>
-<script src="/js/affiliate.js?v=8"></script>
-    <head>
+<head>
     <meta charset="UTF-8">
-    
+
     <!-- ⭐ CACHE BUSTER ⭐ -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -25,32 +21,27 @@
 
     <meta name="theme-color" content="#f8fafc">
     <style> html, body { background-color: #f8fafc !important; margin: 0; padding: 0; } </style>
-    
+
     <meta name="mitgo-verification" content="e3f69518-ab0c-46db-a669-34aacd83fd21" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <title>PrimePickHub - Compare & Click The Best Deals (Amazon, AliExpress, Daraz)</title>
-    <meta name="description" content="Compare products across Daraz, Amazon, AliExpress & eBay. Check live prices instantly. Find the best deals, flash sales, and exclusive discounts on PrimePickHub.">
-    <meta name="keywords" content="price comparison, amazon deals, aliexpress deals, daraz sales, online shopping, flash sale, affiliate deals, best price">
 
-    <!-- Open Graph (Facebook / WhatsApp) -->
+    <!-- ⭐ HONEST TITLE/DESCRIPTION (no "live prices" claim) ⭐ -->
+    <title>PrimePickHub - Curated Deals from Amazon, AliExpress, Daraz</title>
+    <meta name="description" content="Discover trending products from top stores. Curated picks, honest reviews, quick links to Amazon, AliExpress, Daraz & eBay.">
+    <meta name="keywords" content="price comparison, amazon deals, aliexpress deals, daraz sales, online shopping, curated deals, affiliate deals, best price">
+
     <meta property="og:type" content="website">
-    <meta property="og:title" content="PrimePickHub - Compare & Click The Best Deals">
-    <meta property="og:description" content="Compare products across top stores. Live prices, flash deals & exclusive discounts.">
-    
-    <!-- ⭐ FIX: Changed to banner.jpg and added width/height ⭐ -->
+    <meta property="og:title" content="PrimePickHub - Curated Deals from Top Stores">
+    <meta property="og:description" content="Discover trending products. Curated picks from Amazon, AliExpress, Daraz, eBay.">
     <meta property="og:image" content="https://primepickhub.vercel.app/assets/banner.jpg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    
     <meta property="og:url" content="https://primepickhub.vercel.app/">
     <meta property="og:site_name" content="PrimePickHub">
 
-    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="PrimePickHub - Compare & Click The Best Deals">
-    <meta name="twitter:description" content="Compare products across top stores. Live prices.">
-    <!-- ⭐ FIX: Changed to banner.jpg ⭐ -->
+    <meta name="twitter:title" content="PrimePickHub - Curated Deals from Top Stores">
+    <meta name="twitter:description" content="Discover trending products from top stores.">
     <meta name="twitter:image" content="https://primepickhub.vercel.app/assets/banner.jpg">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -73,10 +64,16 @@
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/main.css?v=42">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- ⭐ SPEED OPTIMIZATION: SIRF 2 FONTS LOAD KIYE HAIN ⭐ -->
+
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,800;0,900;1,800&family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
-    
+
+    <!-- ⭐ CORE SCRIPTS (defer = proper order) ⭐ -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="/js/utils.js?v=10" defer></script>
+    <script src="/js/config.js?v=8" defer></script>
+    <script src="/js/api.js?v=11" defer></script>
+    <script src="/js/affiliate.js?v=8" defer></script>
+
     <style>
         .card-timer { background: #FEF2F2; color: #DC2626; font-size: 0.75rem; font-weight: 800; padding: 5px 8px; border-radius: 4px; margin-bottom: 8px; text-align: center; border: 1px solid #FECACA; display: flex; align-items: center; justify-content: center; gap: 5px; }
         body.app-loading { overflow: hidden; }
@@ -115,10 +112,9 @@
             .category-item span { font-size: 0.7rem; white-space: normal; text-align: center; line-height: 1.2; max-width: 85px; word-break: break-word; }
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 </head>
 <body class="app-loading">
-    
+
     <div style="background-color: #FEF3C7; color: #92400E; text-align: center; padding: 8px 15px; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid #FDE68A; z-index: 99999; position: relative;">
         <i class="fa-solid fa-circle-info"></i> PrimePickHub (operated by Jahan.co) is an independent comparison website. We may earn a commission when you click links to partner stores, at no extra cost to you.
     </div>
@@ -170,10 +166,10 @@
 
     <div id="left-side-ad" class="left-ad-container">
         <div style="text-align: center; color: #475569; font-size: 0.8rem; font-weight: bold; padding: 10px;">
-            Advertisement
+            Partner Space
             <br><br>
             <div style="width: 100px; height: 500px; border: 1px dashed #CBD5E1; margin: 0 auto; display: flex; align-items: center; justify-content: center; color: #CBD5E1; border-radius: 4px;">
-                120 x 600
+                Partner Space
             </div>
         </div>
     </div>
@@ -220,14 +216,14 @@
             <div class="flash-sale-left">
                 <div class="flash-title-area" style="display: flex; align-items: center; width: 100%; gap: 20px; flex-wrap: wrap; padding: 15px 0; margin-bottom: 5px;">
                     <h2 id="flashSaleTitle" style="margin: 0; word-break: break-word;">Mega Sale 11.11</h2>
-                    <div class="blinking-ending-soon" style="margin: 0; font-size: 1.2rem; padding: 5px 15px; white-space: nowrap; flex-shrink: 0;">Ending Soon!</div>
+                    <div class="blinking-ending-soon" style="margin: 0; font-size: 1.2rem; padding: 5px 15px; white-space: nowrap; flex-shrink: 0;">Limited Time</div>
                 </div>
                 <div class="flash-controls" style="display: flex; align-items: center; gap: 15px; width: 100%;">
                     <a href="search.html?flash=true" class="explore-btn" style="background: #fff; color: #7c3aed; padding: 8px 22px; border-radius: 20px; font-weight: bold; font-size: 1rem; text-decoration: none; white-space: nowrap; transition: all 0.2s;">Explore now</a>
                     <div class="flash-marquee-container" style="flex: 1;">
                         <div class="marquee-content">
-                            <span>🔥 Hurry up! Offer ends soon. &nbsp;&nbsp;&nbsp; 🔥 Limited stock available! &nbsp;&nbsp;&nbsp; 🔥 Hurry up! Offer ends soon.</span>
-                            <span>🔥 Hurry up! Offer ends soon. &nbsp;&nbsp;&nbsp; 🔥 Limited stock available! &nbsp;&nbsp;&nbsp; 🔥 Hurry up! Offer ends soon.</span>
+                            <span>✨ Handpicked deals from our editorial team. &nbsp;&nbsp;&nbsp; 💡 Prices may change — verify on store. &nbsp;&nbsp;&nbsp; ✨ Explore our latest picks.</span>
+                            <span>✨ Handpicked deals from our editorial team. &nbsp;&nbsp;&nbsp; 💡 Prices may change — verify on store. &nbsp;&nbsp;&nbsp; ✨ Explore our latest picks.</span>
                         </div>
                     </div>
                 </div>
@@ -244,14 +240,14 @@
             <div class="flash-sale-2-left">
                 <div class="flash-title-area" style="display: flex; align-items: center; width: 100%; gap: 20px; flex-wrap: wrap; padding: 15px 0; margin-bottom: 5px;">
                     <h2 id="flashSaleTitle2" style="margin: 0; word-break: break-word;">Winter Sale 2.2</h2>
-                    <div class="blinking-ending-soon" style="margin: 0; font-size: 1.2rem; padding: 5px 15px; white-space: nowrap; flex-shrink: 0;">Ending Soon!</div>
+                    <div class="blinking-ending-soon" style="margin: 0; font-size: 1.2rem; padding: 5px 15px; white-space: nowrap; flex-shrink: 0;">Limited Time</div>
                 </div>
                 <div class="flash-controls" style="display: flex; align-items: center; gap: 15px; width: 100%;">
                     <a href="search.html?sale2=true" class="explore-btn" style="background: #fff; color: #047857; padding: 8px 22px; border-radius: 20px; font-weight: bold; font-size: 1rem; text-decoration: none; white-space: nowrap; transition: all 0.2s;">Explore now</a>
                     <div class="flash-marquee-container" style="flex: 1;">
                         <div class="marquee-content">
-                            <span>🔥 Hurry up! Offer ends soon. &nbsp;&nbsp;&nbsp; 🔥 Limited stock available! &nbsp;&nbsp;&nbsp; 🔥 Hurry up! Offer ends soon.</span>
-                            <span>🔥 Hurry up! Offer ends soon. &nbsp;&nbsp;&nbsp; 🔥 Limited stock available! &nbsp;&nbsp;&nbsp; 🔥 Hurry up! Offer ends soon.</span>
+                            <span>✨ Handpicked deals from our editorial team. &nbsp;&nbsp;&nbsp; 💡 Prices may change — verify on store. &nbsp;&nbsp;&nbsp; ✨ Explore our latest picks.</span>
+                            <span>✨ Handpicked deals from our editorial team. &nbsp;&nbsp;&nbsp; 💡 Prices may change — verify on store. &nbsp;&nbsp;&nbsp; ✨ Explore our latest picks.</span>
                         </div>
                     </div>
                 </div>
@@ -339,7 +335,7 @@
                 <input type="hidden" name="access_key" value="59aca094-d044-44c9-b57e-5b19c9572270">
                 <input type="hidden" name="subject" value="New Message from PrimePickHub Floating Contact">
                 <input type="hidden" name="from_name" value="PrimePickHub Website">
-                
+
                 <div class="form-group">
                     <label for="fcName">Your Name</label>
                     <input type="text" id="fcName" name="name" required>
@@ -381,12 +377,10 @@
         <span>App</span>
     </button>
 
-    <script src="js/utils.js?v=2" defer></script>
-    <script src="js/config.js?v=7" defer></script>
-    <script src="js/api.js?v=9" defer></script> 
-    <script src="js/app.js?v=82" defer></script>
-    <script src="js/affiliate.js?v=6" defer></script>
-    
+    <!-- ⭐ Page-specific scripts at bottom with defer ⭐ -->
+    <script src="/js/app.js?v=83" defer></script>
+    <script src="/js/floating-widgets.js?v=10" defer></script>
+
     <script>
         function toggleCatDropdown(event) {
             if(event) { event.preventDefault(); event.stopPropagation(); }
@@ -407,6 +401,5 @@
             if (wrap && !wrap.contains(e.target) && menu) { menu.style.display = 'none'; }
         });
     </script>
-    <script src="js/floating-widgets.js?v=10" defer></script>
 </body>
 </html>
