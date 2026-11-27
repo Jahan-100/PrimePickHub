@@ -229,15 +229,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     if (galleryImages.length === 0) galleryImages = ['/assets/icon-192.png'];
 
-    // ⭐ PRELOAD ALL IMAGES TO PREVENT DELAY ⭐
-    galleryImages.forEach(src => { const img = new Image(); img.src = src; });
-
     window.currentMainImageIndex = 0;
-    const mainImage = galleryImages[window.currentMainImageIndex];
+    const mainImage = getHighQualityImage(galleryImages[window.currentMainImageIndex], 800);
     const shareUrl = encodeURIComponent(window.location.href); const shareText = encodeURIComponent(`Check out ${product.title} on PrimePickHub`);
     
-    // Use original URL for thumbnails so it doesn't break
-    const thumbnailsHtml = galleryImages.map((url, i) => `<img src="${escapeHTML(url)}" onerror="this.style.display='none'" alt="View ${i + 1}" class="gallery-thumb" data-src="${escapeHTML(url)}" data-index="${i}" style="border:2px solid ${i === window.currentMainImageIndex ? '#FF5A3C' : '#E2E8F0'};">`).join('');
+    // ⭐ FIX: Use getHighQualityImage(url, 150) and lazy loading for thumbnails to make them fast
+    const thumbnailsHtml = galleryImages.map((url, i) => `<img src="${escapeHTML(getHighQualityImage(url, 150))}" loading="lazy" onerror="this.style.display='none'" alt="View ${i + 1}" class="gallery-thumb" data-src="${escapeHTML(url)}" data-index="${i}" style="border:2px solid ${i === window.currentMainImageIndex ? '#FF5A3C' : '#E2E8F0'};">`).join('');
     
     const rawReview = product.review_html || '';
 
@@ -245,7 +242,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="product-layout">
             <div class="product-thumbnails-section"><button class="scroll-arrow up-arrow" onclick="scrollThumbnails('up')" aria-label="Scroll Up"><i class="fa-solid fa-chevron-up"></i></button><div id="thumbnailContainer" class="thumbnail-scroll-wrapper">${thumbnailsHtml}</div><button class="scroll-arrow down-arrow" onclick="scrollThumbnails('down')" aria-label="Scroll Down"><i class="fa-solid fa-chevron-down"></i></button></div>
             
-            <div class="product-image-section"><div id="mainImageWrapper" style="background:#F8FAFC;border-radius:12px;padding:15px;display:flex;align-items:center;justify-content:center;position:relative; height: 100%; overflow: hidden;"><img id="mainImage" src="${escapeHTML(mainImage)}" alt="${escapeHTML(product.title)}" style="width:100%;height:auto;max-height:800px;object-fit:contain;border-radius:8px;cursor:zoom-in; transition: opacity 0.3s;"><button class="main-arrow left" onclick="event.stopPropagation(); changeMainImage(-1)" aria-label="Previous Image"><i class="fa-solid fa-chevron-left"></i></button><button class="main-arrow right" onclick="event.stopPropagation(); changeMainImage(1)" aria-label="Next Image"><i class="fa-solid fa-chevron-right"></i></button></div></div>
+            <div class="product-image-section"><div id="mainImageWrapper" style="background:#F8FAFC;border-radius:12px;padding:15px;display:flex;align-items:center;justify-content:center;position:relative; height: 100%; overflow: hidden;"><img id="mainImage" src="${escapeHTML(mainImage)}" loading="eager" alt="${escapeHTML(product.title)}" style="width:100%;height:auto;max-height:800px;object-fit:contain;border-radius:8px;cursor:zoom-in; transition: opacity 0.3s;"><button class="main-arrow left" onclick="event.stopPropagation(); changeMainImage(-1)" aria-label="Previous Image"><i class="fa-solid fa-chevron-left"></i></button><button class="main-arrow right" onclick="event.stopPropagation(); changeMainImage(1)" aria-label="Next Image"><i class="fa-solid fa-chevron-right"></i></button></div></div>
             
             <div class="product-info-section">
                 <h1 style="font-size:1.8rem;margin-bottom:10px;">${escapeHTML(product.title)}</h1>
@@ -376,19 +373,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     function setMainImage(src, targetIndex) {
         const imgEl = document.getElementById('mainImage');
         
-        // Preload check to swap instantly without delay
         const tempImg = new Image();
-        tempImg.src = src;
+        tempImg.src = getHighQualityImage(src, 800);
         
         const swap = () => {
-            imgEl.src = src;
+            imgEl.src = getHighQualityImage(src, 800);
             imgEl.style.opacity = '1';
         };
 
         if (tempImg.complete) {
-            swap(); // Instantly show if already cached
+            swap(); 
         } else {
-            imgEl.style.opacity = '0.5'; // Fade slightly if still loading
+            imgEl.style.opacity = '0.5'; 
             tempImg.onload = swap;
         }
         
@@ -444,9 +440,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     let scale = 1; let isDragging = false; let wasDragged = false; let startX, startY, translateX = 0, translateY = 0;
     function updateTransform() { imgElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`; if (scale > 1) zoomPanContainer.style.cursor = isDragging ? 'grabbing' : 'grab'; else zoomPanContainer.style.cursor = 'zoom-in'; }
     function resetZoomPan() { scale = 1; translateX = 0; translateY = 0; updateTransform(); }
-    window.openFullScreenImage = function(index) { window.currentMainImageIndex = index; imgElement.src = galleryImages[window.currentMainImageIndex]; resetZoomPan(); modal.style.display = 'flex'; document.body.style.overflow = 'hidden'; };
+    window.openFullScreenImage = function(index) { window.currentMainImageIndex = index; imgElement.src = getHighQualityImage(galleryImages[window.currentMainImageIndex], 1200); resetZoomPan(); modal.style.display = 'flex'; document.body.style.overflow = 'hidden'; };
     window.closeFullScreenImage = function(e) { if (e) e.stopPropagation(); modal.style.display = 'none'; document.body.style.overflow = 'auto'; };
-    window.changeFullScreenImage = function(direction, e) { if (e) e.stopPropagation(); if (galleryImages.length <= 1) return; let newIndex = window.currentMainImageIndex + direction; if (newIndex < 0) newIndex = galleryImages.length - 1; if (newIndex >= galleryImages.length) newIndex = 0; window.currentMainImageIndex = newIndex; imgElement.src = galleryImages[window.currentMainImageIndex]; resetZoomPan(); document.getElementById('mainImage').src = galleryImages[window.currentMainImageIndex]; container.querySelectorAll('.gallery-thumb').forEach((t, i) => { t.style.borderColor = (i === window.currentMainImageIndex) ? '#FF5A3C' : '#E2E8F0'; }); };
+    window.changeFullScreenImage = function(direction, e) { if (e) e.stopPropagation(); if (galleryImages.length <= 1) return; let newIndex = window.currentMainImageIndex + direction; if (newIndex < 0) newIndex = galleryImages.length - 1; if (newIndex >= galleryImages.length) newIndex = 0; window.currentMainImageIndex = newIndex; imgElement.src = getHighQualityImage(galleryImages[window.currentMainImageIndex], 1200); resetZoomPan(); document.getElementById('mainImage').src = getHighQualityImage(galleryImages[window.currentMainImageIndex], 800); container.querySelectorAll('.gallery-thumb').forEach((t, i) => { t.style.borderColor = (i === window.currentMainImageIndex) ? '#FF5A3C' : '#E2E8F0'; }); };
     
     async function loadCustomerReviews() {
         const { data: reviews } = await window.supabaseClient.from('product_reviews').select('*').eq('product_id', product.id).eq('status', 'approved').order('created_at', { ascending: false });
