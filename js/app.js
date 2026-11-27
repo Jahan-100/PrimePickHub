@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer — v84 (Fixed Category Highlight)
+ * PrimePickHub Homepage Renderer — v85 (Final Fixes)
  */
 
 if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
@@ -96,7 +96,7 @@ function getCategoryIcon(cat) {
     return `<div style="width:100%; height:100%; position:relative; display:flex; align-items:center; justify-content:center;"><img src="/assets/${slug}-icon.webp" alt="${escapeHTML(cat.name)}" style="width:100%; height:100%; object-fit:contain; border-radius:50%; background:#fff; position:absolute; top:0; left:0;" onerror="if(this.src.includes('.webp')) { this.src = this.src.replace('.webp', '.jpg'); } else if(this.src.includes('.jpg')) { this.src = this.src.replace('.jpg', '.png'); } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }"><span style="display:none; font-size:2.2rem; align-items:center; justify-content:center; height:100%; width:100%;">${emoji}</span></div>`;
 }
 
-let allCategoriesGlobal = [], activeCategoriesSet = new Set(), hoverTimeout;
+let allCategoriesGlobal = [], activeCategoriesSet = new Set(), hoverTimeout, selectedCategorySlug = 'all';
 
 async function fetchActiveCategories() {
     if (!window.supabaseClient) return;
@@ -140,7 +140,7 @@ async function renderDynamicCategories() {
     });
     const catContainer = document.getElementById('categoryScrollContainer');
     if (catContainer) {
-        catContainer.innerHTML = topCats.map(c => `<a href="javascript:void(0)" class="category-item ${c.slug.trim().toLowerCase() === 'all' ? 'active' : ''}" data-slug="${c.slug}"><div class="cat-icon" style="overflow:hidden;" ${c.slug.trim().toLowerCase() === 'all' ? 'data-is-all="true"' : ''}>${c.slug.trim().toLowerCase() === 'all' ? '<span style="color:#EF4444; font-size: 2.2rem; display:flex; align-items:center; justify-content:center; height:100%;">❤️</span>' : getCategoryIcon(c)}</div><span>${c.name}</span></a>`).join('');
+        catContainer.innerHTML = topCats.map(c => `<a href="javascript:void(0)" class="category-item ${c.slug.trim().toLowerCase() === selectedCategorySlug ? 'active' : ''}" data-slug="${c.slug}"><div class="cat-icon" style="overflow:hidden;" ${c.slug.trim().toLowerCase() === 'all' ? 'data-is-all="true"' : ''}>${c.slug.trim().toLowerCase() === 'all' ? '<span style="color:#EF4444; font-size: 2.2rem; display:flex; align-items:center; justify-content:center; height:100%;">❤️</span>' : getCategoryIcon(c)}</div><span>${c.name}</span></a>`).join('');
         const isHoverDevice = window.matchMedia('(hover: hover)').matches;
         
         catContainer.querySelectorAll('.category-item').forEach(el => {
@@ -159,7 +159,8 @@ async function renderDynamicCategories() {
                 const catSlug = this.dataset.slug;
                 const panel = document.getElementById('categoryHoverPanel');
                 
-                // Remove active from all elements
+                selectedCategorySlug = catSlug; // Save selected state
+
                 document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
                 this.classList.add('active');
 
@@ -174,8 +175,7 @@ async function renderDynamicCategories() {
                 if (subCats.length > 0) {
                     if (panel.style.display === 'flex' && panel.dataset.activeSlug === catSlug) {
                         panel.style.display = 'none'; panel.dataset.activeSlug = '';
-                        // Revert to 'all' active if sub-panel is closed
-                        document.querySelector('#categoryScrollContainer .category-item[data-slug="all"]')?.classList.add('active');
+                        document.querySelector(`#categoryScrollContainer .category-item[data-slug="${selectedCategorySlug}"]`)?.classList.add('active');
                     } else {
                         renderHoverPanel(catSlug, this);
                         panel.dataset.activeSlug = catSlug;
@@ -193,7 +193,9 @@ async function renderDynamicCategories() {
                     const panel = document.getElementById('categoryHoverPanel');
                     if (panel) panel.style.display = 'none';
                     document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
-                    const defaultCat = document.querySelector('#categoryScrollContainer .category-item[data-slug="all"]');
+                    
+                    // Restore to clicked category, not just 'all'
+                    const defaultCat = document.querySelector(`#categoryScrollContainer .category-item[data-slug="${selectedCategorySlug}"]`) || document.querySelector('#categoryScrollContainer .category-item[data-slug="all"]');
                     if (defaultCat) defaultCat.classList.add('active');
                 }, 200);
             });
@@ -204,13 +206,14 @@ async function renderDynamicCategories() {
             if (panel && panel.style.display === 'flex' && !e.target.closest('.category-item') && !e.target.closest('#categoryHoverPanel')) {
                 panel.style.display = 'none'; panel.dataset.activeSlug = '';
                 document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
-                document.querySelector('#categoryScrollContainer .category-item[data-slug="all"]')?.classList.add('active');
+                const target = document.querySelector(`#categoryScrollContainer .category-item[data-slug="${selectedCategorySlug}"]`) || document.querySelector('#categoryScrollContainer .category-item[data-slug="all"]');
+                if (target) target.classList.add('active');
             }
         });
     }
     const dropdownMenu = document.getElementById('categoryDropdownMenu');
     if (dropdownMenu) {
-        dropdownMenu.innerHTML = topCats.map(c => `<li data-value="${c.slug}" class="${c.slug.trim().toLowerCase() === 'all' ? 'active' : ''}" onclick="selectCatDropdown('${c.slug}', '${c.name}', this)">${c.name}</li>`).join('');
+        dropdownMenu.innerHTML = topCats.map(c => `<li data-value="${c.slug}" class="${c.slug.trim().toLowerCase() === selectedCategorySlug ? 'active' : ''}" onclick="selectCatDropdown('${c.slug}', '${c.name}', this)">${c.name}</li>`).join('');
     }
 }
 
@@ -226,10 +229,13 @@ function renderHoverPanel(mainSlug, targetElement) {
         html += `<div class="sub-cat-col"><div class="sub-cat-title" data-slug="${sub.slug}" data-name="${escapeHTML(sub.name)}">${escapeHTML(sub.name)}</div>${minis.length > 0 ? `<div class="mini-list">${minis.map(m => `<div class="mini-item" data-slug="${m.slug}" data-name="${escapeHTML(m.name)}">${escapeHTML(m.name)}</div>`).join('')}</div>` : ''}</div>`;
     });
     panel.innerHTML = html;
+    
+    // For subcategory clicks, we keep the parent highlighted
     panel.querySelectorAll('.sub-cat-title').forEach(el => {
         el.addEventListener('click', function(e) {
             e.preventDefault();
             document.getElementById('categoryHoverPanel').style.display = 'none';
+            selectedCategorySlug = mainSlug; 
             loadCategoryProducts(this.dataset.slug, this.dataset.name);
         });
     });
@@ -237,9 +243,11 @@ function renderHoverPanel(mainSlug, targetElement) {
         el.addEventListener('click', function(e) {
             e.preventDefault(); e.stopPropagation();
             document.getElementById('categoryHoverPanel').style.display = 'none';
+            selectedCategorySlug = mainSlug;
             loadCategoryProducts(this.dataset.slug, this.dataset.name);
         });
     });
+    
     const wrapper = document.querySelector('.category-nav-wrapper');
     const wrapperRect = wrapper.getBoundingClientRect();
     const targetRect = targetElement.getBoundingClientRect();
@@ -271,8 +279,17 @@ async function loadCategoryProducts(catSlug, catName) {
             renderProductsGrid(normalProducts, grid);
         } else {
             const fetchSlugs = getAllDescendantSlugs(catSlug, allCategoriesGlobal);
-            const products = await API.searchProducts({ category: fetchSlugs }) || [];
-            renderProductsGrid(products.filter(p => p.is_available !== false), grid);
+            
+            // Direct Supabase fetch to fix empty grid issues
+            const { data: products, error } = await window.supabaseClient
+                .from('products')
+                .select('*, affiliate_offers(*)')
+                .in('category_slug', fetchSlugs)
+                .eq('is_available', true)
+                .order('created_at', { ascending: false });
+                
+            if (error) throw error;
+            renderProductsGrid((products || []).filter(p => p.is_available !== false), grid);
         }
     } catch (err) { console.error("Product Load Error:", err); showGridMessage(grid, 'Error loading products.'); }
 }
@@ -560,9 +577,11 @@ window.toggleNotifPanel = function(e) {
 
 window.clearAllNotifs = function(e) {
     if (e) e.stopPropagation();
-    readNotifications = allNotifications.map(n => n.id);
-    localStorage.setItem('read_notifications', JSON.stringify(readNotifications));
+    allNotifications = []; // Clear the array completely
+    readNotifications = [];
+    localStorage.setItem('read_notifications', JSON.stringify([]));
     updateNotifBadge();
+    renderNotifPanel();
 };
 
 window.deleteNotif = function(e, id) {
