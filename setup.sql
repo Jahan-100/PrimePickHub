@@ -1,7 +1,9 @@
 -- ============================================================
--- PrimePickHub — SAFE ADDITIVE MIGRATION v4.0
--- Run in Supabase SQL Editor. NO DATA LOSS.
+-- PrimePickHub — SAFE ADDITIVE MIGRATION (FIXED v4.1)
 -- ============================================================
+
+-- ⭐ 0. Enable required extensions
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- ⭐ 1. is_admin() helper (SECURITY DEFINER — no recursion)
 CREATE OR REPLACE FUNCTION public.is_admin()
@@ -24,20 +26,37 @@ ALTER TABLE public.products ADD COLUMN IF NOT EXISTS meta_title TEXT;
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS meta_description TEXT;
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';
 
--- ⭐ 5. save_product_offers RPC (admin-only, atomic)
+-- ⭐ 5. save_product_offers RPC (FIXED: Safe UUID handling)
 CREATE OR REPLACE FUNCTION public.save_product_offers(p_product_id UUID, p_offers JSONB)
 RETURNS VOID LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_id UUID;
 BEGIN
   IF NOT public.is_admin() THEN RAISE EXCEPTION 'Admin access required'; END IF;
   DELETE FROM public.affiliate_offers WHERE product_id = p_product_id;
   IF jsonb_array_length(p_offers) = 0 THEN RETURN; END IF;
-  INSERT INTO public.affiliate_offers (id, product_id, store_name, product_color, color_name, variation_name, affiliate_url, price, sale_price, commission_rate, currency)
-  SELECT COALESCE(NULLIF(o->>'id', '')::uuid, gen_random_uuid()), p_product_id, o->>'store_name',
-    NULLIF(o->>'product_color', ''), NULLIF(o->>'color_name', ''), NULLIF(o->>'variation_name', ''),
-    o->>'affiliate_url', COALESCE(NULLIF(o->>'price', '')::numeric, 0),
-    NULLIF(o->>'sale_price', '')::numeric, COALESCE(NULLIF(o->>'commission_rate', '')::numeric, 0),
-    COALESCE(NULLIF(o->>'currency', ''), 'USD')
-  FROM jsonb_array_elements(p_offers) AS o;
+
+  FOR o IN SELECT * FROM jsonb_array_elements(p_offers) LOOP
+    -- Safe UUID generation if the provided ID is not a valid UUID
+    BEGIN
+      v_id := (o->>'id')::UUID;
+    EXCEPTION WHEN OTHERS THEN
+      v_id := gen_random_uuid();
+    END;
+    
+    IF v_id IS NULL THEN v_id := gen_random_uuid(); END IF;
+
+    INSERT INTO public.affiliate_offers (
+      id, product_id, store_name, product_color, color_name, variation_name,
+      affiliate_url, price, sale_price, commission_rate, currency
+    ) VALUES (
+      v_id, p_product_id, o->>'store_name',
+      NULLIF(o->>'product_color', ''), NULLIF(o->>'color_name', ''), NULLIF(o->>'variation_name', ''),
+      o->>'affiliate_url', COALESCE(NULLIF(o->>'price', '')::numeric, 0),
+      NULLIF(o->>'sale_price', '')::numeric, COALESCE(NULLIF(o->>'commission_rate', '')::numeric, 0),
+      COALESCE(NULLIF(o->>'currency', ''), 'USD')
+    );
+  END LOOP;
 END; $$;
 
 -- ⭐ 6. Fix product_reviews insert policy (force pending, limit images)
@@ -90,10 +109,15 @@ CREATE POLICY "admin insert notifications" ON public.app_notifications FOR INSER
 DROP POLICY IF EXISTS "admin read subscribers" ON public.newsletter_subscribers;
 CREATE POLICY "admin read subscribers" ON public.newsletter_subscribers FOR SELECT TO authenticated USING (public.is_admin());
 
--- ⭐ 11. Storage bucket limits
-UPDATE storage.buckets SET file_size_limit = 5242880,
-  allowed_mime_types = ARRAY['image/jpeg','image/png','image/webp','image/gif']
-  WHERE id IN ('customer-review-photos', 'product-images');
+-- ⭐ 11. Storage bucket limits (Safe update)
+DO $$
+BEGIN
+  UPDATE storage.buckets SET file_size_limit = 5242880,
+    allowed_mime_types = ARRAY['image/jpeg','image/png','image/webp','image/gif']
+    WHERE id IN ('customer-review-photos', 'product-images');
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'Storage bucket update skipped (check if buckets exist).';
+END $$;
 
 -- ⭐ 12. Performance indexes
 CREATE INDEX IF NOT EXISTS idx_clicks_device ON public.clicks(device_type);
