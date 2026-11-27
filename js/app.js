@@ -1,6 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer — v83
- * Reconstructed from truncated upload. All original features preserved.
+ * PrimePickHub Homepage Renderer — v84 (Fixed Category Highlight)
  */
 
 if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
@@ -143,6 +142,7 @@ async function renderDynamicCategories() {
     if (catContainer) {
         catContainer.innerHTML = topCats.map(c => `<a href="javascript:void(0)" class="category-item ${c.slug.trim().toLowerCase() === 'all' ? 'active' : ''}" data-slug="${c.slug}"><div class="cat-icon" style="overflow:hidden;" ${c.slug.trim().toLowerCase() === 'all' ? 'data-is-all="true"' : ''}>${c.slug.trim().toLowerCase() === 'all' ? '<span style="color:#EF4444; font-size: 2.2rem; display:flex; align-items:center; justify-content:center; height:100%;">❤️</span>' : getCategoryIcon(c)}</div><span>${c.name}</span></a>`).join('');
         const isHoverDevice = window.matchMedia('(hover: hover)').matches;
+        
         catContainer.querySelectorAll('.category-item').forEach(el => {
             if (isHoverDevice) {
                 el.addEventListener('mouseenter', function(e) {
@@ -158,31 +158,35 @@ async function renderDynamicCategories() {
                 e.preventDefault();
                 const catSlug = this.dataset.slug;
                 const panel = document.getElementById('categoryHoverPanel');
+                
+                // Remove active from all elements
+                document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
+                this.classList.add('active');
+
                 if (catSlug === 'all') {
                     panel.style.display = 'none'; panel.dataset.activeSlug = '';
-                    document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
-                    this.classList.add('active');
                     loadCategoryProducts('all', 'For You'); return;
                 }
+                
                 const mainCat = allCategoriesGlobal.find(c => c.slug === catSlug);
                 const subCats = allCategoriesGlobal.filter(c => c.parent === catSlug && activeCategoriesSet.has(c.slug.toLowerCase()));
+                
                 if (subCats.length > 0) {
                     if (panel.style.display === 'flex' && panel.dataset.activeSlug === catSlug) {
                         panel.style.display = 'none'; panel.dataset.activeSlug = '';
+                        // Revert to 'all' active if sub-panel is closed
+                        document.querySelector('#categoryScrollContainer .category-item[data-slug="all"]')?.classList.add('active');
                     } else {
-                        document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
-                        this.classList.add('active');
                         renderHoverPanel(catSlug, this);
                         panel.dataset.activeSlug = catSlug;
                     }
                 } else {
                     panel.style.display = 'none'; panel.dataset.activeSlug = '';
-                    document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
-                    this.classList.add('active');
                     loadCategoryProducts(catSlug, mainCat ? mainCat.name : catSlug);
                 }
             });
         });
+        
         if (isHoverDevice) {
             document.querySelector('.category-nav-wrapper')?.addEventListener('mouseleave', function(e) {
                 hoverTimeout = setTimeout(() => {
@@ -194,10 +198,13 @@ async function renderDynamicCategories() {
                 }, 200);
             });
         }
+        
         document.addEventListener('click', function(e) {
             const panel = document.getElementById('categoryHoverPanel');
             if (panel && panel.style.display === 'flex' && !e.target.closest('.category-item') && !e.target.closest('#categoryHoverPanel')) {
                 panel.style.display = 'none'; panel.dataset.activeSlug = '';
+                document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
+                document.querySelector('#categoryScrollContainer .category-item[data-slug="all"]')?.classList.add('active');
             }
         });
     }
@@ -387,7 +394,6 @@ window.scrollFlash = function(dir) { const c = document.getElementById('flashSal
 window.scrollFlash2 = function(dir) { const c = document.getElementById('flashSaleScroll2'); if (c) c.scrollLeft += (dir === 'left' ? -300 : 300); };
 window.scrollSpecial = function(dir) { const c = document.getElementById('specialDealScroll'); if (c) c.scrollLeft += (dir === 'left' ? -300 : 300); };
 
-// ⭐ AD FALLBACK (completed — was truncated here in original)
 function renderAdFallback(products) {
     const topSlot = document.getElementById('ad-fallback-top');
     const midSlot = document.getElementById('ad-fallback-middle');
@@ -413,7 +419,6 @@ function renderAdFallback(products) {
     if (midSlot) midSlot.innerHTML = adHtml;
 }
 
-// ⭐ HOMEPAGE DATA LOADERS
 async function loadHomepageProducts() {
     const grid = document.getElementById('productGrid');
     if (!grid) return;
@@ -499,7 +504,6 @@ async function loadLatestBlog() {
     } catch (err) { console.warn('Latest blog error:', err); section.style.display = 'none'; }
 }
 
-// ⭐ NOTIFICATIONS
 let allNotifications = [];
 let readNotifications = JSON.parse(localStorage.getItem('read_notifications') || '[]');
 
@@ -575,7 +579,6 @@ document.addEventListener('click', (e) => {
     if (panel && panel.style.display === 'block' && !e.target.closest('.notif-wrapper')) panel.style.display = 'none';
 });
 
-// ⭐ SEARCH
 function setupSearch() {
     const searchInput = document.getElementById('searchInput');
     const searchBtn = document.getElementById('searchBtn');
@@ -597,7 +600,6 @@ function setupSearch() {
     }
 }
 
-// ⭐ NEWSLETTER
 function setupNewsletter() {
     const form = document.getElementById('newsletterForm');
     if (!form) return;
@@ -625,7 +627,6 @@ function setupNewsletter() {
     });
 }
 
-// ⭐ INITIALIZATION
 document.addEventListener('DOMContentLoaded', async () => {
     const splash = document.getElementById('splash-screen');
     if (splash) setTimeout(() => hideSplash(), 400);
