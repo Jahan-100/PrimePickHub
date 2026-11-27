@@ -4,7 +4,6 @@ let globalCategories = [];
 let currentGalleryFiles = []; 
 let currentAdminReviews = []; 
 
-// ⭐ Security: Helper to get token for API calls ⭐
 async function getAuthToken() {
     const { data: { session } } = await window.supabaseClient.auth.getSession();
     return session ? session.access_token : null;
@@ -409,7 +408,6 @@ function setupProductForm() {
                 productId = newProduct.id; 
             }
             
-            // ⭐ FIX: Safe RPC Transaction for Offers ⭐
             const offersToInsert = [];
             if (price > 0 || variations.length === 0) { 
                 mainOfferData.product_id = productId; 
@@ -429,7 +427,6 @@ function setupProductForm() {
                 });
                 if (rpcErr) throw rpcErr;
             } else {
-                // Delete offers if none provided
                 await window.supabaseClient.from('affiliate_offers').delete().eq('product_id', productId);
             }
 
@@ -487,7 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ==========================================
-// AI HUNTER / DISCOVERED PRODUCTS
+// AI HUNTER / DISCOVERED PRODUCTS (COMPLETED)
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     function setupScrollButtons(upBtnId, downBtnId, wrapperId) { const upBtn = document.getElementById(upBtnId); const downBtn = document.getElementById(downBtnId); const wrapper = document.getElementById(wrapperId); if (!upBtn || !downBtn || !wrapper) return; let scrollInterval; const startScroll = (direction) => { scrollInterval = setInterval(() => { if (direction === 'up') wrapper.scrollTop -= 10; else wrapper.scrollTop += 10; }, 20); }; const stopScroll = () => clearInterval(scrollInterval); upBtn.addEventListener('mousedown', () => startScroll('up')); upBtn.addEventListener('mouseup', stopScroll); upBtn.addEventListener('mouseleave', stopScroll); downBtn.addEventListener('mousedown', () => startScroll('down')); downBtn.addEventListener('mouseup', stopScroll); downBtn.addEventListener('mouseleave', stopScroll); }
@@ -498,200 +495,193 @@ document.addEventListener('DOMContentLoaded', () => {
     let allDiscovered = []; let selectedIds = new Set(); let seenProductIds = new Set(); let clickedProductIds = new Set(); 
     toggleBtn.addEventListener('click', () => { if (listContainer.style.display === 'none') { listContainer.style.display = 'block'; toggleBtn.innerText = 'Hide List'; toggleBtn.style.background = '#EF4444'; } else { listContainer.style.display = 'none'; toggleBtn.innerText = 'Show List'; toggleBtn.style.background = '#4f46e5'; } });
     async function loadDiscoveredProducts() { const { data, error } = await window.supabaseClient.from('discovered_products').select('*').order('created_at', { ascending: false }); if (error || !data) return; allDiscovered = data.map(p => { const isNew = !seenProductIds.has(p.id); seenProductIds.add(p.id); return { ...p, isNew }; }); selectedIds.clear(); if(selectAllCheckbox) selectAllCheckbox.checked = false; renderDiscoveredTable(); }
+    
+    window.markProductClicked = function(id, event) {
+        if (event) event.stopPropagation();
+        clickedProductIds.add(id);
+        const row = document.getElementById(`disc-${id}`);
+        if (row) {
+            row.classList.remove('row-new');
+            row.classList.add('row-clicked');
+        }
+    }
+
+    window.toggleDiscoveredSelection = function(id, isChecked) {
+        if (isChecked) selectedIds.add(id);
+        else selectedIds.delete(id);
+        if (selectAllCheckbox) {
+            const checkboxes = document.querySelectorAll('.disc-checkbox');
+            if (checkboxes.length > 0) {
+                selectAllCheckbox.checked = Array.from(checkboxes).every(cb => cb.checked);
+            }
+        }
+    }
+
+    window.approveDiscovered = async function(id) {
+        try {
+            const product = allDiscovered.find(p => p.id === id);
+            if (!product) return;
+
+            const { data, error } = await window.supabaseClient.from('products').insert([{
+                title: product.title,
+                slug: product.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+                image_url: product.image_url,
+                category_slug: product.category ? product.category.toLowerCase() : 'electronics',
+                description: `Imported from ${product.platform}. Price: ${product.price}`,
+                review_html: `<p>Trending product found on ${product.platform}.</p>`,
+                is_available: true
+            }]).select().single();
+
+            if (error) throw error;
+
+            await window.supabaseClient.from('affiliate_offers').insert([{
+                product_id: data.id,
+                store_name: product.platform || 'Store',
+                price: product.price || 0,
+                affiliate_url: product.original_url
+            }]);
+
+            alert("Product approved and added to main list!");
+            await window.supabaseClient.from('discovered_products').delete().eq('id', id);
+            await loadDiscoveredProducts();
+            await loadProductsList();
+        } catch (err) {
+            alert("Error approving product: " + err.message);
+        }
+    }
+
+    rejectSelectedBtn.addEventListener('click', async () => {
+        if (selectedIds.size === 0) return alert('Please select products to reject.');
+        if (!confirm(`Are you sure you want to reject ${selectedIds.size} products?`)) return;
+        try {
+            const ids = Array.from(selectedIds);
+            const { error } = await window.supabaseClient.from('discovered_products').delete().in('id', ids);
+            if (error) throw error;
+            alert("Selected products rejected.");
+            selectedIds.clear();
+            if (selectAllCheckbox) selectAllCheckbox.checked = false;
+            await loadDiscoveredProducts();
+        } catch (err) {
+            alert("Error: " + err.message);
+        }
+    });
+
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.disc-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = this.checked;
+                if (this.checked) selectedIds.add(cb.value);
+                else selectedIds.delete(cb.value);
+            });
+        });
+    }
+
     function renderDiscoveredTable() {
         const europeCountries = ['europe', 'uk', 'germany', 'france', 'spain', 'italy', 'netherlands', 'poland', 'sweden', 'belgium', 'switzerland', 'austria', 'ireland', 'denmark', 'finland', 'norway', 'portugal', 'greece'];
         let filtered = allDiscovered.filter(p => { const matchPlatform = filterPlatform.value === 'all' || p.platform === filterPlatform.value; let matchCountry = false; if (filterCountry.value === 'all') { matchCountry = true; } else if (filterCountry.value === 'Europe') { matchCountry = p.country ? europeCountries.some(c => p.country.toLowerCase().includes(c)) : false; } else { matchCountry = p.country === filterCountry.value; } const pCat = p.category ? p.category.toLowerCase() : 'general'; const matchCategory = filterCategory.value === 'all' || pCat.includes(filterCategory.value.toLowerCase()); return matchPlatform && matchCountry && matchCategory; });
         if (sortSales.value === 'high-low') { filtered.sort((a, b) => (b.sales_count || 0) - (a.sales_count || 0)); } else if (sortSales.value === 'low-high') { filtered.sort((a, b) => (a.sales_count || 0) - (b.sales_count || 0)); } else if (sortSales.value === 'price-high-low') { filtered.sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0)); } else if (sortSales.value === 'price-low-high') { filtered.sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0)); }
         countEl.innerText = filtered.length; if (filtered.length === 0) { listBody.innerHTML = '<tr><td colspan="10" style="text-align:center;">No products match your filters.</td></tr>'; if(selectAllCheckbox) selectAllCheckbox.checked = false; return; }
-        listBody.innerHTML = filtered.map((p, index) => { let rowClass = 'row-existing'; if (clickedProductIds.has(p.id)) { rowClass = 'row-clicked'; } else if (p.isNew) { rowClass = 'row-new'; } return `<tr id="disc-${p.id}" class="${rowClass}" onclick="markProductClicked('${p.id}', event)"><td style="text-align:center;"><input type="checkbox" class="disc-checkbox" value="${p.id}" ${selectedIds.has(p.id) ? 'checked' : ''} onchange="toggleDiscoveredSelection('${p.id}', this.checked)" style="cursor:pointer; width:16px; height:16px; margin-right:5px;">${index + 1}</td><td style="text-align:center;"><img src="${p.image_url}" class="table-img" onerror="this.src='/assets/icon-192.png?v=4'"></td><td style="text-align: left; font-weight:600; font-size:0.75rem;">${p.title}</td><td style="text-align:center; font-weight:bold; color:#1E1B4B;">${p.price ? '$' + p.price : 'N/A'}</td><td style="text-align:center;"><span style="background:#f3e8ff; color:#6b21a8; padding:2px 6px; border-radius:4px; font-size:0.75rem;">${p.category || 'General'}</span></td><td style="text-align:center;"><span style="background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:0.75rem;">${p.country}</span></td><td style="text-align:center; font-size:0.8rem;">${p.platform || p.source}</td><td style="text-align:center; font-weight:bold; color:#16a34a; font-size:0.85rem;">${p.sales_count ? p.sales_count.toLocaleString() : 'N/A'}</td><td style="text-align:center;"><a href="${p.original_url}" target="_blank" style="color:#3b82f6; font-size:0.8rem; text-decoration:underline;" onclick="event.stopPropagation()">View</a></td><td onclick="event.stopPropagation()"><div style="display:flex; flex-direction:row; gap:4px; justify-content: center;"><button onclick="approveDiscovered('${p.id}')" style="background:#10B981; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">Approve</button><button onclick="rejectDiscovered('${p.id}')" style="background:#EF4444; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem;">Reject</button></div></td></tr>`; }).join('');
-        const checkboxes = document.querySelectorAll('.disc-checkbox'); if (checkboxes.length > 0 && selectAllCheckbox) selectAllCheckbox.checked = Array.from(checkboxes).every(cb => cb.checked);
+        listBody.innerHTML = filtered.map((p, index) => { let rowClass = 'row-existing'; if (clickedProductIds.has(p.id)) { rowClass = 'row-clicked'; } else if (p.isNew) { rowClass = 'row-new'; } return `<tr id="disc-${p.id}" class="${rowClass}" onclick="markProductClicked('${p.id}', event)"><td style="text-align:center;"><input type="checkbox" class="disc-checkbox" value="${p.id}" ${selectedIds.has(p.id) ? 'checked' : ''} onchange="toggleDiscoveredSelection('${p.id}', this.checked)" style="cursor:pointer; width:16px; height:16px; margin-right:5px;">${index + 1}</td><td style="text-align:center;"><img src="${p.image_url}" class="table-img" onerror="this.src='/assets/icon-192.png?v=4'"></td><td style="text-align: left; font-weight:600; font-size:0.75rem;">${p.title}</td><td style="text-align:center; font-weight:bold; color:#1E1B4B;">${p.price ? '$' + p.price : 'N/A'}</td><td style="text-align:center;"><span style="background:#f3e8ff; color:#6b21a8; padding:2px 6px; border-radius:4px; font-size:0.75rem;">${p.category || 'General'}</span></td><td style="text-align:center;"><span style="background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:0.75rem;">${p.country}</span></td><td style="text-align:center; font-size:0.8rem;">${p.platform || p.source}</td><td style="text-align:center; font-weight:bold; color:#16a34a; font-size:0.85rem;">${p.sales_count ? p.sales_count.toLocaleString() : 'N/A'}</td><td style="text-align:center;"><a href="${p.original_url}" target="_blank" style="color:#3b82f6; font-size:0.8rem; text-decoration:underline;" onclick="event.stopPropagation()">View</a></td><td onclick="event.stopPropagation()"><div style="display:flex; flex-direction:row; gap:4px; justify-content: center;"><button onclick="approveDiscovered('${p.id}')" style="background:#10B981; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.75rem; font-weight:bold;">Approve</button></div></td></tr>`; }).join('');
     }
-    if (selectAllCheckbox) { selectAllCheckbox.addEventListener('change', (e) => { const isChecked = e.target.checked; document.querySelectorAll('.disc-checkbox').forEach(cb => { cb.checked = isChecked; const id = cb.value; if (isChecked) selectedIds.add(id); else selectedIds.delete(id); }); }); }
-    window.markProductClicked = (id, event) => { if (event.target.tagName === 'INPUT' || event.target.tagName === 'BUTTON' || event.target.tagName === 'A' || event.target.tagName === 'IMG') return; clickedProductIds.add(id); const row = document.getElementById(`disc-${id}`); if (row) { row.classList.remove('row-new', 'row-existing'); row.classList.add('row-clicked'); } };
-    filterPlatform.addEventListener('change', renderDiscoveredTable); filterCountry.addEventListener('change', renderDiscoveredTable); filterCategory.addEventListener('change', renderDiscoveredTable); sortSales.addEventListener('change', renderDiscoveredTable);
-    window.toggleDiscoveredSelection = (id, isChecked) => { if (isChecked) selectedIds.add(id); else selectedIds.delete(id); const checkboxes = document.querySelectorAll('.disc-checkbox'); if (selectAllCheckbox) selectAllCheckbox.checked = Array.from(checkboxes).every(cb => cb.checked); };
-    rejectSelectedBtn.addEventListener('click', async () => { if (selectedIds.size === 0) return alert("Please select at least one product to reject."); if (!confirm(`Are you sure you want to reject ${selectedIds.size} products?`)) return; rejectSelectedBtn.innerText = "Rejecting..."; rejectSelectedBtn.disabled = true; try { const idsToDelete = Array.from(selectedIds); const { error } = await window.supabaseClient.from('discovered_products').delete().in('id', idsToDelete); if (error) throw error; selectedIds.clear(); if(selectAllCheckbox) selectAllCheckbox.checked = false; await loadDiscoveredProducts(); } catch (err) { alert("Error: " + err.message); } finally { rejectSelectedBtn.innerText = "Reject Selected"; rejectSelectedBtn.disabled = false; } });
-    
-    // ⭐ API CALL WITH TOKEN (Discover Products) ⭐
-    discoverBtn.addEventListener('click', async () => { 
-        const token = await getAuthToken();
-        const keyword = aiSearchKeyword.value.trim(); const originalText = discoverBtn.innerText; discoverBtn.innerText = keyword ? `⏳ Searching "${keyword}"...` : "⏳ Scraping... (1-2 Mins)"; discoverBtn.disabled = true; 
-        try { 
-            const res = await fetch('/api/discover-products', { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
-                body: JSON.stringify({ keyword: keyword }) 
-            }); 
-            const result = await res.json(); 
-            if (result.success) { alert(result.message); await loadDiscoveredProducts(); if (listContainer.style.display === 'none') { listContainer.style.display = 'block'; toggleBtn.innerText = 'Hide List'; toggleBtn.style.background = '#EF4444'; } } 
-            else { alert("Error: " + result.error); } 
-        } catch (err) { alert("Failed to connect to API. Check console for errors."); } 
-        finally { discoverBtn.innerText = originalText; discoverBtn.disabled = false; } 
+
+    discoverBtn.addEventListener('click', async () => {
+        const keyword = aiSearchKeyword ? aiSearchKeyword.value.trim() : '';
+        const originalText = discoverBtn.innerText; discoverBtn.innerText = "⏳ Searching... Please Wait"; discoverBtn.disabled = true;
+        try {
+            const token = await getAuthToken();
+            const res = await fetch('/api/discover-products', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ keyword: keyword })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Failed to discover products.");
+            alert(data.message || "Products discovered successfully!");
+            await loadDiscoveredProducts();
+            if (listContainer.style.display === 'none') {
+                listContainer.style.display = 'block';
+                toggleBtn.innerText = 'Hide List';
+                toggleBtn.style.background = '#EF4444';
+            }
+        } catch (err) {
+            alert("Error: " + err.message);
+        } finally {
+            discoverBtn.innerText = originalText; discoverBtn.disabled = false;
+        }
     });
 
-    window.approveDiscovered = function(id) { const product = allDiscovered.find(p => p.id === id); if (!product) return; document.getElementById('pTitle').value = product.title; document.getElementById('pImg').value = product.image_url; document.getElementById('pAffUrl').value = product.original_url; document.getElementById('pStore').value = (product.platform || product.source || 'amazon').toLowerCase(); document.getElementById('pDesc').value = `Top selling product in ${product.country} on ${product.platform || product.source}.`; document.getElementById('pCurrency').value = 'USD'; if (product.price) document.getElementById('pPrice').value = product.price; const formContainer = document.getElementById('addProductContainer'); const toggleProductBtn = document.getElementById('toggleAddProductBtn'); if (formContainer.style.display === 'none') { formContainer.style.display = 'block'; toggleProductBtn.textContent = 'Hide Product Form'; toggleProductBtn.style.background = '#EF4444'; } document.getElementById('productForm').scrollIntoView({ behavior: 'smooth' }); document.getElementById('pAffUrl').focus(); };
-    window.rejectDiscovered = async function(id) { if(!confirm("Remove this product from the list?")) return; const { error } = await window.supabaseClient.from('discovered_products').delete().eq('id', id); if (!error) { selectedIds.delete(id); await loadDiscoveredProducts(); } };
     loadDiscoveredProducts();
 });
 
-
 // ==========================================
-// CUSTOMER REVIEWS LOGIC
+// CUSTOMER REVIEWS MANAGEMENT
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     const toggleReviewsBtn = document.getElementById('toggleReviewsBtn');
     const reviewsContainer = document.getElementById('reviewsContainer');
-    const reviewsListBody = document.getElementById('reviewsListBody');
-
-    if (!toggleReviewsBtn) return;
+    if (!toggleReviewsBtn || !reviewsContainer) return;
 
     toggleReviewsBtn.addEventListener('click', () => {
         if (reviewsContainer.style.display === 'none') {
             reviewsContainer.style.display = 'block';
-            toggleReviewsBtn.textContent = 'Hide Reviews';
-            toggleReviewsBtn.style.background = '#EF4444';
-            window.loadAdminReviews();
+            loadReviews();
         } else {
             reviewsContainer.style.display = 'none';
-            toggleReviewsBtn.textContent = 'Show Pending & Approved Reviews';
-            toggleReviewsBtn.style.background = '#16a34a';
         }
     });
 
-    window.loadAdminReviews = async function() {
-        reviewsListBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Fetching reviews...</td></tr>';
-        
-        const { data: reviews, error } = await window.supabaseClient
-            .from('product_reviews')
-            .select('*, products(title, slug)') 
-            .order('created_at', { ascending: false });
+    async function loadReviews() {
+        const tbody = document.getElementById('reviewsListBody');
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Loading...</td></tr>';
+        const { data, error } = await window.supabaseClient.from('product_reviews').select('*, products(title)').order('created_at', { ascending: false });
+        if (error) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">Error: ${error.message}</td></tr>`; return; }
+        if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No reviews found.</td></tr>'; return; }
 
-        if (error) {
-            reviewsListBody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:red;">Error: ${error.message}</td></tr>`;
-            return;
-        }
-
-        if (!reviews || reviews.length === 0) {
-            reviewsListBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No reviews found.</td></tr>';
-            return;
-        }
-
-        currentAdminReviews = reviews; 
-
-        reviewsListBody.innerHTML = reviews.map((r, index) => {
-            const statusBadge = r.status === 'approved' 
-                ? `<span style="background:#10B981; color:white; padding:2px 6px; border-radius:4px; font-size:0.75rem;">APPROVED</span>`
-                : `<span style="background:#F59E0B; color:white; padding:2px 6px; border-radius:4px; font-size:0.75rem;">PENDING</span>`;
-
-            const imagesHtml = r.images && r.images.length > 0 ? `
-                <div style="display:flex; gap:5px; flex-wrap:wrap; margin-top:5px;">
-                    ${r.images.map((imgUrl, imgIdx) => `
-                        <div style="position:relative; display:inline-block;">
-                            <img src="${escapeHTML(imgUrl)}" onerror="this.src='/assets/icon-192.png?v=4'" style="width:40px; height:40px; object-fit:cover; border-radius:4px; cursor:pointer;" onclick="window.open('${escapeHTML(imgUrl)}', '_blank')">
-                            <button onclick="deleteSingleReviewImage('${r.id}', '${escapeHTML(imgUrl)}', ${imgIdx})" style="position:absolute; top:-5px; right:-5px; background:red; color:white; border:none; border-radius:50%; width:15px; height:15px; font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center;" title="Delete Image">&times;</button>
-                        </div>
-                    `).join('')}
-                </div>
-            ` : '<span style="font-size:0.75rem; color:#94A3B8;">No Images</span>';
-
-            let actionBtns = `
-                <button onclick="openEditReviewModal('${r.id}')" style="background:#3B82F6; color:white; padding:4px 8px; border:none; border-radius:4px; font-size:0.75rem; margin-bottom:3px; cursor:pointer; width:100%;">Edit</button>
-            `;
-            
-            if (r.status === 'pending') {
-                actionBtns += `
-                    <button onclick="approveReview('${r.id}')" style="background:#10B981; color:white; padding:4px 8px; border:none; border-radius:4px; font-size:0.75rem; margin-bottom:3px; cursor:pointer; width:100%;">Approve</button>
-                `;
-            }
-            
-            actionBtns += `<button onclick="deleteFullReview('${r.id}')" style="background:#EF4444; color:white; padding:4px 8px; border:none; border-radius:4px; font-size:0.75rem; cursor:pointer; width:100%;">Delete</button>`;
-
-            const productTitle = r.products?.title || 'Unknown Product';
-            const productSlug = r.products?.slug;
-            const productLink = productSlug ? `/product/${productSlug}` : '#';
-
-            return `
-                <tr>
-                    <td style="text-align:center;">${index + 1}</td>
-                    <td style="text-align:center; font-size:0.75rem;">
-                        <a href="${productLink}" target="_blank" style="color:#2563eb; text-decoration:underline; font-weight:bold;" title="${escapeHTML(productTitle)}">
-                            ${escapeHTML(productTitle).substring(0, 20)}${productTitle.length > 20 ? '...' : ''}
-                        </a>
-                    </td>
-                    <td style="text-align:center; font-weight:bold;">${escapeHTML(r.customer_name)}</td>
-                    <td style="text-align:center; color:#F59E0B;">${r.rating} ★</td>
-                    <td style="text-align:left; font-size:0.8rem; max-width:300px;">
-                        <div style="margin-bottom:5px;">${escapeHTML(r.review_text)}</div>
-                        ${imagesHtml}
-                    </td>
-                    <td style="text-align:center;">${statusBadge}</td>
-                    <td style="text-align:center; min-width:100px;">${actionBtns}</td>
-                </tr>
-            `;
+        currentAdminReviews = data;
+        tbody.innerHTML = data.map((r, i) => {
+            const statusColor = r.status === 'approved' ? '#10B981' : r.status === 'rejected' ? '#EF4444' : '#F59E0B';
+            const statusText = r.status.toUpperCase();
+            const images = r.images && r.images.length > 0 ? r.images.map(img => `<a href="${img}" target="_blank"><img src="${img}" style="width:30px; height:30px; object-fit:cover; border-radius:4px; margin-right:3px;"></a>`).join('') : 'No Images';
+            return `<tr>
+                <td style="text-align:center;">${i+1}</td>
+                <td>${escapeHTML(r.products?.title || 'Unknown')}</td>
+                <td>${escapeHTML(r.name)}<br><small>${escapeHTML(r.email || '')}</small></td>
+                <td style="text-align:center; color:#F59E0B;">${'★'.repeat(r.rating)}</td>
+                <td>${escapeHTML(r.review_text)}<br><div style="margin-top:5px;">${images}</div></td>
+                <td style="text-align:center; font-weight:bold; color:${statusColor};">${statusText}</td>
+                <td>
+                    <div class="action-btns">
+                        <button class="btn-edit" onclick="openEditReviewModal('${r.id}')">Edit</button>
+                        <button class="btn-delete" onclick="deleteReview('${r.id}')">Delete</button>
+                    </div>
+                </td>
+            </tr>`;
         }).join('');
     }
 
     window.openEditReviewModal = function(id) {
         const review = currentAdminReviews.find(r => r.id === id);
         if (!review) return;
-        
         document.getElementById('editReviewText').value = review.review_text;
         document.getElementById('editReviewModal').style.display = 'flex';
-        
-        document.getElementById('saveEditReviewBtn').onclick = async function() {
+        document.getElementById('saveEditReviewBtn').onclick = async () => {
             const newText = document.getElementById('editReviewText').value.trim();
-            if (!newText) return alert("Review text cannot be empty.");
-            
-            this.innerText = "Saving..."; this.disabled = true;
-            try {
-                const { error } = await window.supabaseClient.from('product_reviews').update({ review_text: newText }).eq('id', id);
-                if (error) throw error;
-                
+            if (!newText) return alert('Review text cannot be empty.');
+            const { error } = await window.supabaseClient.from('product_reviews').update({ review_text: newText }).eq('id', id);
+            if (error) alert('Error updating: ' + error.message);
+            else {
+                alert('Review updated successfully.');
                 document.getElementById('editReviewModal').style.display = 'none';
-                window.loadAdminReviews();
-            } catch (err) {
-                alert("Error saving review: " + err.message);
-            } finally {
-                this.innerText = "Save Changes"; this.disabled = false;
+                loadReviews();
             }
         };
-    }
+    };
 
-    window.approveReview = async function(id) {
-        if (!confirm("Approve this review to show on the website?")) return;
-        const { error } = await window.supabaseClient.from('product_reviews').update({ status: 'approved' }).eq('id', id);
-        if (error) alert("Error: " + error.message);
-        else loadAdminReviews();
-    }
-
-    window.deleteFullReview = async function(id) {
-        if (!confirm("Are you sure? This will permanently delete the review and its images.")) return;
-        try {
-            const { data: rev } = await window.supabaseClient.from('product_reviews').select('images').eq('id', id).single();
-            if (rev && rev.images && rev.images.length > 0) {
-                for (const imgUrl of rev.images) {
-                    const fileName = imgUrl.split('/').pop(); 
-                    await window.supabaseClient.storage.from('customer-review-photos').remove([fileName]).catch(()=>{});
-                }
-            }
-            const { error } = await window.supabaseClient.from('product_reviews').delete().eq('id', id);
-            if (error) throw error;
-            loadAdminReviews();
-        } catch (err) { alert("Error: " + err.message); }
-    }
-
-    window.deleteSingleReviewImage = async function(reviewId, imgUrl, imgIdx) {
-        if (!confirm("Delete this specific image?")) return;
-        try {
-            const fileName = imgUrl.split('/').pop();
-            await window.supabaseClient.storage.from('customer-review-photos').remove([fileName]).catch(()=>{});
-
-            const { data: rev } = await window.supabaseClient.from('product_reviews').select('images').eq('id', reviewId).single();
-            if (rev && rev.images) {
-                const newImages = rev.images.filter((_, i) => i !== imgIdx);
-                await window.supabaseClient.from('product_reviews').update({ images: newImages }).eq('id', reviewId);
-            }
-            loadAdminReviews();
-        } catch (err) { alert("Error deleting image: " + err.message); }
-    }
+    window.deleteReview = async function(id) {
+        if (!confirm('Delete this review?')) return;
+        const { error } = await window.supabaseClient.from('product_reviews').delete().eq('id', id);
+        if (error) alert('Error: ' + error.message);
+        else loadReviews();
+    };
 });
