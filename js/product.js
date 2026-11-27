@@ -220,19 +220,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         return html;
     }
 
-    let galleryImages = (product.gallery_images && product.gallery_images.length > 0) ? product.gallery_images.filter(Boolean) : (product.image_url ? [product.image_url] : []);
-    galleryImages = galleryImages.filter(url => typeof url === 'string' && url.startsWith('http')).map(url => getHighQualityImage(url, 800));
+    let galleryImages = [];
+    if (product.gallery_images && Array.isArray(product.gallery_images)) {
+        galleryImages = product.gallery_images.filter(url => typeof url === 'string' && url.trim().startsWith('http'));
+    }
+    if (galleryImages.length === 0 && product.image_url && typeof product.image_url === 'string' && product.image_url.startsWith('http')) {
+        galleryImages = [product.image_url];
+    }
     if (galleryImages.length === 0) galleryImages = ['/assets/icon-192.png'];
 
-    // ⭐ PRELOAD ALL GALLERY IMAGES TO FIX DELAY ⭐
+    // ⭐ PRELOAD ALL IMAGES TO PREVENT DELAY ⭐
     galleryImages.forEach(src => { const img = new Image(); img.src = src; });
 
     window.currentMainImageIndex = 0;
     const mainImage = galleryImages[window.currentMainImageIndex];
     const shareUrl = encodeURIComponent(window.location.href); const shareText = encodeURIComponent(`Check out ${product.title} on PrimePickHub`);
     
-    // Added onerror to hide broken thumbnails
-    const thumbnailsHtml = galleryImages.map((url, i) => `<img src="${escapeHTML(getHighQualityImage(url, 150))}" onerror="this.style.display='none'" alt="View ${i + 1}" class="gallery-thumb" data-src="${escapeHTML(url)}" data-index="${i}" style="border:2px solid ${i === window.currentMainImageIndex ? '#FF5A3C' : '#E2E8F0'};">`).join('');
+    // Use original URL for thumbnails so it doesn't break
+    const thumbnailsHtml = galleryImages.map((url, i) => `<img src="${escapeHTML(url)}" onerror="this.style.display='none'" alt="View ${i + 1}" class="gallery-thumb" data-src="${escapeHTML(url)}" data-index="${i}" style="border:2px solid ${i === window.currentMainImageIndex ? '#FF5A3C' : '#E2E8F0'};">`).join('');
     
     const rawReview = product.review_html || '';
 
@@ -368,17 +373,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     fetchRates().then(() => updateUI(currencySelector.value));
     currencySelector.addEventListener('change', (e) => updateUI(e.target.value));
 
-    // Helper to change image instantly without blink
     function setMainImage(src, targetIndex) {
         const imgEl = document.getElementById('mainImage');
-        imgEl.style.opacity = '0.5';
-        // Temporary Image object to preload
+        
+        // Preload check to swap instantly without delay
         const tempImg = new Image();
         tempImg.src = src;
-        tempImg.onload = () => {
+        
+        const swap = () => {
             imgEl.src = src;
             imgEl.style.opacity = '1';
         };
+
+        if (tempImg.complete) {
+            swap(); // Instantly show if already cached
+        } else {
+            imgEl.style.opacity = '0.5'; // Fade slightly if still loading
+            tempImg.onload = swap;
+        }
+        
         window.currentMainImageIndex = targetIndex;
         container.querySelectorAll('.gallery-thumb').forEach((t, i) => { t.style.borderColor = (i === targetIndex) ? '#FF5A3C' : '#E2E8F0'; });
         const activeThumb = container.querySelector(`.gallery-thumb[data-index="${targetIndex}"]`); 
