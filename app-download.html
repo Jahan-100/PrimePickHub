@@ -1,14 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
-<script src="/js/utils.js?v=10"></script>
-<script src="/js/config.js?v=8"></script>
-<script src="/js/api.js?v=11"></script>
-<script src="/js/affiliate.js?v=8"></script>
-    <head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Download PrimePickHub App</title>
     <link rel="stylesheet" href="css/main.css">
+    
+    <!-- Scripts moved inside head with defer -->
+    <script src="/js/utils.js?v=10" defer></script>
+    <script src="/js/config.js?v=8" defer></script>
+    <script src="/js/api.js?v=11" defer></script>
+    <script src="/js/affiliate.js?v=8" defer></script>
+    
     <script>
         window.onload = function() {
             const userAgent = navigator.userAgent || navigator.vendor || window.opera;
