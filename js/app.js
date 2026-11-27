@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer — v85 (Final Fixes)
+ * PrimePickHub Homepage Renderer — v86 (Notifications Fixed)
  */
 
 if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
@@ -159,7 +159,7 @@ async function renderDynamicCategories() {
                 const catSlug = this.dataset.slug;
                 const panel = document.getElementById('categoryHoverPanel');
                 
-                selectedCategorySlug = catSlug; // Save selected state
+                selectedCategorySlug = catSlug;
 
                 document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
                 this.classList.add('active');
@@ -194,7 +194,6 @@ async function renderDynamicCategories() {
                     if (panel) panel.style.display = 'none';
                     document.querySelectorAll('#categoryScrollContainer .category-item').forEach(item => item.classList.remove('active'));
                     
-                    // Restore to clicked category, not just 'all'
                     const defaultCat = document.querySelector(`#categoryScrollContainer .category-item[data-slug="${selectedCategorySlug}"]`) || document.querySelector('#categoryScrollContainer .category-item[data-slug="all"]');
                     if (defaultCat) defaultCat.classList.add('active');
                 }, 200);
@@ -230,7 +229,6 @@ function renderHoverPanel(mainSlug, targetElement) {
     });
     panel.innerHTML = html;
     
-    // For subcategory clicks, we keep the parent highlighted
     panel.querySelectorAll('.sub-cat-title').forEach(el => {
         el.addEventListener('click', function(e) {
             e.preventDefault();
@@ -280,7 +278,6 @@ async function loadCategoryProducts(catSlug, catName) {
         } else {
             const fetchSlugs = getAllDescendantSlugs(catSlug, allCategoriesGlobal);
             
-            // Direct Supabase fetch to fix empty grid issues
             const { data: products, error } = await window.supabaseClient
                 .from('products')
                 .select('*, affiliate_offers(*)')
@@ -521,15 +518,17 @@ async function loadLatestBlog() {
     } catch (err) { console.warn('Latest blog error:', err); section.style.display = 'none'; }
 }
 
+// ⭐ NOTIFICATIONS FIXED ⭐
 let allNotifications = [];
 let readNotifications = JSON.parse(localStorage.getItem('read_notifications') || '[]');
+let hiddenNotifications = JSON.parse(localStorage.getItem('hidden_notifications') || '[]');
 
 async function loadNotifications() {
     if (!window.supabaseClient) return;
     try {
         const { data } = await window.supabaseClient.from('app_notifications').select('*').order('created_at', { ascending: false }).limit(20);
         if (!data) return;
-        allNotifications = data;
+        allNotifications = data.filter(n => !hiddenNotifications.includes(n.id)); // Filter out locally hidden ones
         updateNotifBadge();
         renderNotifPanel();
     } catch (e) { console.warn('Notif load error', e); }
@@ -577,7 +576,13 @@ window.toggleNotifPanel = function(e) {
 
 window.clearAllNotifs = function(e) {
     if (e) e.stopPropagation();
-    allNotifications = []; // Clear the array completely
+    // Save to local storage to hide permanently on this device
+    allNotifications.forEach(n => {
+        if (!hiddenNotifications.includes(n.id)) hiddenNotifications.push(n.id);
+    });
+    localStorage.setItem('hidden_notifications', JSON.stringify(hiddenNotifications));
+    
+    allNotifications = []; 
     readNotifications = [];
     localStorage.setItem('read_notifications', JSON.stringify([]));
     updateNotifBadge();
@@ -586,6 +591,9 @@ window.clearAllNotifs = function(e) {
 
 window.deleteNotif = function(e, id) {
     if (e) e.stopPropagation();
+    if (!hiddenNotifications.includes(id)) hiddenNotifications.push(id);
+    localStorage.setItem('hidden_notifications', JSON.stringify(hiddenNotifications));
+    
     allNotifications = allNotifications.filter(n => n.id !== id);
     readNotifications = readNotifications.filter(r => r !== id);
     localStorage.setItem('read_notifications', JSON.stringify(readNotifications));
