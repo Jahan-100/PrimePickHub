@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const colorValues = v.product_color.split(',').map(c => c.trim()).filter(Boolean);
             const colorNames = (v.color_name || '').split(',').map(n => n.trim());
             colorValues.forEach((val, idx) => {
-                if (!uniqueColors.find(c => c.value === val)) { uniqueColors.push({ value: val, hdValue: getHighQualityImage(val, 400), name: colorNames[idx] || val }); }
+                if (!uniqueColors.find(c => c.value === val)) { uniqueColors.push({ value: val, hdValue: isValidURL(val) ? val : null, name: colorNames[idx] || val }); }
             });
         }
     });
@@ -188,7 +188,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const activeObj = uniqueColors.find(c => c.value === activeColor);
             html += `<div style="margin-bottom: 20px;"><p style="font-weight:bold; margin-bottom:12px; color:#1E1B4B; font-size:1.05rem;">Color: <span style="color: #64748B; font-weight: 500;">${activeObj ? activeObj.name : (activeColor || '')}</span></p><div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">`;
             uniqueColors.forEach(colorObj => {
-                const isActive = colorObj.value === activeColor; const isImageUrl = colorObj.value.startsWith('http'); let boxStyle = '';
+                const isActive = colorObj.value === activeColor; const isImageUrl = isValidURL(colorObj.value); let boxStyle = '';
                 if (isImageUrl) { boxStyle = `background-image: url('${colorObj.hdValue}'); background-size: cover; background-position: center;`; } else { const bgColor = getHexFromColorString(colorObj.value); boxStyle = `background-color: ${bgColor};`; }
                 html += `<div style="cursor:pointer;" onclick="selectColor('${colorObj.value}', '${colorObj.name}')"><div style="width:50px; height:50px; border-radius:50%; ${boxStyle} border:3px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; box-shadow:${isActive ? '0 0 0 3px rgba(255,90,60,0.3)' : 'none'}; transition:all 0.2s; box-sizing:border-box;"></div></div>`;
             });
@@ -230,11 +230,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (galleryImages.length === 0) galleryImages = ['/assets/icon-192.png'];
 
     window.currentMainImageIndex = 0;
-    const mainImage = getHighQualityImage(galleryImages[window.currentMainImageIndex], 800);
+    
+    // ⭐ FIX: Use original image URLs for main and thumbnails ⭐
+    const mainImage = galleryImages[window.currentMainImageIndex];
     const shareUrl = encodeURIComponent(window.location.href); const shareText = encodeURIComponent(`Check out ${product.title} on PrimePickHub`);
     
-    // ⭐ FIX: Use getHighQualityImage(url, 150) and lazy loading for thumbnails to make them fast
-    const thumbnailsHtml = galleryImages.map((url, i) => `<img src="${escapeHTML(getHighQualityImage(url, 150))}" loading="lazy" onerror="this.style.display='none'" alt="View ${i + 1}" class="gallery-thumb" data-src="${escapeHTML(url)}" data-index="${i}" style="border:2px solid ${i === window.currentMainImageIndex ? '#FF5A3C' : '#E2E8F0'};">`).join('');
+    const thumbnailsHtml = galleryImages.map((url, i) => `<img src="${escapeHTML(url)}" loading="lazy" onerror="this.style.display='none'" alt="View ${i + 1}" class="gallery-thumb" data-src="${escapeHTML(url)}" data-index="${i}" style="border:2px solid ${i === window.currentMainImageIndex ? '#FF5A3C' : '#E2E8F0'};">`).join('');
     
     const rawReview = product.review_html || '';
 
@@ -374,10 +375,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const imgEl = document.getElementById('mainImage');
         
         const tempImg = new Image();
-        tempImg.src = getHighQualityImage(src, 800);
+        tempImg.src = src;
         
         const swap = () => {
-            imgEl.src = getHighQualityImage(src, 800);
+            imgEl.src = src;
             imgEl.style.opacity = '1';
         };
 
@@ -440,9 +441,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     let scale = 1; let isDragging = false; let wasDragged = false; let startX, startY, translateX = 0, translateY = 0;
     function updateTransform() { imgElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`; if (scale > 1) zoomPanContainer.style.cursor = isDragging ? 'grabbing' : 'grab'; else zoomPanContainer.style.cursor = 'zoom-in'; }
     function resetZoomPan() { scale = 1; translateX = 0; translateY = 0; updateTransform(); }
-    window.openFullScreenImage = function(index) { window.currentMainImageIndex = index; imgElement.src = getHighQualityImage(galleryImages[window.currentMainImageIndex], 1200); resetZoomPan(); modal.style.display = 'flex'; document.body.style.overflow = 'hidden'; };
+    window.openFullScreenImage = function(index) { window.currentMainImageIndex = index; imgElement.src = galleryImages[window.currentMainImageIndex]; resetZoomPan(); modal.style.display = 'flex'; document.body.style.overflow = 'hidden'; };
     window.closeFullScreenImage = function(e) { if (e) e.stopPropagation(); modal.style.display = 'none'; document.body.style.overflow = 'auto'; };
-    window.changeFullScreenImage = function(direction, e) { if (e) e.stopPropagation(); if (galleryImages.length <= 1) return; let newIndex = window.currentMainImageIndex + direction; if (newIndex < 0) newIndex = galleryImages.length - 1; if (newIndex >= galleryImages.length) newIndex = 0; window.currentMainImageIndex = newIndex; imgElement.src = getHighQualityImage(galleryImages[window.currentMainImageIndex], 1200); resetZoomPan(); document.getElementById('mainImage').src = getHighQualityImage(galleryImages[window.currentMainImageIndex], 800); container.querySelectorAll('.gallery-thumb').forEach((t, i) => { t.style.borderColor = (i === window.currentMainImageIndex) ? '#FF5A3C' : '#E2E8F0'; }); };
+    window.changeFullScreenImage = function(direction, e) { if (e) e.stopPropagation(); if (galleryImages.length <= 1) return; let newIndex = window.currentMainImageIndex + direction; if (newIndex < 0) newIndex = galleryImages.length - 1; if (newIndex >= galleryImages.length) newIndex = 0; window.currentMainImageIndex = newIndex; imgElement.src = galleryImages[window.currentMainImageIndex]; resetZoomPan(); document.getElementById('mainImage').src = galleryImages[window.currentMainImageIndex]; container.querySelectorAll('.gallery-thumb').forEach((t, i) => { t.style.borderColor = (i === window.currentMainImageIndex) ? '#FF5A3C' : '#E2E8F0'; }); };
     
     async function loadCustomerReviews() {
         const { data: reviews } = await window.supabaseClient.from('product_reviews').select('*').eq('product_id', product.id).eq('status', 'approved').order('created_at', { ascending: false });
@@ -494,7 +495,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         "@context": "https://schema.org/", 
         "@type": "Product", 
         "name": product.title, 
-        "image": [getHighQualityImage(product.image_url, 800)].concat((product.gallery_images || []).map(u => getHighQualityImage(u, 800))).filter(Boolean), 
+        "image": [product.image_url].concat((product.gallery_images || [])).filter(Boolean), 
         "description": product.meta_description || product.description || product.title, 
         "sku": product.slug,
         "brand": { "@type": "Brand", "name": product.affiliate_offers?.[0]?.store_name || "PrimePickHub" },
