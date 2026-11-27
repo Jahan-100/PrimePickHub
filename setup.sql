@@ -1,5 +1,6 @@
 -- ============================================================
--- PrimePickHub — SAFE ADDITIVE MIGRATION (FIXED v4.1)
+-- PrimePickHub — SAFE ADDITIVE MIGRATION (FIXED v4.3)
+-- Run in Supabase SQL Editor. NO DATA LOSS.
 -- ============================================================
 
 -- ⭐ 0. Enable required extensions
@@ -26,20 +27,21 @@ ALTER TABLE public.products ADD COLUMN IF NOT EXISTS meta_title TEXT;
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS meta_description TEXT;
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';
 
--- ⭐ 5. save_product_offers RPC (FIXED: Safe UUID handling)
+-- ⭐ 5. save_product_offers RPC (FIXED LOOP VARIABLE)
 CREATE OR REPLACE FUNCTION public.save_product_offers(p_product_id UUID, p_offers JSONB)
 RETURNS VOID LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE
   v_id UUID;
+  v_offer JSONB;
 BEGIN
   IF NOT public.is_admin() THEN RAISE EXCEPTION 'Admin access required'; END IF;
   DELETE FROM public.affiliate_offers WHERE product_id = p_product_id;
   IF jsonb_array_length(p_offers) = 0 THEN RETURN; END IF;
 
-  FOR o IN SELECT * FROM jsonb_array_elements(p_offers) LOOP
+  FOR v_offer IN SELECT jsonb_array_elements(p_offers) LOOP
     -- Safe UUID generation if the provided ID is not a valid UUID
     BEGIN
-      v_id := (o->>'id')::UUID;
+      v_id := (v_offer->>'id')::UUID;
     EXCEPTION WHEN OTHERS THEN
       v_id := gen_random_uuid();
     END;
@@ -50,11 +52,11 @@ BEGIN
       id, product_id, store_name, product_color, color_name, variation_name,
       affiliate_url, price, sale_price, commission_rate, currency
     ) VALUES (
-      v_id, p_product_id, o->>'store_name',
-      NULLIF(o->>'product_color', ''), NULLIF(o->>'color_name', ''), NULLIF(o->>'variation_name', ''),
-      o->>'affiliate_url', COALESCE(NULLIF(o->>'price', '')::numeric, 0),
-      NULLIF(o->>'sale_price', '')::numeric, COALESCE(NULLIF(o->>'commission_rate', '')::numeric, 0),
-      COALESCE(NULLIF(o->>'currency', ''), 'USD')
+      v_id, p_product_id, v_offer->>'store_name',
+      NULLIF(v_offer->>'product_color', ''), NULLIF(v_offer->>'color_name', ''), NULLIF(v_offer->>'variation_name', ''),
+      v_offer->>'affiliate_url', COALESCE(NULLIF(v_offer->>'price', '')::numeric, 0),
+      NULLIF(v_offer->>'sale_price', '')::numeric, COALESCE(NULLIF(v_offer->>'commission_rate', '')::numeric, 0),
+      COALESCE(NULLIF(v_offer->>'currency', ''), 'USD')
     );
   END LOOP;
 END; $$;
@@ -72,12 +74,18 @@ CREATE POLICY "anon insert reviews" ON public.product_reviews
 
 -- ⭐ 7. Tighten website_visitors RLS
 DROP POLICY IF EXISTS "anon upsert visitors" ON public.website_visitors;
+DROP POLICY IF EXISTS "anon insert visitors" ON public.website_visitors;
+DROP POLICY IF EXISTS "anon update visitors" ON public.website_visitors;
+DROP POLICY IF EXISTS "admin read visitors" ON public.website_visitors;
 CREATE POLICY "anon insert visitors" ON public.website_visitors FOR INSERT TO anon, authenticated WITH CHECK (true);
 CREATE POLICY "anon update visitors" ON public.website_visitors FOR UPDATE TO anon, authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "admin read visitors" ON public.website_visitors FOR SELECT TO authenticated USING (public.is_admin());
 
 -- ⭐ 8. Tighten active_app_installs RLS
 DROP POLICY IF EXISTS "anon upsert installs" ON public.active_app_installs;
+DROP POLICY IF EXISTS "anon insert installs" ON public.active_app_installs;
+DROP POLICY IF EXISTS "anon update installs" ON public.active_app_installs;
+DROP POLICY IF EXISTS "admin read installs" ON public.active_app_installs;
 CREATE POLICY "anon insert installs" ON public.active_app_installs FOR INSERT TO anon, authenticated WITH CHECK (true);
 CREATE POLICY "anon update installs" ON public.active_app_installs FOR UPDATE TO anon, authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "admin read installs" ON public.active_app_installs FOR SELECT TO authenticated USING (public.is_admin());
