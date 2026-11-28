@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer — v88 (Dynamic Title & Timer Fix)
+ * PrimePickHub Homepage Renderer — v89 (Fast Image Proxy)
  */
 
 if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
@@ -15,6 +15,13 @@ document.addEventListener('click', (e) => {
 
 function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb; }
 window.handleImageLoad = function(img) { if (img.decode) { img.decode().then(() => { img.style.opacity = 1; }).catch(() => { img.style.opacity = 1; }); } else { img.style.opacity = 1; } };
+
+// ⭐ IMAGE OPTIMIZATION PROXY (Fixes blocky/slow images) ⭐
+function getOptimizedImage(url, width = 300) {
+    if (!url || typeof url !== 'string') return 'assets/icon-192.png?v=4';
+    if (url.includes('images.weserv.nl')) return url;
+    return `https://images.weserv.nl/?url=${encodeURIComponent(url)}&w=${width}&output=webp`;
+}
 
 function hideSplash() {
     const splash = document.getElementById('splash-screen');
@@ -298,7 +305,7 @@ function renderProductCard(product, isPriority = false) {
     const hasLink = productUrl !== '#';
     const disabledAttr = hasLink ? '' : 'aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:0.6;"';
     
-    const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png?v=4';
+    const imageSrc = isValidURL(product.image_url) ? escapeHTML(getOptimizedImage(product.image_url, 300)) : 'assets/icon-192.png?v=4';
     
     const imgPriority = isPriority ? 'fetchpriority="high"' : '';
     const loadingAttr = isPriority ? 'loading="eager"' : 'loading="lazy"';
@@ -340,7 +347,7 @@ function renderProductCard(product, isPriority = false) {
 function renderFlashCard(product, section = 1) {
     const title = escapeHTML(product.title || 'Untitled');
     const productUrl = getProductUrl(product);
-    const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png?v=4';
+    const imageSrc = isValidURL(product.image_url) ? escapeHTML(getOptimizedImage(product.image_url, 200)) : 'assets/icon-192.png?v=4';
     
     const primaryOffer = getPrimaryOffer(product) || {};
     const symbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
@@ -431,7 +438,7 @@ function renderAdFallback(products) {
     const html = selected.map(p => {
         const title = escapeHTML(p.title || 'Product');
         const productUrl = getProductUrl(p);
-        const imageSrc = isValidURL(p.image_url) ? escapeHTML(p.image_url) : 'assets/icon-192.png?v=4';
+        const imageSrc = isValidURL(p.image_url) ? escapeHTML(getOptimizedImage(p.image_url, 200)) : 'assets/icon-192.png?v=4';
         const primaryOffer = getPrimaryOffer(p) || {};
         const sym = symbols[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
         const price = parseFloat(primaryOffer.sale_price) || parseFloat(primaryOffer.price) || 0;
@@ -447,7 +454,6 @@ async function loadSiteSettings() {
     try {
         const { data } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).maybeSingle();
         if (data) {
-            // Special Deal Title
             const spTitle = document.getElementById('specialDealTitle');
             if (spTitle) {
                 if (data.special_deal_title) spTitle.innerText = data.special_deal_title;
@@ -457,7 +463,6 @@ async function loadSiteSettings() {
                 spTitle.style.fontStyle = data.title_font_style || 'normal';
             }
             
-            // Flash Sale 1 Title
             const flashTitle = document.getElementById('flashSaleTitle');
             if (flashTitle) {
                 if (data.flash_title_text) flashTitle.innerText = data.flash_title_text;
@@ -467,7 +472,6 @@ async function loadSiteSettings() {
                 flashTitle.style.fontStyle = data.flash_title_font_style || 'normal';
             }
 
-            // Flash Sale 2 Title
             const sale2Title = document.getElementById('flashSaleTitle2');
             if (sale2Title) {
                 if (data.sale_section_2_title) sale2Title.innerText = data.sale_section_2_title;
@@ -557,7 +561,7 @@ async function loadLatestBlog() {
         if (!blogs || blogs.length === 0) { section.style.display = 'none'; return; }
         const blog = blogs[0];
         section.style.display = 'block';
-        img.src = isValidURL(blog.image_url) ? blog.image_url : '/assets/icon-192.png?v=4';
+        img.src = isValidURL(blog.image_url) ? getOptimizedImage(blog.image_url, 400) : '/assets/icon-192.png?v=4';
         img.alt = blog.title;
         title.textContent = blog.title;
         date.textContent = new Date(blog.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -565,7 +569,6 @@ async function loadLatestBlog() {
     } catch (err) { console.warn('Latest blog error:', err); section.style.display = 'none'; }
 }
 
-// ⭐ NOTIFICATIONS ⭐
 let allNotifications = [];
 let readNotifications = JSON.parse(localStorage.getItem('read_notifications') || '[]');
 let hiddenNotifications = JSON.parse(localStorage.getItem('hidden_notifications') || '[]');
@@ -712,7 +715,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadFlashSales(),
         loadLatestBlog(),
         loadNotifications(),
-        loadSiteSettings() // <--- Yahan add kiya hai taake title update ho
+        loadSiteSettings()
     ]);
 
     setupSearch();
