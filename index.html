@@ -8,11 +8,18 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 
-    <!-- ⭐ BACK BUTTON SPLASH FIX ⭐ -->
+    <!-- ⭐ BFCACHE FIX & SPLASH FIX ⭐ -->
     <script>
         if (sessionStorage.getItem('splashShown') === 'true') {
             document.documentElement.classList.add('hide-splash-init');
         }
+        
+        // Force reload if page is restored from browser's back-forward cache
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
     </script>
     <style>
         .hide-splash-init #splash-screen { display: none !important; }
@@ -25,7 +32,6 @@
     <meta name="mitgo-verification" content="e3f69518-ab0c-46db-a669-34aacd83fd21" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- ⭐ HONEST TITLE/DESCRIPTION (no "live prices" claim) ⭐ -->
     <title>PrimePickHub - Curated Deals from Amazon, AliExpress, Daraz</title>
     <meta name="description" content="Discover trending products from top stores. Curated picks, honest reviews, quick links to Amazon, AliExpress, Daraz & eBay.">
     <meta name="keywords" content="price comparison, amazon deals, aliexpress deals, daraz sales, online shopping, curated deals, affiliate deals, best price">
@@ -67,7 +73,7 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,800;0,900;1,800&family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
 
-    <!-- ⭐ CORE SCRIPTS (defer = proper order) ⭐ -->
+    <!-- ⭐ CORE SCRIPTS ⭐ -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="/js/utils.js?v=10" defer></script>
     <script src="/js/config.js?v=8" defer></script>
@@ -378,7 +384,7 @@
     </button>
 
     <!-- ⭐ Page-specific scripts at bottom with defer ⭐ -->
-    <script src="/js/app.js?v=83" defer></script>
+    <script src="/js/app.js?v=89" defer></script>
     <script src="/js/floating-widgets.js?v=10" defer></script>
 
     <script>
