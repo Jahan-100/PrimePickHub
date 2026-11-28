@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer — v87 (Images & Notifications Fixed)
+ * PrimePickHub Homepage Renderer — v88 (Dynamic Title & Timer Fix)
  */
 
 if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
@@ -298,7 +298,6 @@ function renderProductCard(product, isPriority = false) {
     const hasLink = productUrl !== '#';
     const disabledAttr = hasLink ? '' : 'aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:0.6;"';
     
-    // ⭐ FIX: Use original image URL directly to prevent broken links ⭐
     const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png?v=4';
     
     const imgPriority = isPriority ? 'fetchpriority="high"' : '';
@@ -341,7 +340,6 @@ function renderProductCard(product, isPriority = false) {
 function renderFlashCard(product, section = 1) {
     const title = escapeHTML(product.title || 'Untitled');
     const productUrl = getProductUrl(product);
-    // ⭐ FIX: Use original image URL directly ⭐
     const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png?v=4';
     
     const primaryOffer = getPrimaryOffer(product) || {};
@@ -353,8 +351,11 @@ function renderFlashCard(product, section = 1) {
     if (basePrice === 0 && salePrice === 0) priceDisplay = `<div style="font-weight:bold; color:#FF5A3C; font-size:0.95rem;">Check Price</div>`;
     else if (salePrice > 0) priceDisplay = `<div style="display:flex; flex-direction:column; justify-content:center; align-items:center; width: 100%;"><div style="display:flex; align-items:center; gap:4px;"><span style="text-decoration:line-through; color:#64748B; font-size:0.75rem;">${sym}${basePrice.toFixed(2)}</span><span style="font-weight:bold; color:#DC2626; font-size:0.95rem;">${sym}${salePrice.toFixed(2)}</span></div></div>`;
     else priceDisplay = `<div class="price" style="font-size:0.95rem;">${sym}${basePrice.toFixed(2)}</div>`;
+    
     const endTime = section === 1 ? product.sale_end_date : product.sale_end_date_2;
-    return `<a href="${productUrl}" class="special-deal-card flash-card"><div class="img-box"><img src="${imageSrc}" alt="${title}" width="190" height="190" loading="lazy" decoding="async" style="opacity: 0; transition: opacity 0.4s ease-in-out;" onload="handleImageLoad(this)"></div><div class="info-box">${priceDisplay}<div class="title">${title}</div><div class="card-timer" data-endtime="${endTime}">⏳ Calculating...</div></div></a>`;
+    const timerHtml = endTime ? `<div class="card-timer" data-endtime="${endTime}">⏳ Calculating...</div>` : '';
+    
+    return `<a href="${productUrl}" class="special-deal-card flash-card"><div class="img-box"><img src="${imageSrc}" alt="${title}" width="190" height="190" loading="lazy" decoding="async" style="opacity: 0; transition: opacity 0.4s ease-in-out;" onload="handleImageLoad(this)"></div><div class="info-box">${priceDisplay}<div class="title">${title}</div>${timerHtml}</div></a>`;
 }
 
 function renderProductsGrid(products, grid) {
@@ -372,7 +373,10 @@ function renderProductsGrid(products, grid) {
 setInterval(() => {
     let flashSaleChanged = false;
     document.querySelectorAll('.card-timer').forEach(el => {
+        if (!el.dataset.endtime || el.dataset.endtime === 'undefined' || el.dataset.endtime === 'null') return;
         const endTime = new Date(el.dataset.endtime).getTime();
+        if (isNaN(endTime)) return;
+        
         const now = new Date().getTime();
         const distance = endTime - now;
         if (distance < 0) {
@@ -427,7 +431,6 @@ function renderAdFallback(products) {
     const html = selected.map(p => {
         const title = escapeHTML(p.title || 'Product');
         const productUrl = getProductUrl(p);
-        // ⭐ FIX: Use original image URL directly ⭐
         const imageSrc = isValidURL(p.image_url) ? escapeHTML(p.image_url) : 'assets/icon-192.png?v=4';
         const primaryOffer = getPrimaryOffer(p) || {};
         const sym = symbols[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
@@ -437,6 +440,44 @@ function renderAdFallback(products) {
     const adHtml = `<div class="ad-fallback-container">${html}</div>`;
     if (topSlot) topSlot.innerHTML = adHtml;
     if (midSlot) midSlot.innerHTML = adHtml;
+}
+
+async function loadSiteSettings() {
+    if (!window.supabaseClient) return;
+    try {
+        const { data } = await window.supabaseClient.from('site_settings').select('*').eq('id', 1).maybeSingle();
+        if (data) {
+            // Special Deal Title
+            const spTitle = document.getElementById('specialDealTitle');
+            if (spTitle) {
+                if (data.special_deal_title) spTitle.innerText = data.special_deal_title;
+                spTitle.style.fontFamily = data.title_font_family || "'Poppins', sans-serif";
+                spTitle.style.fontSize = data.title_font_size || '2rem';
+                spTitle.style.fontWeight = data.title_font_weight || '800';
+                spTitle.style.fontStyle = data.title_font_style || 'normal';
+            }
+            
+            // Flash Sale 1 Title
+            const flashTitle = document.getElementById('flashSaleTitle');
+            if (flashTitle) {
+                if (data.flash_title_text) flashTitle.innerText = data.flash_title_text;
+                flashTitle.style.fontFamily = data.flash_title_font_family || "'Poppins', sans-serif";
+                flashTitle.style.fontSize = data.flash_title_font_size || '2rem';
+                flashTitle.style.fontWeight = data.flash_title_font_weight || '900';
+                flashTitle.style.fontStyle = data.flash_title_font_style || 'normal';
+            }
+
+            // Flash Sale 2 Title
+            const sale2Title = document.getElementById('flashSaleTitle2');
+            if (sale2Title) {
+                if (data.sale_section_2_title) sale2Title.innerText = data.sale_section_2_title;
+                sale2Title.style.fontFamily = data.sale_section_2_font_family || "'Poppins', sans-serif";
+                sale2Title.style.fontSize = data.sale_section_2_font_size || '2rem';
+                sale2Title.style.fontWeight = data.sale_section_2_font_weight || '900';
+                sale2Title.style.fontStyle = data.sale_section_2_font_style || 'normal';
+            }
+        }
+    } catch (e) { console.error("Error loading site settings:", e); }
 }
 
 async function loadHomepageProducts() {
@@ -524,7 +565,7 @@ async function loadLatestBlog() {
     } catch (err) { console.warn('Latest blog error:', err); section.style.display = 'none'; }
 }
 
-// ⭐ NOTIFICATIONS FIXED ⭐
+// ⭐ NOTIFICATIONS ⭐
 let allNotifications = [];
 let readNotifications = JSON.parse(localStorage.getItem('read_notifications') || '[]');
 let hiddenNotifications = JSON.parse(localStorage.getItem('hidden_notifications') || '[]');
@@ -534,7 +575,7 @@ async function loadNotifications() {
     try {
         const { data } = await window.supabaseClient.from('app_notifications').select('*').order('created_at', { ascending: false }).limit(20);
         if (!data) return;
-        allNotifications = data.filter(n => !hiddenNotifications.includes(n.id)); // Filter out locally hidden ones
+        allNotifications = data.filter(n => !hiddenNotifications.includes(n.id)); 
         updateNotifBadge();
         renderNotifPanel();
     } catch (e) { console.warn('Notif load error', e); }
@@ -582,7 +623,6 @@ window.toggleNotifPanel = function(e) {
 
 window.clearAllNotifs = function(e) {
     if (e) e.stopPropagation();
-    // Save to local storage to hide permanently on this device
     allNotifications.forEach(n => {
         if (!hiddenNotifications.includes(n.id)) hiddenNotifications.push(n.id);
     });
@@ -671,7 +711,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadSpecialDeals(),
         loadFlashSales(),
         loadLatestBlog(),
-        loadNotifications()
+        loadNotifications(),
+        loadSiteSettings() // <--- Yahan add kiya hai taake title update ho
     ]);
 
     setupSearch();
