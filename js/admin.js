@@ -421,9 +421,10 @@ function setupProductForm() {
             });
 
             if (offersToInsert.length > 0) {
+                // ⭐ FIX: Removed JSON.stringify here so it sends as Array
                 const { error: rpcErr } = await window.supabaseClient.rpc('save_product_offers', {
                     p_product_id: productId,
-                    p_offers: JSON.stringify(offersToInsert)
+                    p_offers: offersToInsert
                 });
                 if (rpcErr) throw rpcErr;
             } else {
@@ -484,7 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ==========================================
-// AI HUNTER / DISCOVERED PRODUCTS (COMPLETED)
+// AI HUNTER / DISCOVERED PRODUCTS
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     function setupScrollButtons(upBtnId, downBtnId, wrapperId) { const upBtn = document.getElementById(upBtnId); const downBtn = document.getElementById(downBtnId); const wrapper = document.getElementById(wrapperId); if (!upBtn || !downBtn || !wrapper) return; let scrollInterval; const startScroll = (direction) => { scrollInterval = setInterval(() => { if (direction === 'up') wrapper.scrollTop -= 10; else wrapper.scrollTop += 10; }, 20); }; const stopScroll = () => clearInterval(scrollInterval); upBtn.addEventListener('mousedown', () => startScroll('up')); upBtn.addEventListener('mouseup', stopScroll); upBtn.addEventListener('mouseleave', stopScroll); downBtn.addEventListener('mousedown', () => startScroll('down')); downBtn.addEventListener('mouseup', stopScroll); downBtn.addEventListener('mouseleave', stopScroll); }
@@ -646,7 +647,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return `<tr>
                 <td style="text-align:center;">${i+1}</td>
                 <td>${escapeHTML(r.products?.title || 'Unknown')}</td>
-                <td>${escapeHTML(r.name)}<br><small>${escapeHTML(r.email || '')}</small></td>
+                <td>${escapeHTML(r.customer_name)}<br><small>${escapeHTML(r.email || '')}</small></td>
                 <td style="text-align:center; color:#F59E0B;">${'★'.repeat(r.rating)}</td>
                 <td>${escapeHTML(r.review_text)}<br><div style="margin-top:5px;">${images}</div></td>
                 <td style="text-align:center; font-weight:bold; color:${statusColor};">${statusText}</td>
