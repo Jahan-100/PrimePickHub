@@ -1,5 +1,5 @@
 // PrimePickHub Service Worker (Network-First for fresh content)
-const CACHE_NAME = 'primepickhub-v4';
+const CACHE_NAME = 'primepickhub-v5'; // ⭐ Version bumped to clear old cache
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -28,7 +28,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         keyList.map((key) => {
           if (key !== CACHE_NAME) {
-            return caches.delete(key);
+            return caches.delete(key); // Purana cache delete karega
           }
         })
       );
@@ -42,9 +42,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // ⭐ NETWORK-FIRST STRATEGY ⭐
+  // ⭐ NETWORK-FIRST STRATEGY WITH NO HTTP CACHE ⭐
   event.respondWith(
-    fetch(event.request).then((networkResponse) => {
+    fetch(event.request, { cache: 'no-store' }).then((networkResponse) => {
       if (networkResponse && networkResponse.status === 200 && event.request.method === 'GET') {
         const responseClone = networkResponse.clone();
         caches.open(CACHE_NAME).then((cache) => {
