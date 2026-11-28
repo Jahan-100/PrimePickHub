@@ -1,5 +1,5 @@
 /**
- * PrimePickHub Homepage Renderer — v89 (Fast Image Proxy)
+ * PrimePickHub Homepage Renderer — v90 (Proxy Removed, Fast Load)
  */
 
 if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
@@ -15,13 +15,6 @@ document.addEventListener('click', (e) => {
 
 function safeColor(v, fb) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : fb; }
 window.handleImageLoad = function(img) { if (img.decode) { img.decode().then(() => { img.style.opacity = 1; }).catch(() => { img.style.opacity = 1; }); } else { img.style.opacity = 1; } };
-
-// ⭐ IMAGE OPTIMIZATION PROXY (Fixes blocky/slow images) ⭐
-function getOptimizedImage(url, width = 300) {
-    if (!url || typeof url !== 'string') return 'assets/icon-192.png?v=4';
-    if (url.includes('images.weserv.nl')) return url;
-    return `https://images.weserv.nl/?url=${encodeURIComponent(url)}&w=${width}&output=webp`;
-}
 
 function hideSplash() {
     const splash = document.getElementById('splash-screen');
@@ -305,7 +298,8 @@ function renderProductCard(product, isPriority = false) {
     const hasLink = productUrl !== '#';
     const disabledAttr = hasLink ? '' : 'aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:0.6;"';
     
-    const imageSrc = isValidURL(product.image_url) ? escapeHTML(getOptimizedImage(product.image_url, 300)) : 'assets/icon-192.png?v=4';
+    // Directly use the image URL
+    const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png?v=4';
     
     const imgPriority = isPriority ? 'fetchpriority="high"' : '';
     const loadingAttr = isPriority ? 'loading="eager"' : 'loading="lazy"';
@@ -347,7 +341,7 @@ function renderProductCard(product, isPriority = false) {
 function renderFlashCard(product, section = 1) {
     const title = escapeHTML(product.title || 'Untitled');
     const productUrl = getProductUrl(product);
-    const imageSrc = isValidURL(product.image_url) ? escapeHTML(getOptimizedImage(product.image_url, 200)) : 'assets/icon-192.png?v=4';
+    const imageSrc = isValidURL(product.image_url) ? escapeHTML(product.image_url) : 'assets/icon-192.png?v=4';
     
     const primaryOffer = getPrimaryOffer(product) || {};
     const symbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ' };
@@ -438,7 +432,7 @@ function renderAdFallback(products) {
     const html = selected.map(p => {
         const title = escapeHTML(p.title || 'Product');
         const productUrl = getProductUrl(p);
-        const imageSrc = isValidURL(p.image_url) ? escapeHTML(getOptimizedImage(p.image_url, 200)) : 'assets/icon-192.png?v=4';
+        const imageSrc = isValidURL(p.image_url) ? escapeHTML(p.image_url) : 'assets/icon-192.png?v=4';
         const primaryOffer = getPrimaryOffer(p) || {};
         const sym = symbols[(primaryOffer.currency || 'USD').toUpperCase()] || '$';
         const price = parseFloat(primaryOffer.sale_price) || parseFloat(primaryOffer.price) || 0;
@@ -561,7 +555,7 @@ async function loadLatestBlog() {
         if (!blogs || blogs.length === 0) { section.style.display = 'none'; return; }
         const blog = blogs[0];
         section.style.display = 'block';
-        img.src = isValidURL(blog.image_url) ? getOptimizedImage(blog.image_url, 400) : '/assets/icon-192.png?v=4';
+        img.src = isValidURL(blog.image_url) ? blog.image_url : '/assets/icon-192.png?v=4';
         img.alt = blog.title;
         title.textContent = blog.title;
         date.textContent = new Date(blog.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
