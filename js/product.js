@@ -13,6 +13,13 @@ function getVideoHtml(url) {
 
 const currencySymbols = { USD: '$', PKR: 'Rs. ', EUR: '€', GBP: '£', INR: '₹', AED: 'AED ', SAR: 'SAR ', CAD: 'C$', AUD: 'A$', CNY: '¥', JPY: '¥', TRY: '₺', BDT: '৳', MYR: 'RM ', IDR: 'Rp ', QAR: 'QAR ', KWD: 'KWD ', BHD: 'BHD ', OMR: 'OMR ', ZAR: 'R ', BRL: 'R$', MXN: 'MX$', RUB: '₽', KRW: '₩', SGD: 'S$', HKD: 'HK$', NZD: 'NZ$', CHF: 'CHF ', SEK: 'kr ', NOK: 'kr ' };
 
+// ⭐ IMAGE OPTIMIZATION PROXY (Fixes blocky/slow images) ⭐
+function getOptimizedImage(url, width = 800) {
+    if (!url || typeof url !== 'string') return '/assets/icon-192.png';
+    if (url.includes('images.weserv.nl')) return url;
+    return `https://images.weserv.nl/?url=${encodeURIComponent(url)}&w=${width}&output=webp`;
+}
+
 async function compressImage(file, maxWidth = 1000, maxHeight = 1000, quality = 0.75) {
     return new Promise((resolve) => {
         const reader = new FileReader();
@@ -189,7 +196,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             html += `<div style="margin-bottom: 20px;"><p style="font-weight:bold; margin-bottom:12px; color:#1E1B4B; font-size:1.05rem;">Color: <span style="color: #64748B; font-weight: 500;">${activeObj ? activeObj.name : (activeColor || '')}</span></p><div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">`;
             uniqueColors.forEach(colorObj => {
                 const isActive = colorObj.value === activeColor; const isImageUrl = isValidURL(colorObj.value); let boxStyle = '';
-                if (isImageUrl) { boxStyle = `background-image: url('${colorObj.hdValue}'); background-size: cover; background-position: center;`; } else { const bgColor = getHexFromColorString(colorObj.value); boxStyle = `background-color: ${bgColor};`; }
+                if (isImageUrl) { boxStyle = `background-image: url('${getOptimizedImage(colorObj.hdValue, 100)}'); background-size: cover; background-position: center;`; } else { const bgColor = getHexFromColorString(colorObj.value); boxStyle = `background-color: ${bgColor};`; }
                 html += `<div style="cursor:pointer;" onclick="selectColor('${colorObj.value}', '${colorObj.name}')"><div style="width:50px; height:50px; border-radius:50%; ${boxStyle} border:3px solid ${isActive ? '#FF5A3C' : '#E2E8F0'}; box-shadow:${isActive ? '0 0 0 3px rgba(255,90,60,0.3)' : 'none'}; transition:all 0.2s; box-sizing:border-box;"></div></div>`;
             });
             html += `</div></div>`;
@@ -229,13 +236,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     if (galleryImages.length === 0) galleryImages = ['/assets/icon-192.png'];
 
+    // ⭐ Optimize all gallery images ⭐
+    galleryImages = galleryImages.map(url => getOptimizedImage(url, 1000));
+
     window.currentMainImageIndex = 0;
-    
-    // ⭐ FIX: Use original image URLs for main and thumbnails ⭐
     const mainImage = galleryImages[window.currentMainImageIndex];
     const shareUrl = encodeURIComponent(window.location.href); const shareText = encodeURIComponent(`Check out ${product.title} on PrimePickHub`);
     
-    const thumbnailsHtml = galleryImages.map((url, i) => `<img src="${escapeHTML(url)}" loading="lazy" onerror="this.style.display='none'" alt="View ${i + 1}" class="gallery-thumb" data-src="${escapeHTML(url)}" data-index="${i}" style="border:2px solid ${i === window.currentMainImageIndex ? '#FF5A3C' : '#E2E8F0'};">`).join('');
+    const thumbnailsHtml = galleryImages.map((url, i) => `<img src="${escapeHTML(getOptimizedImage(url, 150))}" loading="lazy" onerror="this.style.display='none'" alt="View ${i + 1}" class="gallery-thumb" data-src="${escapeHTML(url)}" data-index="${i}" style="border:2px solid ${i === window.currentMainImageIndex ? '#FF5A3C' : '#E2E8F0'};">`).join('');
     
     const rawReview = product.review_html || '';
 
@@ -495,7 +503,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         "@context": "https://schema.org/", 
         "@type": "Product", 
         "name": product.title, 
-        "image": [product.image_url].concat((product.gallery_images || [])).filter(Boolean), 
+        "image": [getOptimizedImage(product.image_url, 800)].concat((product.gallery_images || []).map(u => getOptimizedImage(u, 800))).filter(Boolean), 
         "description": product.meta_description || product.description || product.title, 
         "sku": product.slug,
         "brand": { "@type": "Brand", "name": product.affiliate_offers?.[0]?.store_name || "PrimePickHub" },
